@@ -15,12 +15,12 @@ def parse_arguments():
     """Parse command line arguments"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Python utility for NeuroML2')
+    parser = argparse.ArgumentParser(description='Python utilities for NeuroML2')
 
     parser.add_argument('xml_filename', metavar='xmlfile', type=str,
                         help='The xml file to process')
 
-    parser.add_argument('--sim', choices=('neuron', 'jlems'),
+    parser.add_argument('--sim', choices=('pylems', 'jlems'),
                         help='Simulator to use')
 
     parser.add_argument('--validate', action='store_true',
@@ -50,7 +50,7 @@ def run_jnml(args):
 
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
-    jar = os.path.join(script_dir, "../lib/jNeuroML-0.7.0-jar-with-dependencies.jar")
+    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.0-jar-with-dependencies.jar")
     
     print(script_dir)
 

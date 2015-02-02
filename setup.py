@@ -12,7 +12,7 @@ setup(
     entry_points={
         'console_scripts': ['pynml = pyneuroml.pynml:main']},
     package_data={
-        'pynml': [
+        'pyneuroml': [
             'lib/jNeuroML-0.7.0-jar-with-dependencies.jar']},
     url='https://github.com/pgleeson/pyNeuroML',
     license='LICENSE.lesser',
