@@ -60,8 +60,6 @@ def run_jnml(args):
 
 
 
-
-
 def main():
     """Main"""
 
