@@ -18,8 +18,8 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description='pyNeuroML v%s: Python utilities for NeuroML2'%__version__)
 
-    parser.add_argument('neuroml2_file', metavar='neuroml2_file', type=str,
-                        help='The NeuroML2 file to process')
+    parser.add_argument('target_file', metavar='target_file', type=str,
+                        help='The LEMS/NeuroML2 file to process')
 
     ##parser.add_argument('-sim', choices=('pylems', 'jlems'),
     ##                     help='Simulator to use')
@@ -51,26 +51,24 @@ def run_jnml(args):
     ##else:
         
     exec_dir = "."
+    pre_args = ""
+    post_args = ""
 
-    '''
-    if not args.sim:
-        simulator_option = ''
-    elif args.sim == 'jlems':
-        simulator_option = ''
-    else:
-        simulator_option = '-%s' % args.sim
-    '''
         
-    gui = "-nogui" if args.nogui==True else ""
-  
+    gui = " -nogui" if args.nogui==True else ""
+    post_args += gui
+    
+    if args.validate:
+        pre_args += " -validate"
+    
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
     jar = os.path.join(script_dir, "lib/jNeuroML-0.7.0-jar-with-dependencies.jar")
     
     print_comment(script_dir)
 
-    output = execute_command_in_dir("java -jar %s %s %s" %
-                                        (jar, args.neuroml2_file, gui), exec_dir)
+    output = execute_command_in_dir("java -jar %s %s %s %s" %
+                                        (jar, pre_args, args.target_file, post_args), exec_dir)
                                             
     print_comment(output, True)
                               

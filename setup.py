@@ -20,7 +20,8 @@ setup(
     long_description=open('README.md').read(),
     install_requires=[
         'lxml',
-        'pylems'],
+        'pylems',
+        'airspeed'],
     classifiers = [
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: LGPL',
