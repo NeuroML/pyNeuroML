@@ -20,8 +20,7 @@ setup(
     long_description=open('README.md').read(),
     install_requires=[
         'lxml',
-        'pylems',
-        'libNeuroML'],
+        'pylems'],
     classifiers = [
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: LGPL',

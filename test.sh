@@ -8,7 +8,7 @@ fi
 
 cd $PYNML_TEST
 
-git clone git@github.com:NeuroML/NeuroML2.git
+git clone https://github.com/NeuroML/NeuroML2.git
 
 cd NeuroML2/LEMSexamples
 
