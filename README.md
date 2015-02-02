@@ -27,11 +27,11 @@ All export & import options of jNeuroML available through easy command line inte
 
 #### Helper Python scripts
 
-Lots of helper scrips for commonly used NeuroML2 functions
+Lots of helper scripts for commonly used NeuroML2 functions
 
 - nml2analyse: channels, etc.
 
-#### Home for existing functionality distributed in variaous places
+#### Home for existing functionality distributed in various places
 
 Incorporate ChannelML2NeuroML2beta.xsl for updating ChannelML
 

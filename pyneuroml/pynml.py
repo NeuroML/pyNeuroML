@@ -8,28 +8,33 @@ Thanks to Werner van Geit for initiating this
 import os
 import subprocess
 
+from . import __version__
+
 verbose = False
 
 def parse_arguments():
     """Parse command line arguments"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Python utilities for NeuroML2')
+    parser = argparse.ArgumentParser(description='pyNeuroML v%s: Python utilities for NeuroML2'%__version__)
 
     parser.add_argument('neuroml2_file', metavar='neuroml2_file', type=str,
                         help='The NeuroML2 file to process')
 
-    parser.add_argument('-sim', choices=('pylems', 'jlems'),
-                        help='Simulator to use')
+    ##parser.add_argument('-sim', choices=('pylems', 'jlems'),
+    ##                     help='Simulator to use')
 
     parser.add_argument('-validate', action='store_true',
                         help='Only validate')
                         
+    parser.add_argument('-nogui', action='store_true',
+                        help='Supress GUI, i.e. show no plots, just save results', default="False")
+                        
     parser.add_argument('-verbose', action='store_true',
                         help='Verbose output')
 
-    parser.add_argument('-outputdir', nargs=1,
-                        help='Directory to write output scripts to')
+    ##parser.add_argument('-outputdir', nargs=1,
+    ##                    help='Directory to write output scripts to')
 
     return parser.parse_args()
 
@@ -40,19 +45,24 @@ def run_jnml(args):
     global verbose 
     verbose = args.verbose
 
-    if args.outputdir:
-        initialize_outputdir(args.outputdir[0], args.xml_filename)
-        exec_dir = args.outputdir[0]
-    else:
-        exec_dir = "."
+    ##if args.outputdir:
+    ##    initialize_outputdir(args.outputdir[0], args.xml_filename)
+    ##    exec_dir = args.outputdir[0]
+    ##else:
+        
+    exec_dir = "."
 
+    '''
     if not args.sim:
         simulator_option = ''
     elif args.sim == 'jlems':
         simulator_option = ''
     else:
         simulator_option = '-%s' % args.sim
-
+    '''
+        
+    gui = "-nogui" if args.nogui==True else ""
+  
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
     jar = os.path.join(script_dir, "lib/jNeuroML-0.7.0-jar-with-dependencies.jar")
@@ -60,10 +70,9 @@ def run_jnml(args):
     print_comment(script_dir)
 
     output = execute_command_in_dir("java -jar %s %s %s" %
-                                        (jar, args.neuroml2_file,
-                                            simulator_option), exec_dir)
+                                        (jar, args.neuroml2_file, gui), exec_dir)
                                             
-    print_comment(output)
+    print_comment(output, True)
                               
 
 def main():
@@ -73,9 +82,9 @@ def main():
 
     run_jnml(args)
     
-def print_comment(text):
+def print_comment(text, print_it=verbose):
     
-    if verbose:
+    if print_it:
         print("pyNeuroML >>> %s"%(text))
 
 

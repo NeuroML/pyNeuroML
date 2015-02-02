@@ -19,7 +19,9 @@ setup(
     description='Python utilities for NeuroML',
     long_description=open('README.md').read(),
     install_requires=[
-        'lxml'],
+        'lxml',
+        'pylems',
+        'libNeuroML'],
     classifiers = [
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: LGPL',

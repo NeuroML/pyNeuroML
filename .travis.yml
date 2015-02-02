@@ -10,3 +10,4 @@ install:
     
 script:
     - pynml -h
+    - ./test.sh
