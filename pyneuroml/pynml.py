@@ -25,7 +25,7 @@ def parse_arguments():
     ##                     help='Simulator to use')
 
     parser.add_argument('-validate', action='store_true',
-                        help='Only validate')
+                        help='Validate NeuroML2 file against the latest Schema')
                         
     parser.add_argument('-nogui', action='store_true',
                         help='Supress GUI, i.e. show no plots, just save results', default="False")
@@ -62,6 +62,14 @@ def evaluate_arguments(args):
     pre_args = ""
     post_args = ""
 
+    '''
+    if not args.sim:
+        simulator_option = ''
+    elif args.sim == 'jlems':
+        simulator_option = ''
+    else:
+        simulator_option = '-%s' % args.sim
+    '''
         
     gui = " -nogui" if args.nogui==True else ""
     post_args += gui
