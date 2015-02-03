@@ -39,8 +39,17 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def run_jnml(args):
-    """Run the jnml command"""
+def run_lems_with_jneuroml(lems_file_name, nogui=False):           
+    print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, True)
+    
+    post_args = ""
+    gui = " -nogui" if nogui else ""
+    post_args += gui
+    
+    run_jneuroml("", lems_file_name, post_args)
+
+
+def evaluate_arguments(args):
     
     global verbose 
     verbose = args.verbose
@@ -50,7 +59,6 @@ def run_jnml(args):
     ##    exec_dir = args.outputdir[0]
     ##else:
         
-    exec_dir = "."
     pre_args = ""
     post_args = ""
 
@@ -60,15 +68,21 @@ def run_jnml(args):
     
     if args.validate:
         pre_args += " -validate"
+        
+    run_jneuroml(pre_args, args.target_file, post_args)
+    
+        
+def run_jneuroml(pre_args, target_file, post_args):    
+       
+    exec_dir = "." 
     
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
     jar = os.path.join(script_dir, "lib/jNeuroML-0.7.0-jar-with-dependencies.jar")
     
-    print_comment(script_dir)
 
     output = execute_command_in_dir("java -jar %s %s %s %s" %
-                                        (jar, pre_args, args.target_file, post_args), exec_dir)
+                                        (jar, pre_args, target_file, post_args), exec_dir)
                                             
     print_comment(output, True)
                               
@@ -78,7 +92,7 @@ def main():
 
     args = parse_arguments()
 
-    run_jnml(args)
+    evaluate_arguments(args)
     
 def print_comment(text, print_it=verbose):
     
