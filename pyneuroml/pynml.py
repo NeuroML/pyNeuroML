@@ -39,7 +39,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def run_lems_with_jneuroml(lems_file_name, nogui=False):           
+def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False):           
     print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, True)
     
     post_args = ""
@@ -47,6 +47,32 @@ def run_lems_with_jneuroml(lems_file_name, nogui=False):
     post_args += gui
     
     run_jneuroml("", lems_file_name, post_args)
+    
+    if load_saved_data:
+        
+        # Could use pylems to parse this...
+        
+        results = {}
+        
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(lems_file_name)
+        sim = tree.getroot().find('Simulation')
+        for of in sim.findall('OutputFile'):
+            results[of.attrib['id']] = {}
+            results[of.attrib['id']]['t'] = []
+            file_name = of.attrib['fileName']
+            print_comment("Loading saved data from %s"%file_name, True)
+        
+            for col in of.findall('OutputColumn'):
+                results[of.attrib['id']][col.attrib['id']] = []
+            for line in open(file_name):
+                values = line.split()
+                for vi in range(len(values)):
+                   results[of.attrib['id']].values()[vi].append(values[vi])
+            
+        return results
+                
+            
 
 
 def evaluate_arguments(args):
