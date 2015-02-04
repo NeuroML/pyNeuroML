@@ -8,17 +8,20 @@ setup(
     version=version,
     author='Padraig Gleeson',
     author_email='p.gleeson@gmail.com',
-    packages = ['pyneuroml'],
+    packages = ['pyneuroml', 'pyneuroml.analysis'],
     entry_points={
-        'console_scripts': ['pynml = pyneuroml.pynml:main']},
+        'console_scripts': ['pynml                 = pyneuroml.pynml:main',
+                            'pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main']},
     package_data={
         'pyneuroml': [
-            'lib/jNeuroML-0.7.0-jar-with-dependencies.jar']},
+            'lib/jNeuroML-0.7.0-jar-with-dependencies.jar',
+            'analysis/LEMS_Test_TEMPLATE.xml']},
     url='https://github.com/pgleeson/pyNeuroML',
     license='LICENSE.lesser',
     description='Python utilities for NeuroML',
     long_description=open('README.md').read(),
     install_requires=[
+        'argparse',
         'lxml',
         'pylems',
         'airspeed'],

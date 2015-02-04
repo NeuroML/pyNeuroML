@@ -1,0 +1,153 @@
+<Lems>
+
+    <!-- Specify which component to run -->
+    <Target component="sim1"/>
+
+    <!-- Include core NeuroML2 ComponentType definitions -->
+    <Include file="Cells.xml"/>
+    <Include file="Networks.xml"/>
+    <Include file="Simulation.xml"/>
+
+    <Include file="${channel_file}"/>
+    
+    <!-- These may eventually be moved to core NeuroML definition files -->
+    
+    <ComponentType name="vClampedCell" extends="baseCellMembPot" description="A 'cell' which can be clamped to a specific voltage for a certain duration to examine ion channel behaviour."> 
+
+        <Parameter name="delay" dimension="time"/>
+        <Parameter name="duration" dimension="time"/>
+        <Parameter name="baseVoltage" dimension="voltage"/>
+        <Parameter name="targetVoltage" dimension="voltage"/>
+        
+        <Parameter name="caConc" dimension="concentration"/>
+
+        <Children name="channelPopulation" type="channelPopulation"/>
+
+        <Dynamics>
+
+            <StateVariable name="v" exposure="v" dimension="voltage"/>
+
+            <OnStart>
+                <StateAssignment variable="v" value="baseVoltage"/>
+            </OnStart>
+
+            <OnCondition test="t .geq. delay .and. t .lt. duration+delay">
+                <StateAssignment variable="v" value="targetVoltage"/>
+            </OnCondition>
+
+            <OnCondition test="t .gt. duration+delay">
+                <StateAssignment variable="v" value="baseVoltage"/>
+            </OnCondition>
+
+        </Dynamics>
+
+    </ComponentType>
+    
+    <ComponentType name="vClampedRampCell" extends="baseCellMembPot" description="A 'cell' which can be clamped to a steadily changing voltage for a certain duration to examine ion channel behaviour."> 
+
+        <Parameter name="delay" dimension="time"/>
+        <Parameter name="duration" dimension="time"/>
+        <Parameter name="baseVoltage" dimension="voltage"/>
+        <Parameter name="targetVoltage0" dimension="voltage"/>
+        <Parameter name="targetVoltage1" dimension="voltage"/>
+        
+        <Parameter name="caConc" dimension="concentration"/>
+        
+        <Child name="channelPopulation" type="channelPopulation"/>
+
+        <Dynamics>
+
+            <StateVariable name="v" exposure="v" dimension="voltage"/>
+            
+            <OnStart>
+                <StateAssignment variable="v" value="baseVoltage"/>
+            </OnStart>
+
+            <OnCondition test="t .geq. delay .and. t .lt. duration+delay">
+                <StateAssignment variable="v" value="targetVoltage0 + (targetVoltage1-targetVoltage0)*(t-delay)/(duration)"/>
+            </OnCondition>
+
+            <OnCondition test="t .gt. duration+delay">
+                <StateAssignment variable="v" value="baseVoltage"/>
+            </OnCondition>
+
+        </Dynamics>
+
+    </ComponentType>
+    
+
+#foreach ($tv in $target_voltages)##
+    <vClampedCell id="holderCell_${tv.v_str}" delay="${clamp_delay}ms" duration="${clamp_duration}ms" baseVoltage="${clamp_base_voltage}mV" targetVoltage="${tv.v}mV" caConc="${ca_conc}mM">
+        <channelPopulation id="test" ionChannel="${channel}" number="1" erev="${erev}mV"/>
+    </vClampedCell>
+#end##    
+    
+    <vClampedRampCell id="rampCell0" delay="0ms" duration="${duration}ms" baseVoltage="${min_target_voltage}mV" targetVoltage0="${min_target_voltage}mV" targetVoltage1="${max_target_voltage}mV" caConc="${ca_conc}mM">
+        <channelPopulation id="test" ionChannel="${channel}" number="1" erev="${erev}mV"/>
+    </vClampedRampCell>
+
+    
+    <network id="net1" type="networkWithTemperature" temperature = "${temperature} degC">
+        
+#foreach ($tv in $target_voltages)##
+        <population id="holderCellPop_${tv.v_str}" component="holderCell_${tv.v_str}" size="1"/>
+#end##    
+        
+        <population id="rampCellPop0" component="rampCell0" size="1"/>
+    </network>
+
+#set( $start = -0.1 * $duration )
+#set( $end = 1.1 * $duration )
+#set( $startv = $min_target_voltage - (0.1 * ($max_target_voltage-$min_target_voltage)) )
+#set( $endv =   $max_target_voltage + (0.1 * ($max_target_voltage-$min_target_voltage)) )
+#set( $dt = 0.00025 * $duration )
+
+    <Simulation id="sim1" length="${duration}ms" step="${dt}ms" target="net1">
+        
+        <Display id="d0" title="${channel}: Clamp voltages (mV)"  timeScale="1ms" xmin="$start" xmax="$end" ymin="$startv" ymax="$endv">
+#foreach ($tv in $target_voltages)##
+            <Line id="${tv.v}mV" quantity="holderCellPop_${tv.v_str}[0]/v" scale="1mV"  color="${tv.col}" timeScale="1ms"/>
+#end## 
+        </Display>
+
+        <Display id="d1" title="${channel}: Fractional conductance at ${temperature} degC"  timeScale="1ms" xmin="$start" xmax="$end" ymin="-0.1" ymax="1.1">
+#foreach ($tv in $target_voltages)##
+            <Line id="${tv.v}mV" quantity="holderCellPop_${tv.v_str}[0]/test/${channel}/fopen" scale="1"  color="${tv.col}" timeScale="1ms"/>
+#end## 
+        </Display>
+        
+        <Display id="d7" title="${channel}: Currents (nA) at different clamped potentials; ${temperature} degC; rev potential: ${erev} mV"  timeScale="1ms" xmin="$start" xmax="$end" ymin="-0.002" ymax="0.0014">
+#foreach ($tv in $target_voltages)##
+            <Line id="${tv.v}mV" quantity="holderCellPop_${tv.v_str}[0]/test/i" scale="1nA"  color="${tv.col}" timeScale="1ms"/>
+#end## 
+        </Display>
+
+#foreach ($g in $gates)##
+        <Display id="${g}_inf" title="${channel}: Gate ${g} steady state, ${g}_inf"  timeScale="1ms" xmin="$start" xmax="$end" ymin="-0.1" ymax="1.1">
+            <Line id="${g}_inf (x axis: ${min_target_voltage}mV to ${max_target_voltage}mV)" quantity="rampCellPop0[0]/test/${channel}/${g}/inf" scale="1"  color="#000000" timeScale="1ms"/>
+        </Display>
+        
+        <Display id="${g}_tau" title="${channel}: Gate ${g} time course, ${g}_tau (ms) at ${temperature} degC"  timeScale="1ms" xmin="$start" xmax="$end" ymin="-10" ymax="110">
+            <Line id="${g}_tau (x axis: ${min_target_voltage}mV to ${max_target_voltage}mV)" quantity="rampCellPop0[0]/test/${channel}/${g}/tau" scale="1ms"  color="#000000" timeScale="1ms"/>
+        </Display>
+#end## 
+
+#foreach ($g in $gates)##
+        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g}.inf.lems.dat">
+            <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/inf"/> 
+        </OutputFile>
+        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g}.tau.lems.dat">
+            <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/tau"/> 
+        </OutputFile>
+#end## 
+
+        <OutputFile id="rampCellV" fileName="${channel}.rampV.lems.dat">
+            <OutputColumn id="v" quantity="rampCellPop0[0]/v"/> 
+        </OutputFile>
+
+
+
+    </Simulation>
+
+
+</Lems>
