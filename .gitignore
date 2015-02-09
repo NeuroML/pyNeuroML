@@ -1,6 +1,5 @@
 test_models
 
-results
 *.pyc
 pyNeuroML.egg-info
 build
@@ -17,3 +16,4 @@ x86_64
 i386
 time.dat
 
+examples/results/*.dat
