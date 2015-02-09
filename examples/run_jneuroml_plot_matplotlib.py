@@ -1,16 +1,43 @@
+import sys
+
 from pyneuroml import pynml
 
-from matplotlib import pyplot as plt
 
-example_lems_file = 'LEMS_NML2_Ex1_HH.xml'
+####################################################################
+#   Choose a LEMS/NeuroML2 file and run it with jNeuroML
 
-results = pynml.run_lems_with_jneuroml(example_lems_file, nogui=True, load_saved_data=True)
+example_lems_file = 'LEMS_NML2_Ex5_DetCell.xml'
 
-for file_contents in results.keys():
+results1 = pynml.run_lems_with_jneuroml(example_lems_file, nogui=True, load_saved_data=True)
 
-    plt.xlabel('Time (ms)')
-    plt.ylabel('Membrane potential (mV)')
-    plt.grid('on')
 
-    plt.plot(results[file_contents]['t'],results[file_contents]['v'])
+
+####################################################################
+#   Convert LEMS/NeuroML2 file to NEURON with jNeuroML & run
+
+
+if not '-noneuron' in sys.argv:  # To allow skipping of this for ease of testing
+
+    results2 = pynml.run_lems_with_jneuroml_neuron(example_lems_file, nogui=True, load_saved_data=True)
+
+
+
+####################################################################
+#   Reload & plot results
+
+if not '-nogui' in sys.argv:
+    
+    from matplotlib import pyplot as plt
+
+    for key in results1.keys():
+
+        plt.xlabel('Time (ms)')
+        plt.ylabel('...')
+        plt.grid('on')
+
+        if key != 't':
+            plt.plot(results1['t'],results1[key], label="jNeuroML: "+key)
+            plt.plot(results2['t'],results2[key], label="jNeuroML_NEURON: "+key)
+
+
     plt.show()

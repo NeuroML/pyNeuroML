@@ -6,3 +6,14 @@ pyNeuroML.egg-info
 build
 dist
 /pynml/*.dat
+
+*.o
+*.dll
+*.log
+*.mod
+*.hoc
+*nrn.py
+x86_64
+i386
+time.dat
+

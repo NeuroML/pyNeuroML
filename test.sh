@@ -38,6 +38,14 @@ cd ../examples
 pynml -validate NML2_SynapseTypes.nml
 
 
+################################################
+##   Try running one of the examples
+
+cd ../../../examples
+
+python run_jneuroml_plot_matplotlib.py -nogui -noneuron
+
+
 
 
 

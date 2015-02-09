@@ -49,53 +49,60 @@ def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False):
     run_jneuroml("", lems_file_name, post_args)
     
     if load_saved_data:
-        
-        # Could use pylems to parse this...
-        
-        results = {}
-        
-        import xml.etree.ElementTree as ET
-        tree = ET.parse(lems_file_name)
-        sim = tree.getroot().find('Simulation')
-        for of in sim.findall('OutputFile'):
-            results[of.attrib['id']] = {}
-            results[of.attrib['id']]['t'] = []
-            file_name = of.attrib['fileName']
-            print_comment("Loading saved data from %s"%file_name, True)
-        
-            for col in of.findall('OutputColumn'):
-                results[of.attrib['id']][col.attrib['id']] = []
-            for line in open(file_name):
-                values = line.split()
-                for vi in range(len(values)):
-                   results[of.attrib['id']].values()[vi].append(values[vi])
+        return reload_saved_data(lems_file_name)
+
+
+def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=False):           
+    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, True)
+    
+    post_args = " -neuron -run"
+    gui = " -nogui" if nogui else ""
+    post_args += gui
+    
+    run_jneuroml("", lems_file_name, post_args)
+    
+    if load_saved_data:
+        return reload_saved_data(lems_file_name)
+    
+    
+def reload_saved_data(lems_file_name): 
+    
+    # Could use pylems to parse this...
+
+    results = {}
+
+    import xml.etree.ElementTree as ET
+    tree = ET.parse(lems_file_name)
+    sim = tree.getroot().find('Simulation')
+    
+    for of in sim.findall('OutputFile'):
+        results['t'] = []
+        file_name = of.attrib['fileName']
+        print_comment("Loading saved data from %s"%file_name, True)
+
+        cols = []
+        cols.append('t')
+        for col in of.findall('OutputColumn'):
+            results[col.attrib['quantity']] = []
+            cols.append(col.attrib['quantity'])
             
-        return results
+        for line in open(file_name):
+            values = line.split()
+            
+            for vi in range(len(values)):
+               results[cols[vi]].append(values[vi])
+
+    return results
                 
             
-
 
 def evaluate_arguments(args):
     
     global verbose 
     verbose = args.verbose
 
-    ##if args.outputdir:
-    ##    initialize_outputdir(args.outputdir[0], args.xml_filename)
-    ##    exec_dir = args.outputdir[0]
-    ##else:
-        
     pre_args = ""
     post_args = ""
-
-    '''
-    if not args.sim:
-        simulator_option = ''
-    elif args.sim == 'jlems':
-        simulator_option = ''
-    else:
-        simulator_option = '-%s' % args.sim
-    '''
         
     gui = " -nogui" if args.nogui==True else ""
     post_args += gui
@@ -119,19 +126,16 @@ def run_jneuroml(pre_args, target_file, post_args):
                                         (jar, pre_args, target_file, post_args), exec_dir)
                                             
     print_comment(output, True)
-                              
 
-def main():
-    """Main"""
-
-    args = parse_arguments()
-
-    evaluate_arguments(args)
+    
     
 def print_comment(text, print_it=verbose):
     
+    prefix = "pyNeuroML >>> "
     if print_it:
-        print("pyNeuroML >>> %s"%(text))
+        
+        print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
+
 
 
 def execute_command_in_dir(command, directory):
@@ -148,6 +152,15 @@ def execute_command_in_dir(command, directory):
                                      
     return return_string
 
+                              
 
+def main():
+    """Main"""
+
+    args = parse_arguments()
+
+    evaluate_arguments(args)
+    
+    
 if __name__ == "__main__":
     main()
