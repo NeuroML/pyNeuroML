@@ -93,26 +93,29 @@ def reload_saved_data(lems_file_name, plot=False):
     if plot:
         from matplotlib import pyplot as plt
 
-    import xml.etree.ElementTree as ET
-    tree = ET.parse(lems_file_name)
+    from lxml import etree
+    tree = etree.parse(lems_file_name)
     sim = tree.getroot().find('Simulation')
+    ns_prefix = ''
     
+    possible_prefixes = ['{http://www.neuroml.org/lems/0.7.2}']
     if sim is None:
         #print tree.getroot().nsmap
         #print tree.getroot().getchildren()
-        for comp in tree.getroot().findall('Component'):
-            print(comp)
-            if comp.attrib['type'] == 'Simulation':
-                sim = comp
+        for pre in possible_prefixes:
+            for comp in tree.getroot().findall(pre+'Component'):
+                if comp.attrib['type'] == 'Simulation':
+                    ns_prefix = pre
+                    sim = comp
     
-    for of in sim.findall('OutputFile'):
+    for of in sim.findall(ns_prefix+'OutputFile'):
         results['t'] = []
         file_name = of.attrib['fileName']
         print_comment("Loading saved data from %s"%file_name, True)
 
         cols = []
         cols.append('t')
-        for col in of.findall('OutputColumn'):
+        for col in of.findall(ns_prefix+'OutputColumn'):
             results[col.attrib['quantity']] = []
             cols.append(col.attrib['quantity'])
             
