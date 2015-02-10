@@ -165,7 +165,7 @@ def main():
     
     ## Get name of channel mechanism to test
 
-    if verbose: print "Going to test channel from file: "+ args.channelFile
+    if verbose: print("Going to test channel from file: "+ args.channelFile)
     
     step_target_voltage = args.stepTargetVoltage
     clamp_delay = args.clampDelay 

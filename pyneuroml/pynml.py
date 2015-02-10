@@ -10,6 +10,10 @@ import subprocess
 
 from . import __version__
 
+import neuroml.loaders as loaders
+import neuroml.writers as writers
+from neuroml.utils import validate_neuroml2
+
 verbose = False
 
 def parse_arguments():
@@ -39,7 +43,22 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False):           
+
+def read_neuroml2_file(nml2_file_name):
+    
+    return loaders.NeuroMLLoader.load(nml2_file_name)
+
+
+
+def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True):
+    
+    writers.NeuroMLWriter.write(nml2_doc,nml2_file_name)
+    
+    if validate:
+        validate_neuroml2(nml2_file_name)
+
+
+def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False, plot=False):           
     print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, True)
     
     post_args = ""
@@ -49,10 +68,10 @@ def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False):
     run_jneuroml("", lems_file_name, post_args)
     
     if load_saved_data:
-        return reload_saved_data(lems_file_name)
+        return reload_saved_data(lems_file_name, plot)
 
 
-def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=False):           
+def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=False, plot=False):           
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, True)
     
     post_args = " -neuron -run"
@@ -62,18 +81,29 @@ def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=F
     run_jneuroml("", lems_file_name, post_args)
     
     if load_saved_data:
-        return reload_saved_data(lems_file_name)
+        return reload_saved_data(lems_file_name, plot)
     
     
-def reload_saved_data(lems_file_name): 
+def reload_saved_data(lems_file_name, plot=False): 
     
     # Could use pylems to parse this...
 
     results = {}
+    
+    if plot:
+        from matplotlib import pyplot as plt
 
     import xml.etree.ElementTree as ET
     tree = ET.parse(lems_file_name)
     sim = tree.getroot().find('Simulation')
+    
+    if sim is None:
+        #print tree.getroot().nsmap
+        #print tree.getroot().getchildren()
+        for comp in tree.getroot().findall('Component'):
+            print(comp)
+            if comp.attrib['type'] == 'Simulation':
+                sim = comp
     
     for of in sim.findall('OutputFile'):
         results['t'] = []
@@ -91,6 +121,21 @@ def reload_saved_data(lems_file_name):
             
             for vi in range(len(values)):
                results[cols[vi]].append(values[vi])
+               
+
+        if plot:
+            for key in results.keys():
+
+                plt.xlabel('Time (ms)')
+                plt.ylabel('(SI units...)')
+                plt.grid('on')
+
+                if key != 't':
+                    plt.plot(results['t'], results[key])
+                    
+        
+    if plot:
+        plt.show()
 
     return results
                 
@@ -132,6 +177,7 @@ def run_jneuroml(pre_args, target_file, post_args):
 def print_comment(text, print_it=verbose):
     
     prefix = "pyNeuroML >>> "
+    if not isinstance(text, str): text = text.decode('ascii')
     if print_it:
         
         print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
