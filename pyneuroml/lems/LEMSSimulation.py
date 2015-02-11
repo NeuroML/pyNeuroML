@@ -5,7 +5,6 @@ Helper class for generating LEMS xml files for simulations
     
 import airspeed
 import os.path
-import sys
 
 class LEMSSimulation():
     
@@ -14,14 +13,18 @@ class LEMSSimulation():
     lems_info = {}
     
     
-    def __init__(self, sim_id, duration, dt):
+    def __init__(self, sim_id, duration, dt, target=None):
         self.lems_info['sim_id'] = sim_id
         self.lems_info['duration'] = duration
         self.lems_info['dt'] = dt
         self.lems_info['include_files'] = []
         self.lems_info['displays'] = []
         self.lems_info['output_files'] = []
+        if target:
+            self.lems_info['target'] = target
         
+    def assign_simulation_target(self, target):
+        self.lems_info['target'] = target
         
     def include_neuroml2_file(self, nml2_file_name):
         self.lems_info['include_files'].append(nml2_file_name)
@@ -96,7 +99,7 @@ class LEMSSimulation():
 if __name__ == '__main__':
     
     sim_id = 'mysim'
-    ls = LEMSSimulation(sim_id, 500, 0.05)
+    ls = LEMSSimulation(sim_id, 500, 0.05, 'net1')
     ls.include_neuroml2_file('../../examples/NML2_SingleCompHHCell.nml')
     
     disp0 = 'display0'

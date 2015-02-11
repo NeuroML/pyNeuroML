@@ -1,3 +1,6 @@
+/examples/LEMS_iv_hhcell.xml
+/examples/iv_hhcell.net.nml
+/examples/iv_hhcell.v.dat
 /pyneuroml/lems/mysim.v.dat
 /pyneuroml/lems/LEMS_mysim.xml
 test_models

@@ -14,6 +14,8 @@ import neuroml.loaders as loaders
 import neuroml.writers as writers
 from neuroml.utils import validate_neuroml2
 
+import random
+
 verbose = False
 
 def parse_arguments():
@@ -143,6 +145,9 @@ def reload_saved_data(lems_file_name, plot=False):
     return results
                 
             
+def get_next_hex_color():
+    
+    return "#%06x" % random.randint(0,0xFFFFFF)
 
 def evaluate_arguments(args):
     

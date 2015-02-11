@@ -14,7 +14,7 @@
    
 #set( $start = -0.1 * $duration )
 #set( $end = 1.1 * $duration )
-    <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="net1">
+    <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="${target}">
         
 #foreach ($display in $displays)##
         <Display id="${display.id}" title="${display.title}" timeScale="${display.time_scale}" xmin="$start" xmax="$end" ymin="${display.ymin}" ymax="${display.ymax}">
