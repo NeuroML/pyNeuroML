@@ -1,0 +1,38 @@
+<Lems>
+
+    <!-- Specify which component to run -->
+    <Target component="${sim_id}"/>
+
+    <!-- Include core NeuroML2 ComponentType definitions -->
+    <Include file="Cells.xml"/>
+    <Include file="Networks.xml"/>
+    <Include file="Simulation.xml"/>
+    
+#foreach ($include_file in $include_files)##
+    <Include file="${include_file}"/>
+#end##     
+   
+#set( $start = -0.1 * $duration )
+#set( $end = 1.1 * $duration )
+    <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="net1">
+        
+#foreach ($display in $displays)##
+        <Display id="${display.id}" title="${display.title}" timeScale="${display.timeScale}" xmin="$start" xmax="$end" ymin="${display.ymin}" ymax="${display.ymax}">
+#foreach ($line in $display.lines)##
+            <Line id="${line.id}" quantity="${line.quantity}" scale="${line.scale}" color="${line.color}" timeScale="${line.timeScale}"/>
+#end## 
+        </Display>
+#end## 
+
+#foreach ($g in $gates)##
+        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g}.inf.lems.dat">
+            <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/inf"/> 
+        </OutputFile>
+        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g}.tau.lems.dat">
+            <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/tau"/> 
+        </OutputFile>
+#end## 
+    </Simulation>
+
+
+</Lems>
