@@ -25,7 +25,10 @@ setup(
         'argparse',
         'lxml',
         'pylems',
-        'airspeed'],
+        'airspeed>=0.4.1'],
+    dependency_links=[
+      'git+https://github.com/purcell/airspeed.git#egg=airspeed-0.4.2dev'
+    ],
     classifiers = [
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: LGPL',
