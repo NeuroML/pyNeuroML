@@ -94,6 +94,8 @@ class LEMSSimulation():
         lems_file.close()
         print("Written LEMS Simulation %s to file: %s"%(self.lems_info['sim_id'], file_name))
         
+        return file_name
+        
         
 
 if __name__ == '__main__':

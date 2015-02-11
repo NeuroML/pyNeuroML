@@ -1,6 +1,7 @@
 from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
+import sys
 
 
 def generate_current_vs_frequency_curve(nml2_file, 
@@ -10,7 +11,8 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         step_nA, 
                                         analysis_duration, 
                                         analysis_delay, 
-                                        dt = 0.05):
+                                        dt = 0.05,
+                                        plot_voltage_traces=False):
     
     sim_id = 'iv_%s'%cell_id
     duration = analysis_duration+analysis_delay
@@ -75,7 +77,21 @@ def generate_current_vs_frequency_curve(nml2_file,
     
         ls.add_column_to_output_file(of0, ref, quantity)
     
-    ls.save_to_file()
+    lems_file_name = ls.save_to_file()
+    
+    results = pynml.run_lems_with_jneuroml(lems_file_name, 
+                                            nogui=True, 
+                                            load_saved_data=True, 
+                                            plot=plot_voltage_traces)
     
     
-generate_current_vs_frequency_curve('NML2_SingleCompHHCell.nml', 'hhcell', 0.01, 0.1, 0.01, 500, 50)
+nogui = '-nogui' in sys.argv  # Used to supress GUI in tests for Travis-CI
+    
+generate_current_vs_frequency_curve('NML2_SingleCompHHCell.nml', 
+                                    'hhcell', 
+                                    0.01, 
+                                    0.1, 
+                                    0.01, 
+                                    500, 
+                                    50,
+                                    plot_voltage_traces=not nogui)

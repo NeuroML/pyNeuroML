@@ -39,11 +39,15 @@ pynml -validate NML2_SynapseTypes.nml
 
 
 ################################################
-##   Try running one of the examples
+##   Try running some of the examples
 
 cd ../../../examples
 
+#  Run an example with jNeuroML
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
+
+#  Generate a frequency vs current plot
+python generate_if_curve.py -nogui
 
 
 
