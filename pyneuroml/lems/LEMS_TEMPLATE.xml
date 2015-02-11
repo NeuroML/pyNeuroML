@@ -17,22 +17,21 @@
     <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="net1">
         
 #foreach ($display in $displays)##
-        <Display id="${display.id}" title="${display.title}" timeScale="${display.timeScale}" xmin="$start" xmax="$end" ymin="${display.ymin}" ymax="${display.ymax}">
+        <Display id="${display.id}" title="${display.title}" timeScale="${display.time_scale}" xmin="$start" xmax="$end" ymin="${display.ymin}" ymax="${display.ymax}">
 #foreach ($line in $display.lines)##
-            <Line id="${line.id}" quantity="${line.quantity}" scale="${line.scale}" color="${line.color}" timeScale="${line.timeScale}"/>
+            <Line id="${line.id}" quantity="${line.quantity}" scale="${line.scale}" color="${line.color}" timeScale="${line.time_scale}"/>
 #end## 
         </Display>
 #end## 
 
-#foreach ($g in $gates)##
-        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g}.inf.lems.dat">
-            <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/inf"/> 
-        </OutputFile>
-        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g}.tau.lems.dat">
-            <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/tau"/> 
+#foreach ($output_file in $output_files)##
+        <OutputFile id="${output_file.id}" fileName="${output_file.file_name}">
+#foreach ($column in $output_file.columns)##
+            <OutputColumn id="${column.id}" quantity="${column.quantity}"/> 
+#end## 
         </OutputFile>
 #end## 
-    </Simulation>
 
+    </Simulation>
 
 </Lems>

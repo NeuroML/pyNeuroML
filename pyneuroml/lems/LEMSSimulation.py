@@ -20,6 +20,7 @@ class LEMSSimulation():
         self.lems_info['dt'] = dt
         self.lems_info['include_files'] = []
         self.lems_info['displays'] = []
+        self.lems_info['output_files'] = []
         
         
     def include_neuroml2_file(self, nml2_file_name):
@@ -33,8 +34,17 @@ class LEMSSimulation():
         disp['title'] = title
         disp['ymin'] = ymin
         disp['ymax'] = ymax
-        disp['timeScale'] = timeScale
+        disp['time_scale'] = timeScale
         disp['lines'] = []
+        
+        
+    def create_output_file(self, id, file_name):
+        of = {}
+        self.lems_info['output_files'].append(of)
+        of['id'] = id
+        of['file_name'] = file_name
+        of['columns'] = []
+        
         
     def add_line_to_display(self, display_id, line_id, quantity, scale, color, timeScale="1ms"):
         disp = None
@@ -48,7 +58,19 @@ class LEMSSimulation():
         line['quantity'] = quantity
         line['scale'] = scale
         line['color'] = color
-        line['timeScale'] = timeScale
+        line['time_scale'] = timeScale
+        
+        
+    def add_column_to_output_file(self, output_file_id, column_id, quantity):
+        of = None
+        for o in self.lems_info['output_files']:
+            if o['id'] == output_file_id:
+                of = o
+                
+        column = {}
+        of['columns'].append(column)
+        column['id'] = column_id
+        column['quantity'] = quantity
         
     
     def to_xml(self):
@@ -73,14 +95,18 @@ class LEMSSimulation():
 
 if __name__ == '__main__':
     
-    
-    ls = LEMSSimulation('mysim', 500, 0.05)
+    sim_id = 'mysim'
+    ls = LEMSSimulation(sim_id, 500, 0.05)
     ls.include_neuroml2_file('../../examples/NML2_SingleCompHHCell.nml')
     
     disp0 = 'display0'
     ls.create_display(disp0,"Voltages", "-90", "50")
     
     ls.add_line_to_display(disp0, "v", "hhpop[0]/v", "1mV", "#ffffff")
+    
+    of0 = 'Volts_file'
+    ls.create_output_file(of0, "%s.v.dat"%sim_id)
+    ls.add_column_to_output_file(of0, 'v', "hhpop[0]/v")
     
     print(ls.lems_info)
     print(ls.to_xml())
