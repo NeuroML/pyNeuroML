@@ -10,6 +10,7 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         analysis_duration, 
                                         analysis_delay, 
                                         dt = 0.05,
+                                        temperature = "32degC",
                                         plot_voltage_traces=False):
     
     sim_id = 'iv_%s'%cell_id
@@ -33,7 +34,7 @@ def generate_current_vs_frequency_curve(nml2_file,
 
     # create network and add populations
     net_id = "network_of_%s"%cell_id
-    net = nml.Network(id=net_id)
+    net = nml.Network(id=net_id, type="networkWithTemperature", temperature=temperature)
     ls.assign_simulation_target(net_id)
     net_doc = nml.NeuroMLDocument(id=net.id)
     net_doc.networks.append(net)

@@ -25,9 +25,11 @@ setup(
         'argparse',
         'lxml',
         'pylems',
-        'airspeed>=0.4.1'],
+        'airspeed>=0.4.1',
+        'libNeuroML>=0.2.5'],
     dependency_links=[
-      'git+https://github.com/purcell/airspeed.git#egg=airspeed-0.4.2dev'
+      'git+https://github.com/purcell/airspeed.git#egg=airspeed-0.4.2dev',
+      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML-0.2.5'
     ],
     classifiers = [
         'Intended Audience :: Science/Research',

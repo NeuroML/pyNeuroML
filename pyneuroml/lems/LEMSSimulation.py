@@ -6,6 +6,8 @@ Helper class for generating LEMS xml files for simulations
 import airspeed
 import os.path
 
+from pyneuroml.pynml import read_neuroml2_file
+
 class LEMSSimulation():
     
     TEMPLATE_FILE = "%s/LEMS_TEMPLATE.xml"%(os.path.dirname(__file__))
@@ -26,8 +28,12 @@ class LEMSSimulation():
     def assign_simulation_target(self, target):
         self.lems_info['target'] = target
         
-    def include_neuroml2_file(self, nml2_file_name):
+    def include_neuroml2_file(self, nml2_file_name, include_included=True):
         self.lems_info['include_files'].append(nml2_file_name)
+        if include_included:
+            cell = read_neuroml2_file(nml2_file_name)
+            for include in cell.includes:
+                self.lems_info['include_files'].append(include.href)
         
         
     def create_display(self, id, title, ymin, ymax, timeScale="1ms"):
