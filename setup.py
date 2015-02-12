@@ -24,6 +24,8 @@ setup(
     install_requires=[
         'argparse',
         'lxml',
+        'numpy',
+        'scipy',
         'pylems',
         'airspeed>=0.4.1',
         'libNeuroML>=0.2.5'],
