@@ -2,6 +2,10 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
+from pyelectro.analysis import max_min
+from pyelectro.analysis import mean_spike_frequency
+import numpy as np
+
 def generate_current_vs_frequency_curve(nml2_file, 
                                         cell_id, 
                                         start_amp_nA, 
@@ -11,7 +15,9 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         analysis_delay, 
                                         dt = 0.05,
                                         temperature = "32degC",
-                                        plot_voltage_traces=False):
+                                        plot_voltage_traces=False,
+                                        plot_if=True,
+                                        simulator="jNeuroML"):
     
     sim_id = 'iv_%s'%cell_id
     duration = analysis_duration+analysis_delay
@@ -78,7 +84,35 @@ def generate_current_vs_frequency_curve(nml2_file,
     
     lems_file_name = ls.save_to_file()
     
-    results = pynml.run_lems_with_jneuroml(lems_file_name, 
-                                            nogui=True, 
-                                            load_saved_data=True, 
-                                            plot=plot_voltage_traces)
+    if simulator == "jNeuroML":
+        results = pynml.run_lems_with_jneuroml(lems_file_name, 
+                                                nogui=True, 
+                                                load_saved_data=True, 
+                                                plot=plot_voltage_traces)
+    elif simulator == "jNeuroML_NEURON":
+        results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, 
+                                                nogui=True, 
+                                                load_saved_data=True, 
+                                                plot=plot_voltage_traces)
+                                                
+    
+    #print(results.keys())
+    if_results = {}
+    for i in range(number_cells):
+        t = np.array(results['t'])*1000
+        v = np.array(results["%s[%i]/v"%(pop.id, i)])*1000
+        
+        spike_times = max_min(v, t, delta=0,peak_threshold=0)['maxima_times']
+        freq = mean_spike_frequency(spike_times) 
+        if_results[stims[i]] = freq
+        
+    if plot_if:
+        #print(if_results)
+        
+        from matplotlib import pyplot as plt
+        
+        plt.plot(if_results.keys(), if_results.values(), 'x')
+         
+        plt.show()
+        
+    return if_results

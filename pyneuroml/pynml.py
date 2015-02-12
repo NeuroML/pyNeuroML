@@ -125,7 +125,7 @@ def reload_saved_data(lems_file_name, plot=False):
             values = line.split()
             
             for vi in range(len(values)):
-               results[cols[vi]].append(values[vi])
+               results[cols[vi]].append(float(values[vi]))
                
 
         if plot:
