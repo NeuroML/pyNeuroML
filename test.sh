@@ -47,7 +47,7 @@ cd ../../../examples
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 
 #  Generate a frequency vs current plot
-python generate_if_curve.py -nogui
+##python generate_if_curve.py -nogui
 
 
 
