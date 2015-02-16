@@ -1,5 +1,9 @@
 <Lems>
-
+    
+#if ($comment)##
+    <!-- ${comment} -->
+    
+#end## 
     <!-- Specify which component to run -->
     <Target component="${sim_id}"/>
 
