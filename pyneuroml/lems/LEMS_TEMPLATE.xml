@@ -26,16 +26,16 @@
             <Line id="${line.id}" quantity="${line.quantity}" scale="${line.scale}" color="${line.color}" timeScale="${line.time_scale}"/>
 #end## 
         </Display>
+        
 #end## 
-
 #foreach ($output_file in $output_files)##
         <OutputFile id="${output_file.id}" fileName="${output_file.file_name}">
 #foreach ($column in $output_file.columns)##
             <OutputColumn id="${column.id}" quantity="${column.quantity}"/> 
 #end## 
         </OutputFile>
+        
 #end## 
-
     </Simulation>
 
 </Lems>

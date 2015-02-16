@@ -8,6 +8,7 @@ import os.path
 
 from pyneuroml import __version__
 from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.pynml import read_lems_file
 
 class LEMSSimulation():
     
@@ -29,8 +30,10 @@ class LEMSSimulation():
         if target:
             self.lems_info['target'] = target
         
+        
     def assign_simulation_target(self, target):
         self.lems_info['target'] = target
+        
         
     def include_neuroml2_file(self, nml2_file_name, include_included=True):
         self.lems_info['include_files'].append(nml2_file_name)
@@ -38,6 +41,14 @@ class LEMSSimulation():
             cell = read_neuroml2_file(nml2_file_name)
             for include in cell.includes:
                 self.lems_info['include_files'].append(include.href)
+        
+        
+    def include_lems_file(self, lems_file_name, include_included=True):
+        self.lems_info['include_files'].append(lems_file_name)
+        if include_included:
+            model = read_lems_file(lems_file_name)
+            for inc in model.included_files:
+                self.lems_info['include_files'].append(inc)
         
         
     def create_display(self, id, title, ymin, ymax, timeScale="1ms"):

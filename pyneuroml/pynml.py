@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-Python wrapper around jnml command
 
-Thanks to Werner van Geit for initiating this
+Python wrapper around jnml command. Also a number of helper functions for handling/gnerating/running LEMS/NeuroML2 files
+
+Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
+
 """
 
+from __future__ import absolute_import
 import os
 import subprocess
 
@@ -13,6 +16,8 @@ from . import __version__
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 from neuroml.utils import validate_neuroml2
+
+import lems.model.model as lems_model
 
 import random
 
@@ -58,6 +63,24 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True):
     
     if validate:
         validate_neuroml2(nml2_file_name)
+        
+        
+def read_lems_file(lems_file_name):
+    
+    model = lems_model.Model(include_includes=False)
+
+    model.import_from_file(lems_file_name)
+    
+    return model
+
+
+def write_lems_file(lems_model, lems_file_name, validate=True):
+    
+    lems_model.export_to_file(lems_file_name)
+    
+    if validate:
+        from lems.base.util import validate_lems
+        validate_lems(lems_file_name)
 
 
 def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False, plot=False):           
