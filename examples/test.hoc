@@ -1,0 +1,35 @@
+
+
+print "Testing export of NeuroML from NEURON"
+
+create Soma, mainDendSec
+
+Soma {pt3dclear()
+	pt3dadd(0, 0, 0, 10)
+	pt3dadd(0, 5, 0, 10)
+}
+mainDendSec {pt3dclear()
+    pt3dadd(0, 0, 0, 2)
+    pt3dadd(20, 0, 0, 2)
+    pt3dadd(40, 0, 0, 2)
+}
+define_shape()
+
+connect mainDendSec(0), Soma(0)
+
+objref all
+all = new SectionList()
+Soma all.append()
+mainDendSec all.append()
+
+Soma {
+    insert hh
+    gnabar_hh=0.33
+}
+mainDendSec insert hh
+
+forall insert pas
+
+forall psection()
+
+

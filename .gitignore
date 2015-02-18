@@ -1,3 +1,5 @@
+/examples/test.level2.xml
+/examples/test.level1.xml
 .idea
 
 /examples/LEMS_iv_hhcell.xml
@@ -8,6 +10,7 @@
 test_models
 
 *.pyc
+*.*~
 pyNeuroML.egg-info
 build
 dist
@@ -17,7 +20,6 @@ dist
 *.dll
 *.log
 *.mod
-*.hoc
 *nrn.py
 x86_64
 i386

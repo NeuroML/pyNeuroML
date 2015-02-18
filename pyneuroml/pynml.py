@@ -15,7 +15,6 @@ from . import __version__
 
 import neuroml.loaders as loaders
 import neuroml.writers as writers
-from neuroml.utils import validate_neuroml2
 
 import lems.model.model as lems_model
 
@@ -50,6 +49,22 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def validate_neuroml1(nml1_file_name):
+    
+    pre_args = "-validatev1"
+    post_args = ""
+        
+    run_jneuroml(pre_args, nml1_file_name, post_args)
+
+
+def validate_neuroml2(nml2_file_name):
+    
+    pre_args = "-validate"
+    post_args = ""
+        
+    run_jneuroml(pre_args, nml2_file_name, post_args)
+    
+
 
 def read_neuroml2_file(nml2_file_name):
     
@@ -63,6 +78,7 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True):
     
     if validate:
         validate_neuroml2(nml2_file_name)
+        
         
         
 def read_lems_file(lems_file_name):

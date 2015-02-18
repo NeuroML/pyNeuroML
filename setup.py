@@ -8,7 +8,7 @@ setup(
     version=version,
     author='Padraig Gleeson',
     author_email='p.gleeson@gmail.com',
-    packages = ['pyneuroml', 'pyneuroml.analysis', 'pyneuroml.lems'],
+    packages = ['pyneuroml', 'pyneuroml.analysis', 'pyneuroml.lems', 'pyneuroml.neuron'],
     entry_points={
         'console_scripts': ['pynml                 = pyneuroml.pynml:main',
                             'pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main']},
