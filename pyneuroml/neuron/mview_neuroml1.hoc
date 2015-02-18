@@ -1,50 +1,5 @@
-begintemplate ModelViewSegment
 
-public proximal, distal, id
-
-proc init() {
-      proximal = $2
-      distal = $3
-      id = $1
-}
-
-endtemplate ModelViewSegment
-
-
-
-begintemplate ModelViewSection
-
-public name, segmentList, getName, addSegment
-objref segmentList
-objref strobj
-strdef name
-
-proc init() {
-	segmentList = new List()
-	name = $s1
-}
-
-proc addSegment() {
-	segmentList.append($o1)
-}
-
-func getName() {
-	return name
-}
-
-func hashCode() {local hash, length, i
-	strobj = new StringFunctions()
-	length = strobj.len(name)
-	for i = 0, len - 1 {
-	}
-	return 0
-}
-
-endtemplate ModelViewSection
-
-
-
-begintemplate ModelViewXML
+begintemplate ModelViewNeuroML1
 
 public selected
 public selsub, selsec, disp, xportLevel1, xportLevel2
@@ -954,4 +909,4 @@ proc kstrans2() {local i
 	$o1.printf("            </parameterised_hh>\n")
 	$o1.printf("          </%s>\n", $s2)
 }
-endtemplate ModelViewXML
+endtemplate ModelViewNeuroML1

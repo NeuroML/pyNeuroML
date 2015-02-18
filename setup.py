@@ -17,7 +17,7 @@ setup(
             'lib/jNeuroML-0.7.0-jar-with-dependencies.jar',
             'analysis/LEMS_Test_TEMPLATE.xml',
             'lems/LEMS_TEMPLATE.xml',
-            'neuron/mviewxml.hoc',
+            'neuron/mview_neuroml1.hoc',
             'neuron/mview_neuroml2.hoc']},
     url='https://github.com/pgleeson/pyNeuroML',
     license='LICENSE.lesser',
