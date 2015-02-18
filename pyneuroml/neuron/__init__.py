@@ -53,9 +53,15 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
 
     h.load_file("mview.hoc")
 
-    mv = h.ModelView()
+    h('objref mv')
+    h('mv = new ModelView()')
+    
+    h.load_file("%s/mviewxml.hoc"%(os.path.dirname(__file__)))
+    
+    h('objref mvnml1')
+    h('mvnml1 = new ModelViewXML(mv)')
 
-    mv.xml.exportNeuroML(nml1_file_name, level)
+    h.mvnml1.exportNeuroML(nml1_file_name, level)
 
     if validate:
         

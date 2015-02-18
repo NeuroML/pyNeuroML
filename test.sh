@@ -43,11 +43,28 @@ pynml -validate NML2_SynapseTypes.nml
 
 cd ../../../examples
 
+run_neuron_examples=false
+
+if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
+    run_neuron_examples=true
+fi
+
 #  Run an example with jNeuroML
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 
 #  Generate a frequency vs current plot
 ##python generate_if_curve.py -nogui
+
+if [ "$run_neuron_examples" == true ]; then
+    
+    # Export NeuroML v1 from NEURON example
+    python export_neuroml1.py
+    
+    # Export NeuroML v2 from NEURON example
+    python export_neuroml2.py
+
+fi
+    
 
 
 
