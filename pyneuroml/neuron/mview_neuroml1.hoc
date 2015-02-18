@@ -1,3 +1,12 @@
+/*
+  This file is based on the original NeuroML v1.8.1 export class 
+  (http://www.neuron.yale.edu/hg/neuron/nrn/file/477da879a623/share/lib/hoc/mview/mviewxml.hoc)
+  as developed by Michael Hines and Padraig Gleeson.
+
+  While a version of this file will remain in the Neuron codebase, it has been copied here to allow 
+  easier updates as the NeuroML standard develops & to facilitate bugfixes
+
+*/
 
 begintemplate ModelViewNeuroML1
 

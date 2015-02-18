@@ -1,4 +1,12 @@
+/*
+  This file is based on the original NeuroML v1.8.1 export class 
+  (http://www.neuron.yale.edu/hg/neuron/nrn/file/477da879a623/share/lib/hoc/mview/mviewxml.hoc)
+  as developed by Michael Hines and Padraig Gleeson.
 
+  While a version of this file will remain in the Neuron codebase, it has been copied here to allow 
+  easier updates as the NeuroML standard develops & to facilitate bugfixes
+
+*/
 
 begintemplate ModelViewNeuroML2
 
@@ -42,7 +50,7 @@ proc selected() {
 
 
 
-// Takes args: fileName
+// Takes args: fileName, level (1 = no biophys; 2 = include biophys (channel densities etc.))
 proc exportNeuroML2() {local ok
     fileref = new File($s1)
     level = $2
@@ -95,9 +103,10 @@ proc assoc_cell_number() {local i, j, pointcount
 proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
 	strdef date
 
-	$o1.printf("<notes> NeuroML 2 file generated from ModelView by: %s\n", nrnversion())
-	$o1.printf("Authors: Michael Hines, Sushil Kambampati and Padraig Gleeson,\n")
-	$o1.printf("Yale University and UCL </notes>\n\n")
+	$o1.printf("  <notes> NeuroML 2 file generated from ModelView by: %s\n", nrnversion())
+	$o1.printf("          Authors: Michael Hines, Sushil Kambampati and Padraig Gleeson,\n")
+	$o1.printf("          Yale University and UCL \n")
+	$o1.printf("  </notes>\n\n")
 
 	proximalid = 0
 	pointcount = 0
@@ -186,6 +195,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                                 sprint(parentNameInfo, "  <!-- Parent section: %s -->", secname())
                                 parentsegid = segmentvec.x[cm(.00001)] + n3d() - 2
                                 if (parentsegid == oldidrootseg) {parentsegid = 0}
+
                                 $o1.printf(" parent=\"%d\"", parentsegid)
 
                             } else {
@@ -203,7 +213,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
                                 if (parentSeg == oldidrootseg) {parentSeg = 0}
 
-                                $o1.printf(" parent=\"%d\"", parentSeg)
+                                $o1.printf(">%s\n        <parent segment=\"%d\"/", parentNameInfo, parentSeg)
                             }
 
                         }
@@ -211,10 +221,10 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                 } else {
                     parentsegid = segmentcount - 1
                     if (parentsegid == oldidrootseg) {parentsegid = 0}
-                    $o1.printf(" parent=\"%d\"", parentsegid)
+                    $o1.printf(">%s\n        <parent segment=\"%d\"/", parentNameInfo, parentsegid)
                 }
 
-                $o1.printf(" cable = \"%d\">%s\n", sectioncount, parentNameInfo)
+                $o1.printf(">\n")
 
                 if (i == 1) {
                 $o1.printf("        <proximal x=\"%g\" y=\"%g\" z=\"%g\" diameter=\"%g\"/>\n", \
@@ -249,10 +259,12 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
     
             }
 
-			$o1.printf("      <segmentGroup id = \"%d\" name = \"%s\"",sectioncount, newSectionName)
+			$o1.printf("      <segmentGroup id = \"%s\"", newSectionName)
+
+            /*
             if (parent_connection() != 1) {
                 $o1.printf(" fract_along_parent = \"%g\"", parent_connection())
-            }
+            }*/
 
             if (nseg > 1) {
                 $o1.printf(">\n")
@@ -298,14 +310,18 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                     sprint(comment, "<!-- Replacing subset name %s with all, as it contains all sections -->", nameForGroupWithAll)
                 }
 
-                $o1.printf("      <cablegroup name=\"%s\"> %s\n", groupName, comment)
+                $o1.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
 
                 for j=0, tobj1.subset.size - 1 {
                     secref = cellref.secanal.all.object(tobj1.subset.x(j))
 
-                    $o1.printf("        <cable id = \"%d\"/>\n",secref.sec.cm(.00001))
+                    strdef currsecname
+                    secref.sec {currsecname = secname()}
+
+                    // TODO: put check on secname for [] etc!!
+                    $o1.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
                 }
-                $o1.printf("      </cablegroup>\n")
+                $o1.printf("      </segmentGroup>\n")
             }
         } else {
             $o1.printf("      <!-- No cable groups present -->\n")
@@ -355,9 +371,9 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
                             if (!singleSecGroupsCreated.contains(cableid)) {  //  so no repeats...
 
-                                $o1.printf("      <cablegroup name=\"%s\"> %s\n", groupName, comment)
-                                $o1.printf("        <cable id = \"%d\"/>\n", cableid)
-                                $o1.printf("      </cablegroup>\n")
+                                $o1.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
+                                $o1.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
+                                $o1.printf("      </segmentGroup>\n")
                             }
 
                             singleSecGroupsCreated.append(cableid)
