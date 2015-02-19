@@ -18,7 +18,6 @@ external nil, hoc_sf_
 objref tobj, tobj1, mview, secref, cellref, fileref
 objref dmech, dparm, dpelm, dmlist
 objref storecm, pointvec, segmentvec
-objref ksstate, ksgate, kstrans
 strdef tstr
 
 strdef nameForGroupWithAll
@@ -26,30 +25,16 @@ strdef singleSecGroupPrefix
 
 objref singleSecGroupsCreated
 
+
+// Initialise template & set some useful strings
 proc init() {local i
     mview = $o1
     nameForGroupWithAll = ""
     singleSecGroupPrefix = "OneSecGrp_"
 }
 
-proc unlink() {local i
-    if (dmlist != nil) for i=0, dmlist.count - 1 {
-        dmlist.object(i).unlink()
-    }
-    objref tobj, tobj1, mview
-    objref parmsubsets, parmsecs, parminhomos, dmech, dmlist
-}
 
-proc selected() {
-    if ($4 == -2) {
-    }else if ($4 == -1) {
-    }else if ($4 > -1) {
-    }
-    xport()
-}
-
-
-
+// Main export procedure
 // Takes args: fileName, level (1 = no biophys; 2 = include biophys (channel densities etc.))
 proc exportNeuroML2() {local ok
     fileref = new File($s1)
@@ -58,7 +43,7 @@ proc exportNeuroML2() {local ok
 
     ok = fileref.wopen()
     if (!ok) {
-        printf("could not open %s\n", fileref.getname)
+        printf("Could not open %s\n", fileref.getname)
         return
     }
     fileref.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
@@ -69,6 +54,7 @@ proc exportNeuroML2() {local ok
     fileref.close()
 }
 
+// Print the NeuroML2 header
 proc header() {
     $o1.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
     $o1.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
@@ -77,7 +63,7 @@ proc header() {
 }
 
 
-// store cell number in cm of first seg of root of cell (and restore original cm
+// store cell number in cm of first seg of root of cell (and restore original cm)
 proc assoc_cell_number() {local i, j, pointcount
     i = 0
     pointcount = 0
@@ -100,6 +86,25 @@ proc assoc_cell_number() {local i, j, pointcount
     }
 }
 
+/*
+obfunc convertSectionName() {
+
+    strdef newSectionName
+    newSectionName = $s1
+    hoc_sf_.right(newSectionName, hoc_sf_.substr(newSectionName, ".")+1)
+
+    if (hoc_sf_.substr(newSectionName,"[")>=0 && hoc_sf_.substr(newSectionName,"]")>=0) {
+        hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"]"))
+        strdef index 
+        index = newSectionName
+        hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"["))
+        hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
+        sprint(newSectionName, "%s_%s", newSectionName, index)
+    }
+    return newSectionName
+}*/
+
+// Write main body of XML file
 proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
     strdef date
 
@@ -132,6 +137,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
         strdef cellName
         cellName = cellref.name
+
         if (hoc_sf_.substr(cellName,"[")>=0 && hoc_sf_.substr(cellName,"]")>=0) {
             hoc_sf_.left(cellName, hoc_sf_.substr(cellName,"]"))
             strdef index 
@@ -139,13 +145,15 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
             hoc_sf_.left(cellName, hoc_sf_.substr(cellName,"["))
             hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
             sprint(cellName, "%s_%s", cellName, index)
-
         }
-
 
         $o1.printf("  <cell id=\"%s\">\n", cellName)
         $o1.printf("    <notes>Cell: %s exported from NEURON ModelView</notes>\n", cellName)
         $o1.printf("    <morphology id=\"morphology\">\n")
+
+
+        strdef segmentGroupsForSections 
+        segmentGroupsForSections=""
 
         forsec cellref.secanal.allseclist {
 
@@ -156,6 +164,10 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
             proximalid = pointvec.x[sectioncount]
             pointcount = pointvec.x[sectioncount]
             segmentcount = segmentvec.x[sectioncount]
+
+            sprint(segmentGroupsForSections, "%s<!-- Section: %s which has %d 3D points, so %d segment(s)-->\n\n", segmentGroupsForSections, secname(), n3d(), (n3d() - 1))
+
+            sprint(segmentGroupsForSections, "%s\n\n", segmentGroupsForSections, secname(), n3d(), (n3d() - 1))
 
             for i = 1, n3d() - 1 {
 
@@ -196,7 +208,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                                 parentsegid = segmentvec.x[cm(.00001)] + n3d() - 2
                                 if (parentsegid == oldidrootseg) {parentsegid = 0}
 
-                                $o1.printf(" parent=\"%d\"", parentsegid)
+                                $o1.printf(">\n        <parent segment=\"%d\"/", parentsegid)
 
                             } else {
                                 parentSeg = -1
@@ -239,14 +251,17 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
             }
         }
 
-        totalNumCables = 0
+        $o1.printf("%s", segmentGroupsForSections)
 
+        totalNumCables = 0
+        
         forsec cellref.secanal.allseclist {
             sectioncount = cm(.00001)
             tobj = new SectionRef()
 
             strdef newSectionName 
             newSectionName = secname()
+            ////convertSectionName(newSectionName)
             hoc_sf_.right(newSectionName, hoc_sf_.substr(newSectionName, ".")+1)
 
             if (hoc_sf_.substr(newSectionName,"[")>=0 && hoc_sf_.substr(newSectionName,"]")>=0) {
@@ -256,15 +271,14 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                 hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"["))
                 hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
                 sprint(newSectionName, "%s_%s", newSectionName, index)
-
             }
 
+            if (parent_connection() != 1) {
+                $o1.printf("\n<!-- Error! Cannot yet deal with connections of child sections not at zero (fract_along_parent = \"%g\")-->\n", parent_connection())
+            }
             $o1.printf("      <segmentGroup id = \"%s\"", newSectionName)
 
-            /*
-            if (parent_connection() != 1) {
-                $o1.printf(" fract_along_parent = \"%g\"", parent_connection())
-            }*/
+            
 
             if (nseg > 1) {
                 $o1.printf(">\n")
@@ -279,9 +293,9 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
             totalNumCables = totalNumCables + 1
         }
 
-    if (object_id(cellref.secanal.parmsubsets) == 0) {
-        cellref.secanal.analyse()
-    }
+        if (object_id(cellref.secanal.parmsubsets) == 0) {
+            cellref.secanal.analyse()
+        }
 
         if (cellref.secanal.parmsubsets.subsets.count >= 1) {
 
@@ -763,124 +777,11 @@ proc printvecvals() {local i
 proc ion_xmlwrite() {
     for mview.dparm.mechs(tobj) {
         if (hoc_sf_.head(tobj.name, "_ion", tstr) != -1) {
-$o1.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))
+            $o1.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))
         }
     }
-}
-proc kschan_xmlwrite() {local i, j
-    $o1.printf("  <channel_type name=\"%s\"", $o2.name)
-    if ($o2.is_point) {
-        $o1.printf(" density=\"no\"")
-    }else{
-        $o1.printf(" density=\"yes\"")
-    }
-    $o1.printf(">\n")
-
-    $o1.printf("    <current_voltage_relation>\n")
-    if ($o2.iv_type == 0) {
-        if (strcmp($o2.ion, "NonSpecific") == 0) {
-$o1.printf("      <ohmic NonSpecific=\"yes\" default_erev=\"%g\">\n", $o2.erev)
-        }else{
-$o1.printf("      <ohmic ion=\"%s\">\n", $o2.ion)
-        }
-        $o1.printf("        <conductance default_gmax=\"%g\">\n", $o2.gmax)
-        kschan_cond_xmlwrite($o1, $o2)
-        $o1.printf("        </conductance>\n")
-    }else{
-$o1.printf("      <Goldman_Hodgkin_Katz ion=\"%s\">\n", $o2.ion)
-        $o1.printf("        <permeability default_pmax=\"%g\">\n", $o2.gmax)
-        kschan_cond_xmlwrite($o1, $o2)
-        $o1.printf("        </permeability>\n")
-    }
-    if ($o2.iv_type == 0) {
-        $o1.printf("      </ohmic>\n")
-    }else{
-        $o1.printf("      </Goldman_Hodgkin_Katz>\n")
-    }
-
-    $o1.printf("    </current_voltage_relation>\n")
-    for i=0, $o2.ngate-1 {
-        ksgate = $o2.gate(i)
-        if (ksgate.nstate == 1) {
-            ksstate = $o2.state(ksgate.sindex)
-            $o1.printf("    <hh_gate state=\"%s\">\n", ksstate.name)
-            kstrans = $o2.trans(i)
-            kstrans1($o1, $o2, kstrans)
-            $o1.printf("    </hh_gate>\n")
-        }else{
-            $o1.printf("    <ks_gate>\n")
-            for j=0, ksgate.nstate-1 {
-                ksstate = $o2.state(ksgate.sindex + j)
-                $o1.printf("      <state name=\"%s\"/>\n", ksstate.name)
-            }
-            for j=0, $o2.ntrans-1 {
-                kstrans = $o2.trans(j)
-                if (kstrans.src.gate.index == i) {
-                    kstrans1($o1, $o2, kstrans)
-                }
-            }
-            $o1.printf("    </ks_gate>\n")
-        }
-    }
-    $o1.printf("  </channel_type>\n")
 }
 
-proc kschan_cond_xmlwrite() {local i, j
-    for i=0, $o2.ngate-1 {
-        ksgate = $o2.gate(i)
-        $o1.printf("        <gate power=\"%g\">\n", ksgate.power)
-        for j=0, ksgate.nstate-1 {
-            ksstate = $o2.state(ksgate.sindex + j)
-            if (ksstate.frac != 0) {
-$o1.printf("          <state name=\"%s\" fraction=\"%g\"/>\n", ksstate.name, ksstate.frac)
-            }
-        }
-        $o1.printf("        </gate>\n")
-    }
-}
-proc kstrans1() {
-    if ($o3.src == $o3.target) {
-        $o1.printf("      <transition>\n")
-    }else{
-        $o1.printf("      <transition src=\"%s\" target=\"%s\">\n", $o3.src.name, $o3.target.name)
-    }
-    if ($o3.type <= 1) {
-        $o1.printf("        <voltage_gate>\n")
-        if($o3.type == 0) {
-            kstrans2($o1, "alpha", $o3.ftype(0), $o3.parm(0))
-            kstrans2($o1, "beta", $o3.ftype(1), $o3.parm(1))
-        }else{
-            kstrans2($o1, "infinity", $o3.ftype(0), $o3.parm(0))
-            kstrans2($o1, "tau", $o3.ftype(1), $o3.parm(1))
-        }
-        $o1.printf("        </voltage_gate>\n")
-    }else if ($o3.type > 1) {
-        if ($o3.type == 2) { tstr = "no" } else { tstr = "yes" }
-        $o1.printf("        <ligand_gate ligand=\"%s\" inside=\"%s\">\n", $o3.ligand, tstr)
-        kstrans2($o1, "alpha", $o3.ftype(0), $o3.parm(0))
-        kstrans2($o1, "beta", $o3.ftype(1), $o3.parm(1))
-        $o1.printf("        </ligand_gate>\n")
-    }
-    $o1.printf("      </transition>\n")
-}
-proc kstrans2() {local i
-    $o1.printf("          <%s>\n", $s2)
-    $o1.printf("            <parameterised_hh")
-    if ($3 == 1) {
-        $o1.printf(" type=\"constant\" value=\"%g\"/>", $o4.x[0])
-        return
-    }else if ($3 == 2) {
-        $o1.printf(" type=\"exponential\" expr=\"A*exp(k*(v-d))\"")
-    }else if ($3 == 3) {
-        $o1.printf(" type=\"linoid\" expr=\"A*x/(1 - exp(-x)) where x = k*v-d)\"")
-    }else if ($3 == 4) {
-        $o1.printf(" type=\"sigmoid\" expr=\"A/(1 + exp(-k*(d-v))\"")
-    }
-    $o1.printf(">\n")
-    $o1.printf("              <parameter name=\"A\" value=\"%g\"/>\n", $o4.x[0])
-    $o1.printf("              <parameter name=\"k\" value=\"%g\"/>\n", $o4.x[1])
-    $o1.printf("              <parameter name=\"d\" value=\"%g\"/>\n", $o4.x[2])
-    $o1.printf("            </parameterised_hh>\n")
-    $o1.printf("          </%s>\n", $s2)
-}
+
+
 endtemplate ModelViewNeuroML2
