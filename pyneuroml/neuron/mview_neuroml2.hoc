@@ -54,6 +54,7 @@ proc exportNeuroML2() {local ok
     fileref.close()
 }
 
+
 // Print the NeuroML2 header
 proc header() {
     $o1.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
@@ -76,8 +77,8 @@ proc assoc_cell_number() {local i, j, pointcount
             segmentvec.x[i] = pointcount + 1 - i
             for j = 0, n3d() - 1 {
                 pointcount += 1
-//                $o2.printf("  <point id=\"%d\" x=\"%g\" y=\"%g\" z=\"%g\" diam=\"%g\"/>\n", pointcount, x3d(j), y3d(j), z3d(j), diam3d(j))
-//                $o2.printf("  <point id=\"%d\"><x=\"%g\"/><y=\"%g\"/><z=\"%g\"/><diam=\"%g\"/></point>\n", pointcount, x3d(j), y3d(j), z3d(j), diam3d(j))
+                //$o2.printf("  <point id=\"%d\" x=\"%g\" y=\"%g\" z=\"%g\" diam=\"%g\"/>\n", pointcount, x3d(j), y3d(j), z3d(j), diam3d(j))
+                //$o2.printf("  <point id=\"%d\"><x=\"%g\"/><y=\"%g\"/><z=\"%g\"/><diam=\"%g\"/></point>\n", pointcount, x3d(j), y3d(j), z3d(j), diam3d(j))
             }
        } else {
             cm(.00001) = storecm.x[i]
@@ -86,23 +87,7 @@ proc assoc_cell_number() {local i, j, pointcount
     }
 }
 
-/*
-obfunc convertSectionName() {
 
-    strdef newSectionName
-    newSectionName = $s1
-    hoc_sf_.right(newSectionName, hoc_sf_.substr(newSectionName, ".")+1)
-
-    if (hoc_sf_.substr(newSectionName,"[")>=0 && hoc_sf_.substr(newSectionName,"]")>=0) {
-        hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"]"))
-        strdef index 
-        index = newSectionName
-        hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"["))
-        hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-        sprint(newSectionName, "%s_%s", newSectionName, index)
-    }
-    return newSectionName
-}*/
 
 // Write main body of XML file
 proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
@@ -152,12 +137,27 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
         $o1.printf("    <morphology id=\"morphology\">\n")
 
 
-        strdef segmentGroupsForSections 
-        segmentGroupsForSections=""
+        strdef segGrpsForSections 
+        segGrpsForSections=""
+
+        totalNumCables = 0
 
         forsec cellref.secanal.allseclist {
 
-            $o1.printf("<!-- Section: %s which has %d 3D points, so %d segment(s)-->\n", secname(), n3d(), (n3d() - 1))
+            totalNumCables = totalNumCables + 1
+            strdef nmlSegGrpName
+            nmlSegGrpName = secname()
+
+            if (hoc_sf_.substr(nmlSegGrpName,"[")>=0 && hoc_sf_.substr(nmlSegGrpName,"]")>=0) {
+                hoc_sf_.left(nmlSegGrpName, hoc_sf_.substr(nmlSegGrpName,"]"))
+                strdef index
+                index = nmlSegGrpName
+                hoc_sf_.left(nmlSegGrpName, hoc_sf_.substr(nmlSegGrpName,"["))
+                hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
+                sprint(nmlSegGrpName, "%s_%s", nmlSegGrpName, index)
+            }
+
+            $o1.printf("<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n", secname(), nmlSegGrpName, n3d(), (n3d() - 1))
 
             sectioncount = cm(.00001)
             tobj = new SectionRef()
@@ -165,15 +165,22 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
             pointcount = pointvec.x[sectioncount]
             segmentcount = segmentvec.x[sectioncount]
 
-            sprint(segmentGroupsForSections, "%s<!-- Section: %s which has %d 3D points, so %d segment(s)-->\n\n", segmentGroupsForSections, secname(), n3d(), (n3d() - 1))
+            sprint(segGrpsForSections, "%s\n<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n\n", segGrpsForSections, secname(), nmlSegGrpName, n3d(), (n3d() - 1))
+            sprint(segGrpsForSections, "%s      <segmentGroup id = \"%s\"  neuroLexId=\"sao864921383\">    <!--\n", segGrpsForSections, nmlSegGrpName)
+            sprint(segGrpsForSections, "%s             This group contains an unbranched set of segments, and all of the segmentGroups marked with\n", segGrpsForSections)
+            sprint(segGrpsForSections, "%s             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.\n", segGrpsForSections)
+            sprint(segGrpsForSections, "%s             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections -->\n", segGrpsForSections)
 
-            sprint(segmentGroupsForSections, "%s\n\n", segmentGroupsForSections, secname(), n3d(), (n3d() - 1))
+            if (nseg > 1) {
 
+                sprint(segGrpsForSections, "%s        <annotation>\n", segGrpsForSections)
+                sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export. Can be overridden by importing application-->\n", segGrpsForSections, nseg)
+                sprint(segGrpsForSections, "%s        </annotation>\n", segGrpsForSections)
+          
+            }
             for i = 1, n3d() - 1 {
 
-                strdef newSec
-                newSec = secname()
-                hoc_sf_.right(newSec, hoc_sf_.substr(newSec, ".")+1)
+                hoc_sf_.right(nmlSegGrpName, hoc_sf_.substr(nmlSegGrpName, ".")+1)
 
                 thissegid = segmentcount
 
@@ -184,17 +191,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
                 $o1.printf("      <segment id=\"%d\"", thissegid)
 
-                if (hoc_sf_.substr(newSec,"[")>=0 && hoc_sf_.substr(newSec,"]")>=0) {
-                    hoc_sf_.left(newSec, hoc_sf_.substr(newSec,"]"))
-                    strdef index
-                    index = newSec
-                    hoc_sf_.left(newSec, hoc_sf_.substr(newSec,"["))
-                    hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-                    sprint(newSec, "%s_%s", newSec, index)
-
-                }
-
-                $o1.printf(" name = \"Seg%d_%s\"", i-1, newSec)
+                $o1.printf(" name = \"Seg%d_%s\"", i-1, nmlSegGrpName)
                 strdef parentNameInfo
                 parentNameInfo = ""
 
@@ -246,52 +243,19 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                 x3d(i), y3d(i), z3d(i), diam3d(i))
 
                 $o1.printf("      </segment>\n")
+
+                sprint(segGrpsForSections, "%s        <member segment = \"%d\"/>\n", segGrpsForSections, thissegid)
+
                 pointcount += 1
                 segmentcount += 1
             }
-        }
-
-        $o1.printf("%s", segmentGroupsForSections)
-
-        totalNumCables = 0
-        
-        forsec cellref.secanal.allseclist {
-            sectioncount = cm(.00001)
-            tobj = new SectionRef()
-
-            strdef newSectionName 
-            newSectionName = secname()
-            ////convertSectionName(newSectionName)
-            hoc_sf_.right(newSectionName, hoc_sf_.substr(newSectionName, ".")+1)
-
-            if (hoc_sf_.substr(newSectionName,"[")>=0 && hoc_sf_.substr(newSectionName,"]")>=0) {
-                hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"]"))
-                strdef index 
-                index = newSectionName
-                hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"["))
-                hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-                sprint(newSectionName, "%s_%s", newSectionName, index)
-            }
-
-            if (parent_connection() != 1) {
-                $o1.printf("\n<!-- Error! Cannot yet deal with connections of child sections not at zero (fract_along_parent = \"%g\")-->\n", parent_connection())
-            }
-            $o1.printf("      <segmentGroup id = \"%s\"", newSectionName)
-
             
 
-            if (nseg > 1) {
-                $o1.printf(">\n")
-                $o1.printf("        <meta:properties>\n          <meta:property>\n")
-                $o1.printf("            <meta:tag>numberInternalDivisions</meta:tag> <!-- Discetization of model at time of export. Can be overridden by importing application-->\n            <meta:value>%d</meta:value>\n", nseg)
-                $o1.printf("          </meta:property>\n        </meta:properties>\n")
-                $o1.printf("      </segmentGroup>\n")
-            } else {
-                $o1.printf("/>\n")
-            }
-
-            totalNumCables = totalNumCables + 1
+            sprint(segGrpsForSections, "%s      </segmentGroup>\n\n", segGrpsForSections)
         }
+
+        $o1.printf("%s", segGrpsForSections)
+        
 
         if (object_id(cellref.secanal.parmsubsets) == 0) {
             cellref.secanal.analyse()
@@ -560,58 +524,6 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
     ////////PG: not required  ////  $o1.printf("</morphml>\n")
 
 
-/*
-    if (parmsubsets.subsets.count > 1) {
-        sprint(tstr, "%d subsets with constant parameters", parmsubsets.subsets.count)
-        disp1 = new TreeViewItem(disp, tstr, this, -1)
-    }else{
-        disp1 = disp
-    }
-    for i=0, parmsubsets.subsets.count-1 {
-        tobj = parmsubsets.subsets.object(i)
-        sprint(tstr, "%s (%d sections)", tobj, tobj.subset.size)
-        msub = new TreeViewItem(disp1, tstr, tobj, -1)
-        prsub(tobj.subset)
-        for j=0, tobj.parmlist.count-1 {
-            tobj1 = tobj.parmlist.object(j)
-            sprint(tstr, "%s = %g", tobj1.parmelm.name, tobj1.value)
-            msub.append(tstr, tobj, j)
-        }
-    }
-
-    if (parmsecs.count + parminhomos.count > 1) {
-        sprint(tstr, "%d sections with unique parameters", parmsecs.count + parminhomos.count)
-        disp1 = new TreeViewItem(disp, tstr)
-    }else{
-        disp1 = disp
-    }
-    for i=0, parmsecs.count-1 {
-        tobj = parmsecs.object(i)
-        all.object(tobj.isec).sec sprint(tstr, "%s {", secname())
-        msub = new TreeViewItem(disp1, tstr, tobj, -1)
-        for j=0, tobj.parmlist.count-1 {
-            tobj1 = tobj.parmlist.object(j)
-            sprint(tstr, "    %s = %g", tobj1.parmelm.name, tobj1.value)
-            msub.append(tstr, tobj, j)
-        }
-        msub.append("}", tobj, j)
-    }
-
-    for i=0, parminhomos.count-1 {
-        tobj = parminhomos.object(i)
-        all.object(tobj.isec).sec sprint(tstr, "%s {", secname())
-        msub = new TreeViewItem(disp1, tstr, tobj, -1)
-        for j=0, tobj.parmlist.count-1 {
-            tobj1 = tobj.parmlist.object(j)
-            sprint(tstr, "    %s =", tobj1.parmelm.name)
-            for k=0, tobj1.vec.size-1 {
-                sprint(tstr, " %s %g", tstr, tobj1.vec.x[k])
-            }
-            msub.append(tstr, tobj, j)
-        }
-        msub.append("}", tobj, j)
-    }
-*/
     artcell($o1)
 //	$o1.printf("</model>\n")
 }
@@ -752,16 +664,14 @@ proc printparmval() {
 
 
 
-
 proc printsec() {
     $o2.sec { 
         $o1.printf("      <section name=\"%s\"/>\n", secname())
     }
 }
 
+
 proc printvecvals() {local i
-
-
 
     $o2.location.realcell.all.object($o2.location.isec).sec {
         $o1.printf("          <!-- NOTE: this mechanism is present on %s but has non uniform values. Expression for generating values cannot be retrieved! -->\n", secname())
@@ -774,6 +684,7 @@ proc printvecvals() {local i
     //$o1.printf("      </section>\n")
 }
 
+
 proc ion_xmlwrite() {
     for mview.dparm.mechs(tobj) {
         if (hoc_sf_.head(tobj.name, "_ion", tstr) != -1) {
@@ -781,7 +692,6 @@ proc ion_xmlwrite() {
         }
     }
 }
-
 
 
 endtemplate ModelViewNeuroML2

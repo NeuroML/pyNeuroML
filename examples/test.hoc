@@ -28,6 +28,10 @@ Soma {
 }
 mainDendSec insert hh
 
+mainDendSec {
+    nseg =3
+}
+
 forall insert pas
 
 forall psection()
