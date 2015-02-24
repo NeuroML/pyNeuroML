@@ -15,7 +15,10 @@ def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalPro
     from nrn import *
     
     if hoc_or_python_file is not None:
-        h.load_file(hoc_or_python_file)
+        if hoc_or_python_file.endswith(".py"):
+            print("Importing Python scripts not yet implemented...")
+        else:
+            h.load_file(hoc_or_python_file)
 
     print "Loaded NEURON file: %s"%hoc_or_python_file
 

@@ -25,12 +25,19 @@ strdef singleSecGroupPrefix
 
 objref singleSecGroupsCreated
 
+objref p
+
 
 // Initialise template & set some useful strings
 proc init() {local i
     mview = $o1
     nameForGroupWithAll = ""
     singleSecGroupPrefix = "OneSecGrp_"
+
+    p = new PythonObject()
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_name")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import get_segment_group_name")
+    nrnpython("from neuron import h")
 }
 
 
@@ -90,7 +97,7 @@ proc assoc_cell_number() {local i, j, pointcount
 
 
 // Write main body of XML file
-proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
+proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
     strdef date
 
     $o1.printf("  <notes> NeuroML 2 file generated from ModelView by: %s\n", nrnversion())
@@ -118,24 +125,16 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
         totalnumcells =totalnumcells+1
     }
 
+    cellindex = 0
+
     for mview.realcells(cellref) {
 
         strdef cellName
-        cellName = cellref.name
-
-        if (hoc_sf_.substr(cellName,"[")>=0 && hoc_sf_.substr(cellName,"]")>=0) {
-            hoc_sf_.left(cellName, hoc_sf_.substr(cellName,"]"))
-            strdef index 
-            index = cellName
-            hoc_sf_.left(cellName, hoc_sf_.substr(cellName,"["))
-            hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-            sprint(cellName, "%s_%s", cellName, index)
-        }
+        cellName = p.get_cell_name(cellref.name, cellindex)
 
         $o1.printf("  <cell id=\"%s\">\n", cellName)
         $o1.printf("    <notes>Cell: %s exported from NEURON ModelView</notes>\n", cellName)
         $o1.printf("    <morphology id=\"morphology\">\n")
-
 
         strdef segGrpsForSections 
         segGrpsForSections=""
@@ -146,16 +145,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
             totalNumCables = totalNumCables + 1
             strdef nmlSegGrpName
-            nmlSegGrpName = secname()
-
-            if (hoc_sf_.substr(nmlSegGrpName,"[")>=0 && hoc_sf_.substr(nmlSegGrpName,"]")>=0) {
-                hoc_sf_.left(nmlSegGrpName, hoc_sf_.substr(nmlSegGrpName,"]"))
-                strdef index
-                index = nmlSegGrpName
-                hoc_sf_.left(nmlSegGrpName, hoc_sf_.substr(nmlSegGrpName,"["))
-                hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-                sprint(nmlSegGrpName, "%s_%s", nmlSegGrpName, index)
-            }
+            nmlSegGrpName = p.get_segment_group_name(secname())
 
             $o1.printf("<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n", secname(), nmlSegGrpName, n3d(), (n3d() - 1))
 
@@ -269,18 +259,10 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
                 strdef groupName
                 sprint(groupName, "%s", tobj1)
+                groupName = p.get_segment_group_name(groupName)
                 strdef comment
                 comment = ""
 
-                if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
-                    hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
-                    strdef index 
-                    index = groupName
-                    hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"["))
-                    hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-                    sprint(groupName, "%s_%s", groupName, index)
-
-                }
 
                 if (hoc_sf_.len(nameForGroupWithAll)==0 && tobj1.subset.size== totalNumCables) {
                     nameForGroupWithAll = groupName
@@ -293,22 +275,12 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                 for j=0, tobj1.subset.size - 1 {
                     secref = cellref.secanal.all.object(tobj1.subset.x(j))
 
-                    strdef currsecname0
                     strdef currsecname
-                    secref.sec {currsecname0 = secname()}
                     secref.sec {currsecname = secname()}
 
-                    if (hoc_sf_.substr(currsecname,"[")>=0 && hoc_sf_.substr(currsecname,"]")>=0) {
-                        hoc_sf_.left(currsecname, hoc_sf_.substr(currsecname,"]"))
-                        strdef index 
-                        index = currsecname
-                        hoc_sf_.left(currsecname, hoc_sf_.substr(currsecname,"["))
-                        hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
-                        sprint(currsecname, "%s_%s", currsecname, index)
+                    currsecname = p.get_segment_group_name(currsecname)
 
-                    }
-
-                    $o1.printf("        <include segmentGroup = \"%s\"/> <!-- %s -->\n", currsecname, currsecname0)
+                    $o1.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
                 }
                 $o1.printf("      </segmentGroup>\n")
             }
@@ -353,6 +325,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
                             strdef currsecname
                             secref.sec {currsecname = secname()}
+                            currsecname = p.get_segment_group_name(currsecname)
 
                             cableid = secref.sec.cm(.00001)
 
@@ -378,7 +351,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
         $o1.printf("    </morphology>\n")
 
-// biophysics element for THIS cell. Only include if level > 1
+    // biophysics element for THIS cell. Only include if level > 1
 
     if ($2 > 1) { // i.e. Level 2 of NeuroML or greater
 
@@ -522,9 +495,10 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
         $o1.printf("    </biophysics>\n")   
 
-
+        cellindex = cellindex +1
     }
-        $o1.printf("  </cell>\n")
+        
+    $o1.printf("  </cell> \n")
 
 
 
