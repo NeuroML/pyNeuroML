@@ -20,6 +20,10 @@ objref dmech, dparm, dpelm, dmlist
 objref storecm, pointvec, segmentvec
 strdef tstr
 
+
+objref mainnml2file
+objref cellnml2file
+
 strdef nameForGroupWithAll
 strdef singleSecGroupPrefix
 
@@ -27,12 +31,19 @@ objref singleSecGroupsCreated
 
 objref p
 
+strdef mainNotes
+
 
 // Initialise template & set some useful strings
 proc init() {local i
     mview = $o1
     nameForGroupWithAll = ""
     singleSecGroupPrefix = "OneSecGrp_"
+
+    sprint(mainNotes, "  <notes> NeuroML 2 file generated from ModelView by: %s\n", nrnversion())
+    sprint(mainNotes, "%s          Authors: Michael Hines, Sushil Kambampati and Padraig Gleeson,\n", mainNotes)
+    sprint(mainNotes, "%s          Yale University and UCL \n", mainNotes)
+    sprint(mainNotes, "%s  </notes>\n\n", mainNotes)
 
     p = new PythonObject()
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_name")
@@ -42,11 +53,16 @@ proc init() {local i
 
 
 // Main export procedure
-// Takes args: fileName, level (1 = no biophys; 2 = include biophys (channel densities etc.))
+// Takes arguments: 
+//    fileName
+//    level      (1 = no biophys; 2 = include biophys (channel densities etc.))
+//    separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
+
 proc exportNeuroML2() {local ok
     fileref = new File($s1)
     level = $2
-    print "Exporting NeuroML 2 into: ",fileref.getname
+    separateCellFiles = $3
+    print "Exporting NeuroML 2 into: ",fileref.getname, ", 'level' = ", level
 
     ok = fileref.wopen()
     if (!ok) {
@@ -56,7 +72,7 @@ proc exportNeuroML2() {local ok
     fileref.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
     header(fileref, level)
-    xmlwrite(fileref, level)
+    xmlwrite(fileref, level, separateCellFiles)
     fileref.printf("</neuroml>\n")
     fileref.close()
 }
@@ -97,13 +113,22 @@ proc assoc_cell_number() {local i, j, pointcount
 
 
 // Write main body of XML file
+// Takes arguments: 
+//    fileref           File object
+//    level             (1 = no biophys; 2 = include biophys (channel densities etc.))
+//    separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
+
 proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
     strdef date
 
-    $o1.printf("  <notes> NeuroML 2 file generated from ModelView by: %s\n", nrnversion())
-    $o1.printf("          Authors: Michael Hines, Sushil Kambampati and Padraig Gleeson,\n")
-    $o1.printf("          Yale University and UCL \n")
-    $o1.printf("  </notes>\n\n")
+    separateCellFiles = $3
+    mainnml2file = $o1
+    cellnml2file = $o1
+
+    strdef network
+    sprint(network, "\n  <network id=\"network\" type=\"networkWithTemperature\" temperature=\"%d degC\">", celsius)
+
+    mainnml2file.printf("%s", mainNotes)
 
     proximalid = 0
     pointcount = 0
@@ -121,6 +146,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
     oldidrootseg = -1
 
+
     for mview.realcells(cellref) {
         totalnumcells =totalnumcells+1
     }
@@ -130,11 +156,30 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
     for mview.realcells(cellref) {
 
         strdef cellName
-        cellName = p.get_cell_name(cellref.name, cellindex)
+        {cellName = p.get_cell_name(secname(), cellindex)}
 
-        $o1.printf("  <cell id=\"%s\">\n", cellName)
-        $o1.printf("    <notes>Cell: %s exported from NEURON ModelView</notes>\n", cellName)
-        $o1.printf("    <morphology id=\"morphology\">\n")
+        print "Exporting cell: ", cellref, ", secname: ", secname(), ", named: ", cellName
+
+        if (separateCellFiles == 1) {
+            strdef newcellfile
+            sprint(newcellfile, "%s.cell.nml", cellName)
+            cellnml2file = new File(newcellfile)
+            ok = cellnml2file.wopen()
+            if (!ok) {
+                printf("Could not open %s\n", cellnml2file.getname)
+                return
+            }
+            cellnml2file.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+
+            header(cellnml2file, level)
+
+
+            mainnml2file.printf("  <include href=\"%s\"/>\n\n", newcellfile)
+        } 
+
+        cellnml2file.printf("  <cell id=\"%s\">\n", cellName)
+        cellnml2file.printf("    <notes>Cell: %s exported from NEURON ModelView</notes>\n", cellName)
+        cellnml2file.printf("    <morphology id=\"morphology\">\n")
 
         strdef segGrpsForSections 
         segGrpsForSections=""
@@ -145,9 +190,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
             totalNumCables = totalNumCables + 1
             strdef nmlSegGrpName
-            nmlSegGrpName = p.get_segment_group_name(secname())
+            {nmlSegGrpName = p.get_segment_group_name(secname())}
 
-            $o1.printf("<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n", secname(), nmlSegGrpName, n3d(), (n3d() - 1))
+            cellnml2file.printf("<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n", secname(), nmlSegGrpName, n3d(), (n3d() - 1))
 
             sectioncount = cm(.00001)
             tobj = new SectionRef()
@@ -179,9 +224,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                     thissegid = 0
                 }
 
-                $o1.printf("      <segment id=\"%d\"", thissegid)
+                cellnml2file.printf("      <segment id=\"%d\"", thissegid)
 
-                $o1.printf(" name = \"Seg%d_%s\"", i-1, nmlSegGrpName)
+                cellnml2file.printf(" name = \"Seg%d_%s\"", i-1, nmlSegGrpName)
                 strdef parentNameInfo
                 parentNameInfo = ""
 
@@ -195,7 +240,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                                 parentsegid = segmentvec.x[cm(.00001)] + n3d() - 2
                                 if (parentsegid == oldidrootseg) {parentsegid = 0}
 
-                                $o1.printf(">\n        <parent segment=\"%d\"/", parentsegid)
+                                cellnml2file.printf(">\n        <parent segment=\"%d\"/", parentsegid)
 
                             } else {
                                 parentSeg = -1
@@ -212,7 +257,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                                 if (parentSeg == oldidrootseg) {parentSeg = 0}
 
-                                $o1.printf(">%s\n        <parent segment=\"%d\"/", parentNameInfo, parentSeg)
+                                cellnml2file.printf(">%s\n        <parent segment=\"%d\"/", parentNameInfo, parentSeg)
                             }
 
                         }
@@ -220,19 +265,19 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 } else {
                     parentsegid = segmentcount - 1
                     if (parentsegid == oldidrootseg) {parentsegid = 0}
-                    $o1.printf(">%s\n        <parent segment=\"%d\"/", parentNameInfo, parentsegid)
+                    cellnml2file.printf(">%s\n        <parent segment=\"%d\"/", parentNameInfo, parentsegid)
                 }
 
-                $o1.printf(">\n")
+                cellnml2file.printf(">\n")
 
                 if (i == 1) {
-                $o1.printf("        <proximal x=\"%g\" y=\"%g\" z=\"%g\" diameter=\"%g\"/>\n", \
+                cellnml2file.printf("        <proximal x=\"%g\" y=\"%g\" z=\"%g\" diameter=\"%g\"/>\n", \
                     x3d(i-1), y3d(i-1), z3d(i-1), diam3d(i-1))
                 }
-                $o1.printf("        <distal x=\"%g\" y=\"%g\" z=\"%g\" diameter=\"%g\"/>\n", \
+                cellnml2file.printf("        <distal x=\"%g\" y=\"%g\" z=\"%g\" diameter=\"%g\"/>\n", \
                 x3d(i), y3d(i), z3d(i), diam3d(i))
 
-                $o1.printf("      </segment>\n")
+                cellnml2file.printf("      </segment>\n")
 
                 sprint(segGrpsForSections, "%s        <member segment = \"%d\"/>\n", segGrpsForSections, thissegid)
 
@@ -244,7 +289,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             sprint(segGrpsForSections, "%s      </segmentGroup>\n\n", segGrpsForSections)
         }
 
-        $o1.printf("%s", segGrpsForSections)
+        cellnml2file.printf("%s", segGrpsForSections)
         
 
         if (object_id(cellref.secanal.parmsubsets) == 0) {
@@ -259,7 +304,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                 strdef groupName
                 sprint(groupName, "%s", tobj1)
-                groupName = p.get_segment_group_name(groupName)
+                {groupName = p.get_segment_group_name(groupName)}
                 strdef comment
                 comment = ""
 
@@ -270,7 +315,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                     sprint(comment, "<!-- Replacing subset name %s with all, as it contains all sections -->", nameForGroupWithAll)
                 }
 
-                $o1.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
+                cellnml2file.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
 
                 for j=0, tobj1.subset.size - 1 {
                     secref = cellref.secanal.all.object(tobj1.subset.x(j))
@@ -278,14 +323,14 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                     strdef currsecname
                     secref.sec {currsecname = secname()}
 
-                    currsecname = p.get_segment_group_name(currsecname)
+                    {currsecname = p.get_segment_group_name(currsecname)}
 
-                    $o1.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
+                    cellnml2file.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
                 }
-                $o1.printf("      </segmentGroup>\n")
+                cellnml2file.printf("      </segmentGroup>\n")
             }
         } else {
-            $o1.printf("      <!-- No cable groups present -->\n")
+            cellnml2file.printf("      <!-- No cable groups present -->\n")
         }
 
         /// Must check if there is an easier way of doing this!!!
@@ -300,7 +345,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             for dmech.parmiter(dparm) {
                 for dparm.parmiter(dpelm) {
                     for l=0, dpelm.parms.count - 1 {
-                        ///printparmval($o1, cellref.secanal.all, "", dpelm.parms.object(l), 1)  // Converting ohm cm (NEURON units) to Kohm cm (Phys units)
+                        ///printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 1)  // Converting ohm cm (NEURON units) to Kohm cm (Phys units)
 
                         trySingleSecGroup = 1
                         if (dpelm.parms.object(l).type() == 1){
@@ -325,7 +370,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                             strdef currsecname
                             secref.sec {currsecname = secname()}
-                            currsecname = p.get_segment_group_name(currsecname)
+                            {currsecname = p.get_segment_group_name(currsecname)}
 
                             cableid = secref.sec.cm(.00001)
 
@@ -333,9 +378,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                             if (!singleSecGroupsCreated.contains(cableid)) {  //  so no repeats...
 
-                                $o1.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
-                                $o1.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
-                                $o1.printf("      </segmentGroup>\n")
+                                cellnml2file.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
+                                cellnml2file.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
+                                cellnml2file.printf("      </segmentGroup>\n")
                             }
 
                             singleSecGroupsCreated.append(cableid)
@@ -349,25 +394,23 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
 
 
-        $o1.printf("    </morphology>\n")
+        cellnml2file.printf("    </morphology>\n")
 
     // biophysics element for THIS cell. Only include if level > 1
 
     if ($2 > 1) { // i.e. Level 2 of NeuroML or greater
 
-        $o1.printf("    <biophysics  units = \"Physiological Units\"> <!-- Note: values of cond dens are different in NEURON and phy units-->\n")
+        cellnml2file.printf("    <biophysics  units = \"Physiological Units\"> <!-- Note: values of cond dens are different in NEURON and phy units-->\n")
 
         for mview.dparm.kschans(tobj) {
-            kschan_xmlwrite($o1, tobj)
+            kschan_xmlwrite(cellnml2file, tobj)
         }
-        ///////////for mview.realcells(cellref) {
 
         // to distinguish b/w toplevel and encapsulated real cells
         if (object_id(cellref.secanal.parmsubsets) == 0) {
             continue
         }
 
-        //////////////$o1.printf("<cell name=\"%s\">\n", cellref.name)
 
         for i=0, cellref.secanal.dmlist.count - 1 {
             dmech = cellref.secanal.dmlist.object(i)
@@ -388,10 +431,10 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 if (strcmp(dmech.name,"LeakConductance") == 0) {
                     passiveAttr = " passive_conductance=\"true\""
                 }
-                $o1.printf("      <bio:mechanism name=\"%s\" type=\"Channel Mechanism\"%s>\n", dmech.name, passiveAttr)
+                cellnml2file.printf("      <bio:mechanism name=\"%s\" type=\"Channel Mechanism\"%s>\n", dmech.name, passiveAttr)
                 for j=0, dmech.location.subset.size()-1 {
                     secref = cellref.secanal.all.object(dmech.location.subset.x(j))
-        //              printsec($o1, secref)
+        //              printsec(cellnml2file, secref)
                 }
                 for dmech.parmiter(dparm) {
                     for dparm.parmiter(dpelm) {
@@ -443,11 +486,11 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                             if (hoc_sf_.substr(paramNameToUse,"gmax") >= 0) {
                                 factor = 1000   /// converting S cm-2 (NEURON units) to mS cm-2 (Phys units)
                             }
-                            printparmval($o1, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name)
+                            printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name)
                         }
                     }
                 }
-                $o1.printf("      </bio:mechanism>\n")
+                cellnml2file.printf("      </bio:mechanism>\n")
             }
         }
 
@@ -460,15 +503,15 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             if (object_id(dmech.location) == 0) { continue }
 
             if (strcmp(dmech.name,"capacitance") == 0) {
-                $o1.printf("      <bio:spec_capacitance>\n")
+                cellnml2file.printf("      <bio:spec_capacitance>\n")
                 for dmech.parmiter(dparm) {
                     for dparm.parmiter(dpelm) {
                         for l=0, dpelm.parms.count - 1 {
-                            printparmval($o1, cellref.secanal.all, "", dpelm.parms.object(l), 1, noComment, dmech.name) // Converting μF cm-2 (NEURON units) to μF cm-2 (Phys units)
+                            printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 1, noComment, dmech.name) // Converting μF cm-2 (NEURON units) to μF cm-2 (Phys units)
                         }
                     }
                 }
-                $o1.printf("      </bio:spec_capacitance>\n")
+                cellnml2file.printf("      </bio:spec_capacitance>\n")
             } 
         }
 
@@ -479,38 +522,47 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             if (object_id(dmech.location) == 0) { continue }
 
             if (strcmp(dmech.name,"Ra") == 0) {
-                $o1.printf("      <bio:spec_axial_resistance>\n")
+                cellnml2file.printf("      <bio:spec_axial_resistance>\n")
                 for dmech.parmiter(dparm) {
                     for dparm.parmiter(dpelm) {
                         for l=0, dpelm.parms.count - 1 {
-                            printparmval($o1, cellref.secanal.all, "", dpelm.parms.object(l), 0.001, noComment, dmech.name)  // Converting ohm cm (NEURON units) to Kohm cm (Phys units)
+                            printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 0.001, noComment, dmech.name)  // Converting ohm cm (NEURON units) to Kohm cm (Phys units)
                         }
                     }
                 }
-                $o1.printf("      </bio:spec_axial_resistance>\n")
+                cellnml2file.printf("      </bio:spec_axial_resistance>\n")
             } 
         }
 
-       //////////// ion_xmlwrite($o1)
+       //////////// ion_xmlwrite(cellnml2file)
 
-        $o1.printf("    </biophysics>\n")   
+        cellnml2file.printf("    </biophysics>\n")   
 
-        cellindex = cellindex +1
     }
         
-    $o1.printf("  </cell> \n")
+    cellnml2file.printf("  </cell> \n")
 
 
+    sprint(network, "%s\n    <population id=\"Pop_%s\" component=\"%s\" size=\"1\"/>", network, cellName, cellName)
 
+    if (separateCellFiles == 1) {
+        cellnml2file.printf("</neuroml>\n")
+        cellnml2file.close()
 
     }
 
-    assoc_cell_number(0, $o1) 
-    ////////PG: not required  ////  $o1.printf("</morphml>\n")
 
 
-    artcell($o1)
-//	$o1.printf("</model>\n")
+    cellindex = cellindex +1
+
+    }
+
+    sprint(network, "%s\n  </network>\n", network)
+    mainnml2file.printf("%s \n", network)
+
+    assoc_cell_number(0, mainnml2file) 
+
+    artcell(mainnml2file)
 }
 
 

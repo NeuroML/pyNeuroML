@@ -9,7 +9,7 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
 
-def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalProperties=True, validate=True):
+def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalProperties=True, separateCellFiles=False, validate=True):
     
     from neuron import *
     from nrn import *
@@ -34,7 +34,7 @@ def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalPro
     
     nml2_level = 2 if includeBiophysicalProperties else 1
     
-    h.mvnml.exportNeuroML2(nml2_file_name, nml2_level)
+    h.mvnml.exportNeuroML2(nml2_file_name, nml2_level, int(separateCellFiles))
     
 
     if validate:

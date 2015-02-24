@@ -5,16 +5,14 @@ def replace_brackets(ref):
     return ref.replace('[', '_').replace(']', '')
 
 def get_cell_name(nrn_section_name, cell_index=0):
-    print("Getting cell name for %s"%nrn_section_name)
+    #print("Getting cell name for %s"%nrn_section_name)
     if '.' not in nrn_section_name:
         return 'Cell%i'%cell_index
     else:
-        return replace_brackets(nrn_section_name.split('.')[0])
+        return '%s_%i'%(replace_brackets(nrn_section_name.split('.')[0]),cell_index)
 
 def get_segment_group_name(nrn_section_name):
-    print("Getting segment group name for %s"%nrn_section_name)
-    if isinstance(nrn_section_name, hoc.HocObject):
-        nrn_section_name = nrn_section_name.name
+    #print("Getting segment group name for %s"%nrn_section_name)
     if '.' not in nrn_section_name:
         return replace_brackets(nrn_section_name)
     else:
