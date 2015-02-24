@@ -9,14 +9,15 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
 
-def export_to_neuroml2(hoc_file, nml2_file_name, includeBiophysicalProperties=True, validate=True):
+def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalProperties=True, validate=True):
     
     from neuron import *
     from nrn import *
     
-    h.load_file(hoc_file)
+    if hoc_or_python_file is not None:
+        h.load_file(hoc_or_python_file)
 
-    print "Loaded NEURON file: %s"%hoc_file
+    print "Loaded NEURON file: %s"%hoc_or_python_file
 
     h.load_file("mview.hoc")
     

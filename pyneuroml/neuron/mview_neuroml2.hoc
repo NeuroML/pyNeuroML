@@ -293,11 +293,22 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                 for j=0, tobj1.subset.size - 1 {
                     secref = cellref.secanal.all.object(tobj1.subset.x(j))
 
+                    strdef currsecname0
                     strdef currsecname
+                    secref.sec {currsecname0 = secname()}
                     secref.sec {currsecname = secname()}
 
-                    // TODO: put check on secname for [] etc!!
-                    $o1.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
+                    if (hoc_sf_.substr(currsecname,"[")>=0 && hoc_sf_.substr(currsecname,"]")>=0) {
+                        hoc_sf_.left(currsecname, hoc_sf_.substr(currsecname,"]"))
+                        strdef index 
+                        index = currsecname
+                        hoc_sf_.left(currsecname, hoc_sf_.substr(currsecname,"["))
+                        hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
+                        sprint(currsecname, "%s_%s", currsecname, index)
+
+                    }
+
+                    $o1.printf("        <include segmentGroup = \"%s\"/> <!-- %s -->\n", currsecname, currsecname0)
                 }
                 $o1.printf("      </segmentGroup>\n")
             }
