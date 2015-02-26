@@ -132,7 +132,7 @@ def reload_saved_data(lems_file_name, plot=False):
     results = {}
     
     if plot:
-        from matplotlib import pyplot as plt
+        import matplotlib.pyplot as pylab
 
     from lxml import etree
     tree = etree.parse(lems_file_name)
@@ -157,8 +157,9 @@ def reload_saved_data(lems_file_name, plot=False):
         cols = []
         cols.append('t')
         for col in of.findall(ns_prefix+'OutputColumn'):
-            results[col.attrib['quantity']] = []
-            cols.append(col.attrib['quantity'])
+            quantity = col.attrib['quantity']
+            results[quantity] = []
+            cols.append(quantity)
             
         for line in open(file_name):
             values = line.split()
@@ -168,18 +169,27 @@ def reload_saved_data(lems_file_name, plot=False):
                
 
         if plot:
-            for key in results.keys():
+            fig = pylab.figure()
+            fig.canvas.set_window_title("Data loaded from %s"%file_name)
+            
+            for key in cols:
 
-                plt.xlabel('Time (ms)')
-                plt.ylabel('(SI units...)')
-                plt.grid('on')
+                pylab.xlabel('Time (ms)')
+                pylab.ylabel('(SI units...)')
+                pylab.grid('on')
 
+                curr_plot = pylab.subplot(111)
+                
                 if key != 't':
-                    plt.plot(results['t'], results[key])
+                    curr_plot.plot(results['t'], results[key], label=key)
+                    print_comment("Adding trace for: %s, from: %s"%(key,file_name), True)
                     
+                pylab.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True)
+                   
+    #print(results.keys())
         
     if plot:
-        plt.show()
+        pylab.show()
 
     return results
                 

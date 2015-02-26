@@ -37,7 +37,8 @@ if not '-nogui' in sys.argv:
 
         if key != 't':
             plt.plot(results1['t'],results1[key], label="jNeuroML: "+key)
-            plt.plot(results2['t'],results2[key], label="jNeuroML_NEURON: "+key)
+            if not '-noneuron' in sys.argv:
+                plt.plot(results2['t'],results2[key], label="jNeuroML_NEURON: "+key)
 
 
     plt.show()
