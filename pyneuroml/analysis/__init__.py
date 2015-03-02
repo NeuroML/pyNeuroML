@@ -102,16 +102,32 @@ def generate_current_vs_frequency_curve(nml2_file,
         t = np.array(results['t'])*1000
         v = np.array(results["%s[%i]/v"%(pop.id, i)])*1000
         
-        spike_times = max_min(v, t, delta=0,peak_threshold=0)['maxima_times']
-        freq = mean_spike_frequency(spike_times) 
+        mm = max_min(v, t, delta=0, peak_threshold=0)
+        spike_times = mm['maxima_times']
+        freq = 0
+        if len(spike_times) > 2:
+            count = 0
+            for s in spike_times:
+                if s >= analysis_delay and s < (analysis_duration+analysis_delay):
+                    count+=1
+            freq = count/float(analysis_duration)
+                    
+        mean_freq = mean_spike_frequency(spike_times) 
+        print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
         if_results[stims[i]] = freq
         
     if plot_if:
-        #print(if_results)
         
         from matplotlib import pyplot as plt
         
-        plt.plot(if_results.keys(), if_results.values(), 'x')
+        plt.xlabel('Input current (nA)')
+        plt.ylabel('Firing frequency (Hz)')
+        plt.grid('on')
+        stims = sorted(if_results.keys())
+        freqs = []
+        for s in stims:
+            freqs.append(if_results[s])
+        plt.plot(stims, freqs, 'o')
          
         plt.show()
         
