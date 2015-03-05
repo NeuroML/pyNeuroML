@@ -221,7 +221,7 @@ def run_jneuroml(pre_args, target_file, post_args):
     
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
-    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.0-jar-with-dependencies.jar")
+    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.1-jar-with-dependencies.jar")
     
 
     output = execute_command_in_dir("java -jar %s %s %s %s" %

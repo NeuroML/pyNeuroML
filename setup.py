@@ -14,7 +14,7 @@ setup(
                             'pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main']},
     package_data={
         'pyneuroml': [
-            'lib/jNeuroML-0.7.0-jar-with-dependencies.jar',
+            'lib/jNeuroML-0.7.1-jar-with-dependencies.jar',
             'analysis/LEMS_Test_TEMPLATE.xml',
             'lems/LEMS_TEMPLATE.xml',
             'neuron/mview_neuroml1.hoc',

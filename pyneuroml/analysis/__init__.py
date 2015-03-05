@@ -110,10 +110,10 @@ def generate_current_vs_frequency_curve(nml2_file,
             for s in spike_times:
                 if s >= analysis_delay and s < (analysis_duration+analysis_delay):
                     count+=1
-            freq = count/float(analysis_duration)
+            freq = 1000 * count/float(analysis_duration)
                     
         mean_freq = mean_spike_frequency(spike_times) 
-        print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
+        # print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
         if_results[stims[i]] = freq
         
     if plot_if:
