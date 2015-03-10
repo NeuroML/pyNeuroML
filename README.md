@@ -13,6 +13,15 @@ Clone the repository:
 It should be possible to install pyNeuroML using just:
 
     sudo python setup.py install
+    
+You **may** have to install the development version of [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) manually:
+
+    cd ..
+    git clone https://github.com/NeuralEnsemble/libNeuroML.git
+    cd libNeuroML
+    git checkout development
+    sudo python setup.py install
+    
 
 ### Some planned features
 
