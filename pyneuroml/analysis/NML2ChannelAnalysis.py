@@ -10,10 +10,13 @@
 import argparse
 
 import neuroml.loaders as loaders
+from pyneuroml import pynml
 
 import airspeed
 import sys
 import os.path
+
+from matplotlib import pyplot as plt
 
 TEMPLATE_FILE = "%s/LEMS_Test_TEMPLATE.xml"%(os.path.dirname(__file__))
     
@@ -99,6 +102,11 @@ def process_args():
                         metavar='<Ca2+ concentration>',
                         default=5e-5,
                         help='Internal concentration of Ca2+ (float, concentration in mM)')
+                        
+    parser.add_argument('-norun',
+                        action='store_true',
+                        default=False,
+                        help="If used, just generate the LEMS file, don't run it")
                         
                         
     return parser.parse_args()
@@ -209,7 +217,32 @@ def main():
         
     print("Written generated LEMS file to %s\n"%new_lems_file)
     
+    if not args.norun:
+        results = pynml.run_lems_with_jneuroml(new_lems_file, nogui=True, load_saved_data=True, plot=False)
     
+        #print results.keys()
+        
+        plt.xlabel('Membrane potential (V)')
+        plt.ylabel('Steady state - inf')
+        plt.grid('on')
+        v = "rampCellPop0[0]/v"
+        for g in gates:
+            g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(args.channelId, g)
+            #print("Plotting %s"%(g_inf))
+            plt.plot(results[v], results[g_inf], '-', label="%s %s inf"%(args.channelId, g))
+            
+        plt.legend()
+        plt.figure()
+        
+        plt.xlabel('Membrane potential (V)')
+        plt.ylabel('Time Course - tau (s)')
+        for g in gates:
+            g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(args.channelId, g)
+            plt.plot(results[v], results[g_tau], '-', label="%s %s tau"%(args.channelId, g))
+        
+        plt.legend()
+        
+        plt.show()
 
 
 if __name__ == '__main__':
