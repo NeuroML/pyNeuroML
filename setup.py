@@ -30,7 +30,7 @@ setup(
         'airspeed>=0.4.1',
         'libNeuroML>=0.2.5'],
     dependency_links=[
-      'git+https://github.com/purcell/airspeed.git#egg=airspeed-0.4.2dev',
+      'https://github.com/purcell/airspeed.git',
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML-0.2.5'
     ],
     classifiers = [
