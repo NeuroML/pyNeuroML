@@ -31,7 +31,7 @@
                 <StateAssignment variable="v" value="baseVoltage"/>
             </OnStart>
 
-            <OnCondition test="t .geq. delay .and. t .lt. duration+delay">
+            <OnCondition test="t .geq. delay .and. t .leq. duration+delay">
                 <StateAssignment variable="v" value="targetVoltage"/>
             </OnCondition>
 
@@ -63,7 +63,7 @@
                 <StateAssignment variable="v" value="baseVoltage"/>
             </OnStart>
 
-            <OnCondition test="t .geq. delay .and. t .lt. duration+delay">
+            <OnCondition test="t .geq. delay .and. t .leq. duration+delay">
                 <StateAssignment variable="v" value="targetVoltage0 + (targetVoltage1-targetVoltage0)*(t-delay)/(duration)"/>
             </OnCondition>
 
@@ -82,7 +82,10 @@
     </vClampedCell>
 #end##    
     
-    <vClampedRampCell id="rampCell0" delay="0ms" duration="${duration}ms" baseVoltage="${min_target_voltage}mV" targetVoltage0="${min_target_voltage}mV" targetVoltage1="${max_target_voltage}mV" caConc="${ca_conc}mM">
+#set( $duration_2 = 2 * $duration )
+#set( $max_target_voltage_2 = 2 * $max_target_voltage - $min_target_voltage)
+    <!-- Using twice duration & scaled up max_target_voltage to avoid problem at t = delay+duration -->
+    <vClampedRampCell id="rampCell0" delay="0ms" duration="${duration_2}ms" baseVoltage="${min_target_voltage}mV" targetVoltage0="${min_target_voltage}mV" targetVoltage1="${max_target_voltage_2}mV" caConc="${ca_conc}mM">
         <channelPopulation id="test" ionChannel="${channel}" number="1" erev="${erev}mV"/>
     </vClampedRampCell>
 
