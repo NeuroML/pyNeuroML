@@ -1,0 +1,12 @@
+<html>
+    <title>Channel information</title>
+    <body>
+#foreach ($channel in $channels)##
+        <h3>${channel.id} (from ${channel.file})</h3>
+        <p>${channel.notes}</p>
+        <img alt="${channel.id} steady state" src="${channel.id}.inf.png" height="340"/> 
+        <img alt="${channel.id} time course" src="${channel.id}.tau.png" height="340"/>
+#end##   
+    </body>
+
+</html>

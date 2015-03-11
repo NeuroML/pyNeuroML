@@ -14,12 +14,15 @@ from pyneuroml import pynml
 
 import airspeed
 import sys
+import os
 import os.path
 
 import matplotlib.pyplot as pylab
+import pprint
 
 TEMPLATE_FILE = "%s/LEMS_Test_TEMPLATE.xml"%(os.path.dirname(__file__))
-    
+HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html"%(os.path.dirname(__file__))
+     
 MAX_COLOUR = (255, 0, 0)
 MIN_COLOUR = (255, 255, 0)
 
@@ -109,6 +112,11 @@ def process_args():
                         default=False,
                         help="If used, just generate the LEMS file, don't run it")
                         
+    parser.add_argument('-html',
+                        action='store_true',
+                        default=False,
+                        help="Generate a HTML page (as well as a Markdown version...) featuring the plots for the channel")
+                        
                         
     return parser.parse_args()
 
@@ -183,6 +191,10 @@ def main():
     duration = args.duration
     erev = args.erev
     
+    info = {}
+    chan_list = []
+    info["channels"] = chan_list
+    
     for channel_file in args.channelFiles:
 
         if not os.path.isfile(channel_file):
@@ -206,7 +218,18 @@ def main():
             if len(gates) == 0:
                 print("No gates found in a channel with ID %s"%channel_id)
             else:
-
+                
+                if args.html:
+                    if not os.path.isdir('html'):
+                        os.mkdir('html')
+                    channel_info = {}
+                    chan_list.append(channel_info)
+                    channel_info['id'] = channel_id
+                    channel_info['file'] = channel_file
+                    if ic.notes:
+                        print ic.notes
+                        channel_info['notes'] = ic.notes
+                        
                 lems_content = generate_lems_channel_analyser(channel_file, channel_id, args.minV, \
                                   step_target_voltage, args.maxV, clamp_delay, \
                                   clamp_duration, clamp_base_voltage, duration, erev, gates, \
@@ -237,6 +260,9 @@ def main():
                         pylab.plot(results[v], results[g_inf], '-', label="%s %s inf"%(channel_id, g))
 
                     pylab.legend()
+                    
+                    if args.html:
+                        pylab.savefig('html/%s.inf.png'%channel_id)
 
                     fig = pylab.figure()
                     fig.canvas.set_window_title("Time Course(s) of activation variables of channel %s from %s"%(channel_id, channel_file))
@@ -249,10 +275,22 @@ def main():
                         pylab.plot(results[v], results[g_tau], '-', label="%s %s tau"%(channel_id, g))
 
                     pylab.legend()
+                    if args.html:
+                        pylab.savefig('html/%s.tau.png'%channel_id)
 
         
-        
-    pylab.show()
+    if not args.html:
+        pylab.show()
+    else:
+        pp = pprint.PrettyPrinter(depth=4)
+        pp.pprint(info)
+        merged = merge_with_template(info, HTML_TEMPLATE_FILE)
+        print(merged)
+        new_html_file = "html/ChannelInfo.html"
+        lf = open(new_html_file, 'w')
+        lf.write(merged)
+        lf.close()
+        print('Written HTML info to: %s'%new_html_file)
 
 
 if __name__ == '__main__':
