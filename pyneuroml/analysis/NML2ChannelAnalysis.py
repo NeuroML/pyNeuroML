@@ -16,7 +16,7 @@ import airspeed
 import sys
 import os.path
 
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as pylab
 
 TEMPLATE_FILE = "%s/LEMS_Test_TEMPLATE.xml"%(os.path.dirname(__file__))
     
@@ -32,11 +32,12 @@ def process_args():
     """
     parser = argparse.ArgumentParser(description="A script which can be run to generate a LEMS file to analyse the behaviour of channels in NeuroML 2")
 
-    parser.add_argument('channelFile', type=str, metavar='<NeuroML 2 Channel file>', 
-                        help='Name of the NeuroML 2 file')
+    parser.add_argument('channelFiles', 
+                        type=str,
+                        nargs='+',
+                        metavar='<NeuroML 2 Channel file>', 
+                        help='Name of the NeuroML 2 file(s)')
                         
-    parser.add_argument('channelId', type=str, metavar='<Channel Id>', 
-                        help='Id of the channel in the NeuroML 2 file ')
                         
     parser.add_argument('-v',
                         action='store_true',
@@ -181,68 +182,77 @@ def main():
     clamp_base_voltage = args.clampBaseVoltage
     duration = args.duration
     erev = args.erev
-
-    if not os.path.isfile(args.channelFile):
-        print("File could not be found: %s!\n"%args.channelFile)
-        exit(1)
-    doc = loaders.NeuroMLLoader.load(args.channelFile)
-    gates = []
-    channels = []
-    for c in doc.ion_channel_hhs: channels.append(c)
-    for c in doc.ion_channel: channels.append(c)
     
-    for ic in channels:
-        print("Checking channel "+ic.id)
-        if ic.id == args.channelId:
+    for channel_file in args.channelFiles:
+
+        if not os.path.isfile(channel_file):
+            print("File could not be found: %s!\n"%channel_file)
+            exit(1)
+        doc = loaders.NeuroMLLoader.load(channel_file)
+
+        channels = []
+        for c in doc.ion_channel_hhs: channels.append(c)
+        for c in doc.ion_channel: channels.append(c)
+
+        for ic in channels:    
+            channel_id = ic.id
+            gates = []
+
             for g in ic.gates:
                 gates.append(g.id)
             for g in ic.gate_hh_tau_infs:
                 gates.append(g.id)
-               
-    if len(gates) == 0:
-        print("No gates found in a channel with ID %s"%args.channelId)
-        exit()
-    
-    lems_content = generate_lems_channel_analyser(args.channelFile, args.channelId, args.minV, \
-                      step_target_voltage, args.maxV, clamp_delay, \
-                      clamp_duration, clamp_base_voltage, duration, erev, gates, \
-                      args.temperature, args.caConc)
-                      
-    new_lems_file = "LEMS_Test_%s.xml"%args.channelId
 
-                      
-    lf = open(new_lems_file, 'w')
-    lf.write(lems_content)
-    lf.close()
+            if len(gates) == 0:
+                print("No gates found in a channel with ID %s"%channel_id)
+            else:
+
+                lems_content = generate_lems_channel_analyser(channel_file, channel_id, args.minV, \
+                                  step_target_voltage, args.maxV, clamp_delay, \
+                                  clamp_duration, clamp_base_voltage, duration, erev, gates, \
+                                  args.temperature, args.caConc)
+
+                new_lems_file = "LEMS_Test_%s.xml"%channel_id
+
+
+                lf = open(new_lems_file, 'w')
+                lf.write(lems_content)
+                lf.close()
+
+                print("Written generated LEMS file to %s\n"%new_lems_file)
+
+                if not args.norun:
+                    results = pynml.run_lems_with_jneuroml(new_lems_file, nogui=True, load_saved_data=True, plot=False)
+
+                    #print results.keys()
+                    fig = pylab.figure()
+                    fig.canvas.set_window_title("Steady state(s) of activation variables of channel %s from %s"%(channel_id, channel_file))
+                    pylab.xlabel('Membrane potential (V)')
+                    pylab.ylabel('Steady state - inf')
+                    pylab.grid('on')
+                    v = "rampCellPop0[0]/v"
+                    for g in gates:
+                        g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
+                        #print("Plotting %s"%(g_inf))
+                        pylab.plot(results[v], results[g_inf], '-', label="%s %s inf"%(channel_id, g))
+
+                    pylab.legend()
+
+                    fig = pylab.figure()
+                    fig.canvas.set_window_title("Time Course(s) of activation variables of channel %s from %s"%(channel_id, channel_file))
+
+                    pylab.xlabel('Membrane potential (V)')
+                    pylab.ylabel('Time Course - tau (s)')
+                    pylab.grid('on')
+                    for g in gates:
+                        g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(channel_id, g)
+                        pylab.plot(results[v], results[g_tau], '-', label="%s %s tau"%(channel_id, g))
+
+                    pylab.legend()
+
         
-    print("Written generated LEMS file to %s\n"%new_lems_file)
-    
-    if not args.norun:
-        results = pynml.run_lems_with_jneuroml(new_lems_file, nogui=True, load_saved_data=True, plot=False)
-    
-        #print results.keys()
         
-        plt.xlabel('Membrane potential (V)')
-        plt.ylabel('Steady state - inf')
-        plt.grid('on')
-        v = "rampCellPop0[0]/v"
-        for g in gates:
-            g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(args.channelId, g)
-            #print("Plotting %s"%(g_inf))
-            plt.plot(results[v], results[g_inf], '-', label="%s %s inf"%(args.channelId, g))
-            
-        plt.legend()
-        plt.figure()
-        
-        plt.xlabel('Membrane potential (V)')
-        plt.ylabel('Time Course - tau (s)')
-        for g in gates:
-            g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(args.channelId, g)
-            plt.plot(results[v], results[g_tau], '-', label="%s %s tau"%(args.channelId, g))
-        
-        plt.legend()
-        
-        plt.show()
+    pylab.show()
 
 
 if __name__ == '__main__':
