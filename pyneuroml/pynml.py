@@ -90,7 +90,7 @@ def read_lems_file(lems_file_name):
     return model
 
 
-def write_lems_file(lems_model, lems_file_name, validate=True):
+def write_lems_file(lems_model, lems_file_name, validate=False):
     
     lems_model.export_to_file(lems_file_name)
     
