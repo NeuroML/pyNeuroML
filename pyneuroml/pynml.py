@@ -99,14 +99,14 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         validate_lems(lems_file_name)
 
 
-def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False, plot=False):           
+def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False, plot=False, verbose=True):           
     print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, True)
     
     post_args = ""
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args)
+    run_jneuroml("", lems_file_name, post_args, verbose)
     
     if load_saved_data:
         return reload_saved_data(lems_file_name, plot, 'jNeuroML')
@@ -215,7 +215,7 @@ def evaluate_arguments(args):
     run_jneuroml(pre_args, args.target_file, post_args)
     
         
-def run_jneuroml(pre_args, target_file, post_args):    
+def run_jneuroml(pre_args, target_file, post_args, verbose=True):    
        
     exec_dir = "." 
     
@@ -227,7 +227,7 @@ def run_jneuroml(pre_args, target_file, post_args):
     output = execute_command_in_dir("java -jar %s %s %s %s" %
                                         (jar, pre_args, target_file, post_args), exec_dir)
                                             
-    print_comment(output, True)
+    print_comment(output, verbose)
 
     
     
