@@ -109,7 +109,7 @@ def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False, p
     run_jneuroml("", lems_file_name, post_args)
     
     if load_saved_data:
-        return reload_saved_data(lems_file_name, plot)
+        return reload_saved_data(lems_file_name, plot, 'jNeuroML')
 
 
 def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=False, plot=False):           
@@ -122,10 +122,10 @@ def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=F
     run_jneuroml("", lems_file_name, post_args)
     
     if load_saved_data:
-        return reload_saved_data(lems_file_name, plot)
+        return reload_saved_data(lems_file_name, plot, 'jNeuroML_NEURON')
     
     
-def reload_saved_data(lems_file_name, plot=False): 
+def reload_saved_data(lems_file_name, plot=False, simulator=None): 
     
     # Could use pylems to parse this...
 
@@ -152,7 +152,7 @@ def reload_saved_data(lems_file_name, plot=False):
     for of in sim.findall(ns_prefix+'OutputFile'):
         results['t'] = []
         file_name = of.attrib['fileName']
-        print_comment("Loading saved data from %s"%file_name, True)
+        print_comment("Loading saved data from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''), True)
 
         cols = []
         cols.append('t')
@@ -170,7 +170,7 @@ def reload_saved_data(lems_file_name, plot=False):
 
         if plot:
             fig = pylab.figure()
-            fig.canvas.set_window_title("Data loaded from %s"%file_name)
+            fig.canvas.set_window_title("Data loaded from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''))
             
             for key in cols:
 
