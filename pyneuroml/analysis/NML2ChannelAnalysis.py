@@ -174,6 +174,18 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
 
     return merged
 
+def get_state_color(s):
+    col='#000000'
+    if s=='m': col='#FF0000'
+    if s=='h': col='#00FF00'
+    if s=='n': col='#0000FF'
+    if s=='a': col='#FF0000'
+    if s=='b': col='#00FF00'
+    if s=='c': col='#0000FF'
+    if s=='q': col='#FF00FF'
+    
+    return col
+
 def main():
 
     args = process_args()
@@ -212,6 +224,8 @@ def main():
 
             for g in ic.gates:
                 gates.append(g.id)
+            for g in ic.gate_hh_rates:
+                gates.append(g.id)
             for g in ic.gate_hh_tau_infs:
                 gates.append(g.id)
 
@@ -249,7 +263,7 @@ def main():
 
                     #print results.keys()
                     fig = pylab.figure()
-                    fig.canvas.set_window_title("Steady state(s) of activation variables of channel %s from %s"%(channel_id, channel_file))
+                    fig.canvas.set_window_title("Steady state(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
                     pylab.xlabel('Membrane potential (V)')
                     pylab.ylabel('Steady state - inf')
                     pylab.grid('on')
@@ -257,7 +271,8 @@ def main():
                     for g in gates:
                         g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
                         #print("Plotting %s"%(g_inf))
-                        pylab.plot(results[v], results[g_inf], '-', label="%s %s inf"%(channel_id, g))
+                        col=get_state_color(g)
+                        pylab.plot(results[v], results[g_inf], color=col, linestyle='-', label="%s %s inf"%(channel_id, g))
 
                     pylab.legend()
                     
@@ -265,14 +280,15 @@ def main():
                         pylab.savefig('html/%s.inf.png'%channel_id)
 
                     fig = pylab.figure()
-                    fig.canvas.set_window_title("Time Course(s) of activation variables of channel %s from %s"%(channel_id, channel_file))
+                    fig.canvas.set_window_title("Time Course(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
 
                     pylab.xlabel('Membrane potential (V)')
                     pylab.ylabel('Time Course - tau (s)')
                     pylab.grid('on')
                     for g in gates:
                         g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(channel_id, g)
-                        pylab.plot(results[v], results[g_tau], '-', label="%s %s tau"%(channel_id, g))
+                        col=get_state_color(g)
+                        pylab.plot(results[v], results[g_tau], color=col, linestyle='-', label="%s %s tau"%(channel_id, g))
 
                     pylab.legend()
                     if args.html:

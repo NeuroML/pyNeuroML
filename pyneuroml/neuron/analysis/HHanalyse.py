@@ -12,7 +12,7 @@ import argparse
 import neuron
 print("\n\n") 
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pylab
 from pylab import *
 from math import log
 
@@ -83,6 +83,7 @@ def get_state_color(s):
     if s=='a': col='#FF0000'
     if s=='b': col='#00FF00'
     if s=='c': col='#0000FF'
+    if s=='q': col='#FF00FF'
     
     return col
 
@@ -95,11 +96,12 @@ def main():
     ## Get name of channel mechanism to test
 
     chanToTest = args.channel
-    if verbose: print "Going to test channel: "+ chanToTest
+    if verbose: 
+        print("Going to test channel: "+ chanToTest)
 
     ## Create the standard vars h, p for accessing hoc from Python & vice versa
 
-    print "Starting NEURON in Python mode..."
+    print("Starting NEURON in Python mode...")
     h = neuron.h
     h.load_file('stdrun.hoc')
     h('''
@@ -151,7 +153,8 @@ def main():
                     elif el.endswith('}'): states.append(el[:-1])
                     else: states.append(el)
 
-    if verbose: print "States found in mod file: " + str(states)
+    if verbose: 
+        print("States found in mod file: " + str(states))
 
 
     ## Settings for the voltage clamp test
@@ -179,12 +182,12 @@ def main():
 
 
     if verbose: 
-        figV = plt.figure()
-        figV.suptitle("Membrane potentials")
+        figV = pylab.figure()
+        figV.canvas.set_window_title("Membrane potentials for %s at %s degC"%(chanToTest,h.celsius))
         plV = figV.add_subplot(111, autoscale_on=True)
 
-        figR = plt.figure()
-        figR.suptitle("Rate variables at %s degC"%h.celsius)
+        figR = pylab.figure()
+        figR.canvas.set_window_title("Rate variables for %s at %s degC"%(chanToTest,h.celsius))
         plR = figR.add_subplot(111, autoscale_on=True)
 
 
@@ -214,7 +217,7 @@ def main():
         for s in states:
             rateRec[s] = []
 
-        print "Starting simulation with channel %s of max time: %f, with holding potential: %f"%(chanToTest, tstopMax, vh)
+        print("Starting simulation with channel %s of max time: %f, with holding potential: %f"%(chanToTest, tstopMax, vh))
         #h.cvode.active(1)
         h.finitialize(v0)
         tolerance = 1e-5
@@ -234,7 +237,8 @@ def main():
             h.fadvance()
             tRec.append(h.t)
             vRec.append(sec(0.5).v)
-            if verbose: print "--- Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"%(h.t, h.dt, vh, foundTau, foundInf)
+            if verbose: 
+                print("--- Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"%(h.t, h.dt, vh, foundTau, foundInf))
             for s in states:
                 rateVal = eval("sec(0.5)."+s+"_"+chanToTest)
                 rateRec[s].append(float(rateVal))
@@ -243,20 +247,24 @@ def main():
                     if(h.t >= preHold):
                         slope = (rateRec[s][-1] - rateRec[s][-2])/h.dt
                         fractOfInit = slope/initSlopeVal[s]
-                        if verbose: print "        Slope of %s: %s (%s -> %s); init slope: %s; fractOfInit: %s; rateVal: %s"%(s, slope, rateRec[s][-2], rateRec[s][-1], initSlopeVal[s], fractOfInit, rateVal)
+                        if verbose: 
+                            print("        Slope of %s: %s (%s -> %s); init slope: %s; fractOfInit: %s; rateVal: %s"%(s, slope, rateRec[s][-2], rateRec[s][-1], initSlopeVal[s], fractOfInit, rateVal))
                         
                         if initSlopeVal[s]==1e9 and h.t >= timeToCheckTau:
                             initSlopeVal[s] = slope
-                            if verbose: print "        Init slope of %s: %s at val: %s; timeToCheckTau: %s"%(s, slope, rateVal, timeToCheckTau)
+                            if verbose: 
+                                print("        Init slope of %s: %s at val: %s; timeToCheckTau: %s"%(s, slope, rateVal, timeToCheckTau))
                         elif initSlopeVal[s]!=1e9:
 
                             if fractOfInit < 0.367879441:
                                 tau =  (h.t-timeToCheckTau)  #/ (-1*log(fractOfInit))
-                                if verbose: print "        Found! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log %s; tau %s"%(s, slope, initSlopeVal[s], rateVal, h.t-timeToCheckTau, fractOfInit, log(fractOfInit), tau)
+                                if verbose:  
+                                    print("        Found! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log %s; tau %s"%(s, slope, initSlopeVal[s], rateVal, h.t-timeToCheckTau, fractOfInit, log(fractOfInit), tau))
                                 foundTau.append(s)
                                 timeCourseVals[s].append(tau)
                             else:
-                                if verbose: print "        Not yet fallen by 1/e: %s"% fractOfInit   
+                                if verbose: 
+                                    print("        Not yet fallen by 1/e: %s"% fractOfInit)
 
 
 
@@ -270,15 +278,17 @@ def main():
 
                     if s not in foundInf:
                         if abs((lastCheckVal[s]-val)/val) > tolerance:
-                            if verbose: print "State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"%(s,val, lastCheckVal[s], ((lastCheckVal[s]-val)/val), tolerance)
+                            if verbose: 
+                                print("State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"%(s,val, lastCheckVal[s], ((lastCheckVal[s]-val)/val), tolerance))
                         else:
-                            if verbose: print "State %s has passed at %f"%(s,val)
+                            if verbose: print("State %s has passed at %f"%(s,val))
                             foundInf.append(s)
 
                         lastCheckVal[s] = val
 
 
-        if verbose: print "Finished run,  t: %f, v: %f, vh: %f, initSlopeVal: %s, timeCourseVals: %s ---  "%(h.t, sec(0.5).v, vh, str(initSlopeVal), str(timeCourseVals))
+        if verbose: 
+            print("Finished run,  t: %f, v: %f, vh: %f, initSlopeVal: %s, timeCourseVals: %s ---  "%(h.t, sec(0.5).v, vh, str(initSlopeVal), str(timeCourseVals)))
 
         if verbose: plV.plot(tRec, vRec, solid_joinstyle ='round', solid_capstyle ='round', color='#000000', linestyle='-', marker='None')
 
@@ -292,14 +302,15 @@ def main():
 
 
 
-    figRates = plt.figure()
-    figRates.suptitle("Steady states of rate activation variables")
-    plRates = figRates.add_subplot(111, autoscale_on=False, xlim=(minV - 0.1*(maxV-minV), maxV + 0.1*(maxV-minV)), ylim=(-0.1, 1.1))
+    figRates = pylab.figure()
+    plRates = figRates.add_subplot(111, autoscale_on=True)
+    figRates.canvas.set_window_title("Steady state(s) of activation variables in %s at %s degC"%(chanToTest,h.celsius))
+    pylab.grid('on')
 
-
-    figTau = plt.figure()
-    figTau.suptitle("Time courses of rate activation variables at %s degC"%h.celsius)
+    figTau = pylab.figure()
+    figTau.canvas.set_window_title("Time course(s) of activation variables in %s at %s degC"%(chanToTest,h.celsius))
     plTau = figTau.add_subplot(111, autoscale_on=True)
+    pylab.grid('on')
 
     for s in states:
         col=get_state_color(s)
@@ -331,9 +342,9 @@ def main():
         
         
     if not args.nogui:
-        plt.show()
+        pylab.show()
 
-    print "Done!"
+    print("Done!")
 
 
 if __name__ == '__main__':

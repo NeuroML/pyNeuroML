@@ -1,3 +1,11 @@
+/examples/LEMS_Test_NaConductance.xml
+/examples/LEMS_Test_naChan.xml
+/examples/NaConductance.channel.nml
+/examples/NaConductance.h.inf.lems.dat
+/examples/NaConductance.h.tau.lems.dat
+/examples/NaConductance.m.inf.lems.dat
+/examples/NaConductance.m.tau.lems.dat
+/examples/NaConductance.rampV.lems.dat
 /examples/NaConductance.h.inf.dat
 /examples/NaConductance.h.tau.dat
 /examples/NaConductance.m.inf.dat
