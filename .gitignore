@@ -1,3 +1,8 @@
+/examples/NaConductance.h.inf.dat
+/examples/NaConductance.h.tau.dat
+/examples/NaConductance.m.inf.dat
+/examples/NaConductance.m.tau.dat
+/examples/run_jneuroml_plot_matplotlib2.py
 /examples/hhcell.hoc
 /examples/test.morphonly.nml
 /examples/test.biophys.nml

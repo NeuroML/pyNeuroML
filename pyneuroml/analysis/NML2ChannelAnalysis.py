@@ -227,7 +227,7 @@ def main():
                     channel_info['id'] = channel_id
                     channel_info['file'] = channel_file
                     if ic.notes:
-                        print ic.notes
+                        #print ic.notes
                         channel_info['notes'] = ic.notes
                         
                 lems_content = generate_lems_channel_analyser(channel_file, channel_id, args.minV, \
