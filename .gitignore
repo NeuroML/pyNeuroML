@@ -1,3 +1,7 @@
+/examples/kChan.mod
+/examples/naChan.mod
+/examples/passiveChan.mod
+/examples/pulseGen1.mod
 /examples/LEMS_Test_NaConductance.xml
 /examples/LEMS_Test_naChan.xml
 /examples/NaConductance.channel.nml
@@ -35,7 +39,6 @@ dist
 *.o
 *.dll
 *.log
-*.mod
 *nrn.py
 x86_64
 i386
