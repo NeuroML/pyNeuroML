@@ -261,24 +261,8 @@ def main():
                 if not args.norun:
                     results = pynml.run_lems_with_jneuroml(new_lems_file, nogui=True, load_saved_data=True, plot=False)
 
-                    #print results.keys()
-                    fig = pylab.figure()
-                    fig.canvas.set_window_title("Steady state(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
-                    pylab.xlabel('Membrane potential (V)')
-                    pylab.ylabel('Steady state - inf')
-                    pylab.grid('on')
                     v = "rampCellPop0[0]/v"
-                    for g in gates:
-                        g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
-                        #print("Plotting %s"%(g_inf))
-                        col=get_state_color(g)
-                        pylab.plot(results[v], results[g_inf], color=col, linestyle='-', label="%s %s inf"%(channel_id, g))
-
-                    pylab.legend()
                     
-                    if args.html:
-                        pylab.savefig('html/%s.inf.png'%channel_id)
-
                     fig = pylab.figure()
                     fig.canvas.set_window_title("Time Course(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
 
@@ -289,10 +273,29 @@ def main():
                         g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(channel_id, g)
                         col=get_state_color(g)
                         pylab.plot(results[v], results[g_tau], color=col, linestyle='-', label="%s %s tau"%(channel_id, g))
+                        pylab.gca().autoscale(enable=True, axis='x', tight=True)
 
                     pylab.legend()
+                    
                     if args.html:
                         pylab.savefig('html/%s.tau.png'%channel_id)
+                        
+                    fig = pylab.figure()
+                    fig.canvas.set_window_title("Steady state(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
+                    pylab.xlabel('Membrane potential (V)')
+                    pylab.ylabel('Steady state - inf')
+                    pylab.grid('on')
+                    for g in gates:
+                        g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
+                        #print("Plotting %s"%(g_inf))
+                        col=get_state_color(g)
+                        pylab.plot(results[v], results[g_inf], color=col, linestyle='-', label="%s %s inf"%(channel_id, g))
+                        pylab.gca().autoscale(enable=True, axis='x', tight=True)
+                    pylab.legend()
+                    
+                    if args.html:
+                        pylab.savefig('html/%s.inf.png'%channel_id)
+
 
         
     if not args.html:

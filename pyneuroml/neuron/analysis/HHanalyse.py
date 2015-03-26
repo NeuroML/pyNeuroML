@@ -237,7 +237,8 @@ def main():
             h.fadvance()
             tRec.append(h.t)
             vRec.append(sec(0.5).v)
-            if verbose: 
+            vverbose = verbose and False
+            if vverbose: 
                 print("--- Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"%(h.t, h.dt, vh, foundTau, foundInf))
             for s in states:
                 rateVal = eval("sec(0.5)."+s+"_"+chanToTest)
@@ -247,23 +248,23 @@ def main():
                     if(h.t >= preHold):
                         slope = (rateRec[s][-1] - rateRec[s][-2])/h.dt
                         fractOfInit = slope/initSlopeVal[s]
-                        if verbose: 
+                        if vverbose: 
                             print("        Slope of %s: %s (%s -> %s); init slope: %s; fractOfInit: %s; rateVal: %s"%(s, slope, rateRec[s][-2], rateRec[s][-1], initSlopeVal[s], fractOfInit, rateVal))
                         
                         if initSlopeVal[s]==1e9 and h.t >= timeToCheckTau:
                             initSlopeVal[s] = slope
-                            if verbose: 
+                            if vverbose: 
                                 print("        Init slope of %s: %s at val: %s; timeToCheckTau: %s"%(s, slope, rateVal, timeToCheckTau))
                         elif initSlopeVal[s]!=1e9:
 
                             if fractOfInit < 0.367879441:
                                 tau =  (h.t-timeToCheckTau)  #/ (-1*log(fractOfInit))
-                                if verbose:  
+                                if vverbose:  
                                     print("        Found! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log %s; tau %s"%(s, slope, initSlopeVal[s], rateVal, h.t-timeToCheckTau, fractOfInit, log(fractOfInit), tau))
                                 foundTau.append(s)
                                 timeCourseVals[s].append(tau)
                             else:
-                                if verbose: 
+                                if vverbose: 
                                     print("        Not yet fallen by 1/e: %s"% fractOfInit)
 
 
@@ -278,7 +279,7 @@ def main():
 
                     if s not in foundInf:
                         if abs((lastCheckVal[s]-val)/val) > tolerance:
-                            if verbose: 
+                            if vverbose: 
                                 print("State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"%(s,val, lastCheckVal[s], ((lastCheckVal[s]-val)/val), tolerance))
                         else:
                             if verbose: print("State %s has passed at %f"%(s,val))
@@ -315,14 +316,14 @@ def main():
     for s in states:
         col=get_state_color(s)
 
-        plRates.plot(volts, steadyStateVals[s], label='Steady state of %s in %s'%(s,chanToTest), solid_joinstyle ='round', solid_capstyle ='round', color=col, linestyle='-', marker='o')
+        plRates.plot(volts, steadyStateVals[s], label='%s %s inf'%(chanToTest,s), solid_joinstyle ='round', solid_capstyle ='round', color=col, linestyle='-', marker='o')
 
-        plRates.legend(loc='center right')
+        plRates.legend()
 
         if len(timeCourseVals[s])==len(volts):
-            plTau.plot(volts, timeCourseVals[s], label='Time course of %s in %s'%(s,chanToTest), solid_joinstyle ='round', solid_capstyle ='round', color=col, linestyle='-', marker='o')
+            plTau.plot(volts, timeCourseVals[s], label='%s %s tau'%(chanToTest,s), solid_joinstyle ='round', solid_capstyle ='round', color=col, linestyle='-', marker='o')
 
-        plTau.legend(loc='center right')
+        plTau.legend()
 
 
     for s in states:
