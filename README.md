@@ -7,7 +7,7 @@
 
 Clone the repository:
 
-    git clone https://github.com/pgleeson/pyNeuroML.git
+    git clone https://github.com/NeuroML/pyNeuroML.git
     cd pyNeuroML
     
 It should be possible to install pyNeuroML using just:
@@ -23,7 +23,7 @@ You **may** have to install the development version of [libNeuroML](https://gith
     sudo python setup.py install
     
 
-### Some planned features
+### Some current/planned features
 
 #### Single Python package for NeuroML2/LEMS
 
@@ -35,15 +35,19 @@ One Python package which can be installed using pip & a user has everything they
 
 #### Run models using jNeuroML or PyLEMS
 
-Ability to run NeuroML2/LEMS models using jLEMS/jNeuroML or PyLEMS
+Ability to run NeuroML2/LEMS models using jLEMS/jNeuroML (with [bundled jar](https://github.com/NeuroML/pyNeuroML/tree/master/pyneuroml/lib)) or PyLEMS (coming soon...)
 
-- Uses the same command line interface as jNeuroML?
+- Uses similar command line interface as jNeuroML
+
+Try:
+
+    pynml -h
 
 #### Access to export & import options of jNeuroML
 
-All export & import options of jNeuroML available through easy command line interface
+All export & import options of jNeuroML available through easy command line interface (coming soon...) & through Python methods.
 
-- pynml
+Example of export of NeuroML2/LEMS to NEURON and execution of generated code using single method is [here](https://github.com/NeuroML/pyNeuroML/blob/master/examples/run_jneuroml_plot_matplotlib.py#L21).
 
 #### Helper Python scripts
 
