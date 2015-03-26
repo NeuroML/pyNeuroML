@@ -12,6 +12,8 @@ import argparse
 import neuroml.loaders as loaders
 from pyneuroml import pynml
 
+from pyneuroml.neuron.nrn_export_utils import get_state_color
+
 import airspeed
 import sys
 import os
@@ -174,17 +176,6 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
 
     return merged
 
-def get_state_color(s):
-    col='#000000'
-    if s=='m': col='#FF0000'
-    if s=='h': col='#00FF00'
-    if s=='n': col='#0000FF'
-    if s=='a': col='#FF0000'
-    if s=='b': col='#00FF00'
-    if s=='c': col='#0000FF'
-    if s=='q': col='#FF00FF'
-    
-    return col
 
 def main():
 

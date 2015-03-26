@@ -13,6 +13,9 @@ import neuron
 print("\n\n") 
 
 import matplotlib.pyplot as pylab
+
+from pyneuroml.neuron.nrn_export_utils import get_state_color
+
 from pylab import *
 from math import log
 
@@ -75,17 +78,7 @@ def process_args():
     
     return parser.parse_args()
 
-def get_state_color(s):
-    col='#000000'
-    if s=='m': col='#FF0000'
-    if s=='h': col='#00FF00'
-    if s=='n': col='#0000FF'
-    if s=='a': col='#FF0000'
-    if s=='b': col='#00FF00'
-    if s=='c': col='#0000FF'
-    if s=='q': col='#FF00FF'
     
-    return col
 
 def main():
 

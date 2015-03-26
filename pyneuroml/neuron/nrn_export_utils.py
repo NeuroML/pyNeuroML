@@ -19,6 +19,17 @@ def get_segment_group_name(nrn_section_name):
         return replace_brackets(nrn_section_name.split('.')[1])
     
     
+def get_state_color(s):
+    col='#000000'
+    if s.startswith('m'): col='#FF0000'
+    if s.startswith('h'): col='#00FF00'
+    if s.startswith('n'): col='#0000FF'
+    if s.startswith('a'): col='#FF0000'
+    if s.startswith('b'): col='#00FF00'
+    if s.startswith('c'): col='#0000FF'
+    if s.startswith('q'): col='#FF00FF'
+    
+    return col
 
 if __name__ == '__main__':
     
