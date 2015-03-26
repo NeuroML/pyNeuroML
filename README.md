@@ -84,5 +84,4 @@ Built in viewer of cells in 3D? Mayavi?
 More closely tied to PyNN?
 
 
-
-[![Build Status](https://travis-ci.org/pgleeson/pyNeuroML.svg?branch=master)](https://travis-ci.org/pgleeson/pyNeuroML)
+[![Build Status](https://travis-ci.org/NeuroML/pyNeuroML.svg?branch=master)](https://travis-ci.org/NeuroML/pyNeuroML)
