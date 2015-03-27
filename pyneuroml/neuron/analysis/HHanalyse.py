@@ -225,7 +225,7 @@ def main():
             initSlopeVal[s]=1e9
 
 
-        while (h.t <= tstopMax) and (s not in foundInf or s not in foundTau):
+        while (h.t <= tstopMax) and (len(foundInf) < len(states) or len(foundTau) < len(states)):
 
             h.fadvance()
             tRec.append(h.t)
@@ -264,7 +264,9 @@ def main():
 
 
             if h.t >= preHold and h.t >= lastCheckTime+postHoldStep:
-                
+                if verbose:
+                    print("  - Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"%(h.t, h.dt, vh, foundTau, foundInf))
+                    
                 lastCheckTime = h.t
 
                 for s in states:
@@ -272,10 +274,10 @@ def main():
 
                     if s not in foundInf:
                         if abs((lastCheckVal[s]-val)/val) > tolerance:
-                            if vverbose: 
-                                print("State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"%(s,val, lastCheckVal[s], ((lastCheckVal[s]-val)/val), tolerance))
+                            if verbose: 
+                                print("  State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"%(s, val, lastCheckVal[s], ((lastCheckVal[s]-val)/val), tolerance))
                         else:
-                            if verbose: print("State %s has passed at %f"%(s,val))
+                            if verbose: print("  State %s has passed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"%(s, val, lastCheckVal[s], ((lastCheckVal[s]-val)/val), tolerance))
                             foundInf.append(s)
 
                         lastCheckVal[s] = val
