@@ -240,6 +240,8 @@ def main():
                 if s not in foundTau:
                     if(h.t >= preHold):
                         slope = (rateRec[s][-1] - rateRec[s][-2])/h.dt
+                        if initSlopeVal[s] == 0:
+                            print("\n**************************************\n*  Error! Initial slope of curve for state %s is 0\n*  Consider using a smaller dt (currently %s) with option: -dt\n**************************************\n"%(s, h.dt))
                         fractOfInit = slope/initSlopeVal[s]
                         if vverbose: 
                             print("        Slope of %s: %s (%s -> %s); init slope: %s; fractOfInit: %s; rateVal: %s"%(s, slope, rateRec[s][-2], rateRec[s][-1], initSlopeVal[s], fractOfInit, rateVal))
