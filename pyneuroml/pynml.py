@@ -184,7 +184,7 @@ def reload_saved_data(lems_file_name, plot=False, simulator=None):
                     curr_plot.plot(results['t'], results[key], label=key)
                     print_comment("Adding trace for: %s, from: %s"%(key,file_name), True)
                     
-                pylab.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True)
+                pylab.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=4) 
                    
     #print(results.keys())
         
