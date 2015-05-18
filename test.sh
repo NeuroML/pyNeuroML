@@ -31,8 +31,10 @@ fi
 #  Run an example with jNeuroML
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 
-#  Generate a frequency vs current plot
-##python generate_if_curve.py -nogui
+
+################################################
+##   Try exporting morphologies to NeuroML from NEURON
+
 
 if [ "$run_neuron_examples" == true ]; then
     
@@ -44,7 +46,10 @@ if [ "$run_neuron_examples" == true ]; then
 
 fi
     
+################################################
+#  Generate a frequency vs current plot
 
+##python generate_if_curve.py -nogui
 
 
 

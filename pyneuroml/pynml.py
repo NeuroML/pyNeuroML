@@ -250,10 +250,16 @@ def execute_command_in_dir(command, directory):
         
     print_comment("Executing: (%s) in dir: %s" % (command, directory))
     
-    return_string = subprocess.check_output(command, cwd=directory, shell=True)
-                                     
-    return return_string
+    try:
+        return_string = subprocess.check_output(command, cwd=directory, shell=True)
 
+        return return_string
+    
+    except AttributeError:
+        # For python 2.6...
+        return_string = subprocess.Popen(command, cwd=directory, shell=True,
+                                     stdout=subprocess.PIPE).communicate()[0]
+        return return_string
                               
 
 def main():
