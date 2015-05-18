@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="NaConductance">
+
+    <notes>ChannelML file containing a single Channel description</notes>
+
+    <ionChannel id="NaConductance" conductance="10pS" type="ionChannelHH" species="na">
+
+        <notes>ChannelML file containing a single Channel description</notes>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="NaConductance">
+                    
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>A. L. Hodgkin and A. F. Huxley, A quantitative description of membrane current and 
+            its application to conduction and excitation in nerve, J. Physiol., vol. 117, pp. 500-544, 1952.</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&amp;db=pubmed&amp;dopt=Abstract&amp;list_uids=12991237"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Na channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/senselab/NeuronDB/channelGene2.htm#table2"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+        <gate id="m" type="gateHHrates" instances="3">
+            <forwardRate type="HHExpLinearRate" rate="1per_ms" scale="10mV" midpoint="-40mV"/>
+            <reverseRate type="HHExpRate" rate="4per_ms" scale="-18mV" midpoint="-65mV"/>
+        </gate>
+
+        <gate id="h" type="gateHHrates" instances="1">
+            <forwardRate type="HHExpRate" rate="0.07per_ms" scale="-20mV" midpoint="-65mV"/>
+            <reverseRate type="HHSigmoidRate" rate="1per_ms" scale="10mV" midpoint="-35mV"/>
+        </gate>
+                            
+    </ionChannel>
+
+</neuroml>
