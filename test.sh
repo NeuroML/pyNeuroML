@@ -32,19 +32,12 @@ fi
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 
 
+    
 ################################################
-##   Try exporting morphologies to NeuroML from NEURON
+#  Test analysis of NeuroML2 channel
 
+pynml-channelanalysis NaConductance.channel.nml -nogui
 
-if [ "$run_neuron_examples" == true ]; then
-    
-    # Export NeuroML v1 from NEURON example
-    python export_neuroml1.py
-    
-    # Export NeuroML v2 from NEURON example
-    python export_neuroml2.py
-
-fi
     
 ################################################
 #  Generate a frequency vs current plot
@@ -53,4 +46,25 @@ fi
 
 
 
+# Only run these if NEURON is installed & -neuron flag is used
+if [ "$run_neuron_examples" == true ]; then
+
+
+    
+################################################
+##   Try exporting morphologies to NeuroML from NEURON
+
+    # Export NeuroML v1 from NEURON example
+    python export_neuroml1.py
+    
+    # Export NeuroML v2 from NEURON example
+    python export_neuroml2.py
+
+################################################
+#  Test analysis of channel in mod file 
+
+    nrnivmodl
+    pynml-modchananalysis -stepV 20  NaConductance  -dt 0.01 -nogui
+
+fi
 

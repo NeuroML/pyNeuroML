@@ -2,9 +2,6 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
-from pyelectro.analysis import max_min
-from pyelectro.analysis import mean_spike_frequency
-import numpy as np
 
 def generate_current_vs_frequency_curve(nml2_file, 
                                         cell_id, 
@@ -18,6 +15,11 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         plot_voltage_traces=False,
                                         plot_if=True,
                                         simulator="jNeuroML"):
+                                            
+                                            
+    from pyelectro.analysis import max_min
+    from pyelectro.analysis import mean_spike_frequency
+    import numpy as np
     
     sim_id = 'iv_%s'%cell_id
     duration = analysis_duration+analysis_delay

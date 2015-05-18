@@ -12,8 +12,6 @@ import argparse
 import neuroml.loaders as loaders
 from pyneuroml import pynml
 
-from pyneuroml.neuron.nrn_export_utils import get_state_color
-
 import airspeed
 import sys
 import os
@@ -114,6 +112,11 @@ def process_args():
                         default=False,
                         help="If used, just generate the LEMS file, don't run it")
                         
+    parser.add_argument('-nogui',
+                        action='store_true',
+                        default=False,
+                        help="Supress plotting of variables and only save data to file")
+                        
     parser.add_argument('-html',
                         action='store_true',
                         default=False,
@@ -128,6 +131,20 @@ def get_colour_hex(fract):
     col = "#"
     for c in rgb: col+= ( c[2:4] if len(c)==4 else "00")
     return col
+
+    
+def get_state_color(s):
+    col='#000000'
+    if s.startswith('m'): col='#FF0000'
+    if s.startswith('h'): col='#00FF00'
+    if s.startswith('n'): col='#0000FF'
+    if s.startswith('a'): col='#FF0000'
+    if s.startswith('b'): col='#00FF00'
+    if s.startswith('c'): col='#0000FF'
+    if s.startswith('q'): col='#FF00FF'
+    
+    return col
+
 
 def merge_with_template(model, templfile):
     if not os.path.isfile(templfile):
@@ -252,40 +269,41 @@ def main():
                 if not args.norun:
                     results = pynml.run_lems_with_jneuroml(new_lems_file, nogui=True, load_saved_data=True, plot=False)
 
-                    v = "rampCellPop0[0]/v"
-                    
-                    fig = pylab.figure()
-                    fig.canvas.set_window_title("Time Course(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
+                    if not args.nogui:
+                        v = "rampCellPop0[0]/v"
 
-                    pylab.xlabel('Membrane potential (V)')
-                    pylab.ylabel('Time Course - tau (s)')
-                    pylab.grid('on')
-                    for g in gates:
-                        g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(channel_id, g)
-                        col=get_state_color(g)
-                        pylab.plot(results[v], results[g_tau], color=col, linestyle='-', label="%s %s tau"%(channel_id, g))
-                        pylab.gca().autoscale(enable=True, axis='x', tight=True)
+                        fig = pylab.figure()
+                        fig.canvas.set_window_title("Time Course(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
 
-                    pylab.legend()
-                    
-                    if args.html:
-                        pylab.savefig('html/%s.tau.png'%channel_id)
-                        
-                    fig = pylab.figure()
-                    fig.canvas.set_window_title("Steady state(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
-                    pylab.xlabel('Membrane potential (V)')
-                    pylab.ylabel('Steady state - inf')
-                    pylab.grid('on')
-                    for g in gates:
-                        g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
-                        #print("Plotting %s"%(g_inf))
-                        col=get_state_color(g)
-                        pylab.plot(results[v], results[g_inf], color=col, linestyle='-', label="%s %s inf"%(channel_id, g))
-                        pylab.gca().autoscale(enable=True, axis='x', tight=True)
-                    pylab.legend()
-                    
-                    if args.html:
-                        pylab.savefig('html/%s.inf.png'%channel_id)
+                        pylab.xlabel('Membrane potential (V)')
+                        pylab.ylabel('Time Course - tau (s)')
+                        pylab.grid('on')
+                        for g in gates:
+                            g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(channel_id, g)
+                            col=get_state_color(g)
+                            pylab.plot(results[v], results[g_tau], color=col, linestyle='-', label="%s %s tau"%(channel_id, g))
+                            pylab.gca().autoscale(enable=True, axis='x', tight=True)
+
+                        pylab.legend()
+
+                        if args.html:
+                            pylab.savefig('html/%s.tau.png'%channel_id)
+
+                        fig = pylab.figure()
+                        fig.canvas.set_window_title("Steady state(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
+                        pylab.xlabel('Membrane potential (V)')
+                        pylab.ylabel('Steady state - inf')
+                        pylab.grid('on')
+                        for g in gates:
+                            g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
+                            #print("Plotting %s"%(g_inf))
+                            col=get_state_color(g)
+                            pylab.plot(results[v], results[g_inf], color=col, linestyle='-', label="%s %s inf"%(channel_id, g))
+                            pylab.gca().autoscale(enable=True, axis='x', tight=True)
+                        pylab.legend()
+
+                        if args.html:
+                            pylab.savefig('html/%s.inf.png'%channel_id)
 
 
         

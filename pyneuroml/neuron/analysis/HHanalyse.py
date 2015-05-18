@@ -14,7 +14,7 @@ print("\n\n")
 
 import matplotlib.pyplot as pylab
 
-from pyneuroml.neuron.nrn_export_utils import get_state_color
+from pyneuroml.analysis.NML2ChannelAnalysis import get_state_color
 
 from pylab import *
 from math import log
