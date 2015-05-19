@@ -22,6 +22,8 @@ import random
 
 verbose = False
 
+default_java_max_memory = "400M"
+
 def parse_arguments():
     """Parse command line arguments"""
     import argparse
@@ -39,6 +41,9 @@ def parse_arguments():
                         
     parser.add_argument('-nogui', action='store_true',
                         help='Supress GUI, i.e. show no plots, just save results', default="False")
+                        
+    parser.add_argument('-java_max_memory', metavar='java_max_memory', type=str,
+                        help='Java memory for jnml', default=default_java_max_memory)
                         
     parser.add_argument('-verbose', action='store_true',
                         help='Verbose output')
@@ -99,27 +104,27 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         validate_lems(lems_file_name)
 
 
-def run_lems_with_jneuroml(lems_file_name, nogui=False, load_saved_data=False, plot=False, verbose=True):           
+def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory, nogui=False, load_saved_data=False, plot=False, verbose=True):           
     print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, True)
     
     post_args = ""
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args, verbose)
+    run_jneuroml("", lems_file_name, post_args, max_memory, verbose)
     
     if load_saved_data:
         return reload_saved_data(lems_file_name, plot, 'jNeuroML')
 
 
-def run_lems_with_jneuroml_neuron(lems_file_name, nogui=False, load_saved_data=False, plot=False):           
+def run_lems_with_jneuroml_neuron(lems_file_name, max_memory=default_java_max_memory, nogui=False, load_saved_data=False, plot=False):           
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, True)
     
     post_args = " -neuron -run"
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args)
+    run_jneuroml("", lems_file_name, post_args, max_memory)
     
     if load_saved_data:
         return reload_saved_data(lems_file_name, plot, 'jNeuroML_NEURON')
@@ -212,10 +217,10 @@ def evaluate_arguments(args):
     if args.validate:
         pre_args += " -validate"
         
-    run_jneuroml(pre_args, args.target_file, post_args)
+    run_jneuroml(pre_args, args.target_file, post_args, args.java_max_memory)
     
         
-def run_jneuroml(pre_args, target_file, post_args, verbose=True):    
+def run_jneuroml(pre_args, target_file, post_args, max_memory=default_java_max_memory, verbose=True):    
        
     exec_dir = "." 
     
@@ -224,8 +229,8 @@ def run_jneuroml(pre_args, target_file, post_args, verbose=True):
     jar = os.path.join(script_dir, "lib/jNeuroML-0.7.1-jar-with-dependencies.jar")
     
 
-    output = execute_command_in_dir("java -jar %s %s %s %s" %
-                                        (jar, pre_args, target_file, post_args), exec_dir)
+    output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
+                                        (max_memory, jar, pre_args, target_file, post_args), exec_dir)
                                             
     print_comment(output, verbose)
 
