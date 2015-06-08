@@ -31,13 +31,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='pyNeuroML v%s: Python utilities for NeuroML2'%__version__)
 
     parser.add_argument('target_file', metavar='target_file', type=str,
-                        help='The LEMS/NeuroML2 file to process; without other options runs a LEMS file natively')
+                        help='The LEMS/NeuroML2 file to process; without other options simulates a LEMS file (containing a <Simulation element>) natively using jNeuroML')
 
     ##parser.add_argument('-sim', choices=('pylems', 'jlems'),
     ##                     help='Simulator to use')
 
     parser.add_argument('-nogui', action='store_true',
-                        help='Supress GUI, i.e. show no plots, just save results, when running ', default="False")
+                        help='Simulate LEMS file with jNeuroML, but supress GUI, i.e. show no plots, just save results', default="False")
                         
     parser.add_argument('-validate', action='store_true',
                         help='(Via jNeuroML) Validate NeuroML2 file against the latest Schema')
