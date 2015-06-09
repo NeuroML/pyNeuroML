@@ -236,6 +236,8 @@ def main():
     
     info = {}
     chan_list = []
+    info['info'] = "Channel information at %s degC, reversal potential %smV, [Ca2+]: %smM"%(args.temperature, args.erev, args.caConc)
+                    
     info["channels"] = chan_list
     
     for channel_file in args.channelFiles:
