@@ -1,27 +1,21 @@
 #!/usr/bin/env python
-
 #
-#
-#   A script which can be run to generate a LEMS file to analyse the behaviour of channels in NeuroML 2
-#
-#
+#   A script which can be run to generate a LEMS file to analyse the behaviour 
+#   of channels in NeuroML 2
 #
 
-import argparse
-
-import neuroml.loaders as loaders
-from pyneuroml import pynml
-
-import airspeed
 import sys
 import os
 import os.path
-
-import matplotlib.pyplot as pylab
+import argparse
 import pprint
-
 import glob
 import re
+
+import neuroml.loaders as loaders
+from pyneuroml import pynml
+import airspeed
+import matplotlib.pyplot as pylab
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -53,13 +47,16 @@ def process_args():
     """ 
     Parse command-line arguments.
     """
-    parser = argparse.ArgumentParser(description="A script which can be run to generate a LEMS file to analyse the behaviour of channels in NeuroML 2")
+    parser = argparse.ArgumentParser(
+                description=("A script which can be run to generate a LEMS "
+                             "file to analyse the behaviour of channels in "
+                             "NeuroML 2"))
 
     parser.add_argument('channelFiles', 
                         type=str,
                         nargs='+',
                         metavar='<NeuroML 2 Channel file>', 
-                        help='Name of the NeuroML 2 file(s)')
+                        help="Name of the NeuroML 2 file(s)")
                         
                         
     parser.add_argument('-v',
@@ -71,81 +68,89 @@ def process_args():
                         type=int,
                         metavar='<min v>',
                         default=DEFAULTS['minV'],
-                        help='Minimum voltage to test (integer, mV)')
+                        help="Minimum voltage to test (integer, mV)")
                         
     parser.add_argument('-maxV', 
                         type=int,
                         metavar='<max v>',
                         default=DEFAULTS['maxV'],
-                        help='Maximum voltage to test (integer, mV)')
+                        help="Maximum voltage to test (integer, mV)")
                         
     parser.add_argument('-temperature', 
                         type=float,
                         metavar='<temperature>',
                         default=DEFAULTS['temperature'],
-                        help='Temperature (float, celsius)')
+                        help="Temperature (float, celsius)")
                         
     parser.add_argument('-duration', 
                         type=float,
                         metavar='<duration>',
                         default=DEFAULTS['duration'],
-                        help='Duration of simulation in ms')
+                        help="Duration of simulation in ms")
                         
     parser.add_argument('-clampDelay', 
                         type=float,
                         metavar='<clamp delay>',
                         default=DEFAULTS['clampDelay'],
-                        help='Delay before voltage clamp is activated in ms')
+                        help="Delay before voltage clamp is activated in ms")
                         
     parser.add_argument('-clampDuration', 
                         type=float,
                         metavar='<clamp duration>',
                         default=DEFAULTS['clampDuration'],
-                        help='Duration of voltage clamp in ms')
+                        help="Duration of voltage clamp in ms")
                         
     parser.add_argument('-clampBaseVoltage', 
                         type=float,
                         metavar='<clamp base voltage>',
                         default=DEFAULTS['clampBaseVoltage'],
-                        help='Clamp base (starting/finishing) voltage in mV')
+                        help="Clamp base (starting/finishing) voltage in mV")
                         
     parser.add_argument('-stepTargetVoltage', 
                         type=float,
                         metavar='<step target voltage>',
                         default=DEFAULTS['stepTargetVoltage'],
-                        help='Voltage in mV through which to step voltage clamps')
+                        help=("Voltage in mV through which to step voltage "
+                              "clamps"))
                         
     parser.add_argument('-erev', 
                         type=float,
                         metavar='<reversal potential>',
                         default=DEFAULTS['erev'],
-                        help='Reversal potential of channel for currents')
+                        help="Reversal potential of channel for currents")
                         
     parser.add_argument('-caConc', 
                         type=float,
                         metavar='<Ca2+ concentration>',
                         default=DEFAULTS['caConc'],
-                        help='Internal concentration of Ca2+ (float, concentration in mM)')
+                        help=("Internal concentration of Ca2+ (float, "
+                              "concentration in mM)"))
                         
     parser.add_argument('-norun',
                         action='store_true',
                         default=DEFAULTS['norun'],
-                        help="If used, just generate the LEMS file, don't run it")
+                        help=("If used, just generate the LEMS file, "
+                              "don't run it"))
                         
     parser.add_argument('-nogui',
                         action='store_true',
                         default=DEFAULTS['nogui'],
-                        help="Supress plotting of variables and only save data to file")
+                        help=("Supress plotting of variables and only save "
+                              "data to file"))
                         
     parser.add_argument('-html',
                         action='store_true',
                         default=DEFAULTS['html'],
-                        help="Generate a HTML page (as well as a Markdown version...) featuring the plots for the channel")
+                        help=("Generate a HTML page (as well as a Markdown "
+                              "version...) featuring the plots for the "
+                              "channel"))
                         
     parser.add_argument('-ivCurve',
                         action='store_true',
                         default=False,
-                        help="Save currents through voltage clamp at each level & plot current vs voltage for ion channel")
+                        help=("Save currents through voltage clamp at each "
+                              "level & plot current vs voltage for ion "
+                              "channel"))
                         
                         
     return parser.parse_args()
@@ -181,10 +186,10 @@ def merge_with_template(model, templfile):
     return templ.merge(model)
 
 
-def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
-                      step_target_voltage, max_target_voltage, clamp_delay, \
-                      clamp_duration, clamp_base_voltage, duration, erev, gates, \
-                      temperature, ca_conc, iv_curve):
+def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
+                      step_target_voltage, max_target_voltage, clamp_delay, 
+                      clamp_duration, clamp_base_voltage, duration, erev, 
+                      gates, temperature, ca_conc, iv_curve):
                       
     target_voltages = []
     v = min_target_voltage
@@ -263,7 +268,7 @@ def run(a=None,**kwargs):
     info = {}
     chan_list = []
     info['info'] = "Channel information at %s degC, reversal potential %s mV,\
-                    [Ca2+]: %smM" % (a.temperature, a.erev, a.ca_conc)
+                    [Ca2+]: %s mM" % (a.temperature, a.erev, a.ca_conc)
                     
     info["channels"] = chan_list
     
@@ -319,12 +324,13 @@ def run(a=None,**kwargs):
                 lf.write(lems_content)
                 lf.close()
 
-                print("Written generated LEMS file to %s\n" % new_lems_file)
+                if verbose:
+                    print("Written generated LEMS file to %s\n" % new_lems_file)
 
                 if not a.norun:
                     results = pynml.run_lems_with_jneuroml(
                         new_lems_file, nogui=True, 
-                        load_saved_data=True, plot=False)
+                        load_saved_data=True, plot=False, verbose=verbose)
 
                     if not a.nogui:
                         v = "rampCellPop0[0]/v"
@@ -368,14 +374,18 @@ def run(a=None,**kwargs):
                             pylab.plot(results[v], results[g_inf], color=col, 
                                        linestyle='-', 
                                        label="%s %s inf" % (channel_id, g))
-                            pylab.gca().autoscale(enable=True, axis='x', tight=True)
+                            pylab.gca().autoscale(enable=True, axis='x', 
+                                                  tight=True)
                         pylab.legend()
 
                         if a.html:
                             pylab.savefig('html/%s.inf.png' % channel_id)
                             
                         if a.iv_curve:
-                            # Based on work by Rayner Lucas here: https://github.com/openworm/BlueBrainProjectShowcase/blob/master/Channelpedia/iv_analyse.py
+                            # Based on work by Rayner Lucas here: 
+                            # https://github.com/openworm/
+                            # BlueBrainProjectShowcase/blob/master/
+                            # Channelpedia/iv_analyse.py
                             fig = pylab.figure()
                             fig.canvas.set_window_title(
                                 ("Currents through voltage clamp for %s from "

@@ -110,8 +110,10 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         validate_lems(lems_file_name)
 
 
-def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory, nogui=False, load_saved_data=False, plot=False, verbose=True):           
-    print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, True)
+def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory, 
+                           nogui=False, load_saved_data=False, plot=False, 
+                           verbose=True):           
+    print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, verbose)
     
     post_args = ""
     gui = " -nogui" if nogui else ""
@@ -123,8 +125,10 @@ def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory, n
         return reload_saved_data(lems_file_name, plot, 'jNeuroML')
 
 
-def run_lems_with_jneuroml_neuron(lems_file_name, max_memory=default_java_max_memory, nogui=False, load_saved_data=False, plot=False):           
-    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, True)
+def run_lems_with_jneuroml_neuron(
+    lems_file_name, max_memory=default_java_max_memory, nogui=False, 
+    load_saved_data=False, plot=False, verbose=True):           
+    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, verbose)
     
     post_args = " -neuron -run"
     gui = " -nogui" if nogui else ""
@@ -136,7 +140,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name, max_memory=default_java_max_me
         return reload_saved_data(lems_file_name, plot, 'jNeuroML_NEURON')
     
     
-def reload_saved_data(lems_file_name, plot=False, simulator=None): 
+def reload_saved_data(lems_file_name, plot=False, 
+                      simulator=None, verbose=verbose): 
     
     # Could use pylems to parse this...
 
@@ -163,7 +168,7 @@ def reload_saved_data(lems_file_name, plot=False, simulator=None):
     for of in sim.findall(ns_prefix+'OutputFile'):
         results['t'] = []
         file_name = of.attrib['fileName']
-        print_comment("Loading saved data from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''), True)
+        print_comment("Loading saved data from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''), verbose)
 
         cols = []
         cols.append('t')
@@ -242,7 +247,8 @@ def run_jneuroml(pre_args, target_file, post_args, max_memory=default_java_max_m
     
 
     output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
-                                        (max_memory, jar, pre_args, target_file, post_args), exec_dir)
+                                        (max_memory, jar, pre_args, target_file, 
+                                         post_args), exec_dir, verbose=verbose)
                                             
     print_comment(output, verbose)
 
@@ -258,14 +264,14 @@ def print_comment(text, print_it=verbose):
 
 
 
-def execute_command_in_dir(command, directory):
+def execute_command_in_dir(command, directory, verbose=True):
     
     """Execute a command in specific working directory"""
     
     if os.name == 'nt':
         directory = os.path.normpath(directory)
         
-    print_comment("Executing: (%s) in dir: %s" % (command, directory))
+    print_comment("Executing: (%s) in dir: %s" % (command, directory), verbose)
     
     try:
         return_string = subprocess.check_output(command, cwd=directory, shell=True)
