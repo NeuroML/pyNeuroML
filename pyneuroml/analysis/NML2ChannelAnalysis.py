@@ -44,6 +44,7 @@ DEFAULTS = {'v': False,
             'stepTargetVoltage': 20,
             'erev': 0,
             'caConc': 5e-5,
+            'ivCurve': False,
             'norun':False,
             'nogui':False,
             'html':False} 
@@ -223,43 +224,67 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
     return merged
 
 
+def convert_case(name):
+    """Converts from camelCase to under_score"""
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
 def main(args=None):
 
     if args is None:
         args = process_args()
-        
-    verbose = args.v
-    
-    ## Get name of channel mechanism to test
+    run(a=a)
 
-    if verbose: print("Going to test channel from file: "+ args.channelFile)
+
+def run(a=None,**kwargs):
     
-    step_target_voltage = args.stepTargetVoltage
-    clamp_delay = args.clampDelay 
-    clamp_duration = args.clampDuration
-    clamp_base_voltage = args.clampBaseVoltage
-    duration = args.duration
-    erev = args.erev
+    if a is None:
+        a = argparse.Namespace()
     
-    if args.ivCurve:
-        if duration > clamp_delay + clamp_duration:
-            
-            print("Note: when option -ivCurve is specified, total duration "+
-                  "(%sms) should be equal to or less than initial delay (%sms) + clamp duration(%sms)."%(duration, clamp_delay, clamp_duration))
-            print("This is to facilitate calculation of steady state IV curves\n")
-            exit(1)
+    # Add arguments passed in by keyword.  
+    for key,value in kwargs.items():
+        setattr(a,key,value)
+
+    # Add defaults for arguments not provided.  
+    for key,value in DEFAULTS.items():
+        if not hasattr(a,key):
+            setattr(a,key,value)
+
+    # Change all values to under_score from camelCase.  
+    for key,value in a.__dict__.items():
+        new_key = convert_case(key)
+        if new_key != key:
+            setattr(a,new_key,value)
+            delattr(a,key)
+
+    verbose = a.v
+
+    if a.iv_curve:
+        if a.duration > a.clamp_delay + a.clamp_duration:
+            print(("Note: when option -ivCurve is specified, total duration "
+                   "(%s ms) should be equal to or less than initial delay "
+                   "(%s ms) + clamp duration(%s ms).") \
+                    % (a.duration, a.clamp_delay, a.clamp_duration))
+            print(("This is to facilitate calculation of steady "
+                   "state IV curves\n"))
+            sys.exit(1)
     
     info = {}
     chan_list = []
-    info['info'] = "Channel information at %s degC, reversal potential %smV, [Ca2+]: %smM"%(args.temperature, args.erev, args.caConc)
+    info['info'] = "Channel information at %s degC, reversal potential %s mV,\
+                    [Ca2+]: %smM" % (a.temperature, a.erev, a.ca_conc)
                     
     info["channels"] = chan_list
     
-    for channel_file in args.channelFiles:
-
+    for channel_file in a.channel_files:
+        ## Get name of channel mechanism to test
+        if verbose: 
+            print("Going to test channel from file: "+ channel_files)
+    
         if not os.path.isfile(channel_file):
-            print("File could not be found: %s!\n"%channel_file)
-            exit(1)
+            print("File could not be found: %s!\n" % channel_file)
+            sys.exit(1)
         doc = loaders.NeuroMLLoader.load(channel_file)
 
         channels = []
@@ -278,81 +303,100 @@ def main(args=None):
                 gates.append(g.id)
 
             if len(gates) == 0:
-                print("No gates found in a channel with ID %s"%channel_id)
+                print("No gates found in a channel with ID %s" % channel_id)
             else:
                 
-                if args.html:
+                if a.html:
                     if not os.path.isdir('html'):
                         os.mkdir('html')
                     channel_info = {}
                     chan_list.append(channel_info)
-                    channel_info['id'] = channel_id
+                    channel_info['id'] = a.channel_id
                     channel_info['file'] = channel_file
                     if ic.notes:
                         #print ic.notes
                         channel_info['notes'] = ic.notes
                         
-                lems_content = generate_lems_channel_analyser(channel_file, channel_id, args.minV, \
-                                  step_target_voltage, args.maxV, clamp_delay, \
-                                  clamp_duration, clamp_base_voltage, duration, erev, gates, \
-                                  args.temperature, args.caConc, args.ivCurve)
+                lems_content = generate_lems_channel_analyser(
+                    channel_file, a.channel_id, a.min_v, 
+                    a.step_target_voltage, a.max_v, a.clamp_delay, 
+                    a.clamp_duration, a.clamp_base_voltage, a.duration, 
+                    a.erev, gates, a.temperature, a.ca_conc, a.iv_curve)
 
-                new_lems_file = "LEMS_Test_%s.xml"%channel_id
-
+                new_lems_file = "LEMS_Test_%s.xml" % channel_id
 
                 lf = open(new_lems_file, 'w')
                 lf.write(lems_content)
                 lf.close()
 
-                print("Written generated LEMS file to %s\n"%new_lems_file)
+                print("Written generated LEMS file to %s\n" % new_lems_file)
 
-                if not args.norun:
-                    results = pynml.run_lems_with_jneuroml(new_lems_file, nogui=True, load_saved_data=True, plot=False)
+                if not a.norun:
+                    results = pynml.run_lems_with_jneuroml(
+                        new_lems_file, nogui=True, 
+                        load_saved_data=True, plot=False)
 
-                    if not args.nogui:
+                    if not a.nogui:
                         v = "rampCellPop0[0]/v"
 
                         fig = pylab.figure()
-                        fig.canvas.set_window_title("Time Course(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
+                        fig.canvas.set_window_title(\
+                            ("Time Course(s) of activation variables of %s "
+                             "from %s at %s degC") \
+                             % (a.channel_id, channel_file, a.temperature))
 
                         pylab.xlabel('Membrane potential (V)')
                         pylab.ylabel('Time Course - tau (s)')
                         pylab.grid('on')
                         for g in gates:
-                            g_tau = "rampCellPop0[0]/test/%s/%s/tau"%(channel_id, g)
-                            col=get_state_color(g)
-                            pylab.plot(results[v], results[g_tau], color=col, linestyle='-', label="%s %s tau"%(channel_id, g))
-                            pylab.gca().autoscale(enable=True, axis='x', tight=True)
+                            g_tau = "rampCellPop0[0]/test/%s/%s/tau" \
+                                    % (channel_id, g)
+                            col = get_state_color(g)
+                            pylab.plot(results[v], results[g_tau], color=col, 
+                             linestyle='-', label="%s %s tau" % (channel_id, g))
+                            pylab.gca().autoscale(enable=True, axis='x', 
+                                                  tight=True)
 
                         pylab.legend()
 
-                        if args.html:
+                        if a.html:
                             pylab.savefig('html/%s.tau.png'%channel_id)
 
                         fig = pylab.figure()
-                        fig.canvas.set_window_title("Steady state(s) of activation variables of %s from %s at %sdegC"%(channel_id, channel_file, args.temperature))
+                        fig.canvas.set_window_title(\
+                            ("Steady state(s) of activation variables of %s "
+                             "from %s at %s degC") \
+                             % (a.channel_id, channel_file, a.temperature))
                         pylab.xlabel('Membrane potential (V)')
                         pylab.ylabel('Steady state - inf')
                         pylab.grid('on')
                         for g in gates:
-                            g_inf = "rampCellPop0[0]/test/%s/%s/inf"%(channel_id, g)
+                            g_inf = "rampCellPop0[0]/test/%s/%s/inf" \
+                                    %(channel_id, g)
                             #print("Plotting %s"%(g_inf))
                             col=get_state_color(g)
-                            pylab.plot(results[v], results[g_inf], color=col, linestyle='-', label="%s %s inf"%(channel_id, g))
+                            pylab.plot(results[v], results[g_inf], color=col, 
+                                       linestyle='-', 
+                                       label="%s %s inf" % (channel_id, g))
                             pylab.gca().autoscale(enable=True, axis='x', tight=True)
                         pylab.legend()
 
-                        if args.html:
-                            pylab.savefig('html/%s.inf.png'%channel_id)
+                        if a.html:
+                            pylab.savefig('html/%s.inf.png' % channel_id)
                             
-                        if args.ivCurve:
+                        if a.iv_curve:
                             # Based on work by Rayner Lucas here: https://github.com/openworm/BlueBrainProjectShowcase/blob/master/Channelpedia/iv_analyse.py
                             fig = pylab.figure()
-                            fig.canvas.set_window_title("Currents through voltage clamp for %s from %s at %sdegC, erev: %sV"%(channel_id, channel_file, args.temperature, erev))
+                            fig.canvas.set_window_title(
+                                ("Currents through voltage clamp for %s from "
+                                 "%s at %s degC, erev: %s V") \
+                                 % (a.channel_id, channel_file, 
+                                    a.temperature, a.erev))
                             pylab.xlabel('Time (s)')
                             pylab.ylabel('Current (A)')
                             pylab.grid('on')
-                            filenames = glob.glob('./%s.i_*.lems.dat'%channel_id)
+                            filenames = glob.glob('./%s.i_*.lems.dat' \
+                                                  % channel_id)
                             
                             i_peaks = {}
                             i_steady = {}
@@ -361,7 +405,8 @@ def main(args=None):
                             
                             for name in filenames:
                                 times = []
-                                v_match = re.match("\./%s.i_(.*)\.lems\.dat"%channel_id, name)
+                                v_match = re.match("\./%s.i_(.*)\.lems\.dat" \
+                                                   % a.channel_id, name)
                                 voltage = v_match.group(1)
                                 voltage = voltage.replace("min", "-")
                                 voltage = float(voltage)/1000
@@ -380,7 +425,8 @@ def main(args=None):
                                     if i>i_max: i_max = i
                                     if i<i_min: i_min = i
                                     
-                                i_peak = i_max if abs(i_max) > abs(i_min) else i_min
+                                i_peak = i_max if abs(i_max) > abs(i_min)\
+                                               else i_min
                                 i_peaks[voltage] = -1 * i_peak
                                 i_steady[voltage] = -1 * i
                                     
@@ -388,46 +434,53 @@ def main(args=None):
                             hold_v.sort()
                             
                             for v in hold_v:
-                                col = get_colour_hex(float(hold_v.index(v))/len(hold_v))
-                                pylab.plot(times, currents[v], color=col, linestyle='-', label="%s V"%(v))
+                                col = get_colour_hex(
+                                        float(hold_v.index(v))/len(hold_v))
+                                pylab.plot(times, currents[v], color=col, 
+                                           linestyle='-', label="%s V" % v)
                                 
                             pylab.legend()
                             
-                            
                             fig = pylab.figure()
-                            fig.canvas.set_window_title("Currents vs. holding potentials at erev %sV"%erev)
+                            fig.canvas.set_window_title(
+                                "Currents vs. holding potentials at erev %s V"\
+                                % a.erev)
                             pylab.xlabel('Membrane potential (V)')
                             pylab.ylabel('Current (A)')
                             pylab.grid('on')
                         
-                            pylab.plot(hold_v, [i_peaks[v] for v in hold_v], 'ko-', label="Peak currents")
+                            pylab.plot(hold_v, [i_peaks[v] for v in hold_v], 
+                                       'ko-', label="Peak currents")
                             pylab.legend()
                             
                             # Save to file...
                             iv_file = open('%s.i_peak.dat'%channel_id,'w')
                             for v in hold_v:
-                                iv_file.write("%s\t%s\n"%(v,i_peaks[v]))
+                                iv_file.write("%s\t%s\n" % (v,i_peaks[v]))
                             iv_file.close()
                             
                             fig = pylab.figure()
-                            fig.canvas.set_window_title("Currents vs. holding potentials at erev %sV"%erev)
+                            fig.canvas.set_window_title(
+                                "Currents vs. holding potentials at erev %sV" \
+                                % a.erev)
                             pylab.xlabel('Membrane potential (V)')
                             pylab.ylabel('Current (A)')
                             pylab.grid('on')
                             
-                            pylab.plot(hold_v, [i_steady[v] for v in hold_v], 'ko-', label="Steady state currents")
+                            pylab.plot(hold_v, [i_steady[v] for v in hold_v], 
+                                       'ko-', label="Steady state currents")
                                 
                             pylab.legend()
                             
                             # Save to file...
-                            iv_file = open('%s.i_steady.dat'%channel_id,'w')
+                            iv_file = open('%s.i_steady.dat' % channel_id,'w')
                             for v in hold_v:
-                                iv_file.write("%s\t%s\n"%(v,i_steady[v]))
+                                iv_file.write("%s\t%s\n" % (v,i_steady[v]))
                             iv_file.close()
 
 
         
-    if not args.html:
+    if not a.html:
         pylab.show()
     else:
         pp.pprint(info)
@@ -437,7 +490,7 @@ def main(args=None):
         lf = open(new_html_file, 'w')
         lf.write(merged)
         lf.close()
-        print('Written HTML info to: %s'%new_html_file)
+        print('Written HTML info to: %s' % new_html_file)
 
     return new_lems_file
 
