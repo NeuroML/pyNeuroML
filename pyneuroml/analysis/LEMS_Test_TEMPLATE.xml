@@ -144,6 +144,14 @@
         </OutputFile>
 #end## 
 
+#if ($iv_curve)##
+#foreach ($tv in $target_voltages)##
+        <OutputFile id="i_${tv.v_str}_of1" fileName="${channel}.i_${tv.v_str}.lems.dat">
+            <OutputColumn id="${tv.v_str}" quantity="holderCellPop_${tv.v_str}[0]/test/i"/> 
+        </OutputFile>
+#end## 
+#end## 
+
         <OutputFile id="rampCellV" fileName="${channel}.rampV.lems.dat">
             <OutputColumn id="v" quantity="rampCellPop0[0]/v"/> 
         </OutputFile>

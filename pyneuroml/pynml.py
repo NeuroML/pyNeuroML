@@ -31,19 +31,25 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='pyNeuroML v%s: Python utilities for NeuroML2'%__version__)
 
     parser.add_argument('target_file', metavar='target_file', type=str,
-                        help='The LEMS/NeuroML2 file to process')
+                        help='The LEMS/NeuroML2 file to process; without other options simulates a LEMS file (containing a <Simulation element>) natively using jNeuroML')
 
     ##parser.add_argument('-sim', choices=('pylems', 'jlems'),
     ##                     help='Simulator to use')
 
-    parser.add_argument('-validate', action='store_true',
-                        help='Validate NeuroML2 file against the latest Schema')
-                        
     parser.add_argument('-nogui', action='store_true',
-                        help='Supress GUI, i.e. show no plots, just save results', default="False")
+                        help='Simulate LEMS file with jNeuroML, but supress GUI, i.e. show no plots, just save results', default="False")
                         
-    parser.add_argument('-java_max_memory', metavar='java_max_memory', type=str,
-                        help='Java memory for jnml', default=default_java_max_memory)
+    parser.add_argument('-validate', action='store_true',
+                        help='(Via jNeuroML) Validate NeuroML2 file against the latest Schema')
+                        
+    parser.add_argument('-svg', action='store_true',
+                        help='(Via jNeuroML) Convert NeuroML2 file (network & cells) to SVG format view of 3D structure')
+                        
+    parser.add_argument('-sedml', action='store_true',
+                        help='(Via jNeuroML) Load a LEMS file, and convert simulation settings (duration, dt, what to save) to SED-ML format')
+                        
+    parser.add_argument('-java_max_memory', metavar='MAX', type=str,
+                        help='Java memory for jNeuroML, e.g. 400M, 2G (used in -Xmx argument to java)', default=default_java_max_memory)
                         
     parser.add_argument('-verbose', action='store_true',
                         help='Verbose output')
@@ -216,6 +222,12 @@ def evaluate_arguments(args):
     
     if args.validate:
         pre_args += " -validate"
+        
+    elif args.svg:
+        post_args += " -svg"
+        
+    elif args.sedml:
+        post_args += " -sedml"
         
     run_jneuroml(pre_args, args.target_file, post_args, args.java_max_memory)
     

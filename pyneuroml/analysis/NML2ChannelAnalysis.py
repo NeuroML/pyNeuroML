@@ -20,6 +20,11 @@ import os.path
 import matplotlib.pyplot as pylab
 import pprint
 
+import glob
+import re
+
+pp = pprint.PrettyPrinter(depth=4)
+
 TEMPLATE_FILE = "%s/LEMS_Test_TEMPLATE.xml"%(os.path.dirname(__file__))
 HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html"%(os.path.dirname(__file__))
      
@@ -136,6 +141,11 @@ def process_args():
                         default=DEFAULTS['html'],
                         help="Generate a HTML page (as well as a Markdown version...) featuring the plots for the channel")
                         
+    parser.add_argument('-ivCurve',
+                        action='store_true',
+                        default=False,
+                        help="Save currents through voltage clamp at each level & plot current vs voltage for ion channel")
+                        
                         
     return parser.parse_args()
 
@@ -156,6 +166,8 @@ def get_state_color(s):
     if s.startswith('b'): col='#00FF00'
     if s.startswith('c'): col='#0000FF'
     if s.startswith('q'): col='#FF00FF'
+    if s.startswith('e'): col='#00FFFF'
+    if s.startswith('f'): col='#FFFF00'
     
     return col
 
@@ -171,7 +183,7 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
                       step_target_voltage, max_target_voltage, clamp_delay, \
                       clamp_duration, clamp_base_voltage, duration, erev, gates, \
-                      temperature, ca_conc):
+                      temperature, ca_conc, iv_curve):
                       
     target_voltages = []
     v = min_target_voltage
@@ -201,7 +213,10 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
              "erev":  erev,
              "gates":  gates,
              "temperature":  temperature,
-             "ca_conc":  ca_conc}
+             "ca_conc":  ca_conc,
+             "iv_curve":  iv_curve}
+             
+    #pp.pprint(model)
 
     merged = merge_with_template(model, TEMPLATE_FILE)
 
@@ -226,8 +241,18 @@ def main(args=None):
     duration = args.duration
     erev = args.erev
     
+    if args.ivCurve:
+        if duration > clamp_delay + clamp_duration:
+            
+            print("Note: when option -ivCurve is specified, total duration "+
+                  "(%sms) should be equal to or less than initial delay (%sms) + clamp duration(%sms)."%(duration, clamp_delay, clamp_duration))
+            print("This is to facilitate calculation of steady state IV curves\n")
+            exit(1)
+    
     info = {}
     chan_list = []
+    info['info'] = "Channel information at %s degC, reversal potential %smV, [Ca2+]: %smM"%(args.temperature, args.erev, args.caConc)
+                    
     info["channels"] = chan_list
     
     for channel_file in args.channelFiles:
@@ -270,7 +295,7 @@ def main(args=None):
                 lems_content = generate_lems_channel_analyser(channel_file, channel_id, args.minV, \
                                   step_target_voltage, args.maxV, clamp_delay, \
                                   clamp_duration, clamp_base_voltage, duration, erev, gates, \
-                                  args.temperature, args.caConc)
+                                  args.temperature, args.caConc, args.ivCurve)
 
                 new_lems_file = "LEMS_Test_%s.xml"%channel_id
 
@@ -319,13 +344,92 @@ def main(args=None):
 
                         if args.html:
                             pylab.savefig('html/%s.inf.png'%channel_id)
+                            
+                        if args.ivCurve:
+                            # Based on work by Rayner Lucas here: https://github.com/openworm/BlueBrainProjectShowcase/blob/master/Channelpedia/iv_analyse.py
+                            fig = pylab.figure()
+                            fig.canvas.set_window_title("Currents through voltage clamp for %s from %s at %sdegC, erev: %sV"%(channel_id, channel_file, args.temperature, erev))
+                            pylab.xlabel('Time (s)')
+                            pylab.ylabel('Current (A)')
+                            pylab.grid('on')
+                            filenames = glob.glob('./%s.i_*.lems.dat'%channel_id)
+                            
+                            i_peaks = {}
+                            i_steady = {}
+                            hold_v = []
+                            currents = {}
+                            
+                            for name in filenames:
+                                times = []
+                                v_match = re.match("\./%s.i_(.*)\.lems\.dat"%channel_id, name)
+                                voltage = v_match.group(1)
+                                voltage = voltage.replace("min", "-")
+                                voltage = float(voltage)/1000
+                                hold_v.append(voltage)
+                                currents[voltage] = []
+                                
+                                i_file  = open(name)
+                                i_max = -1*sys.float_info.min
+                                i_min = sys.float_info.min
+                                
+                                for line in i_file:
+                                    t = float(line.split()[0])
+                                    times.append(t)
+                                    i = float(line.split()[1])
+                                    currents[voltage].append(i)
+                                    if i>i_max: i_max = i
+                                    if i<i_min: i_min = i
+                                    
+                                i_peak = i_max if abs(i_max) > abs(i_min) else i_min
+                                i_peaks[voltage] = -1 * i_peak
+                                i_steady[voltage] = -1 * i
+                                    
+                                
+                            hold_v.sort()
+                            
+                            for v in hold_v:
+                                col = get_colour_hex(float(hold_v.index(v))/len(hold_v))
+                                pylab.plot(times, currents[v], color=col, linestyle='-', label="%s V"%(v))
+                                
+                            pylab.legend()
+                            
+                            
+                            fig = pylab.figure()
+                            fig.canvas.set_window_title("Currents vs. holding potentials at erev %sV"%erev)
+                            pylab.xlabel('Membrane potential (V)')
+                            pylab.ylabel('Current (A)')
+                            pylab.grid('on')
+                        
+                            pylab.plot(hold_v, [i_peaks[v] for v in hold_v], 'ko-', label="Peak currents")
+                            pylab.legend()
+                            
+                            # Save to file...
+                            iv_file = open('%s.i_peak.dat'%channel_id,'w')
+                            for v in hold_v:
+                                iv_file.write("%s\t%s\n"%(v,i_peaks[v]))
+                            iv_file.close()
+                            
+                            fig = pylab.figure()
+                            fig.canvas.set_window_title("Currents vs. holding potentials at erev %sV"%erev)
+                            pylab.xlabel('Membrane potential (V)')
+                            pylab.ylabel('Current (A)')
+                            pylab.grid('on')
+                            
+                            pylab.plot(hold_v, [i_steady[v] for v in hold_v], 'ko-', label="Steady state currents")
+                                
+                            pylab.legend()
+                            
+                            # Save to file...
+                            iv_file = open('%s.i_steady.dat'%channel_id,'w')
+                            for v in hold_v:
+                                iv_file.write("%s\t%s\n"%(v,i_steady[v]))
+                            iv_file.close()
 
 
         
     if not args.html:
         pylab.show()
     else:
-        pp = pprint.PrettyPrinter(depth=4)
         pp.pprint(info)
         merged = merge_with_template(info, HTML_TEMPLATE_FILE)
         print(merged)

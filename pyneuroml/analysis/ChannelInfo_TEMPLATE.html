@@ -1,12 +1,25 @@
 <html>
     <title>Channel information</title>
+    
     <body>
+        <p>${info}</p>
+        <table>
 #foreach ($channel in $channels)##
-        <h3>${channel.id} (from ${channel.file})</h3>
-        <p>${channel.notes}</p>
-        <img alt="${channel.id} steady state" src="${channel.id}.inf.png" height="340"/> 
-        <img alt="${channel.id} time course" src="${channel.id}.tau.png" height="340"/>
+            <tr>
+        <td width="130px">
+            <b>${channel.id}</b><br/>
+            ${channel.file}<br/><br/>
+            ${channel.notes}<br/>
+        </td>
+        <td>
+        <a href="${channel.id}.inf.png"><img alt="${channel.id} steady state" src="${channel.id}.inf.png" height="300"/></a>
+        </td>
+        <td>
+        <a href="${channel.id}.tau.png"><img alt="${channel.id} time course" src="${channel.id}.tau.png" height="300"/></a>
+        </td>
+        </tr>
 #end##   
+        </table>
     </body>
 
 </html>

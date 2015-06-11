@@ -70,6 +70,12 @@ def process_args():
                         default=6.3,
                         help='Temperature (float, celsius)')
                         
+    parser.add_argument('-caConc', 
+                        type=float,
+                        metavar='<Ca2+ concentration>',
+                        default=5e-5,
+                        help='Internal concentration of Ca2+ (float, concentration in mM)')
+                        
     parser.add_argument('-modFile', 
                         type=str,
                         metavar='<name of mod file>',
@@ -117,7 +123,9 @@ def main():
     sec.insert("pas")
     sec(0.5).g_pas = 0.001
     sec(0.5).e_pas = -65
-
+    
+    sec.insert("ca_ion")
+    sec(0.5).cai = args.caConc
 
     ## insert channel into section
 
@@ -141,7 +149,7 @@ def main():
                 inState = 0
             chopped = line.split()
             for el in chopped:
-                if el != '{' and el != '}' and el != 'STATE': 
+                if el != '{' and el != '}' and el != 'STATE' and el != 'FROM' and el != '0' and el != 'TO' and el != '1': 
                     if el.startswith('{'): states.append(el[1:])
                     elif el.endswith('}'): states.append(el[:-1])
                     else: states.append(el)
@@ -230,7 +238,7 @@ def main():
             h.fadvance()
             tRec.append(h.t)
             vRec.append(sec(0.5).v)
-            vverbose = verbose and False
+            vverbose = verbose
             if vverbose: 
                 print("--- Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"%(h.t, h.dt, vh, foundTau, foundInf))
             for s in states:
