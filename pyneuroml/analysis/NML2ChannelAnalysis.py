@@ -259,16 +259,6 @@ def run(a=None,**kwargs):
             delattr(a,key)
 
     verbose = a.v
-
-    if a.iv_curve:
-        if a.duration > a.clamp_delay + a.clamp_duration:
-            print(("Note: when option -ivCurve is specified, total duration "
-                   "(%s ms) should be equal to or less than initial delay "
-                   "(%s ms) + clamp duration(%s ms).") \
-                    % (a.duration, a.clamp_delay, a.clamp_duration))
-            print(("This is to facilitate calculation of steady "
-                   "state IV curves\n"))
-            sys.exit(1)
     
     info = {}
     chan_list = []
@@ -417,6 +407,9 @@ def run(a=None,**kwargs):
                                 i_max = -1*sys.float_info.min
                                 i_min = sys.float_info.min
                                 
+                                i_steady[voltage] = None
+                                t_steady_end = (a.clamp_delay + \
+                                                a.clamp_duration)/1000.0
                                 for line in i_file:
                                     t = float(line.split()[0])
                                     times.append(t)
@@ -424,11 +417,13 @@ def run(a=None,**kwargs):
                                     currents[voltage].append(i)
                                     if i>i_max: i_max = i
                                     if i<i_min: i_min = i
+                                    if t < t_steady_end:
+                                        i_steady[voltage] = i
                                     
                                 i_peak = i_max if abs(i_max) > abs(i_min)\
                                                else i_min
                                 i_peaks[voltage] = -1 * i_peak
-                                i_steady[voltage] = -1 * i
+                                
                                     
                                 
                             hold_v.sort()
