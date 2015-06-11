@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Python wrapper around jnml command. Also a number of helper functions for handling/gnerating/running LEMS/NeuroML2 files
+Python wrapper around jnml command. Also a number of helper functions for handling/generating/running LEMS/NeuroML2 files
 
 Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 
@@ -267,10 +267,11 @@ def execute_command_in_dir(command, directory):
         return return_string
                               
 
-def main():
+def main(args=None):
     """Main"""
 
-    args = parse_arguments()
+    if args is None:
+        args = parse_arguments()
 
     evaluate_arguments(args)
     

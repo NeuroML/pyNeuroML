@@ -26,8 +26,22 @@ HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html"%(os.path.dirname(__file__))
 MAX_COLOUR = (255, 0, 0)
 MIN_COLOUR = (255, 255, 0)
 
-print("\n") 
+print("\n")
 
+DEFAULTS = {'v': False,
+            'minV': -100,
+            'maxV': 100,
+            'temperature': 6.3,
+            'duration': 100,
+            'clampDelay': 10,
+            'clampDuration': 80,
+            'clampBaseVoltage': -70,
+            'stepTargetVoltage': 20,
+            'erev': 0,
+            'caConc': 5e-5,
+            'norun':False,
+            'nogui':False,
+            'html':False} 
 
 def process_args():
     """ 
@@ -44,82 +58,82 @@ def process_args():
                         
     parser.add_argument('-v',
                         action='store_true',
-                        default=False,
+                        default=DEFAULTS['v'],
                         help="Verbose output")
                         
     parser.add_argument('-minV', 
                         type=int,
                         metavar='<min v>',
-                        default=-100,
+                        default=DEFAULTS['minV'],
                         help='Minimum voltage to test (integer, mV)')
                         
     parser.add_argument('-maxV', 
                         type=int,
                         metavar='<max v>',
-                        default=100,
+                        default=DEFAULTS['maxV'],
                         help='Maximum voltage to test (integer, mV)')
                         
     parser.add_argument('-temperature', 
                         type=float,
                         metavar='<temperature>',
-                        default=6.3,
+                        default=DEFAULTS['temperature'],
                         help='Temperature (float, celsius)')
                         
     parser.add_argument('-duration', 
                         type=float,
                         metavar='<duration>',
-                        default=100,
+                        default=DEFAULTS['duration'],
                         help='Duration of simulation in ms')
                         
     parser.add_argument('-clampDelay', 
                         type=float,
                         metavar='<clamp delay>',
-                        default=10,
+                        default=DEFAULTS['clampDelay'],
                         help='Delay before voltage clamp is activated in ms')
                         
     parser.add_argument('-clampDuration', 
                         type=float,
                         metavar='<clamp duration>',
-                        default=80,
+                        default=DEFAULTS['clampDuration'],
                         help='Duration of voltage clamp in ms')
                         
     parser.add_argument('-clampBaseVoltage', 
                         type=float,
                         metavar='<clamp base voltage>',
-                        default=-70,
+                        default=DEFAULTS['clampBaseVoltage'],
                         help='Clamp base (starting/finishing) voltage in mV')
                         
     parser.add_argument('-stepTargetVoltage', 
                         type=float,
                         metavar='<step target voltage>',
-                        default=20,
+                        default=DEFAULTS['stepTargetVoltage'],
                         help='Voltage in mV through which to step voltage clamps')
                         
     parser.add_argument('-erev', 
                         type=float,
                         metavar='<reversal potential>',
-                        default=0,
+                        default=DEFAULTS['erev'],
                         help='Reversal potential of channel for currents')
                         
     parser.add_argument('-caConc', 
                         type=float,
                         metavar='<Ca2+ concentration>',
-                        default=5e-5,
+                        default=DEFAULTS['caConc'],
                         help='Internal concentration of Ca2+ (float, concentration in mM)')
                         
     parser.add_argument('-norun',
                         action='store_true',
-                        default=False,
+                        default=DEFAULTS['norun'],
                         help="If used, just generate the LEMS file, don't run it")
                         
     parser.add_argument('-nogui',
                         action='store_true',
-                        default=False,
+                        default=DEFAULTS['nogui'],
                         help="Supress plotting of variables and only save data to file")
                         
     parser.add_argument('-html',
                         action='store_true',
-                        default=False,
+                        default=DEFAULTS['html'],
                         help="Generate a HTML page (as well as a Markdown version...) featuring the plots for the channel")
                         
                         
@@ -194,9 +208,10 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, \
     return merged
 
 
-def main():
+def main(args=None):
 
-    args = process_args()
+    if args is None:
+        args = process_args()
         
     verbose = args.v
     
@@ -319,6 +334,8 @@ def main():
         lf.write(merged)
         lf.close()
         print('Written HTML info to: %s'%new_html_file)
+
+    return new_lems_file
 
 
 if __name__ == '__main__':
