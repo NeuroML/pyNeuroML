@@ -306,14 +306,14 @@ def run(a=None,**kwargs):
                         os.mkdir('html')
                     channel_info = {}
                     chan_list.append(channel_info)
-                    channel_info['id'] = a.channel_id
+                    channel_info['id'] = channel_id
                     channel_info['file'] = channel_file
                     if ic.notes:
                         #print ic.notes
                         channel_info['notes'] = ic.notes
                         
                 lems_content = generate_lems_channel_analyser(
-                    channel_file, a.channel_id, a.min_v, 
+                    channel_file, channel_id, a.min_v, 
                     a.step_target_voltage, a.max_v, a.clamp_delay, 
                     a.clamp_duration, a.clamp_base_voltage, a.duration, 
                     a.erev, gates, a.temperature, a.ca_conc, a.iv_curve)
@@ -339,7 +339,7 @@ def run(a=None,**kwargs):
                         fig.canvas.set_window_title(\
                             ("Time Course(s) of activation variables of %s "
                              "from %s at %s degC") \
-                             % (a.channel_id, channel_file, a.temperature))
+                             % (channel_id, channel_file, a.temperature))
 
                         pylab.xlabel('Membrane potential (V)')
                         pylab.ylabel('Time Course - tau (s)')
@@ -362,7 +362,7 @@ def run(a=None,**kwargs):
                         fig.canvas.set_window_title(\
                             ("Steady state(s) of activation variables of %s "
                              "from %s at %s degC") \
-                             % (a.channel_id, channel_file, a.temperature))
+                             % (channel_id, channel_file, a.temperature))
                         pylab.xlabel('Membrane potential (V)')
                         pylab.ylabel('Steady state - inf')
                         pylab.grid('on')
@@ -390,7 +390,7 @@ def run(a=None,**kwargs):
                             fig.canvas.set_window_title(
                                 ("Currents through voltage clamp for %s from "
                                  "%s at %s degC, erev: %s V") \
-                                 % (a.channel_id, channel_file, 
+                                 % (channel_id, channel_file, 
                                     a.temperature, a.erev))
                             pylab.xlabel('Time (s)')
                             pylab.ylabel('Current (A)')
@@ -408,7 +408,7 @@ def run(a=None,**kwargs):
                         for name in filenames:
                             times = []
                             v_match = re.match("\./%s.i_(.*)\.lems\.dat" \
-                                               % a.channel_id, name)
+                                               % channel_id, name)
                             voltage = v_match.group(1)
                             voltage = voltage.replace("min", "-")
                             voltage = float(voltage)/1000
