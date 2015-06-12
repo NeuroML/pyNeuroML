@@ -239,7 +239,7 @@ def main(args=None):
 
     if args is None:
         args = process_args()
-    run(a=a)
+    run(a=args)
 
 
 def run(a=None,**kwargs):
