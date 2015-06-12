@@ -395,47 +395,62 @@ def run(a=None,**kwargs):
                             pylab.xlabel('Time (s)')
                             pylab.ylabel('Current (A)')
                             pylab.grid('on')
-                            filenames = glob.glob('./%s.i_*.lems.dat' \
-                                                  % channel_id)
+                      
+                    if a.iv_curve:        
+                        filenames = glob.glob('./%s.i_*.lems.dat' \
+                                              % channel_id)
+                        
+                        i_peaks = {}
+                        i_steady = {}
+                        hold_v = []
+                        currents = {}
+                        
+                        for name in filenames:
+                            times = []
+                            v_match = re.match("\./%s.i_(.*)\.lems\.dat" \
+                                               % a.channel_id, name)
+                            voltage = v_match.group(1)
+                            voltage = voltage.replace("min", "-")
+                            voltage = float(voltage)/1000
+                            hold_v.append(voltage)
+                            currents[voltage] = []
                             
-                            i_peaks = {}
-                            i_steady = {}
-                            hold_v = []
-                            currents = {}
+                            i_file  = open(name)
+                            i_max = -1*sys.float_info.min
+                            i_min = sys.float_info.min
                             
-                            for name in filenames:
-                                times = []
-                                v_match = re.match("\./%s.i_(.*)\.lems\.dat" \
-                                                   % a.channel_id, name)
-                                voltage = v_match.group(1)
-                                voltage = voltage.replace("min", "-")
-                                voltage = float(voltage)/1000
-                                hold_v.append(voltage)
-                                currents[voltage] = []
+                            i_steady[voltage] = None
+                            t_steady_end = (a.clamp_delay + \
+                                            a.clamp_duration)/1000.0
+                            for line in i_file:
+                                t = float(line.split()[0])
+                                times.append(t)
+                                i = float(line.split()[1])
+                                currents[voltage].append(i)
+                                if i>i_max: i_max = i
+                                if i<i_min: i_min = i
+                                if t < t_steady_end:
+                                    i_steady[voltage] = i
                                 
-                                i_file  = open(name)
-                                i_max = -1*sys.float_info.min
-                                i_min = sys.float_info.min
-                                
-                                i_steady[voltage] = None
-                                t_steady_end = (a.clamp_delay + \
-                                                a.clamp_duration)/1000.0
-                                for line in i_file:
-                                    t = float(line.split()[0])
-                                    times.append(t)
-                                    i = float(line.split()[1])
-                                    currents[voltage].append(i)
-                                    if i>i_max: i_max = i
-                                    if i<i_min: i_min = i
-                                    if t < t_steady_end:
-                                        i_steady[voltage] = i
+                            i_peak = i_max if abs(i_max) > abs(i_min)\
+                                           else i_min
+                            i_peaks[voltage] = -1 * i_peak
+
+                        # Save to file...
+                        iv_file = open('%s.i_peak.dat'%channel_id,'w')
+                        for v in hold_v:
+                            iv_file.write("%s\t%s\n" % (v,i_peaks[v]))
+                        iv_file.close()
+
+                        # Save to file...
+                        iv_file = open('%s.i_steady.dat' % channel_id,'w')
+                        for v in hold_v:
+                            iv_file.write("%s\t%s\n" % (v,i_steady[v]))
+                        iv_file.close()
+                            
                                     
-                                i_peak = i_max if abs(i_max) > abs(i_min)\
-                                               else i_min
-                                i_peaks[voltage] = -1 * i_peak
-                                
-                                    
-                                
+                    if not a.nogui:
+                        if a.iv_curve:            
                             hold_v.sort()
                             
                             for v in hold_v:
@@ -458,12 +473,6 @@ def run(a=None,**kwargs):
                                        'ko-', label="Peak currents")
                             pylab.legend()
                             
-                            # Save to file...
-                            iv_file = open('%s.i_peak.dat'%channel_id,'w')
-                            for v in hold_v:
-                                iv_file.write("%s\t%s\n" % (v,i_peaks[v]))
-                            iv_file.close()
-                            
                             fig = pylab.figure()
                             fig.canvas.set_window_title(
                                 "Currents vs. holding potentials at erev %sV" \
@@ -477,14 +486,6 @@ def run(a=None,**kwargs):
                                 
                             pylab.legend()
                             
-                            # Save to file...
-                            iv_file = open('%s.i_steady.dat' % channel_id,'w')
-                            for v in hold_v:
-                                iv_file.write("%s\t%s\n" % (v,i_steady[v]))
-                            iv_file.close()
-
-
-        
     if not a.html:
         pylab.show()
     else:
