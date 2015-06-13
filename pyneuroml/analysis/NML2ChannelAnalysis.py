@@ -25,8 +25,6 @@ HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html"%(os.path.dirname(__file__))
 MAX_COLOUR = (255, 0, 0)
 MIN_COLOUR = (255, 255, 0)
 
-print("\n")
-
 DEFAULTS = {'v': False,
             'minV': -100,
             'maxV': 100,
