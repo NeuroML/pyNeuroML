@@ -15,7 +15,7 @@ import re
 import neuroml.loaders as loaders
 from pyneuroml import pynml
 import airspeed
-import matplotlib.pyplot as pylab
+import matplotlib.pyplot as plt
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -333,66 +333,66 @@ def run(a=None,**kwargs):
                     if not a.nogui:
                         v = "rampCellPop0[0]/v"
 
-                        fig = pylab.figure()
+                        fig = plt.figure()
                         fig.canvas.set_window_title(\
                             ("Time Course(s) of activation variables of %s "
                              "from %s at %s degC") \
                              % (channel_id, channel_file, a.temperature))
 
-                        pylab.xlabel('Membrane potential (V)')
-                        pylab.ylabel('Time Course - tau (s)')
-                        pylab.grid('on')
+                        plt.xlabel('Membrane potential (V)')
+                        plt.ylabel('Time Course - tau (s)')
+                        plt.grid('on')
                         for g in gates:
                             g_tau = "rampCellPop0[0]/test/%s/%s/tau" \
                                     % (channel_id, g)
                             col = get_state_color(g)
-                            pylab.plot(results[v], results[g_tau], color=col, 
+                            plt.plot(results[v], results[g_tau], color=col, 
                              linestyle='-', label="%s %s tau" % (channel_id, g))
-                            pylab.gca().autoscale(enable=True, axis='x', 
+                            plt.gca().autoscale(enable=True, axis='x', 
                                                   tight=True)
 
-                        pylab.legend()
+                        plt.legend()
 
                         if a.html:
-                            pylab.savefig('html/%s.tau.png'%channel_id)
+                            plt.savefig('html/%s.tau.png'%channel_id)
 
-                        fig = pylab.figure()
+                        fig = plt.figure()
                         fig.canvas.set_window_title(\
                             ("Steady state(s) of activation variables of %s "
                              "from %s at %s degC") \
                              % (channel_id, channel_file, a.temperature))
-                        pylab.xlabel('Membrane potential (V)')
-                        pylab.ylabel('Steady state - inf')
-                        pylab.grid('on')
+                        plt.xlabel('Membrane potential (V)')
+                        plt.ylabel('Steady state - inf')
+                        plt.grid('on')
                         for g in gates:
                             g_inf = "rampCellPop0[0]/test/%s/%s/inf" \
                                     %(channel_id, g)
                             #print("Plotting %s"%(g_inf))
                             col=get_state_color(g)
-                            pylab.plot(results[v], results[g_inf], color=col, 
+                            plt.plot(results[v], results[g_inf], color=col, 
                                        linestyle='-', 
                                        label="%s %s inf" % (channel_id, g))
-                            pylab.gca().autoscale(enable=True, axis='x', 
+                            plt.gca().autoscale(enable=True, axis='x', 
                                                   tight=True)
-                        pylab.legend()
+                        plt.legend()
 
                         if a.html:
-                            pylab.savefig('html/%s.inf.png' % channel_id)
+                            plt.savefig('html/%s.inf.png' % channel_id)
                             
                         if a.iv_curve:
                             # Based on work by Rayner Lucas here: 
                             # https://github.com/openworm/
                             # BlueBrainProjectShowcase/blob/master/
                             # Channelpedia/iv_analyse.py
-                            fig = pylab.figure()
+                            fig = plt.figure()
                             fig.canvas.set_window_title(
                                 ("Currents through voltage clamp for %s from "
                                  "%s at %s degC, erev: %s V") \
                                  % (channel_id, channel_file, 
                                     a.temperature, a.erev))
-                            pylab.xlabel('Time (s)')
-                            pylab.ylabel('Current (A)')
-                            pylab.grid('on')
+                            plt.xlabel('Time (s)')
+                            plt.ylabel('Current (A)')
+                            plt.grid('on')
                       
                     if a.iv_curve:        
                         filenames = glob.glob('./%s.i_*.lems.dat' \
@@ -454,38 +454,38 @@ def run(a=None,**kwargs):
                             for v in hold_v:
                                 col = get_colour_hex(
                                         float(hold_v.index(v))/len(hold_v))
-                                pylab.plot(times, currents[v], color=col, 
+                                plt.plot(times, currents[v], color=col, 
                                            linestyle='-', label="%s V" % v)
                                 
-                            pylab.legend()
+                            plt.legend()
                             
-                            fig = pylab.figure()
+                            fig = plt.figure()
                             fig.canvas.set_window_title(
                                 "Currents vs. holding potentials at erev %s V"\
                                 % a.erev)
-                            pylab.xlabel('Membrane potential (V)')
-                            pylab.ylabel('Current (A)')
-                            pylab.grid('on')
+                            plt.xlabel('Membrane potential (V)')
+                            plt.ylabel('Current (A)')
+                            plt.grid('on')
                         
-                            pylab.plot(hold_v, [i_peaks[v] for v in hold_v], 
+                            plt.plot(hold_v, [i_peaks[v] for v in hold_v], 
                                        'ko-', label="Peak currents")
-                            pylab.legend()
+                            plt.legend()
                             
-                            fig = pylab.figure()
+                            fig = plt.figure()
                             fig.canvas.set_window_title(
                                 "Currents vs. holding potentials at erev %sV" \
                                 % a.erev)
-                            pylab.xlabel('Membrane potential (V)')
-                            pylab.ylabel('Current (A)')
-                            pylab.grid('on')
+                            plt.xlabel('Membrane potential (V)')
+                            plt.ylabel('Current (A)')
+                            plt.grid('on')
                             
-                            pylab.plot(hold_v, [i_steady[v] for v in hold_v], 
+                            plt.plot(hold_v, [i_steady[v] for v in hold_v], 
                                        'ko-', label="Steady state currents")
                                 
-                            pylab.legend()
+                            plt.legend()
                             
     if not a.html:
-        pylab.show()
+        plt.show()
     else:
         pp.pprint(info)
         merged = merge_with_template(info, HTML_TEMPLATE_FILE)
