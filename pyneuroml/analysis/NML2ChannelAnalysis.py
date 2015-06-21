@@ -40,9 +40,9 @@ DEFAULTS = {'v': False,
             'erev': 0,
             'caConc': 5e-5,
             'ivCurve': False,
-            'norun':False,
-            'nogui':False,
-            'html':False} 
+            'norun': False,
+            'nogui': False,
+            'html': False} 
 
 def process_args():
     """ 
@@ -236,6 +236,17 @@ def convert_case(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
+def get_channels_from_channel_file(channel_file):
+    doc = loaders.NeuroMLLoader.load(channel_file)
+    channels = list(doc.ion_channel_hhs.__iter__()) + \
+               list(doc.ion_channel.__iter__())
+    for channel in channels:
+        setattr(channel,'file',channel_file)  
+        if not hasattr(channel,'notes'):
+            setattr(channel,'notes','')
+    return channels
+
+
 def process_channel_file(channel_file,a):
     ## Get name of channel mechanism to test
     if a.v: 
@@ -244,17 +255,10 @@ def process_channel_file(channel_file,a):
     if not os.path.isfile(channel_file):
         raise IOError("File could not be found: %s!\n" % channel_file)
     
-    doc = loaders.NeuroMLLoader.load(channel_file)
-
-    channels = list(doc.ion_channel_hhs.__iter__()) + \
-               list(doc.ion_channel.__iter__())
+    channels = get_channels_from_channel_file(channel_file)
 
     channels_info = []
     for channel in channels:  
-        setattr(channel,'file',channel_file)  
-        if not hasattr(channel,'notes'):
-            setattr(channel,'notes','')
-    
         new_lems_file = make_lems_file(channel,a)
         if not a.norun:
             results = run_lems_file(new_lems_file,a)        
@@ -429,14 +433,15 @@ def compute_iv_curve(channel,a,results,grid=True):
         iv_file.write("%s\t%s\n" % (v,i_steady[v]))
     iv_file.close()
 
-    return hold_v, times, currents, i_peaks, i_steady
-          
+    iv_data = {items:locals()[item] for item in items}
+    return iv_data   
+       
 
 def plot_iv_curve(channel,a,iv_data,grid=True):
-    hold_v, times, currents, i_peaks, i_steady = iv_data
-    plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=grid)
-    plot_iv_curve_peak(channel,a,hold_v,i_peaks,grid=grid)
-    plot_iv_curve_ss(channel,a,hold_v,i_steady,grid=grid)
+    x = iv_data
+    plot_iv_curve_vm(channel,a,x['hold_v'],x['times'],x['currents'],grid=grid)
+    plot_iv_curve_peak(channel,a,x['hold_v'],x['i_peaks'],grid=grid)
+    plot_iv_curve_ss(channel,a,x['hold_v'],x['i_steady'],grid=grid)
 
 
 def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
@@ -495,13 +500,7 @@ def make_html_file(info):
     print('Written HTML info to: %s' % new_html_file)
 
 
-def main(args=None):
-    if args is None:
-        args = process_args()
-    run(a=args)
-
-
-def run(a=None,**kwargs): 
+def build_namespace(a=None,**kwargs):
     if a is None:
         a = argparse.Namespace()
     
@@ -520,6 +519,18 @@ def run(a=None,**kwargs):
         if new_key != key:
             setattr(a,new_key,value)
             delattr(a,key)
+
+    return a
+
+
+def main(args=None):
+    if args is None:
+        args = process_args()
+    run(a=args)
+
+
+def run(a=None,**kwargs): 
+    a = build_namespace(a,**kwargs)
 
     info = {'info': ("Channel information at: "
                      "T = %s degC, "
