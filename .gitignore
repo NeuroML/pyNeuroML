@@ -1,3 +1,5 @@
+/examples/test.morphonly.cell.nml
+/examples/test.biophys.cell.nml
 /examples/clean.sh
 /examples/kChan.mod
 /examples/naChan.mod
