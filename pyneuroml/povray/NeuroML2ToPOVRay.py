@@ -103,6 +103,12 @@ def process_args():
                         default=1,
                         help='Scale position from network in z dir')
 
+    parser.add_argument('-mindiam', 
+                        type=float,
+                        metavar='<minimum diameter dendrites/axons>',
+                        default=0,
+                        help='Minimum diameter for dendrites/axons (to improve visualisations)')
+
     parser.add_argument('-plane',
                         action='store_true',
                         default=False,
@@ -230,7 +236,7 @@ light_source {
             x = float(distal.x)
             y = float(distal.y)
             z = float(distal.z)
-            r = float(distal.diameter)/2.0
+            r = max(float(distal.diameter)/2.0, args.mindiam)
 
             if x<minXc: minXc=x
             if y<minYc: minYc=y
@@ -247,7 +253,7 @@ light_source {
             proximalpoint = ""
             if segment.proximal is not None:
                 proximal = segment.proximal
-                proximalpoint = "<%f, %f, %f>, %f "%(float(proximal.x),float(proximal.y),float(proximal.z),float(proximal.diameter)/2.0)
+                proximalpoint = "<%f, %f, %f>, %f "%(float(proximal.x),float(proximal.y),float(proximal.z),max(float(proximal.diameter)/2.0, args.mindiam))
             else:
                 parent = int(segment.parent.segments)
                 proximalpoint = distpoints[parent]
