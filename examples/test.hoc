@@ -1,6 +1,7 @@
 
-
 print "Testing export of NeuroML from NEURON"
+
+celsius = 24
 
 create Soma, mainDendSec
 
