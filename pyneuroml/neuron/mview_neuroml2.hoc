@@ -390,14 +390,13 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
         }
 
-
-
         cellnml2file.printf("    </morphology>\n")
 
+
+        //////////////////////////////////////////////////////////////////////////
         // biophysics element for THIS cell. Only include if level > 1
 
-        if (nml2_level > 1) { // i.e. Level 2 of NeuroML or greater
-
+        if (nml2_level > 1) { // i.e. "Level 2" of NeuroML or greater
 
             cellnml2file.printf("\n    <!-- Biophysical properties -->\n\n    <biophysicalProperties id=\"biophys\"> \n")
             cellnml2file.printf("\n      <membraneProperties> \n\n")

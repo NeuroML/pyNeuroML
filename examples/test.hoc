@@ -22,7 +22,7 @@ objref all
 all = new SectionList()
 Soma all.append()
 mainDendSec all.append()
-
+/*
 Soma {
     insert NaConductance
     gmax_NaConductance=0.33
@@ -32,7 +32,7 @@ mainDendSec insert NaConductance
 mainDendSec {
     nseg =3
 }
-
+*/
 forall insert pas
 
 forall psection()

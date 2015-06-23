@@ -124,8 +124,8 @@ def main():
     sec(0.5).g_pas = 0.001
     sec(0.5).e_pas = -65
     
-    sec.insert("ca_ion")
-    sec(0.5).cai = args.caConc
+    #sec.insert("ca_ion")
+    #sec(0.5).cai = args.caConc
 
     ## insert channel into section
 
