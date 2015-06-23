@@ -28,11 +28,11 @@ Soma {
     gmax_NaConductance=0.33
 }
 mainDendSec insert NaConductance
-
+*/
 mainDendSec {
     nseg =3
 }
-*/
+
 forall insert pas
 
 forall psection()

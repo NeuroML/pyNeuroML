@@ -40,11 +40,15 @@ echo "##   Test analysis of NeuroML2 channel"
 pynml-channelanalysis NaConductance.channel.nml -nogui
 
     
+if [ "$TRAVIS" != "true" ]; then   # Requires pyelectro, not in .travis.yml yet...
+
 echo
 echo "################################################"
 echo "##   Generate a frequency vs current plot"
 
-python generate_if_curve.py -nogui
+    python generate_if_curve.py -nogui  
+
+fi 
 
 
 # Only run these if NEURON is installed & -neuron flag is used

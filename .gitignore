@@ -1,3 +1,7 @@
+/examples/NaConductance.h_q.inf.dat
+/examples/NaConductance.h_q.tau.dat
+/examples/NaConductance.m_q.inf.dat
+/examples/NaConductance.m_q.tau.dat
 /examples/test.morphonly.cell.nml
 /examples/test.biophys.cell.nml
 /examples/clean.sh

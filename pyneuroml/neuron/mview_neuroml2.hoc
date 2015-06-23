@@ -33,6 +33,8 @@ objref p
 
 strdef mainNotes
 
+objref file_out
+
 
 // Initialise template & set some useful strings
 proc init() {local i
@@ -54,9 +56,9 @@ proc init() {local i
 
 // Main export procedure
 // Takes arguments: 
-//    fileName          Name of file to export to
-//    level             (1 = no biophys; 2 = include biophys (channel densities etc.))
-//    separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
+//    $s1 fileName          Name of file to export to
+//    $2  level             (1 = no biophys; 2 = include biophys (channel densities etc.))
+//    $3  separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
 //
 proc exportNeuroML2() {local ok
     fileref = new File($s1)
@@ -71,7 +73,7 @@ proc exportNeuroML2() {local ok
     }
     fileref.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
-    header(fileref, level)
+    header(fileref)
     xmlwrite(fileref, level, separateCellFiles)
     fileref.printf("</neuroml>\n")
     fileref.close()
@@ -79,11 +81,12 @@ proc exportNeuroML2() {local ok
 
 
 // Print the NeuroML2 header
-proc header() {
-    $o1.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
-    $o1.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-    $o1.printf("    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd\"\n", $2)
-    $o1.printf("    id = \"NeuroML2_file_exported_from_NEURON\">\n\n")
+proc header() { 
+    file_out = $o1
+    file_out.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
+    file_out.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+    file_out.printf("    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd\"\n")
+    file_out.printf("    id = \"NeuroML2_file_exported_from_NEURON\">\n\n")
 }
 
 
@@ -112,18 +115,19 @@ proc assoc_cell_number() {local i, j, pointcount
 
 // Write main body of XML file
 // Takes arguments: 
-//    $o1 fileref            File object
+//    $o1 file_out           File object to write to
 //    $2  nml2_level         (1 = no biophys; 2 = include biophys (channel densities etc.))
 //    $3  separateCellFiles  (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
 //
 proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
-    strdef date
 
+    file_out = $o1
     separateCellFiles = $3
     nml2_level = $2
     mainnml2file = $o1
     cellnml2file = $o1
 
+    strdef date
     strdef network
     sprint(network, "\n  <network id=\"network\" type=\"networkWithTemperature\" temperature=\"%d degC\">", celsius)
 
@@ -139,7 +143,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
     // go over all points in all sections in all cells
 
-    assoc_cell_number(1, $o1) 
+    assoc_cell_number(1, file_out) 
 
     totalnumcells = 0
 
@@ -170,7 +174,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             }
             cellnml2file.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
-            header(cellnml2file, level)
+            header(cellnml2file)
 
             mainnml2file.printf("  <include href=\"%s\"/>\n\n", newcellfile)
         } 
@@ -207,7 +211,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             if (nseg > 1) {
 
                 sprint(segGrpsForSections, "%s        <annotation>\n", segGrpsForSections)
-                sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export. Can be overridden by importing application-->\n", segGrpsForSections, nseg)
+                sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export from NEURON. Can be overridden by importing application -->\n", segGrpsForSections, nseg)
                 sprint(segGrpsForSections, "%s        </annotation>\n", segGrpsForSections)
           
             }
@@ -413,6 +417,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
             for i=0, cellref.secanal.dmlist.count - 1 {
                 dmech = cellref.secanal.dmlist.object(i)
+                print "---------------------------------------------"
+                print "Handling mechanism: ", dmech.name
+                
                 // TODO:        for tobj.mechs(dmech) { }
                 if (dmech.parms.count > 0) {
                 }
@@ -443,12 +450,12 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                                 strdef paramNameToUse 
                                 paramNameToUse = dparm.name
-                                print "    Init name ", paramNameToUse
+                                print "    Initial parameter name: ", paramNameToUse
 
                                 strdef comment 
                                 comment = ""
 
-                    // strip suffix
+                                // strip suffix
                                 if  (hoc_sf_.substr(paramNameToUse, "_")>=0) {
                                     hoc_sf_.left(paramNameToUse, hoc_sf_.substr(paramNameToUse, "_"))
                                 }
@@ -461,11 +468,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                                     paramNameToUse = "condDensity"
                                     sprint(comment, "<!-- Assuming parameter g_pas refers to passive maximum cond density, so replacing it with condDensity -->", paramNameToUse)
                                 }
-
                                 if (strcmp(paramNameToUse,"g") == 0) {
                                     paramNameToUse = "condDensity"
                                     sprint(comment, "<!-- Assuming parameter g refers to passive maximum cond density, so replacing it with condDensity -->", paramNameToUse)
-
                                 } else if (hoc_sf_.substr(paramNameToUse, "g")==0 && hoc_sf_.substr(paramNameToUse, "bar")>=1) {
                                     sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
                                     paramNameToUse = "condDensity"
@@ -484,7 +489,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                                         paramNameToUse = "condDensity"
                                     }
                                 }
-                                print "  Checking param: ",paramNameToUse, " in ", dmech.name
+                                print "    Checking param: ",paramNameToUse, " in ", dmech.name
                                 //print comment
 
 
@@ -588,10 +593,11 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
 
 proc artcell() {local i,j,l
+    file_out = $o1
     for i=0, mview.acview.alist.count-1 {
         dmech = mview.acview.alist.object(i) 
 
-        $o1.printf("  <mechanism name=\"%s\">\n",  dmech.name)
+        file_out.printf("  <mechanism name=\"%s\">\n",  dmech.name)
 
         for j=0, dmech.parms.count-1 {
             dparm = dmech.parms.object(j)
@@ -606,14 +612,31 @@ proc artcell() {local i,j,l
             }
         }
 
-        $o1.printf("  </mechanism>\n")
+        file_out.printf("  </mechanism>\n")
     }
 }
 
+objref param_obj
+objref secanal_all
+
 proc printparmval() {
-    print "-- Generating parameter value, type: ", $o4.type(), " param: ", $s3, ", val: ", $o4.value, ", comm: [", $s6, "], ref: ", $s7, ", units: ", $s8
+
+    strdef param
+    strdef comment1
+    strdef ref
+    strdef units
+    file_out = $o1
+    secanal_all = $o2
+    param = $s3
+    param_obj = $o4
+    scale_factor = $5
+    comment1 = $s6
+    ref = $s7
+    units = $s8
+    
+    print "-- Generating parameter, type: ", param_obj.type(), " param: ", param, ", val: ", param_obj.value, ", scale: ", scale_factor, ", comm: [", comment1, "], ref: ", ref, ", units: ", units
     // 1 is ModelViewParmVal, 2 is ModelViewParmVec
-    if ($o4.type() == 1) {
+    if (param_obj.type() == 1) {
 
         strdef nameattr
         nameattr = ""
@@ -621,28 +644,28 @@ proc printparmval() {
         strdef comment
         comment = ""
 
-        if (hoc_sf_.len($s3)>0) { // only incl if $s3 is set => condDensity etc. not cap
+        if (hoc_sf_.len(param)>0) { // only incl if param is set => condDensity etc. not cap
 
             strdef newParamName 
-            newParamName = $s3
+            newParamName = param
 
-            $o1.printf(" %s = \"%g %s\"",  newParamName, $o4.value * $5, $s8)  
+            file_out.printf(" %s = \"%g %s\"",  newParamName, param_obj.value * scale_factor, units)  
         } else {
 
-            $o1.printf(" value=\"%g %s\" %s", $o4.value * $5, $s8, $s6)   // specCapacitance, etc.
+            file_out.printf(" value=\"%g %s\" %s", param_obj.value * scale_factor, units, comment1)   // specCapacitance, etc.
         }
 
         // 8 is ModelViewParmSubset, 9 is ModelViewParmSec
-        if ($o4.location.type() == 8) {
+        if (param_obj.location.type() == 8) {
             print "  ModelViewParmSubset..."
 
-//	        for m=0, $o4.location.subset.size()-1 {
-//		        secref = $o2.object($o4.location.subset.x(m))
-//	            printsec($o1, secref)
+//	        for m=0, param_obj.location.subset.size()-1 {
+//		        secref = secanal_all.object(param_obj.location.subset.x(m))
+//	            printsec(file_out, secref)
 //	        }
 
             strdef groupName
-            sprint(groupName, "%s", $o4.location)
+            sprint(groupName, "%s", param_obj.location)
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
@@ -660,13 +683,13 @@ proc printparmval() {
             if (strcmp(groupName,"all") == 0) {
                 // Not including as not required...
             } else {
-                $o1.printf(" segmentGroup=\"%s\" ", groupName)
+                file_out.printf(" segmentGroup=\"%s\" ", groupName)
             }
 
         } else {
             print "  ModelViewParmSec..."
-            secref = $o2.object($o4.location.isec)
-            //printsec($o1, secref)
+            secref = secanal_all.object(param_obj.location.isec)
+            //printsec(file_out, secref)
 
             strdef groupName
             sprint(groupName, "%s%s", singleSecGroupPrefix, secref)
@@ -681,14 +704,14 @@ proc printparmval() {
 
             }
 
-            $o1.printf(" segmentGroup = ", groupName)
+            file_out.printf(" segmentGroup = ", groupName)
 
         }
-        //$o1.printf("        </bio:parameter>\n")
+        //file_out.printf("        </bio:parameter>\n")
 
-    } else if ($o4.type() == 2) {  // ModelViewParmVec
+    } else if (param_obj.type() == 2) {  // ModelViewParmVec
 
-        secref = $o2.object($o4.location.isec)
+        secref = secanal_all.object(param_obj.location.isec)
 
         strdef groupName
         sprint(groupName, "%s%s", singleSecGroupPrefix, secref)
@@ -706,25 +729,25 @@ proc printparmval() {
         strdef currsecname
         secref.sec {currsecname = secname()}
 
-        $o1.printf("        <!-- There is an inhomogenous parameter: %s present for mechanism: %s on group: %s for section: %s! -->\n",  $s3, $s7, groupName, currsecname)
+        file_out.printf("        <!-- There is an inhomogenous parameter: %s present for mechanism: %s on group: %s for section: %s! -->\n", param, ref, groupName, currsecname)
 
         avgVal = 0
         strdef infoVals
         infoVals = ""
 
-        for i=0, $o4.vec.size - 1 {
-             sprint(infoVals, "%s %g, ", infoVals, $o4.vec.x(i))
-             avgVal = avgVal + $o4.vec.x(i)
+        for i=0, param_obj.vec.size - 1 {
+             sprint(infoVals, "%s %g, ", infoVals, param_obj.vec.x(i))
+             avgVal = avgVal + param_obj.vec.x(i)
         }
-        avgVal = avgVal / $o4.vec.size
+        avgVal = avgVal / param_obj.vec.size
 
-        $o1.printf("        <!-- Actual values along section (in NEURON units): %s but using average: %g -->\n",  infoVals, avgVal)
+        file_out.printf("        <!-- Actual values along section (in NEURON units): %s but using average: %g -->\n",  infoVals, avgVal)
 
-        //printvecvals($o1, $o4)
+        //printvecvals(file_out, param_obj)
 
-        $o1.printf("        <bio:parameter name=\"%s\" value=\"%g\"> \n",  $s3, avgVal * $5)
-        $o1.printf("          <bio:group>%s</bio:group>\n", groupName)
-        $o1.printf("        </bio:parameter>\n")
+        file_out.printf("        <bio:parameter name=\"%s\" value=\"%g\"> \n",  param, avgVal * scale_factor)
+        file_out.printf("          <bio:group>%s</bio:group>\n", groupName)
+        file_out.printf("        </bio:parameter>\n")
     }
 }
 
