@@ -385,20 +385,21 @@ def compute_iv_curve(channel,a,results,grid=True):
     dat_path = os.path.join(OUTPUT_DIR,
                             '%s.i_*.lems.dat' % channel.id)
     file_names = glob.glob(dat_path)                        
-    i_peaks = {}
+    i_peak = {}
     i_steady = {}
     hold_v = []
     currents = {}
-        
+    times = {}
+
     for file_name in file_names:
         name = os.path.split(file_name)[1] # Filename without path.    
-        times = []
         v_match = re.match("%s.i_(.*)\.lems\.dat" \
                            % channel.id, name)
         voltage = v_match.group(1)
         voltage = voltage.replace("min", "-")
         voltage = float(voltage)/1000
         hold_v.append(voltage)
+        times[voltage] = []
         
         currents[voltage] = []                
         i_file  = open(name)
@@ -409,7 +410,7 @@ def compute_iv_curve(channel,a,results,grid=True):
                         a.clamp_duration)/1000.0
         for line in i_file:
             t = float(line.split()[0])
-            times.append(t)
+            times[voltage].append(t)
             i = float(line.split()[1])
             currents[voltage].append(i)
             if i>i_max: i_max = i
@@ -417,15 +418,15 @@ def compute_iv_curve(channel,a,results,grid=True):
             if t < t_steady_end:
                 i_steady[voltage] = i
             
-        i_peak = i_max if abs(i_max) > abs(i_min)\
+        i_peak_ = i_max if abs(i_max) > abs(i_min)\
                        else i_min
-        i_peaks[voltage] = -1 * i_peak
+        i_peak[voltage] = -1 * i_peak_
 
     hold_v.sort()
     
     iv_file = open('%s.i_peak.dat' % channel.id,'w')
     for v in hold_v:
-        iv_file.write("%s\t%s\n" % (v,i_peaks[v]))
+        iv_file.write("%s\t%s\n" % (v,i_peak[v]))
     iv_file.close()
 
     iv_file = open('%s.i_steady.dat' % channel.id,'w')
@@ -433,14 +434,16 @@ def compute_iv_curve(channel,a,results,grid=True):
         iv_file.write("%s\t%s\n" % (v,i_steady[v]))
     iv_file.close()
 
-    iv_data = {items:locals()[item] for item in items}
+    items = ['hold_v','times','currents','i_steady','i_peak']
+    locals_ = locals().copy()
+    iv_data = {item:locals_[item] for item in items}
     return iv_data   
        
 
 def plot_iv_curve(channel,a,iv_data,grid=True):
     x = iv_data
     plot_iv_curve_vm(channel,a,x['hold_v'],x['times'],x['currents'],grid=grid)
-    plot_iv_curve_peak(channel,a,x['hold_v'],x['i_peaks'],grid=grid)
+    plot_iv_curve_peak(channel,a,x['hold_v'],x['i_peak'],grid=grid)
     plot_iv_curve_ss(channel,a,x['hold_v'],x['i_steady'],grid=grid)
 
 
