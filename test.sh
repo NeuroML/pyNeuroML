@@ -37,7 +37,9 @@ echo
 echo "################################################"
 echo "##   Test analysis of NeuroML2 channel"
 
-pynml-channelanalysis NaConductance.channel.nml -nogui
+if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then 
+    pynml-channelanalysis NaConductance.channel.nml -nogui
+fi
 
     
 if [ "$TRAVIS" != "true" ]; then   # Requires pyelectro, not in .travis.yml yet...
