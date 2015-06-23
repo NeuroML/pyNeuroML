@@ -315,7 +315,7 @@ def plot_channel(channel,a,results,iv_data=None,grid=True):
     plot_kinetics(channel,a,results,grid=grid)
     plot_steady_state(channel,a,results,grid=grid)
     if iv_data:
-        plot_iv_curve(channel,a,iv_data)
+        plot_iv_curves(channel,a,iv_data)
 
 
 def plot_kinetics(channel,a,results,grid=True):
@@ -440,11 +440,13 @@ def compute_iv_curve(channel,a,results,grid=True):
     return iv_data   
        
 
-def plot_iv_curve(channel,a,iv_data,grid=True):
+def plot_iv_curves(channel,a,iv_data,grid=True):
     x = iv_data
     plot_iv_curve_vm(channel,a,x['hold_v'],x['times'],x['currents'],grid=grid)
-    plot_iv_curve_peak(channel,a,x['hold_v'],x['i_peak'],grid=grid)
-    plot_iv_curve_ss(channel,a,x['hold_v'],x['i_steady'],grid=grid)
+    plot_iv_curve(a,x['hold_v'],x['i_peak'],
+                  grid=grid,label="Peak currents")
+    plot_iv_curve(a,x['hold_v'],x['i_steady'],
+                  grid=grid,label="Steady state currents")
 
 
 def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
@@ -465,8 +467,7 @@ def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
     plt.legend()
 
 
-def plot_iv_curve_peak(channel,a,hold_v,i_peak,grid=True):     
-    # Peaks
+def make_iv_curve_fig(a,grid=True):
     fig = plt.figure()
     fig.canvas.set_window_title(
         "Currents vs. holding potentials at erev = %s V"\
@@ -474,24 +475,19 @@ def plot_iv_curve_peak(channel,a,hold_v,i_peak,grid=True):
     plt.xlabel('Membrane potential (V)')
     plt.ylabel('Current (A)')
     plt.grid('on' if grid else 'off')
-    plt.plot(hold_v, [i_peak[v] for v in hold_v], 
-               'ko-', label="Peak currents")
-    plt.legend()
+
+
+def plot_iv_curve(a,hold_v,i,grid=True,same_fig=False,**plot_args):     
+    # A single IV curve.  
+    if not same_fig:
+        make_iv_curve_fig(a,grid=grid)
+    if type(i) is dict:
+        i = [i[v] for v in hold_v]
+    if 'label' not in plot_args:
+        plot_args['label'] = 'Current'
+    plt.plot(hold_v, i, 'ko-', **plot_args)
+    plt.legend(loc=2)
             
-
-def plot_iv_curve_ss(channel,a,hold_v,i_steady,grid=True):     
-    # Steady states
-    fig = plt.figure()
-    fig.canvas.set_window_title(
-        "Currents vs. holding potentials at erev = %s V" \
-        % a.erev)
-    plt.xlabel('Membrane potential (V)')
-    plt.ylabel('Current (A)')
-    plt.grid('on' if grid else 'off')
-    plt.plot(hold_v, [i_steady[v] for v in hold_v], 
-               'ko-', label="Steady state currents")
-    plt.legend()
-
 
 def make_html_file(info):
     merged = merge_with_template(info, HTML_TEMPLATE_FILE)
