@@ -36,7 +36,9 @@ python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 ################################################
 #  Test analysis of NeuroML2 channel
 
-pynml-channelanalysis NaConductance.channel.nml -nogui
+if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then 
+    pynml-channelanalysis NaConductance.channel.nml -nogui
+fi
 
     
 ################################################
