@@ -1,14 +1,22 @@
 set -e
+  
+run_neuron_examples=false
+
+if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
+    run_neuron_examples=true
+fi
 
 ### Test script for pyNeuroML
 
 cd examples
+
 
 echo
 echo "################################################"
 echo "##   Executing examples with jNeuroML"
 
 pynml LEMS_NML2_Ex5_DetCell.xml -nogui
+
 
 
 echo
@@ -18,15 +26,10 @@ echo "##   Validate with jNeuroML"
 pynml -validate NML2_SingleCompHHCell.nml
 
 
+
 echo
 echo "################################################"
 echo "##   Running some of the examples"
-  
-run_neuron_examples=false
-
-if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
-    run_neuron_examples=true
-fi
 
 #  Run an example with jNeuroML
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
@@ -39,11 +42,13 @@ echo "##   Test analysis of NeuroML2 channel"
 
 if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then 
     pynml-channelanalysis NaConductance.channel.nml -nogui
+    pynml-channelanalysis NaConductance.channel.nml KConductance.channel.nml -html
+    #pynml-channelanalysis NaConductance.channel.nml -ivCurve -erev 55mV -nogui
 fi
+
 
     
 if [ "$TRAVIS" != "true" ]; then   # Requires pyelectro, not in .travis.yml yet...
-
 echo
 echo "################################################"
 echo "##   Generate a frequency vs current plot"
@@ -51,6 +56,7 @@ echo "##   Generate a frequency vs current plot"
     python generate_if_curve.py -nogui  
 
 fi 
+
 
 
 # Only run these if NEURON is installed & -neuron flag is used
@@ -75,6 +81,7 @@ if [ "$run_neuron_examples" == true ]; then
         pynml-modchananalysis -stepV 20  NaConductance  -dt 0.01 -nogui
 
 fi
+
 
 echo
 echo "################################################"

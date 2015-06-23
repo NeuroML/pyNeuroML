@@ -414,11 +414,31 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 continue
             }
 
+            for i=0, cellref.secanal.dmlist.count - 1 {
+                dmech = cellref.secanal.dmlist.object(i)
+                if (object_id(dmech.location) == 0) { continue }
+                
+                if (hoc_sf_.substr(dmech.name, "_ion") > 0) {
+                    print "---------------------------------------------"
+                    print "Handling mechanism: ", dmech.name
+                    
+                    for dmech.parmiter(dparm) {
+                        for dparm.parmiter(dpelm) {
+                            for l=0, dpelm.parms.count - 1 {
+                                print "l ", l, " dparm ", dparm, " dpelm ", dpelm
+                                
+                                strdef paramNameToUse 
+                                paramNameToUse = dparm.name
+                                print "    Initial parameter name: ", paramNameToUse
+                            }
+                        }
+                    }
+                    
+                }
+            }
 
             for i=0, cellref.secanal.dmlist.count - 1 {
                 dmech = cellref.secanal.dmlist.object(i)
-                print "---------------------------------------------"
-                print "Handling mechanism: ", dmech.name
                 
                 // TODO:        for tobj.mechs(dmech) { }
                 if (dmech.parms.count > 0) {
@@ -427,6 +447,10 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
 
                 if (strcmp(dmech.name,"capacitance") != 0 && strcmp(dmech.name,"Ra") != 0 && hoc_sf_.substr(dmech.name, "_ion") == -1) {
+
+                    print "---------------------------------------------"
+                    print "Handling mechanism: ", dmech.name
+                
                     strdef passiveAttr 
                     passiveAttr = ""
                     // If mech name is built in passive conductance in NEURON
@@ -523,13 +547,16 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 if (object_id(dmech.location) == 0) { continue }
 
                 if (strcmp(dmech.name,"capacitance") == 0) {
+
+                    print "---------------------------------------------"
+                    print "Handling mechanism: ", dmech.name
                     strdef units 
                     units = "uF_per_cm2"
                     cellnml2file.printf("        <specificCapacitance ")
                     for dmech.parmiter(dparm) {
                         for dparm.parmiter(dpelm) {
                             for l=0, dpelm.parms.count - 1 {
-                                printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 1, noComment, dmech.name, units) // Converting μF cm-2 (NEURON units) to μF cm-2 (Phys units)
+                                printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 1, noComment, dmech.name, units) // Converting uF cm-2 (NEURON units) to uF cm-2 (Phys units)
                             }
                         }
                     }
@@ -547,6 +574,8 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                 if (strcmp(dmech.name,"Ra") == 0) {
 
+                    print "---------------------------------------------"
+                    print "Handling mechanism: ", dmech.name
                     strdef units 
                     units = "kohm_cm"
                     cellnml2file.printf("        <resistivity")
@@ -561,9 +590,11 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 } 
             }
 
-           //////////// ion_xmlwrite(cellnml2file)
+            //////////// ion_xmlwrite(cellnml2file)
 
             cellnml2file.printf("      </intracellularProperties>\n\n    </biophysicalProperties>\n\n")   
+            
+            print "---------------------------------------------"
 
         }
 
@@ -606,7 +637,7 @@ proc artcell() {local i,j,l
                     tobj = dpelm.parms.object(l)
                     // 1 is ModelViewParmVal, 2 is ModelViewParmVec
                     if (tobj.type() == 1) {
-                        $o1.printf("    <parameter name=\"%s\" value=\"%g\"/>\n",  dpelm.name, tobj.value)
+                        file_out.printf("    <parameter name=\"%s\" value=\"%g\"/>\n",  dpelm.name, tobj.value)
                     }
                 }
             }
@@ -634,7 +665,7 @@ proc printparmval() {
     ref = $s7
     units = $s8
     
-    print "-- Generating parameter, type: ", param_obj.type(), " param: ", param, ", val: ", param_obj.value, ", scale: ", scale_factor, ", comm: [", comment1, "], ref: ", ref, ", units: ", units
+    print "    -- Generating parameter, type: ", param_obj.type(), " param: ", param, ", val: ", param_obj.value, ", scale: ", scale_factor, ", comm: [", comment1, "], ref: ", ref, ", units: ", units
     // 1 is ModelViewParmVal, 2 is ModelViewParmVec
     if (param_obj.type() == 1) {
 
@@ -689,10 +720,12 @@ proc printparmval() {
         } else {
             print "  ModelViewParmSec..."
             secref = secanal_all.object(param_obj.location.isec)
+            print secref
             //printsec(file_out, secref)
 
             strdef groupName
             sprint(groupName, "%s%s", singleSecGroupPrefix, secref)
+            print groupName
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
@@ -704,10 +737,9 @@ proc printparmval() {
 
             }
 
-            file_out.printf(" segmentGroup = ", groupName)
+            file_out.printf(" segmentGroup=\"%s\" ", groupName)
 
         }
-        //file_out.printf("        </bio:parameter>\n")
 
     } else if (param_obj.type() == 2) {  // ModelViewParmVec
 
@@ -752,32 +784,40 @@ proc printparmval() {
 }
 
 
-
+objref temp_secref
 proc printsec() {
-    $o2.sec { 
-        $o1.printf("      <section name=\"%s\"/>\n", secname())
+    file_out = $o1
+    temp_secref = $o2
+    
+    temp_secref.sec { 
+        file_out.printf("      <section name=\"%s\"/>\n", secname())
     }
 }
 
 
+objref temp_param_obj
 proc printvecvals() {local i
-
-    $o2.location.realcell.all.object($o2.location.isec).sec {
-        $o1.printf("          <!-- NOTE: this mechanism is present on %s but has non uniform values. Expression for generating values cannot be retrieved! -->\n", secname())
-        ///$o1.printf("        <section name=\"%s\">\n", secname())
+    file_out = $o1
+    temp_param_obj = $o2
+    
+    temp_param_obj.location.realcell.all.object(temp_param_obj.location.isec).sec {
+        file_out.printf("          <!-- NOTE: this mechanism is present on %s but has non uniform values. Expression for generating values cannot be retrieved! -->\n", secname())
+        ///file_out.printf("        <section name=\"%s\">\n", secname())
     }
-    for i=0, $o2.vec.size - 1 {
-        //$o1.printf("        <value>%g</value>\n", $o2.vec.x(i))
-        $o1.printf("            <!-- Value %g: %g -->\n", i, $o2.vec.x(i))
+    for i=0, temp_param_obj.vec.size - 1 {
+        //file_out.printf("        <value>%g</value>\n", temp_param_obj.vec.x(i))
+        file_out.printf("            <!-- Value %g: %g -->\n", i, temp_param_obj.vec.x(i))
     }
-    //$o1.printf("      </section>\n")
+    //file_out.printf("      </section>\n")
 }
 
 
 proc ion_xmlwrite() {
+    file_out = $o1
+    
     for mview.dparm.mechs(tobj) {
         if (hoc_sf_.head(tobj.name, "_ion", tstr) != -1) {
-            $o1.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))
+            file_out.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))
         }
     }
 }

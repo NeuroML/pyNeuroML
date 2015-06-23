@@ -29,6 +29,7 @@ Soma {
 }
 mainDendSec insert NaConductance
 */
+
 mainDendSec {
     nseg =3
 }

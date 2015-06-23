@@ -1,7 +1,5 @@
-/examples/NaConductance.h_q.inf.dat
-/examples/NaConductance.h_q.tau.dat
-/examples/NaConductance.m_q.inf.dat
-/examples/NaConductance.m_q.tau.dat
+/examples/NaConductance.*.dat
+/examples/KConductance.*.dat
 /examples/test.morphonly.cell.nml
 /examples/test.biophys.cell.nml
 /examples/clean.sh
@@ -9,24 +7,14 @@
 /examples/naChan.mod
 /examples/passiveChan.mod
 /examples/pulseGen1.mod
-/examples/LEMS_Test_NaConductance.xml
-/examples/LEMS_Test_naChan.xml
-/examples/NaConductance.channel.nml
-/examples/NaConductance.h.inf.lems.dat
-/examples/NaConductance.h.tau.lems.dat
-/examples/NaConductance.m.inf.lems.dat
-/examples/NaConductance.m.tau.lems.dat
-/examples/NaConductance.rampV.lems.dat
-/examples/NaConductance.h.inf.dat
-/examples/NaConductance.h.tau.dat
-/examples/NaConductance.m.inf.dat
-/examples/NaConductance.m.tau.dat
+/examples/LEMS_Test_*.xml
 /examples/run_jneuroml_plot_matplotlib2.py
 /examples/hhcell.hoc
 /examples/test.morphonly.nml
 /examples/test.biophys.nml
 /examples/test.level2.xml
 /examples/test.level1.xml
+/examples/html
 .idea
 
 /examples/LEMS_iv_hhcell.xml

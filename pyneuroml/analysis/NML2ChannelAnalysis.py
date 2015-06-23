@@ -148,7 +148,7 @@ def process_args():
                         
     parser.add_argument('-ivCurve',
                         action='store_true',
-                        default=False,
+                        default=DEFAULTS['ivCurve'],
                         help=("Save currents through voltage clamp at each "
                               "level & plot current vs voltage for ion "
                               "channel"))
@@ -538,8 +538,9 @@ def run(a=None,**kwargs):
             'channels': []}
                        
     for channel_file in a.channel_files:
-        channel_info = process_channel_file(channel_file,a)
-        info['channels'].append(channel_info)
+        channels_info = process_channel_file(channel_file,a)
+        for channel_info in channels_info:
+            info['channels'].append(channel_info)
     
     pp.pprint(info)                        
     if not a.nogui and not a.html:
