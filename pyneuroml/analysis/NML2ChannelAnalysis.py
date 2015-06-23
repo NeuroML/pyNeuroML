@@ -465,7 +465,7 @@ def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
     plt.legend()
 
 
-def plot_iv_curve_peak(channel,a,hold_v,i_peaks,grid=True):     
+def plot_iv_curve_peak(channel,a,hold_v,i_peak,grid=True):     
     # Peaks
     fig = plt.figure()
     fig.canvas.set_window_title(
@@ -474,7 +474,7 @@ def plot_iv_curve_peak(channel,a,hold_v,i_peaks,grid=True):
     plt.xlabel('Membrane potential (V)')
     plt.ylabel('Current (A)')
     plt.grid('on' if grid else 'off')
-    plt.plot(hold_v, [i_peaks[v] for v in hold_v], 
+    plt.plot(hold_v, [i_peak[v] for v in hold_v], 
                'ko-', label="Peak currents")
     plt.legend()
             
