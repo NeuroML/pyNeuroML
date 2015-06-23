@@ -8,11 +8,12 @@ setup(
     version=version,
     author='Padraig Gleeson',
     author_email='p.gleeson@gmail.com',
-    packages = ['pyneuroml', 'pyneuroml.analysis', 'pyneuroml.lems', 'pyneuroml.neuron', 'pyneuroml.neuron.analysis'],
+    packages = ['pyneuroml', 'pyneuroml.analysis', 'pyneuroml.lems', 'pyneuroml.neuron', 'pyneuroml.povray', 'pyneuroml.neuron.analysis'],
     entry_points={
         'console_scripts': ['pynml                 = pyneuroml.pynml:main',
                             'pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main',
-                            'pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main']},
+                            'pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main',
+                            'pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main']},
     package_data={
         'pyneuroml': [
             'lib/jNeuroML-0.7.1-jar-with-dependencies.jar',
