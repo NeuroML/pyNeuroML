@@ -50,6 +50,8 @@ proc init() {local i
     p = new PythonObject()
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_name")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_segment_group_name")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import get_erev_for_mechanism")
     nrnpython("from neuron import h")
 }
 
@@ -437,7 +439,7 @@ proc xmlwrite_biophysics() {
     cellnml2file.printf("\n      <membraneProperties> \n\n")
 
     /*
-    Maybe wqorks...
+    Maybe works...
     for mview.dparm.kschans(tobj) {
         kschan_xmlwrite(cellnml2file, tobj)
     }
@@ -457,41 +459,63 @@ proc xmlwrite_biophysics() {
         dmech = cellref.secanal.dmlist.object(i)
         if (object_id(dmech.location) == 0) { continue }
 
-        if (hoc_sf_.substr(dmech.name, "_ion") > 0) {
-            print "---------------------------------------------"
-            print "Handling mechanism: ", dmech.name
+        print "---------------------------------------------"
+        print "Checking ion rev pots in  mechanism: ", dmech.name
 
-            for dmech.parmiter(dparm) {
-                for dparm.parmiter(dpelm) {
-                    for l=0, dpelm.parms.count - 1 {
-                        print "    - l ", l, " dparm ", dparm, " dpelm ", dpelm
+        for dmech.parmiter(dparm) {
+            for dparm.parmiter(dpelm) {
+                for l=0, dpelm.parms.count - 1 {
+                    print "    - l ", l, " dparm ", dparm.name, " dpelm ", dpelm, ", value ", dpelm.parms.object(l).value
+                    
+                    
+                    if (hoc_sf_.substr(dmech.name, "_ion") > 0) {
 
                         strdef paramNameToUse 
                         paramNameToUse = dparm.name
                         strdef groupName
                         sprint(groupName, "%s", dpelm.parms.object(l).location)
                         value = dpelm.parms.object(l).value
-                        print "    Initial parameter name: ", paramNameToUse, ", group: ", groupName, ", value: ", value
-                        if (strcmp(dmech.name,"ena") == 0) {
+                        print "    Initial parameter name: [", paramNameToUse, "], group: ", groupName, ", value: ", value
+                        if (strcmp(paramNameToUse,"ena") == 0) {
                             if (erev_Na != erev_dummy) {
                                 print "There is more than one ena set on the cell! Not yet supported!"
                                 quit()
                             }
                             erev_Na = value
+                            print "Assuming the one and only value for ena is: ", erev_Na, "mV"
                         }
-                        if (strcmp(dmech.name,"ek") == 0) {
+                        if (strcmp(paramNameToUse,"ek") == 0) {
                             if (erev_K != erev_dummy) {
                                 print "There is more than one ek set on the cell! Not yet supported!"
                                 quit()
                             }
                             erev_K = value
+                            print "Assuming the one and only value for ek is: ", erev_K, "mV"
+                        }
+                    } else {
+                    
+                        strdef paramNameToUse 
+                        paramNameToUse = dparm.name
+                        value = dpelm.parms.object(l).value
+                        if  (hoc_sf_.substr(paramNameToUse, "_")>=0) {
+                            hoc_sf_.left(paramNameToUse, hoc_sf_.substr(paramNameToUse, "_"))
+                        }
+                        
+                        print "    Initial parameter name: [", paramNameToUse, "], value: ", value
+                        
+                        if (strcmp(paramNameToUse, "e") == 0) {
+                        
+                            {p.set_erev_for_mechanism(dmech.name, value)}
+                            {print p.get_erev_for_mechanism(dmech.name)}
                         }
                     }
                 }
             }
-
         }
+
+        
     }
+    
 
     for i=0, cellref.secanal.dmlist.count - 1 {
         dmech = cellref.secanal.dmlist.object(i)
@@ -503,7 +527,8 @@ proc xmlwrite_biophysics() {
 
 
         if (strcmp(dmech.name,"capacitance") != 0 && strcmp(dmech.name,"Ra") != 0 && hoc_sf_.substr(dmech.name, "_ion") == -1) {
-
+            
+            found_erev = 0 
             print "---------------------------------------------"
             print "Handling mechanism: ", dmech.name
 
@@ -519,13 +544,17 @@ proc xmlwrite_biophysics() {
                 // Not used in nml2
                 /////passiveAttr = " passive_conductance=\"true\""
             }
-            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s_XXX\"%s ", dmech.name, dmech.name, passiveAttr)
+            
             for j=0, dmech.location.subset.size()-1 {
                 secref = cellref.secanal.all.object(dmech.location.subset.x(j))
                 //              printsec(cellnml2file, secref)
             }
             for dmech.parmiter(dparm) {
+                //print dparm
                 for dparm.parmiter(dpelm) {
+                    //print dpelm
+                    
+            
                     for l=0, dpelm.parms.count - 1 {
 
                         strdef paramNameToUse 
@@ -570,6 +599,9 @@ proc xmlwrite_biophysics() {
                             }
                         }
                         print "    Checking param: ",paramNameToUse, " in ", dmech.name
+                        if (strcmp(paramNameToUse,"e") == 0) {
+                            found_erev = 1
+                        }
                         //print comment
 
 
@@ -584,12 +616,40 @@ proc xmlwrite_biophysics() {
                         if (strcmp(paramNameToUse,"e") == 0) {
                             paramNameToUse = "erev"
                             units = "mV"
+                        } 
+                        
+                        if (strcmp(paramNameToUse, "condDensity")==0) {
+                        
+                            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s_XXX\"%s ", dmech.name, dmech.name, passiveAttr)
+                            
+                            printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name, units)
+                            
+                            if (hoc_sf_.substr(dmech.name,"Na")>=0) {
+                                cellnml2file.printf(" erev=\"%fmV\" ", erev_Na)
+                            } else if (hoc_sf_.substr(dmech.name,"K")>=0) {
+                                cellnml2file.printf(" erev=\"%fmV\" ", erev_K)
+                            } else {
+                                value = p.get_erev_for_mechanism(dmech.name)
+                                cellnml2file.printf(" erev=\"%fmV\" ", value)
+                            }
+                            
+                            cellnml2file.printf("/>\n\n")
+                            
+                            
+                        } else if (strcmp(paramNameToUse, "e")==0) {
+                            print "Rev pot handled elsewhere..."
+                        } else if (strcmp(paramNameToUse, "erev")==0) {
+                            print "Rev pot handled elsewhere..."
+                        } else {
+                            print "Unable to handle parameter: ", paramNameToUse, "!!"
+                            quit()
                         }
-                        printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name, units)
                     }
+                    
+                   
                 }
             }
-            cellnml2file.printf("/>\n\n")
+            
         }
     }
 

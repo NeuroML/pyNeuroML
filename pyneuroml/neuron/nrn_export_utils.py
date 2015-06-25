@@ -18,6 +18,17 @@ def get_segment_group_name(nrn_section_name):
     else:
         return replace_brackets(nrn_section_name.split('.')[1])
     
+mechs_vs_erevs = {}
+
+def set_erev_for_mechanism(mech, erev):
+    mechs_vs_erevs[mech] = erev
+    print "mechs_vs_erevs: %s"%mechs_vs_erevs
+    
+def get_erev_for_mechanism(mech):
+    
+    print "mechs_vs_erevs: %s"%mechs_vs_erevs
+    return mechs_vs_erevs[mech]
+    
 
 if __name__ == '__main__':
     
