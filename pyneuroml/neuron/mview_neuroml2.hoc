@@ -166,7 +166,16 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
         if (separateCellFiles == 1) {
             strdef newcellfile
-            sprint(newcellfile, "%s.cell.nml", cellName)
+            strdef dir
+            if (hoc_sf_.substr(file_out.getname,"/")>=0) {
+                dir = file_out.getname()
+                print hoc_sf_.substr(dir,"/")
+                hoc_sf_.left(dir, hoc_sf_.substr(dir,"/"))
+            } else {
+                dir = "."
+            }
+            sprint(newcellfile, "%s/%s.cell.nml", dir, cellName)
+            print "Saving cell: ", cellref, ", to: ", newcellfile
             cellnml2file = new File(newcellfile)
             ok = cellnml2file.wopen()
             if (!ok) {
