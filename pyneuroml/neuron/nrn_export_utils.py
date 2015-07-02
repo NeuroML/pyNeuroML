@@ -1,5 +1,10 @@
 from neuron import *
 from nrn import *
+
+def clear_neuron():
+    print(' - Clearing NEURON contents...')
+    h('forall delete_section()')
+    print(' - Cleared NEURON contents...')
     
 def replace_brackets(ref):
     return ref.replace('[', '_').replace(']', '')

@@ -123,6 +123,15 @@ def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory,
     
     if load_saved_data:
         return reload_saved_data(lems_file_name, plot, 'jNeuroML')
+    
+    
+
+def nml2_to_svg(nml2_file_name, max_memory=default_java_max_memory, verbose=True):           
+    print_comment("Converting NeuroML2 file: %s to SVG"%nml2_file_name, verbose)
+    
+    post_args = "-svg"
+    
+    run_jneuroml("", nml2_file_name, post_args, max_memory, verbose)
 
 
 def run_lems_with_jneuroml_neuron(

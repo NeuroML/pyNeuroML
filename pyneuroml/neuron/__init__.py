@@ -22,7 +22,7 @@ def export_to_neuroml2(hoc_or_python_file,
         if hoc_or_python_file.endswith(".py"):
             print("Importing Python scripts not yet implemented...")
         else:
-            h.load_file(hoc_or_python_file)
+            h.load_file(1, hoc_or_python_file) # Using 1 to force loading of the file, in case file with same name was loaded before...
 
     print "Loaded NEURON file: %s"%hoc_or_python_file
 
