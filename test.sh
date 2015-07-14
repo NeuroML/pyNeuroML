@@ -42,7 +42,7 @@ echo "##   Test analysis of NeuroML2 channel"
 
 if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then 
     pynml-channelanalysis NaConductance.channel.nml -nogui
-    #pynml-channelanalysis NaConductance.channel.nml -ivCurve -erev 55mV -nogui
+    pynml-channelanalysis NaConductance.channel.nml -ivCurve -erev 55 -nogui
 
     if [ "$TRAVIS" != "true" ]; then   # Requires matplotlib...
         pynml-channelanalysis NaConductance.channel.nml KConductance.channel.nml -html
