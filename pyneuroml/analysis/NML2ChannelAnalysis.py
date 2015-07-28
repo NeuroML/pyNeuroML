@@ -15,7 +15,6 @@ import re
 import neuroml.loaders as loaders
 from pyneuroml import pynml
 import airspeed
-import matplotlib.pyplot as plt
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -530,6 +529,9 @@ def main(args=None):
 
 def run(a=None,**kwargs): 
     a = build_namespace(a,**kwargs)
+    
+    if not a.nogui and not a.html:
+        import matplotlib.pyplot as plt
 
     info = {'info': ("Channel information at: "
                      "T = %s degC, "
