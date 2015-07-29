@@ -27,11 +27,11 @@ mechs_vs_erevs = {}
 
 def set_erev_for_mechanism(mech, erev):
     mechs_vs_erevs[mech] = erev
-    print "mechs_vs_erevs: %s"%mechs_vs_erevs
+    print("mechs_vs_erevs: %s"%mechs_vs_erevs)
     
 def get_erev_for_mechanism(mech):
     
-    print "mechs_vs_erevs: %s"%mechs_vs_erevs
+    print("mechs_vs_erevs: %s"%mechs_vs_erevs)
     return mechs_vs_erevs[mech]
     
 

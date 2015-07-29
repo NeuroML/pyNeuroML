@@ -186,8 +186,8 @@ def reload_saved_data(lems_file_name, plot=False,
     
     possible_prefixes = ['{http://www.neuroml.org/lems/0.7.2}']
     if sim is None:
-        #print tree.getroot().nsmap
-        #print tree.getroot().getchildren()
+        #print(tree.getroot().nsmap)
+        #print(tree.getroot().getchildren())
         for pre in possible_prefixes:
             for comp in tree.getroot().findall(pre+'Component'):
                 if comp.attrib['type'] == 'Simulation':

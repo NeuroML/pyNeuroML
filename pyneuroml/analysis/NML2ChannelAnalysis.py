@@ -207,7 +207,7 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
         target_voltages_map.append(info)
-        #print info
+        #print(info)
 
     model = {"channel_file":        channel_file, 
              "channel":             channel, 

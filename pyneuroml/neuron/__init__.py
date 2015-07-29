@@ -24,7 +24,7 @@ def export_to_neuroml2(hoc_or_python_file,
         else:
             h.load_file(1, hoc_or_python_file) # Using 1 to force loading of the file, in case file with same name was loaded before...
 
-    print "Loaded NEURON file: %s"%hoc_or_python_file
+    print("Loaded NEURON file: %s"%hoc_or_python_file)
 
     h.load_file("mview.hoc")
     
@@ -57,7 +57,7 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
     
     h.load_file(hoc_file)
 
-    print "Loaded NEURON file: %s"%hoc_file
+    print("Loaded NEURON file: %s"%hoc_file)
 
     h.load_file("mview.hoc")
 
