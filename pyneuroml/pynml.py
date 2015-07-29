@@ -109,20 +109,31 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         from lems.base.util import validate_lems
         validate_lems(lems_file_name)
 
+def relative_path(base_dir, file_name):
+    
+    if base_dir == '': return file_name
+    if base_dir == '.': return file_name
+    if base_dir == './': return file_name
+    return '%s/%s'%(base_dir,file_name)
 
-def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory, 
-                           nogui=False, load_saved_data=False, plot=False, 
-                           verbose=True):           
+def run_lems_with_jneuroml(lems_file_name, 
+                           max_memory=default_java_max_memory, 
+                           nogui=False, 
+                           load_saved_data=False, 
+                           plot=False, 
+                           exec_in_dir = ".",
+                           verbose=True):  
+                               
     print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, verbose)
     
     post_args = ""
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args, max_memory, verbose)
+    run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose)
     
     if load_saved_data:
-        return reload_saved_data(lems_file_name, plot, 'jNeuroML')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
     
     
 
@@ -134,19 +145,24 @@ def nml2_to_svg(nml2_file_name, max_memory=default_java_max_memory, verbose=True
     run_jneuroml("", nml2_file_name, post_args, max_memory, verbose)
 
 
-def run_lems_with_jneuroml_neuron(
-    lems_file_name, max_memory=default_java_max_memory, nogui=False, 
-    load_saved_data=False, plot=False, verbose=True):           
+def run_lems_with_jneuroml_neuron(lems_file_name, 
+                                  max_memory=default_java_max_memory, 
+                                  nogui=False, 
+                                  load_saved_data=False, 
+                                  plot=False, 
+                                  exec_in_dir = ".",
+                                  verbose=True):
+                                      
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, verbose)
     
     post_args = " -neuron -run"
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args, max_memory)
+    run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose)
     
     if load_saved_data:
-        return reload_saved_data(lems_file_name, plot, 'jNeuroML_NEURON')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML_NEURON')
     
     
 def reload_saved_data(lems_file_name, plot=False, 
@@ -159,8 +175,12 @@ def reload_saved_data(lems_file_name, plot=False,
     if plot:
         import matplotlib.pyplot as pylab
 
+    base_dir = os.path.dirname(lems_file_name) if len(os.path.dirname(lems_file_name))>0 else '.'
+    
+    
     from lxml import etree
     tree = etree.parse(lems_file_name)
+    
     sim = tree.getroot().find('Simulation')
     ns_prefix = ''
     
@@ -176,8 +196,8 @@ def reload_saved_data(lems_file_name, plot=False,
     
     for of in sim.findall(ns_prefix+'OutputFile'):
         results['t'] = []
-        file_name = of.attrib['fileName']
-        print_comment("Loading saved data from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''), verbose)
+        file_name = base_dir+'/'+of.attrib['fileName']
+        print_comment("Loading saved data from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''), True)
 
         cols = []
         cols.append('t')
@@ -246,9 +266,14 @@ def evaluate_arguments(args):
     run_jneuroml(pre_args, args.target_file, post_args, args.java_max_memory)
     
         
-def run_jneuroml(pre_args, target_file, post_args, max_memory=default_java_max_memory, verbose=True):    
+def run_jneuroml(pre_args, 
+                 target_file, 
+                 post_args, 
+                 max_memory = default_java_max_memory, 
+                 exec_in_dir = ".",
+                 verbose=True):    
        
-    exec_dir = "." 
+     
     
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -257,7 +282,7 @@ def run_jneuroml(pre_args, target_file, post_args, max_memory=default_java_max_m
 
     output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
                                         (max_memory, jar, pre_args, target_file, 
-                                         post_args), exec_dir, verbose=verbose)
+                                         post_args), exec_in_dir, verbose=verbose)
                                             
     print_comment(output, verbose)
 

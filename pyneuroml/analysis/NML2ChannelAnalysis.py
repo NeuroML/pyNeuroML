@@ -16,6 +16,8 @@ import neuroml.loaders as loaders
 from pyneuroml import pynml
 import airspeed
 
+import matplotlib.pyplot as plt
+
 pp = pprint.PrettyPrinter(depth=4)
 
 OUTPUT_DIR = os.getcwd()
@@ -249,7 +251,7 @@ def get_channels_from_channel_file(channel_file):
 def process_channel_file(channel_file,a):
     ## Get name of channel mechanism to test
     if a.v: 
-        print("Going to test channel from file: "+ channel_files)
+        print("Going to test channel from file: "+ channel_file)
 
     if not os.path.isfile(channel_file):
         raise IOError("File could not be found: %s!\n" % channel_file)
@@ -270,8 +272,7 @@ def process_channel_file(channel_file,a):
         if not a.nogui:
             plot_channel(channel,a,results,iv_data=iv_data)
 
-        channel_info = {key:getattr(channel,key) \
-                            for key in ['id','file','notes']}
+        channel_info = {key:getattr(channel,key) for key in ['id','file','notes']}
         channels_info.append(channel_info)
     return channels_info
 
@@ -530,8 +531,8 @@ def main(args=None):
 def run(a=None,**kwargs): 
     a = build_namespace(a,**kwargs)
     
-    if not a.nogui and not a.html:
-        import matplotlib.pyplot as plt
+    #if (not a.nogui) or a.html:
+    #    print('mpl')
 
     info = {'info': ("Channel information at: "
                      "T = %s degC, "
