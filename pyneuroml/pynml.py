@@ -79,6 +79,10 @@ def validate_neuroml2(nml2_file_name):
 
 def read_neuroml2_file(nml2_file_name):
     
+    if not os.path.isfile(nml2_file_name):
+        print_comment("Unable to find file: %s!"%nml2_file_name, True)
+        exit()
+        
     return loaders.NeuroMLLoader.load(nml2_file_name)
 
 
@@ -94,6 +98,10 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True):
         
 def read_lems_file(lems_file_name):
     
+    if not os.path.isfile(lems_file_name):
+        print_comment("Unable to find file: %s!"%lems_file_name, True)
+        exit()
+        
     model = lems_model.Model(include_includes=False)
 
     model.import_from_file(lems_file_name)
