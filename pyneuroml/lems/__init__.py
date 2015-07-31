@@ -1,5 +1,5 @@
 import os.path
-from LEMSSimulation import LEMSSimulation
+from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 
 import shutil
 import os
