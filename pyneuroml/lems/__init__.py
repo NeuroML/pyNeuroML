@@ -1,3 +1,4 @@
+import os.path
 from LEMSSimulation import LEMSSimulation
 
 import shutil
@@ -23,13 +24,15 @@ def generate_lems_file_for_neuroml(sim_id,
     
     nml_doc = read_neuroml2_file(neuroml_file)
     
+    quantities_saved = []
+    
     if not copy_neuroml:
         ls.include_neuroml2_file(neuroml_file)
     else:
-        shutil.copy(neuroml_file, target_dir)
+        if os.path.abspath(os.path.dirname(neuroml_file))!=os.path.abspath(target_dir):
+            shutil.copy(neuroml_file, target_dir)
         
         neuroml_file_name = os.path.basename(neuroml_file)
-        new_neuroml_file = '%s%s'%(target_dir,neuroml_file_name)
         
         ls.include_neuroml2_file(neuroml_file_name, include_included=False)
         
@@ -56,7 +59,7 @@ def generate_lems_file_for_neuroml(sim_id,
                 size = population.size
                 component = population.component
                 
-                
+                quantity_template = "%s[%i]/v"
                 
                 if gen_plots_for_all_v:
                     print('Generating %i plots for %s in population %s'%(size, component, population.id))
@@ -64,14 +67,20 @@ def generate_lems_file_for_neuroml(sim_id,
                     disp0 = 'DispPop__%s'%population.id
                     ls.create_display(disp0, "Voltages of %s"%disp0, "-90", "50")
                     for i in range(size):
-                        ls.add_line_to_display(disp0, "v", "%s[%i]/v"%(population.id, i), "1mV", get_next_hex_color())
+                        quantity = quantity_template%(population.id, i)
+                        ls.add_line_to_display(disp0, "v %s"%quantity, quantity, "1mV", get_next_hex_color())
                 
                 if gen_saves_for_all_v:
                     print('Saving %i values of v for %s in population %s'%(size, component, population.id))
    
                     of0 = 'Volts_file__%s'%population.id
                     ls.create_output_file(of0, "%s.%s.v.dat"%(sim_id,population.id))
-                    ls.add_column_to_output_file(of0, 'v', "%s[%i]/v"%(population.id, i))
+                    for i in range(size):
+                        quantity = quantity_template%(population.id, i)
+                        ls.add_column_to_output_file(of0, 'v_%s'%quantity, quantity)
+                        quantities_saved.append(quantity)
                         
         
     ls.save_to_file(file_name=file_name_full)
+    
+    return quantities_saved

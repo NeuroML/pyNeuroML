@@ -19,6 +19,7 @@ import neuroml.writers as writers
 import lems.model.model as lems_model
 
 import random
+import inspect
 
 verbose = False
 
@@ -76,15 +77,55 @@ def validate_neuroml2(nml2_file_name):
     run_jneuroml(pre_args, nml2_file_name, post_args)
     
 
-
-def read_neuroml2_file(nml2_file_name):
+def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False):  
+    
+    print_comment("Loading NeuroML2 file: %s"%nml2_file_name, verbose)
     
     if not os.path.isfile(nml2_file_name):
         print_comment("Unable to find file: %s!"%nml2_file_name, True)
         exit()
         
-    return loaders.NeuroMLLoader.load(nml2_file_name)
+    nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
+    
+    if include_includes:
+        for include in nml2_doc.includes:
+            incl_loc = '%s/%s'%(os.path.dirname(nml2_file_name),include.href)
+            print_comment("Loading included NeuroML2 file: %s"%incl_loc, verbose)
+            nml2_sub_doc = read_neuroml2_file(incl_loc, True, verbose=verbose)
+            
+            membs = inspect.getmembers(nml2_sub_doc)
 
+            for memb in membs:
+            
+                if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
+                    for entry in memb[1]:
+                        if memb[0] != 'includes':
+                            print_comment("  Adding %s from: %s to list: %s"%(entry, incl_loc, memb[0]), verbose)
+                            getattr(nml2_doc, memb[0]).append(entry)
+                            
+        nml2_doc.includes = []
+            
+    return nml2_doc
+
+
+def quick_summary(nml2_doc):
+    
+    info = 'Contents of NeuroML 2 document: %s\n'%nml2_doc.id
+    membs = inspect.getmembers(nml2_doc)
+
+    for memb in membs:
+
+        if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
+            info+='  %s:\n    ['%memb[0]
+            for entry in memb[1]:
+                extra = '???'
+                extra = entry.id if hasattr(entry,'id') else extra
+                extra = entry.href if hasattr(entry,'href') else extra
+                
+                info+=" %s (%s),"%(entry, extra)
+            
+            info+=']\n'
+    return info
 
 
 def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True):
@@ -117,12 +158,14 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         from lems.base.util import validate_lems
         validate_lems(lems_file_name)
 
+
 def relative_path(base_dir, file_name):
     
     if base_dir == '': return file_name
     if base_dir == '.': return file_name
     if base_dir == './': return file_name
     return '%s/%s'%(base_dir,file_name)
+
 
 def run_lems_with_jneuroml(lems_file_name, 
                            max_memory=default_java_max_memory, 
