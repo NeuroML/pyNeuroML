@@ -68,7 +68,7 @@ def generate_lems_file_for_neuroml(sim_id,
                     ls.create_display(disp0, "Voltages of %s"%disp0, "-90", "50")
                     for i in range(size):
                         quantity = quantity_template%(population.id, i)
-                        ls.add_line_to_display(disp0, "v %s"%quantity, quantity, "1mV", get_next_hex_color())
+                        ls.add_line_to_display(disp0, "v %s"%safe_variable(quantity), quantity, "1mV", get_next_hex_color())
                 
                 if gen_saves_for_all_v:
                     print('Saving %i values of v for %s in population %s'%(size, component, population.id))
@@ -77,10 +77,14 @@ def generate_lems_file_for_neuroml(sim_id,
                     ls.create_output_file(of0, "%s.%s.v.dat"%(sim_id,population.id))
                     for i in range(size):
                         quantity = quantity_template%(population.id, i)
-                        ls.add_column_to_output_file(of0, 'v_%s'%quantity, quantity)
+                        ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
                         quantities_saved.append(quantity)
                         
         
     ls.save_to_file(file_name=file_name_full)
     
     return quantities_saved
+
+# Mainly for NEURON etc.
+def safe_variable(quantity):
+    return quantity.replace(' ','_').replace('[','_').replace(']','_').replace('/','_')
