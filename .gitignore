@@ -1,3 +1,4 @@
+/examples/test_data/hh_v.dat
 /examples/export_neuroml2_2x.py
 /register.py
 /examples/NaConductance.*.dat
@@ -17,6 +18,7 @@
 /examples/test.level2.xml
 /examples/test.level1.xml
 /examples/html
+/examples/NT_*
 .idea
 
 /examples/LEMS_iv_hhcell.xml
@@ -24,6 +26,10 @@
 /examples/iv_hhcell.v.dat
 /pyneuroml/lems/mysim.v.dat
 /pyneuroml/lems/LEMS_mysim.xml
+
+/pyneuroml/tune/temp
+/pyneuroml/tune/NT_*
+
 test_models
 
 *.pyc

@@ -90,7 +90,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False):
     if include_includes:
         for include in nml2_doc.includes:
             incl_loc = '%s/%s'%(os.path.dirname(nml2_file_name),include.href)
-            print_comment("Loading included NeuroML2 file: %s"%incl_loc, verbose)
+            print_comment("Loading included NeuroML2 file: %s"%incl_loc)
             nml2_sub_doc = read_neuroml2_file(incl_loc, True, verbose=verbose)
             
             membs = inspect.getmembers(nml2_sub_doc)
@@ -100,7 +100,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False):
                 if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
                     for entry in memb[1]:
                         if memb[0] != 'includes':
-                            print_comment("  Adding %s from: %s to list: %s"%(entry, incl_loc, memb[0]), verbose)
+                            print_comment("  Adding %s from: %s to list: %s"%(entry, incl_loc, memb[0]))
                             getattr(nml2_doc, memb[0]).append(entry)
                             
         nml2_doc.includes = []
@@ -337,6 +337,10 @@ def run_jneuroml(pre_args,
                                             
     print_comment(output, verbose)
 
+    
+    
+def print_comment_v(text):
+    print_comment(text, True)
     
     
 def print_comment(text, print_it=verbose):
