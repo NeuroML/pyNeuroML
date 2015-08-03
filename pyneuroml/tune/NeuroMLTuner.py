@@ -178,7 +178,7 @@ def run_optimisation(prefix,
 
         plt.legend()
 
-        plt.ylim(-80.0,80.0)
+        #plt.ylim(-80.0,80.0)
         plt.xlim(0.0,sim_time)
         plt.title("Models")
         plt.xlabel("Time (ms)")

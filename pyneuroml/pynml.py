@@ -69,15 +69,15 @@ def validate_neuroml1(nml1_file_name):
     run_jneuroml(pre_args, nml1_file_name, post_args)
 
 
-def validate_neuroml2(nml2_file_name):
+def validate_neuroml2(nml2_file_name, verbose_validate=verbose):
     
     pre_args = "-validate"
     post_args = ""
         
-    run_jneuroml(pre_args, nml2_file_name, post_args)
+    run_jneuroml(pre_args, nml2_file_name, post_args, verbose=verbose_validate)
     
 
-def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False):  
+def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, already_included=[]):  
     
     print_comment("Loading NeuroML2 file: %s"%nml2_file_name, verbose)
     
@@ -88,20 +88,24 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False):
     nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
     
     if include_includes:
+        print_comment('Including included files (included already: %s)'%already_included)
+        
         for include in nml2_doc.includes:
             incl_loc = '%s/%s'%(os.path.dirname(nml2_file_name),include.href)
-            print_comment("Loading included NeuroML2 file: %s"%incl_loc)
-            nml2_sub_doc = read_neuroml2_file(incl_loc, True, verbose=verbose)
-            
-            membs = inspect.getmembers(nml2_sub_doc)
+            if incl_loc not in already_included:
+                print_comment("Loading included NeuroML2 file: %s"%incl_loc)
+                nml2_sub_doc = read_neuroml2_file(incl_loc, True, verbose=verbose, already_included=already_included)
+                already_included.append(incl_loc)
+                
+                membs = inspect.getmembers(nml2_sub_doc)
 
-            for memb in membs:
-            
-                if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
-                    for entry in memb[1]:
-                        if memb[0] != 'includes':
-                            print_comment("  Adding %s from: %s to list: %s"%(entry, incl_loc, memb[0]))
-                            getattr(nml2_doc, memb[0]).append(entry)
+                for memb in membs:
+
+                    if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
+                        for entry in memb[1]:
+                            if memb[0] != 'includes':
+                                print_comment("  Adding %s from: %s to list: %s"%(entry, incl_loc, memb[0]))
+                                getattr(nml2_doc, memb[0]).append(entry)
                             
         nml2_doc.includes = []
             
@@ -128,12 +132,12 @@ def quick_summary(nml2_doc):
     return info
 
 
-def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True):
+def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True, verbose_validate=False):
     
     writers.NeuroMLWriter.write(nml2_doc,nml2_file_name)
     
     if validate:
-        validate_neuroml2(nml2_file_name)
+        validate_neuroml2(nml2_file_name, verbose_validate)
         
         
         

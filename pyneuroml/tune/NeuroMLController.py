@@ -72,7 +72,8 @@ class NeuroMLController():
         
         nml_doc = read_neuroml2_file(self.neuroml_file, 
                                      include_includes=True,
-                                     verbose = True)
+                                     verbose = True,
+                                     already_included = [])
                                      
         
         for var_name in sim_var.keys():

@@ -60,6 +60,8 @@ def generate_lems_file_for_neuroml(sim_id,
                 component = population.component
                 
                 quantity_template = "%s[%i]/v"
+                if population.type and population.type == 'populationList':
+                    quantity_template = "%s/%i/"+component+"/v"
                 
                 if gen_plots_for_all_v:
                     print_comment('Generating %i plots for %s in population %s'%(size, component, population.id))
