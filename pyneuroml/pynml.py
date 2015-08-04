@@ -69,7 +69,7 @@ def validate_neuroml1(nml1_file_name):
     run_jneuroml(pre_args, nml1_file_name, post_args)
 
 
-def validate_neuroml2(nml2_file_name, verbose_validate=verbose):
+def validate_neuroml2(nml2_file_name, verbose_validate=True):
     
     pre_args = "-validate"
     post_args = ""
@@ -332,7 +332,7 @@ def run_jneuroml(pre_args,
     
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
-    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.1-jar-with-dependencies.jar")
+    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.2-jar-with-dependencies.jar")
     
 
     output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %

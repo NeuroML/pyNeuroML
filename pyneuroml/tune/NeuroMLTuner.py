@@ -22,8 +22,6 @@ import pprint
 from collections import OrderedDict
 pp = pprint.PrettyPrinter(indent=4)
 
-
-
 from NeuroMLController import NeuroMLController
 
 
@@ -46,7 +44,8 @@ def run_optimisation(prefix,
                      num_elites =          1,
                      seed =                12345,
                      simulator =           'jNeuroML',
-                     nogui =               False):  
+                     nogui =               False,
+                     verbose =             False):  
                          
     ref = prefix
     
@@ -87,7 +86,7 @@ def run_optimisation(prefix,
                                              num_elites=num_elites,
                                              mutation_rate=mutation_rate,
                                              seeds=None,
-                                             verbose=False)
+                                             verbose=verbose)
 
     start = time.time()
     #run the optimizer

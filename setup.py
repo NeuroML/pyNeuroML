@@ -22,7 +22,7 @@ setup(
                             'pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main']},
     package_data={
         'pyneuroml': [
-            'lib/jNeuroML-0.7.1-jar-with-dependencies.jar',
+            'lib/jNeuroML-0.7.2-jar-with-dependencies.jar',
             'analysis/LEMS_Test_TEMPLATE.xml',
             'analysis/ChannelInfo_TEMPLATE.html',
             'lems/LEMS_TEMPLATE.xml',
