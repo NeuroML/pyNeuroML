@@ -13,6 +13,19 @@ from pyneuroml import pynml
 from pyneuroml.lems import generate_lems_file_for_neuroml
 
 
+try:
+    import pyelectro  #  Not used here, just for checking installation
+except:
+    print('>> Note: pyelectro from https://github.com/pgleeson/pyelectro is required!')
+    exit()
+    
+try:
+    import neurotune  #  Not used here, just for checking installation
+except:
+    print('>> Note: neurotune from https://github.com/pgleeson/neurotune is required!')
+    exit()
+
+
 class NeuroMLSimulation(object):
 
 
