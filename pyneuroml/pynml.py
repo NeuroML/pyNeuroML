@@ -38,7 +38,7 @@ def parse_arguments():
     ##                     help='Simulator to use')
 
     parser.add_argument('-nogui', action='store_true',
-                        help='Simulate LEMS file with jNeuroML, but supress GUI, i.e. show no plots, just save results', default="False")
+                        help='Simulate LEMS file with jNeuroML, but supress GUI, i.e. show no plots, just save results', default=False)
                         
     parser.add_argument('-validate', action='store_true',
                         help='(Via jNeuroML) Validate NeuroML2 file against the latest Schema')
