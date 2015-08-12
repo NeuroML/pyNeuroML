@@ -177,7 +177,8 @@ def run_lems_with_jneuroml(lems_file_name,
                            load_saved_data=False, 
                            plot=False, 
                            exec_in_dir = ".",
-                           verbose=True):  
+                           verbose=True,
+                           exit_on_fail = True):  
                                
     print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, verbose)
     
@@ -185,10 +186,14 @@ def run_lems_with_jneuroml(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose)
+    success = run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose, exit_on_fail)
+    
+    if not success: return False
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
+    else:
+        return True
     
     
 
@@ -206,7 +211,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   load_saved_data=False, 
                                   plot=False, 
                                   exec_in_dir = ".",
-                                  verbose=True):
+                                  verbose=True,
+                                  exit_on_fail = True):
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, verbose)
     
@@ -214,14 +220,20 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose)
+    success = run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose, exit_on_fail)
+    
+    if not success: return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML_NEURON')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
+    else:
+        return True
     
     
-def reload_saved_data(lems_file_name, plot=False, 
-                      simulator=None, verbose=verbose): 
+def reload_saved_data(lems_file_name, 
+                      plot=False, 
+                      simulator=None, 
+                      verbose=verbose): 
     
     # Could use pylems to parse this...
 
@@ -324,9 +336,10 @@ def evaluate_arguments(args):
 def run_jneuroml(pre_args, 
                  target_file, 
                  post_args, 
-                 max_memory = default_java_max_memory, 
-                 exec_in_dir = ".",
-                 verbose=True):    
+                 max_memory   = default_java_max_memory, 
+                 exec_in_dir  = ".",
+                 verbose      = True,
+                 exit_on_fail = True):    
        
      
     
@@ -334,12 +347,23 @@ def run_jneuroml(pre_args,
 
     jar = os.path.join(script_dir, "lib/jNeuroML-0.7.2-jar-with-dependencies.jar")
     
-
-    output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
+    output = ''
+    
+    try:
+        output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
                                         (max_memory, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, verbose=verbose)
-                                            
+    except:
+        print_comment('*** Execution of jnml failed! ***', True)
+                             
+        if exit_on_fail: 
+            exit(-1)
+        else:
+            return False
+        
     print_comment(output, verbose)
+    
+    return True
 
     
     
