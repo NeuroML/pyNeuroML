@@ -121,15 +121,21 @@ def run_optimisation(prefix,
 
     report+="---------- Best candidate ------------------------------------------\n"
     
-    report+=pp.pformat(best_cand_analysis_full)+"\n"
+    report+=pp.pformat(best_cand_analysis_full)+"\n\n"
+    
+    report+="TARGETS: \n"
+    report+=pp.pformat(target_data)+"\n\n"
+    report+="TUNED VALUES:\n"
     report+=pp.pformat(best_cand_analysis)+"\n\n"
+    
+    
     report+="FITNESS: %f\n\n"%fitness
-    report+="FITTEST: %s\n\n"%sim_var
+    report+="FITTEST: %s\n\n"%pp.pformat(dict(sim_var))
     
     print(report)
     
     reportj['fitness']=fitness
-    reportj['fittest vars']=sim_var
+    reportj['fittest vars']=dict(sim_var)
     reportj['best_cand_analysis_full']=best_cand_analysis_full
     reportj['best_cand_analysis']=best_cand_analysis
     reportj['parameters']=parameters
