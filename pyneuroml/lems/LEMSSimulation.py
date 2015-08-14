@@ -6,9 +6,11 @@ Helper class for generating LEMS xml files for simulations
 import airspeed
 import os.path
 
-from pyneuroml import __version__
+from pyneuroml import __version__ as pynml_ver
+from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
+from pyneuroml.pynml import print_comment
 
 class LEMSSimulation():
     
@@ -17,7 +19,8 @@ class LEMSSimulation():
     lems_info = {}
     
     
-    def __init__(self, sim_id, duration, dt, target=None, comment="\n\n        This LEMS file has been automatically generated using PyNeuroML v%s\n\n    "%__version__):
+    def __init__(self, sim_id, duration, dt, target=None, \
+                 comment="\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "%(pynml_ver, libnml_ver)):
         self.lems_info['sim_id'] = sim_id
         self.lems_info['duration'] = duration
         self.lems_info['dt'] = dt
@@ -113,7 +116,7 @@ class LEMSSimulation():
         lems_file = open(file_name, 'w')
         lems_file.write(self.to_xml())
         lems_file.close()
-        print("Written LEMS Simulation %s to file: %s"%(self.lems_info['sim_id'], file_name))
+        print_comment("Written LEMS Simulation %s to file: %s"%(self.lems_info['sim_id'], file_name), True)
         
         return file_name
         
