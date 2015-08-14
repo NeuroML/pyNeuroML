@@ -66,7 +66,9 @@ def validate_neuroml1(nml1_file_name):
     pre_args = "-validatev1"
     post_args = ""
         
-    run_jneuroml(pre_args, nml1_file_name, post_args)
+    run_jneuroml(pre_args, 
+                 nml1_file_name, 
+                 post_args)
 
 
 def validate_neuroml2(nml2_file_name, verbose_validate=True):
@@ -74,7 +76,10 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True):
     pre_args = "-validate"
     post_args = ""
         
-    run_jneuroml(pre_args, nml2_file_name, post_args, verbose=verbose_validate)
+    run_jneuroml(pre_args, 
+                 nml2_file_name, 
+                 post_args, 
+                 verbose = verbose_validate)
     
 
 def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, already_included=[]):  
@@ -186,7 +191,13 @@ def run_lems_with_jneuroml(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    success = run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose, exit_on_fail)
+    success = run_jneuroml("", 
+                           lems_file_name, 
+                           post_args, 
+                           max_memory = max_memory, 
+                           exec_in_dir = exec_in_dir, 
+                           verbose = verbose, 
+                           exit_on_fail = exit_on_fail)
     
     if not success: return False
     
@@ -202,7 +213,11 @@ def nml2_to_svg(nml2_file_name, max_memory=default_java_max_memory, verbose=True
     
     post_args = "-svg"
     
-    run_jneuroml("", nml2_file_name, post_args, max_memory, verbose)
+    run_jneuroml("", 
+                 nml2_file_name, 
+                 post_args, 
+                 max_memory = max_memory, 
+                 verbose = verbose)
 
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
@@ -220,7 +235,13 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    success = run_jneuroml("", lems_file_name, post_args, max_memory, exec_in_dir, verbose, exit_on_fail)
+    success = run_jneuroml("", 
+                           lems_file_name, 
+                           post_args, 
+                           max_memory = max_memory, 
+                           exec_in_dir = exec_in_dir, 
+                           verbose = verbose, 
+                           exit_on_fail = exit_on_fail)
     
     if not success: return False
     
@@ -330,7 +351,10 @@ def evaluate_arguments(args):
     elif args.sedml:
         post_args += " -sedml"
         
-    run_jneuroml(pre_args, args.target_file, post_args, args.java_max_memory)
+    run_jneuroml(pre_args, 
+                 args.target_file, 
+                 post_args, 
+                 max_memory = args.java_max_memory)
     
         
 def run_jneuroml(pre_args, 
