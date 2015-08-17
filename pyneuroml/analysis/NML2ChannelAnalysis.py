@@ -13,7 +13,9 @@ import glob
 import re
 
 import neuroml.loaders as loaders
-from pyneuroml import pynml
+
+from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v
+
 import airspeed
 
 import matplotlib.pyplot as plt
@@ -192,7 +194,10 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
                       gates, temperature, ca_conc, iv_curve):
-                      
+                          
+    print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
+                     channel_file, min_target_voltage, max_target_voltage, temperature))
+                                      
     target_voltages = []
     v = min_target_voltage
     while v <= max_target_voltage:
@@ -207,7 +212,6 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
         target_voltages_map.append(info)
-        #print(info)
 
     model = {"channel_file":        channel_file, 
              "channel":             channel, 
@@ -305,9 +309,11 @@ def make_lems_file(channel,a):
 
 
 def run_lems_file(lems_file,a):
-    results = pynml.run_lems_with_jneuroml(
-                lems_file, nogui=True, 
-                load_saved_data=True, plot=False, verbose=a.v)
+    results = run_lems_with_jneuroml(lems_file, 
+                                     nogui=True, 
+                                     load_saved_data=True, 
+                                     plot=False, 
+                                     verbose=a.v)
     return results
 
 
@@ -450,7 +456,7 @@ def plot_iv_curves(channel,a,iv_data,grid=True):
 
 
 def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
-    # Holding potentials           
+    # Holding potentials      
     fig = plt.figure()
     fig.canvas.set_window_title(("Currents through voltage clamp for %s "
                                  "from %s at %s degC, erev: %s V") 
@@ -462,7 +468,7 @@ def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
     for v in hold_v:
         col = get_colour_hex(
                 float(hold_v.index(v))/len(hold_v))
-        plt.plot(times, currents[v], color=col, 
+        plt.plot(times[v], currents[v], color=col, 
                    linestyle='-', label="%s V" % v)
     plt.legend()
 
@@ -544,8 +550,7 @@ def run(a=None,**kwargs):
         channels_info = process_channel_file(channel_file,a)
         for channel_info in channels_info:
             info['channels'].append(channel_info)
-    
-    pp.pprint(info)                        
+                       
     if not a.nogui and not a.html:
         plt.show()
     elif a.html:
