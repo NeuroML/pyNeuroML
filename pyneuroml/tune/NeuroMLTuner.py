@@ -18,10 +18,9 @@ import os.path
 import time
 
 import pprint
-
-from collections import OrderedDict
 pp = pprint.PrettyPrinter(indent=4)
 
+from collections import OrderedDict
 from NeuroMLController import NeuroMLController
 
 

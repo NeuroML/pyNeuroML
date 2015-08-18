@@ -18,7 +18,7 @@ def generate_lems_file_for_neuroml(sim_id,
     
     file_name_full = '%s/%s'%(target_dir,lems_file_name)
     
-    print_comment_v('Going to create new LEMS file at: %s for NeuroML 2 file: %s'%(file_name_full,neuroml_file))
+    print_comment_v('Creating LEMS file at: %s for NeuroML 2 file: %s'%(file_name_full,neuroml_file))
     
     ls = LEMSSimulation(sim_id, duration, dt, target)
     
