@@ -27,7 +27,9 @@ def generate_lems_file_for_neuroml(sim_id,
     quantities_saved = []
     
     if not copy_neuroml:
-        ls.include_neuroml2_file(neuroml_file)
+        rel_nml_file = os.path.relpath(os.path.abspath(neuroml_file), os.path.abspath(target_dir))
+        print_comment_v("Including existing NeuroML file (%s) as: %s"%(neuroml_file, rel_nml_file))
+        ls.include_neuroml2_file(rel_nml_file, include_included=True, relative_to_dir=os.path.abspath(target_dir))
     else:
         if os.path.abspath(os.path.dirname(neuroml_file))!=os.path.abspath(target_dir):
             shutil.copy(neuroml_file, target_dir)

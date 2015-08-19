@@ -38,10 +38,10 @@ class LEMSSimulation():
         self.lems_info['target'] = target
         
         
-    def include_neuroml2_file(self, nml2_file_name, include_included=True):
+    def include_neuroml2_file(self, nml2_file_name, include_included=True, relative_to_dir='.'):
         self.lems_info['include_files'].append(nml2_file_name)
         if include_included:
-            cell = read_neuroml2_file(nml2_file_name)
+            cell = read_neuroml2_file(relative_to_dir+'/'+nml2_file_name)
             for include in cell.includes:
                 self.lems_info['include_files'].append(include.href)
         
