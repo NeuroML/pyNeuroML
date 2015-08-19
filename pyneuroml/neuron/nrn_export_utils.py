@@ -15,6 +15,13 @@ def get_cell_name(nrn_section_name, cell_index=0):
         return 'Cell%i'%cell_index
     else:
         return '%s_%i'%(replace_brackets(nrn_section_name.split('.')[0]),cell_index)
+    
+
+def get_cell_file_dir(network_file_name):
+    if not '/' in network_file_name:
+        return '.'
+    return network_file_name[:network_file_name.rfind('/')]
+    
 
 def get_segment_group_name(nrn_section_name):
     #print("Getting segment group name for %s"%nrn_section_name)

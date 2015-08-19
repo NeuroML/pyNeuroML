@@ -49,6 +49,7 @@ proc init() {local i
 
     p = new PythonObject()
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_name")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_file_dir")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_segment_group_name")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_erev_for_mechanism")
@@ -162,18 +163,14 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
         strdef cellName
         {cellName = p.get_cell_name(secname(), cellindex)}
 
-        print "Exporting cell: ", cellref, ", secname: ", secname(), ", named: ", cellName
+        print "Exporting cell: ", cellref, ", secname: ", secname(), ", named: ", cellName, "; network in: ", file_out.getname()
 
         if (separateCellFiles == 1) {
             strdef newcellfile
             strdef dir
-            if (hoc_sf_.substr(file_out.getname,"/")>=0) {
-                dir = file_out.getname()
-                print hoc_sf_.substr(dir,"/")
-                hoc_sf_.left(dir, hoc_sf_.substr(dir,"/"))
-            } else {
-                dir = "."
-            }
+
+            {dir = p.get_cell_file_dir(file_out.getname())}
+
             sprint(newcellfile, "%s/%s.cell.nml", dir, cellName)
             print "Saving cell: ", cellref, ", to: ", newcellfile
             cellnml2file = new File(newcellfile)
@@ -186,7 +183,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
             header(cellnml2file)
 
-            mainnml2file.printf("  <include href=\"%s\"/>\n\n", newcellfile)
+            mainnml2file.printf("  <include href=\"%s.cell.nml\"/>\n\n", cellName)
         } 
 
         cellnml2file.printf("  <cell id=\"%s\">\n", cellName)
