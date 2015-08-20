@@ -210,10 +210,10 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             segmentcount = segmentvec.x[sectioncount]
 
             sprint(segGrpsForSections, "%s\n<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n\n", segGrpsForSections, secname(), nmlSegGrpName, n3d(), (n3d() - 1))
-            sprint(segGrpsForSections, "%s      <segmentGroup id = \"%s\"  neuroLexId=\"sao864921383\">    <!--\n", segGrpsForSections, nmlSegGrpName)
-            sprint(segGrpsForSections, "%s             This group contains an unbranched set of segments, and all of the segmentGroups marked with\n", segGrpsForSections)
+            sprint(segGrpsForSections, "%s      <segmentGroup id = \"%s\"  neuroLexId=\"sao864921383\">\n         <notes>", segGrpsForSections, nmlSegGrpName)
+            sprint(segGrpsForSections, "%sThis group contains an unbranched set of segments, and all of the segmentGroups marked with\n", segGrpsForSections)
             sprint(segGrpsForSections, "%s             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.\n", segGrpsForSections)
-            sprint(segGrpsForSections, "%s             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections -->\n", segGrpsForSections)
+            sprint(segGrpsForSections, "%s             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>\n", segGrpsForSections)
 
             if (nseg > 1) {
 
@@ -411,8 +411,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
         cellnml2file.printf("  </cell> \n")
 
-
-        sprint(network, "%s\n    <population id=\"Pop_%s\" component=\"%s\" size=\"1\"/>", network, cellName, cellName)
+        sprint(network, "%s\n    <population id=\"Pop_%s\" component=\"%s\" size=\"1\" type=\"populationList\">", network, cellName, cellName)
+        sprint(network, "%s\n        <instance id=\"0\">\n            <location x=\"0\" y=\"0\" z=\"0\"/>\n        </instance>", network)
+        sprint(network, "%s\n    </population>", network)
 
         if (separateCellFiles == 1) {
             cellnml2file.printf("</neuroml>\n")
