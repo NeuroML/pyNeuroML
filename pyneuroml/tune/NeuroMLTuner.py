@@ -184,9 +184,11 @@ def _run_optimisation(a):
     if isinstance(a.target_data, str): a.target_data = parse_dict_arg(a.target_data)
     if isinstance(a.weights, str): a.weights = parse_dict_arg(a.weights)
     
-    print "==========="
-    print(a)
-    print "==========="
+    print("=====================================================================================")
+    print("Starting run_optimisation with: ")
+    for key,value in a.__dict__.items():
+        print("  %s = %s%s"%(key,' '*(30-len(key)),value))
+    print("=====================================================================================")
     
     ref = a.prefix
     
