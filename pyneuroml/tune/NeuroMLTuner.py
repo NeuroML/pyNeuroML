@@ -151,6 +151,12 @@ def process_args():
                         default=DEFAULTS['seed'],
                         help="Seed for optimiser")
                         
+    parser.add_argument('-simulator', 
+                        type=str,
+                        metavar='<simulator>', 
+                        default=DEFAULTS['simulator'],
+                        help="Simulator to run")
+                        
     parser.add_argument('-nogui', 
                         action='store_true',
                         default=DEFAULTS['nogui'],
@@ -366,29 +372,19 @@ def parse_list_arg(str_list_arg):
     
     
 def build_namespace(a=None,**kwargs):
-    print "---1"
-    print(a)
-    print kwargs
     
     if a is None:
-        print "a was none"
         a = argparse.Namespace()
     
     # Add arguments passed in by keyword.  
     for key,value in kwargs.items():
         setattr(a,key,value)
     
-    print "---2"
-    print(a)
-
     # Add defaults for arguments not provided.  
     for key,value in DEFAULTS.items():
         new_key = convert_case(key)
         if not hasattr(a,key) and not hasattr(a,new_key):
             setattr(a,key,value)
-
-    print "---3"
-    print(a)
     
     # Change all values to under_score from camelCase.  
     for key,value in a.__dict__.items():
@@ -396,9 +392,6 @@ def build_namespace(a=None,**kwargs):
         if new_key != key:
             setattr(a,new_key,value)
             delattr(a,key)
-            
-    print "---"
-    print(a)
 
     return a
 
