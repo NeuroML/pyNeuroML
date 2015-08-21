@@ -1,3 +1,4 @@
+/examples/archive.sh
 /src
 /examples/test_data/hh_v.dat
 /examples/export_neuroml2_2x.py
@@ -47,5 +48,5 @@ dist
 x86_64
 i386
 time.dat
-
+examples/old
 examples/results/*.dat
