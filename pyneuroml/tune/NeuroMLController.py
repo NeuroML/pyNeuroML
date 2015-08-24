@@ -99,8 +99,28 @@ class NeuroMLController():
                             chanDens = cd
                             
                     chanDens.cond_density = '%s %s'%(value, units)
+                    
+                elif variable == 'erev_id': # change all values of erev in channelDensity elements with only this id
+                    
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                        if cd.id == id2:
+                            chanDens = cd
+                            
+                    chanDens.erev = '%s %s'%(value, units)
+                    
+                elif variable == 'erev_ion': # change all values of erev in channelDensity elements with this ion
+                    
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                        if cd.ion == id2:
+                            chanDens = cd
+                            
+                    chanDens.erev = '%s %s'%(value, units)
+                    
                 else:
                     print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, var_name))
+                    exit()
             else:
                 print_comment_v('Unknown type (%s) in variable expression: %s'%(type, var_name))
        
