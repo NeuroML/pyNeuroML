@@ -177,7 +177,7 @@ def get_state_color(s):
     if s.startswith('c'): col='#0000FF'
     if s.startswith('q'): col='#FF00FF'
     if s.startswith('e'): col='#00FFFF'
-    if s.startswith('f'): col='#FFFF00'
+    if s.startswith('f'): col='#DDDD00'
     
     return col
 
@@ -273,7 +273,7 @@ def process_channel_file(channel_file,a):
         else:
             iv_data = None
 
-        if not a.nogui:
+        if not a.nogui and not a.norun:
             plot_channel(channel,a,results,iv_data=iv_data)
 
         channel_info = {key:getattr(channel,key) for key in ['id','file','notes']}
