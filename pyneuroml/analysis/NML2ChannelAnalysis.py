@@ -24,8 +24,12 @@ pp = pprint.PrettyPrinter(depth=4)
 
 OUTPUT_DIR = os.getcwd()
 TEMPLATE_FILE = "%s/LEMS_Test_TEMPLATE.xml" % (os.path.dirname(__file__))
+
 HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html" % \
                         (os.path.dirname(__file__))
+MD_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.md" % \
+                        (os.path.dirname(__file__))
+                        
 V = "rampCellPop0[0]/v" # Key for voltage trace in results dictionary.  
      
 MAX_COLOUR = (255, 0, 0)
@@ -45,7 +49,8 @@ DEFAULTS = {'v': False,
             'ivCurve': False,
             'norun': False,
             'nogui': False,
-            'html': False} 
+            'html': False,
+            'md': False} 
 
 def process_args():
     """ 
@@ -145,8 +150,13 @@ def process_args():
     parser.add_argument('-html',
                         action='store_true',
                         default=DEFAULTS['html'],
-                        help=("Generate a HTML page (as well as a Markdown "
-                              "version...) featuring the plots for the "
+                        help=("Generate a HTML page featuring the plots for the "
+                              "channel"))
+                        
+    parser.add_argument('-md',
+                        action='store_true',
+                        default=DEFAULTS['md'],
+                        help=("Generate a (GitHub flavoured) Markdown page featuring the plots for the "
                               "channel"))
                         
     parser.add_argument('-ivCurve',
@@ -255,7 +265,7 @@ def get_channels_from_channel_file(channel_file):
 def process_channel_file(channel_file,a):
     ## Get name of channel mechanism to test
     if a.v: 
-        print("Going to test channel from file: "+ channel_file)
+        print_comment_v("Going to test channel from file: "+ channel_file)
 
     if not os.path.isfile(channel_file):
         raise IOError("File could not be found: %s!\n" % channel_file)
@@ -264,20 +274,26 @@ def process_channel_file(channel_file,a):
 
     channels_info = []
     for channel in channels:  
-        new_lems_file = make_lems_file(channel,a)
-        if not a.norun:
-            results = run_lems_file(new_lems_file,a)        
-
-        if a.iv_curve:
-            iv_data = compute_iv_curve(channel,a,results)
+        if len(get_channel_gates(channel)) == 0:
+            print_comment_v("Skipping %s in %s as it has no channels (probably passive conductance)"%(channel.id,channel_file))
         else:
-            iv_data = None
+            new_lems_file = make_lems_file(channel,a)
+            if not a.norun:
+                results = run_lems_file(new_lems_file,a)        
 
-        if not a.nogui and not a.norun:
-            plot_channel(channel,a,results,iv_data=iv_data)
+            if a.iv_curve:
+                iv_data = compute_iv_curve(channel,a,results)
+            else:
+                iv_data = None
 
-        channel_info = {key:getattr(channel,key) for key in ['id','file','notes']}
-        channels_info.append(channel_info)
+            if not a.nogui and not a.norun:
+                plot_channel(channel,a,results,iv_data=iv_data)
+
+            channel_info = {key:getattr(channel,key) for key in ['id','file','notes', 'species']}
+            
+            channel_info['expression'] = get_conductance_expression(channel)
+            
+            channels_info.append(channel_info)
     return channels_info
 
 
@@ -285,10 +301,15 @@ def get_channel_gates(channel):
     channel_gates = []
     for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
         channel_gates += [g.id for g in getattr(channel,gates)]
-    if not len(channel_gates):
-        raise AttributeError("No gates found in a channel with ID %s" % \
-                                channel.id)
     return channel_gates
+
+def get_conductance_expression(channel):
+    expr = 'g = gmax '
+    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
+        for g in getattr(channel,gates):
+            instances = int(g.instances)
+            expr += '* %s<sup>%s</sup> '%(g.id, g.instances) if instances >1 else '* %s '%(g.id)
+    return expr
 
 
 def make_lems_file(channel,a):
@@ -304,7 +325,7 @@ def make_lems_file(channel,a):
     lf.write(lems_content)
     lf.close()
     if a.v:
-        print("Written generated LEMS file to %s\n" % new_lems_file)
+        print_comment_v("Written generated LEMS file to %s\n" % new_lems_file)
     return new_lems_file
 
 
@@ -344,7 +365,7 @@ def plot_kinetics(channel,a,results,grid=True):
         plt.gca().autoscale(enable=True, axis='x', tight=True)
         plt.legend()
 
-        if a.html:
+        if a.html or a.md:
             save_fig('%s.tau.png' % channel.id)
 
 def plot_steady_state(channel,a,results,grid=True):
@@ -366,21 +387,21 @@ def plot_steady_state(channel,a,results,grid=True):
         plt.gca().autoscale(enable=True, axis='x', tight=True)
         plt.legend()
 
-        if a.html:
+        if a.html or a.md:
             save_fig('%s.inf.png' % channel.id)
 
 
 def save_fig(name):
-    html_dir = make_html_dir()
-    png_path = os.path.join(html_dir,name)
+    overview_dir = make_overview_dir()
+    png_path = os.path.join(overview_dir,name)
     plt.savefig(png_path)
 
 
-def make_html_dir():
-    html_dir = os.path.join(OUTPUT_DIR,'html')
-    if not os.path.isdir(html_dir):
-        os.makedirs(html_dir)
-    return html_dir
+def make_overview_dir():
+    overview_dir = os.path.join(OUTPUT_DIR,'channel_summary')
+    if not os.path.isdir(overview_dir):
+        os.makedirs(overview_dir)
+    return overview_dir
 
 
 def compute_iv_curve(channel,a,results,grid=True):                  
@@ -497,12 +518,21 @@ def plot_iv_curve(a,hold_v,i,grid=True,same_fig=False,**plot_args):
 
 def make_html_file(info):
     merged = merge_with_template(info, HTML_TEMPLATE_FILE)
-    html_dir = make_html_dir()
+    html_dir = make_overview_dir()
     new_html_file = os.path.join(html_dir,'ChannelInfo.html')
     lf = open(new_html_file, 'w')
     lf.write(merged)
     lf.close()
-    print('Written HTML info to: %s' % new_html_file)
+    print_comment_v('Written HTML info to: %s' % new_html_file)
+
+def make_md_file(info):
+    merged = merge_with_template(info, MD_TEMPLATE_FILE)
+    md_dir = make_overview_dir()
+    new_md_file = os.path.join(md_dir,'README.md')
+    lf = open(new_md_file, 'w')
+    lf.write(merged)
+    lf.close()
+    print_comment_v('Written Markdown info to: %s' % new_md_file)
 
 
 def build_namespace(a=None,**kwargs):
@@ -545,16 +575,41 @@ def run(a=None,**kwargs):
                      "E_rev = %s mV, "
                      "[Ca2+] = %s mM") % (a.temperature, a.erev, a.ca_conc),
             'channels': []}
-                       
-    for channel_file in a.channel_files:
+            
+    na_chan_files = []
+    k_chan_files = []
+    ca_chan_files = []
+    other_chan_files = []
+    
+    if len(a.channel_files) > 0:
+        
+        for channel_file in a.channel_files:
+            channels = get_channels_from_channel_file(channel_file)
+            #TODO look past 1st channel...
+            if channels[0].species == 'na':
+                na_chan_files.append(channel_file)
+            elif channels[0].species == 'k':
+                k_chan_files.append(channel_file)
+            elif channels[0].species == 'ca':
+                ca_chan_files.append(channel_file)
+            else:
+                other_chan_files.append(channel_file)
+            
+    channel_files = na_chan_files + k_chan_files + ca_chan_files + other_chan_files
+    print_comment_v("\nAnalysing channels from files: %s\n"%channel_files)
+    
+    for channel_file in channel_files:
         channels_info = process_channel_file(channel_file,a)
         for channel_info in channels_info:
             info['channels'].append(channel_info)
                        
-    if not a.nogui and not a.html:
+    if not a.nogui and not a.html and not a.md:
         plt.show()
-    elif a.html:
-        make_html_file(info)
+    else:
+        if a.html:
+            make_html_file(info)
+        if a.md:
+            make_md_file(info)
 
 
 if __name__ == '__main__':
