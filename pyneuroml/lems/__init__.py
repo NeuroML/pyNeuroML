@@ -4,6 +4,7 @@ from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import shutil
 import os
 from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color, print_comment_v, print_comment
+import random
 
 def generate_lems_file_for_neuroml(sim_id, 
                                    neuroml_file, 
@@ -14,7 +15,12 @@ def generate_lems_file_for_neuroml(sim_id,
                                    target_dir,
                                    gen_plots_for_all_v = True,
                                    gen_saves_for_all_v = True,
-                                   copy_neuroml = True):
+                                   copy_neuroml = True,
+                                   seed=None):
+                                       
+    
+    if seed:
+        random.seed(seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
     
     file_name_full = '%s/%s'%(target_dir,lems_file_name)
     

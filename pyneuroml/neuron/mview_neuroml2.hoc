@@ -216,7 +216,8 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             sprint(segGrpsForSections, "%s             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>\n", segGrpsForSections)
 
             if (nseg > 1) {
-
+                sprint(segGrpsForSections, "%s        <!-- This is currently inside (old convention) & outside (new convention) the <annotation> element, as some APIs have trouble reading what's inside <annotation> (<xs:any..> in Schema) -->\n", segGrpsForSections)
+                sprint(segGrpsForSections, "%s        <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export from NEURON. Can be overridden by importing application -->\n", segGrpsForSections, nseg)
                 sprint(segGrpsForSections, "%s        <annotation>\n", segGrpsForSections)
                 sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export from NEURON. Can be overridden by importing application -->\n", segGrpsForSections, nseg)
                 sprint(segGrpsForSections, "%s        </annotation>\n", segGrpsForSections)

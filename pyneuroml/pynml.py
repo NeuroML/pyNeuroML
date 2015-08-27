@@ -325,8 +325,8 @@ def reload_saved_data(lems_file_name,
         pylab.show()
 
     return results
-                
-            
+               
+                        
 def get_next_hex_color():
     
     return "#%06x" % random.randint(0,0xFFFFFF)
@@ -342,8 +342,11 @@ def evaluate_arguments(args):
     gui = " -nogui" if args.nogui==True else ""
     post_args += gui
     
+    exit_on_fail = True
+    
     if args.validate:
         pre_args += " -validate"
+        exit_on_fail = False
         
     elif args.svg:
         post_args += " -svg"
@@ -354,7 +357,8 @@ def evaluate_arguments(args):
     run_jneuroml(pre_args, 
                  args.target_file, 
                  post_args, 
-                 max_memory = args.java_max_memory)
+                 max_memory = args.java_max_memory,
+                 exit_on_fail = exit_on_fail)
     
         
 def run_jneuroml(pre_args, 
@@ -381,6 +385,7 @@ def run_jneuroml(pre_args,
         print_comment('*** Execution of jnml failed! ***', True)
                              
         if exit_on_fail: 
+            print_comment(output, True)
             exit(-1)
         else:
             return False
