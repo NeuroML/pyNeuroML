@@ -79,7 +79,12 @@ class NeuroMLController():
         for var_name in sim_var.keys():
             words = var_name.split('/')
             type, id1 = words[0].split(':')
-            variable, id2 = words[1].split(':')
+            if ':' in words[1]:
+                variable, id2 = words[1].split(':')
+            else:
+                variable = words[1]
+                id2 = None
+            
             units = words[2]
             value = sim_var[var_name]
             
@@ -121,6 +126,15 @@ class NeuroMLController():
                 else:
                     print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, var_name))
                     exit()
+                
+            if type == 'izhikevich2007Cell':
+                izhcell = None
+                for c in nml_doc.izhikevich2007_cells:
+                    if c.id == id1:
+                        izhcell = c
+                        
+                izhcell.__setattr__(variable, '%s %s'%(value, units))
+                
             else:
                 print_comment_v('Unknown type (%s) in variable expression: %s'%(type, var_name))
        

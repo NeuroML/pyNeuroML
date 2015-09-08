@@ -382,15 +382,14 @@ def run_jneuroml(pre_args,
                                         (max_memory, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, verbose=verbose)
     except:
-        print_comment('*** Execution of jnml failed! ***', True)
+        print_comment('*** Execution of jnml has failed! ***', True)
                              
+        print_comment(output, True)
         if exit_on_fail: 
-            print_comment(output, True)
             exit(-1)
         else:
             return False
         
-    print_comment(output, verbose)
     
     return True
 
@@ -417,7 +416,7 @@ def execute_command_in_dir(command, directory, verbose=True):
     if os.name == 'nt':
         directory = os.path.normpath(directory)
         
-    print_comment("Executing: (%s) in dir: %s" % (command, directory), verbose)
+    print_comment("Executing: (%s) in dir: %s" % (command, directory), True)
     
     try:
         return_string = subprocess.check_output(command, cwd=directory, shell=True)
