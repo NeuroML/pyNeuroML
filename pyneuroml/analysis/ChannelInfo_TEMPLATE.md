@@ -7,11 +7,11 @@ Channel information
 #foreach ($channel in $channels)##
     <tr>
 <td width="120px">
-            <p style="font-size:70%;font-family:arial"><b>${channel.id}</b><br/>
-            <a href="../${channel.file}">${channel.file}</a><br/><br/>
-            Ion: ${channel.species}<br/><br/>
-            ${channel.expression}<br/><br/>
-            ${channel.notes}<br/></p>
+            <sup><b>${channel.id}</b><br/>
+            <a href="../${channel.file}">${channel.file}</a><br/>
+            <b>Ion: ${channel.species}</b><br/>
+            <i>${channel.expression}</i><br/>
+            ${channel.notes}</sup>
 </td>
 <td>
 <a href="${channel.id}.inf.png"><img alt="${channel.id} steady state" src="${channel.id}.inf.png" height="220"/></a>

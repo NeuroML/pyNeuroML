@@ -176,6 +176,15 @@ def get_colour_hex(fract):
     for c in rgb: col+= ( c[2:4] if len(c)==4 else "00")
     return col
 
+# Better off elsewhere
+def get_ion_color(ion):
+    
+    if ion.lower()=='na': col='#1E90FF'
+    elif ion.lower()=='k': col='#CD5C5C'
+    elif ion.lower()=='ca': col='#8FBC8F'
+    else: col='#A9A9A9'
+    
+    return col
     
 def get_state_color(s):
     col='#000000'
@@ -188,6 +197,9 @@ def get_state_color(s):
     if s.startswith('q'): col='#FF00FF'
     if s.startswith('e'): col='#00FFFF'
     if s.startswith('f'): col='#DDDD00'
+    if s.startswith('p'): col='#880000'
+    if s.startswith('s'): col='#888800'
+    if s.startswith('u'): col='#880088'
     
     return col
 
@@ -292,6 +304,7 @@ def process_channel_file(channel_file,a):
             channel_info = {key:getattr(channel,key) for key in ['id','file','notes', 'species']}
             
             channel_info['expression'] = get_conductance_expression(channel)
+            channel_info['ion_color'] = get_ion_color(channel.species)
             
             channels_info.append(channel_info)
     return channels_info

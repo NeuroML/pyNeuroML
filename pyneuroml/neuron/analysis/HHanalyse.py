@@ -28,70 +28,70 @@ def process_args():
 
     parser.add_argument('channel', type=str, metavar='<channel name>', 
                         help='Name of the channel as used by NEURON (i.e. in SUFFIX statement)')
-                        
+
     parser.add_argument('-v',
                         action='store_true',
                         default=False,
                         help="Verbose output")
-                        
+
     parser.add_argument('-nogui',
                         action='store_true',
                         default=False,
                         help="Supress plotting of variables and only save to file")
-                        
+
     parser.add_argument('-minV', 
                         type=int,
                         metavar='<min v>',
                         default=-100,
                         help='Minimum voltage to test (integer, mV)')
-                        
+
     parser.add_argument('-maxV', 
                         type=int,
                         metavar='<max v>',
                         default=100,
                         help='Maximum voltage to test (integer, mV)')
-                        
-                        
+
+
     parser.add_argument('-stepV', 
                         type=int,
                         metavar='<step v>',
                         default=10,
                         help='Voltage step to use (integer, mV)')
-                        
+
     parser.add_argument('-dt', 
                         type=float,
                         metavar='<time step>',
                         default=0.01,
                         help='Timestep for simulations, dt, in ms') #OR -1 for variable time step')
-                        
+
     parser.add_argument('-temperature', 
                         type=float,
                         metavar='<temperature>',
                         default=6.3,
                         help='Temperature (float, celsius)')
-                        
+
     parser.add_argument('-caConc', 
                         type=float,
                         metavar='<Ca2+ concentration>',
                         default=5e-5,
                         help='Internal concentration of Ca2+ (float, concentration in mM)')
-                        
+
     parser.add_argument('-modFile', 
                         type=str,
                         metavar='<name of mod file>',
                         help='Name of the mod file containing the channel')
 
-    
+
     return parser.parse_args()
 
-    
+
 
 def main():
 
     args = process_args()
-        
+
     verbose = args.v
-    
+
     ## Get name of channel mechanism to test
 
     chanToTest = args.channel
@@ -110,7 +110,7 @@ def main():
 
 
     h.celsius = args.temperature
-        
+
     ## Create a section, set size & insert pas, passive channel mechanism
 
     sec = h.Section()
@@ -123,7 +123,7 @@ def main():
     sec.insert("pas")
     sec(0.5).g_pas = 0.001
     sec(0.5).e_pas = -65
-    
+
     #sec.insert("ca_ion")
     #sec(0.5).cai = args.caConc
 
@@ -169,7 +169,7 @@ def main():
     preHold = 50                       # and duration
     postHoldStep = 10                  # Post step holding time between steady state checks
     postHoldMax = postHoldStep * 1000   # Max sim run time
-    
+
     timeToCheckTau = preHold + (10*h.dt)
 
 
@@ -198,11 +198,11 @@ def main():
 
         h('tstop = '+str(tstopMax))
         h.dt = args.dt
-        
+
         if h.dt == -1:
             h.cvode.active(1)
             h.cvode.atol(0.0001)
-            
+
         # Alternatively use a SEClamp obj
         clampobj = h.SEClamp(.5)
         clampobj.dur1=preHold
@@ -276,7 +276,7 @@ def main():
             if h.t >= preHold and h.t >= lastCheckTime+postHoldStep:
                 if verbose:
                     print("  - Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"%(h.t, h.dt, vh, foundTau, foundInf))
-                    
+
                 lastCheckTime = h.t
 
                 for s in states:
@@ -345,8 +345,8 @@ def main():
             file.write("%f\t%f\n"%(volts[i], timeCourseVals[s][i]))
         file.close()
         print("Written info to file: %s"%file_name)
-        
-        
+
+
     if not args.nogui:
         pylab.show()
 
