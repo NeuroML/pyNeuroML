@@ -127,7 +127,7 @@ class NeuroMLController():
                     print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, var_name))
                     exit()
                 
-            if type == 'izhikevich2007Cell':
+            elif type == 'izhikevich2007Cell':
                 izhcell = None
                 for c in nml_doc.izhikevich2007_cells:
                     if c.id == id1:
