@@ -5,6 +5,7 @@ def clear_neuron():
     print(' - Clearing NEURON contents...')
     h('forall delete_section()')
     print(' - Cleared NEURON contents...')
+    h('topology()')
     
 def replace_brackets(ref):
     return ref.replace('[', '_').replace(']', '')

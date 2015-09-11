@@ -29,7 +29,7 @@ def export_to_neuroml2(hoc_or_python_file,
     h.load_file("mview.hoc")
     
     h('objref mv')
-    h('mv = new ModelView()')
+    h('mv = new ModelView(0)')
     
     h.load_file("%s/mview_neuroml2.hoc"%(os.path.dirname(__file__)))
     
@@ -40,10 +40,13 @@ def export_to_neuroml2(hoc_or_python_file,
     
     h.mvnml.exportNeuroML2(nml2_file_name, nml2_level, int(separateCellFiles))
     
-
     if validate:
-        
         validate_neuroml2(nml2_file_name)
+        
+        
+    h('mv.destroy()')
+        
+        
         
 
 def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
