@@ -61,14 +61,16 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def validate_neuroml1(nml1_file_name):
+def validate_neuroml1(nml1_file_name, verbose_validate=True):
     
     pre_args = "-validatev1"
     post_args = ""
         
     run_jneuroml(pre_args, 
                  nml1_file_name, 
-                 post_args)
+                 post_args,
+                 verbose = verbose_validate,
+                 exit_on_fail = False)
 
 
 def validate_neuroml2(nml2_file_name, verbose_validate=True):
@@ -79,7 +81,8 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True):
     run_jneuroml(pre_args, 
                  nml2_file_name, 
                  post_args, 
-                 verbose = verbose_validate)
+                 verbose = verbose_validate,
+                 exit_on_fail = False)
     
 
 def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, already_included=[]):  
