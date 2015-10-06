@@ -340,7 +340,7 @@ def main():
             plTau.legend()
 
         temp_info = "" 
-        if len(temperatures)>0:
+        if len(temperatures)>1:
             if temperature == int(temperature):
                 temp_info = '.%i'%temperature
             else:
