@@ -223,7 +223,7 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
-                      gates, temperature, ca_conc, iv_curve, dat_suffix):
+                      gates, temperature, ca_conc, iv_curve, dat_suffix=''):
                           
     print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
                      channel_file, min_target_voltage, max_target_voltage, temperature))

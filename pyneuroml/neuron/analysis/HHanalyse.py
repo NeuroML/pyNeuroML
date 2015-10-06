@@ -150,8 +150,9 @@ def main():
         inState = 0
         states = []
         for line in modFile:
-            if line.count('STATE') > 0:
+            if line.count('STATE') > 0 and line.count('STEADYSTATE') == 0:
                 inState = 1
+                print("Found state block")
 
             if inState==1:
                 if line.count('}') > 0:
