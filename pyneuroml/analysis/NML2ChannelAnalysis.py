@@ -46,6 +46,7 @@ DEFAULTS = {'v': False,
             'stepTargetVoltage': 20,
             'erev': 0,
             'caConc': 5e-5,
+            'datSuffix': '',
             'ivCurve': False,
             'norun': False,
             'nogui': False,
@@ -134,6 +135,13 @@ def process_args():
                         default=DEFAULTS['caConc'],
                         help=("Internal concentration of Ca2+ (float, "
                               "concentration in mM)"))
+                              
+                        
+    parser.add_argument('-datSuffix', 
+                        type=str,
+                        metavar='<dat suffix>',
+                        default=DEFAULTS['datSuffix'],
+                        help="String to add to dat file names (before .dat)")
                         
     parser.add_argument('-norun',
                         action='store_true',
@@ -215,7 +223,7 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
-                      gates, temperature, ca_conc, iv_curve):
+                      gates, temperature, ca_conc, iv_curve, dat_suffix):
                           
     print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
                      channel_file, min_target_voltage, max_target_voltage, temperature))
@@ -248,7 +256,8 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
              "gates":  gates,
              "temperature":  temperature,
              "ca_conc":  ca_conc,
-             "iv_curve":  iv_curve}
+             "iv_curve":  iv_curve,
+             "dat_suffix": dat_suffix}
              
     #pp.pprint(model)
 
@@ -331,7 +340,7 @@ def make_lems_file(channel,a):
         channel.file, channel.id, a.min_v, 
         a.step_target_voltage, a.max_v, a.clamp_delay, 
         a.clamp_duration, a.clamp_base_voltage, a.duration, 
-        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve)
+        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, a.dat_suffix)
     new_lems_file = os.path.join(OUTPUT_DIR,
                                  "LEMS_Test_%s.xml" % channel.id)
     lf = open(new_lems_file, 'w')

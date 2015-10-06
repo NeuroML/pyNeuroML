@@ -136,23 +136,23 @@
 #end## 
 
 #foreach ($g in $gates)##
-        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g}.inf.lems.dat">
+        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g}.inf.lems${dat_suffix}.dat">
             <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/inf"/> 
         </OutputFile>
-        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g}.tau.lems.dat">
+        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g}.tau.lems${dat_suffix}.dat">
             <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/tau"/> 
         </OutputFile>
 #end## 
 
 #if ($iv_curve)##
 #foreach ($tv in $target_voltages)##
-        <OutputFile id="i_${tv.v_str}_of1" fileName="${channel}.i_${tv.v_str}.lems.dat">
+        <OutputFile id="i_${tv.v_str}_of1" fileName="${channel}.i_${tv.v_str}.lems${dat_suffix}.dat">
             <OutputColumn id="${tv.v_str}" quantity="holderCellPop_${tv.v_str}[0]/test/i"/> 
         </OutputFile>
 #end## 
 #end## 
 
-        <OutputFile id="rampCellV" fileName="${channel}.rampV.lems.dat">
+        <OutputFile id="rampCellV" fileName="${channel}.rampV.lems${dat_suffix}.dat">
             <OutputColumn id="v" quantity="rampCellPop0[0]/v"/> 
         </OutputFile>
 
