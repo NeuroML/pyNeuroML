@@ -12,6 +12,7 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         analysis_delay, 
                                         dt = 0.05,
                                         temperature = "32degC",
+                                        spike_threshold_mV=0.,
                                         plot_voltage_traces=False,
                                         plot_if=True,
                                         simulator="jNeuroML"):
@@ -104,7 +105,7 @@ def generate_current_vs_frequency_curve(nml2_file,
         t = np.array(results['t'])*1000
         v = np.array(results["%s[%i]/v"%(pop.id, i)])*1000
         
-        mm = max_min(v, t, delta=0, peak_threshold=0)
+        mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
         spike_times = mm['maxima_times']
         freq = 0
         if len(spike_times) > 2:
