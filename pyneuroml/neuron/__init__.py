@@ -9,23 +9,32 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
 
-def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalProperties=True, separateCellFiles=False, validate=True):
+from pyneuroml.pynml import print_comment, print_comment_v
+
+def export_to_neuroml2(hoc_or_python_file, 
+                       nml2_file_name, 
+                       includeBiophysicalProperties=True, 
+                       separateCellFiles=False, 
+                       validate=True):
     
     from neuron import *
     from nrn import *
     
     if hoc_or_python_file is not None:
         if hoc_or_python_file.endswith(".py"):
-            print("Importing Python scripts not yet implemented...")
+            print_comment_v("Importing Python scripts not yet implemented...")
         else:
-            h.load_file(hoc_or_python_file)
+            h.load_file(1, hoc_or_python_file) # Using 1 to force loading of the file, in case file with same name was loaded before...
+    else:
+        print_comment_v("hoc_or_python_file variable is None; exporting what's currently in memory...")
+            
 
-    print "Loaded NEURON file: %s"%hoc_or_python_file
+    print_comment_v("Loaded NEURON file: %s"%hoc_or_python_file)
 
     h.load_file("mview.hoc")
     
     h('objref mv')
-    h('mv = new ModelView()')
+    h('mv = new ModelView(0)')
     
     h.load_file("%s/mview_neuroml2.hoc"%(os.path.dirname(__file__)))
     
@@ -36,16 +45,19 @@ def export_to_neuroml2(hoc_or_python_file, nml2_file_name, includeBiophysicalPro
     
     h.mvnml.exportNeuroML2(nml2_file_name, nml2_level, int(separateCellFiles))
     
-
     if validate:
-        
         validate_neuroml2(nml2_file_name)
+        
+        
+    h('mv.destroy()')
+        
+        
         
 
 def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
     
     if not (level==1 or level == 2):
-        print("Only options for Levels in NeuroMLv1.8.1 are 1 or 2")
+        print_comment_v("Only options for Levels in NeuroMLv1.8.1 are 1 or 2")
         return None
     
     from neuron import *
@@ -53,7 +65,7 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
     
     h.load_file(hoc_file)
 
-    print "Loaded NEURON file: %s"%hoc_file
+    print_comment_v("Loaded NEURON file: %s"%hoc_file)
 
     h.load_file("mview.hoc")
 

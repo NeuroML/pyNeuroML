@@ -1,6 +1,7 @@
 
-
 print "Testing export of NeuroML from NEURON"
+
+celsius = 24
 
 create Soma, mainDendSec
 
@@ -23,10 +24,11 @@ Soma all.append()
 mainDendSec all.append()
 
 Soma {
-    insert hh
-    gnabar_hh=0.33
+    insert NaConductance
+    gmax_NaConductance=0.33
 }
-mainDendSec insert hh
+mainDendSec insert NaConductance
+
 
 mainDendSec {
     nseg =3

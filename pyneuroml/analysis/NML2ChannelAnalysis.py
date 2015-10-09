@@ -13,16 +13,23 @@ import glob
 import re
 
 import neuroml.loaders as loaders
-from pyneuroml import pynml
+
+from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v
+
 import airspeed
+
 import matplotlib.pyplot as plt
 
 pp = pprint.PrettyPrinter(depth=4)
 
 OUTPUT_DIR = os.getcwd()
 TEMPLATE_FILE = "%s/LEMS_Test_TEMPLATE.xml" % (os.path.dirname(__file__))
+
 HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html" % \
                         (os.path.dirname(__file__))
+MD_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.md" % \
+                        (os.path.dirname(__file__))
+                        
 V = "rampCellPop0[0]/v" # Key for voltage trace in results dictionary.  
      
 MAX_COLOUR = (255, 0, 0)
@@ -39,10 +46,12 @@ DEFAULTS = {'v': False,
             'stepTargetVoltage': 20,
             'erev': 0,
             'caConc': 5e-5,
+            'datSuffix': '',
             'ivCurve': False,
             'norun': False,
             'nogui': False,
-            'html': False} 
+            'html': False,
+            'md': False} 
 
 def process_args():
     """ 
@@ -126,6 +135,13 @@ def process_args():
                         default=DEFAULTS['caConc'],
                         help=("Internal concentration of Ca2+ (float, "
                               "concentration in mM)"))
+                              
+                        
+    parser.add_argument('-datSuffix', 
+                        type=str,
+                        metavar='<dat suffix>',
+                        default=DEFAULTS['datSuffix'],
+                        help="String to add to dat file names (before .dat)")
                         
     parser.add_argument('-norun',
                         action='store_true',
@@ -142,13 +158,18 @@ def process_args():
     parser.add_argument('-html',
                         action='store_true',
                         default=DEFAULTS['html'],
-                        help=("Generate a HTML page (as well as a Markdown "
-                              "version...) featuring the plots for the "
+                        help=("Generate a HTML page featuring the plots for the "
+                              "channel"))
+                        
+    parser.add_argument('-md',
+                        action='store_true',
+                        default=DEFAULTS['md'],
+                        help=("Generate a (GitHub flavoured) Markdown page featuring the plots for the "
                               "channel"))
                         
     parser.add_argument('-ivCurve',
                         action='store_true',
-                        default=False,
+                        default=DEFAULTS['ivCurve'],
                         help=("Save currents through voltage clamp at each "
                               "level & plot current vs voltage for ion "
                               "channel"))
@@ -163,6 +184,15 @@ def get_colour_hex(fract):
     for c in rgb: col+= ( c[2:4] if len(c)==4 else "00")
     return col
 
+# Better off elsewhere
+def get_ion_color(ion):
+    
+    if ion.lower()=='na': col='#1E90FF'
+    elif ion.lower()=='k': col='#CD5C5C'
+    elif ion.lower()=='ca': col='#8FBC8F'
+    else: col='#A9A9A9'
+    
+    return col
     
 def get_state_color(s):
     col='#000000'
@@ -174,7 +204,10 @@ def get_state_color(s):
     if s.startswith('c'): col='#0000FF'
     if s.startswith('q'): col='#FF00FF'
     if s.startswith('e'): col='#00FFFF'
-    if s.startswith('f'): col='#FFFF00'
+    if s.startswith('f'): col='#DDDD00'
+    if s.startswith('p'): col='#880000'
+    if s.startswith('s'): col='#888800'
+    if s.startswith('u'): col='#880088'
     
     return col
 
@@ -190,8 +223,11 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
-                      gates, temperature, ca_conc, iv_curve):
-                      
+                      gates, temperature, ca_conc, iv_curve, dat_suffix=''):
+                          
+    print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
+                     channel_file, min_target_voltage, max_target_voltage, temperature))
+                                      
     target_voltages = []
     v = min_target_voltage
     while v <= max_target_voltage:
@@ -206,7 +242,6 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
         target_voltages_map.append(info)
-        #print info
 
     model = {"channel_file":        channel_file, 
              "channel":             channel, 
@@ -221,7 +256,8 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
              "gates":  gates,
              "temperature":  temperature,
              "ca_conc":  ca_conc,
-             "iv_curve":  iv_curve}
+             "iv_curve":  iv_curve,
+             "dat_suffix": dat_suffix}
              
     #pp.pprint(model)
 
@@ -250,7 +286,7 @@ def get_channels_from_channel_file(channel_file):
 def process_channel_file(channel_file,a):
     ## Get name of channel mechanism to test
     if a.v: 
-        print("Going to test channel from file: "+ channel_files)
+        print_comment_v("Going to test channel from file: "+ channel_file)
 
     if not os.path.isfile(channel_file):
         raise IOError("File could not be found: %s!\n" % channel_file)
@@ -259,21 +295,27 @@ def process_channel_file(channel_file,a):
 
     channels_info = []
     for channel in channels:  
-        new_lems_file = make_lems_file(channel,a)
-        if not a.norun:
-            results = run_lems_file(new_lems_file,a)        
-
-        if a.iv_curve:
-            iv_data = compute_iv_curve(channel,a,results)
+        if len(get_channel_gates(channel)) == 0:
+            print_comment_v("Skipping %s in %s as it has no channels (probably passive conductance)"%(channel.id,channel_file))
         else:
-            iv_data = None
+            new_lems_file = make_lems_file(channel,a)
+            if not a.norun:
+                results = run_lems_file(new_lems_file,a)        
 
-        if not a.nogui:
-            plot_channel(channel,a,results,iv_data=iv_data)
+            if a.iv_curve:
+                iv_data = compute_iv_curve(channel,a,results)
+            else:
+                iv_data = None
 
-        channel_info = {key:getattr(channel,key) \
-                            for key in ['id','file','notes']}
-        channels_info.append(channel_info)
+            if not a.nogui and not a.norun:
+                plot_channel(channel,a,results,iv_data=iv_data)
+
+            channel_info = {key:getattr(channel,key) for key in ['id','file','notes', 'species']}
+            
+            channel_info['expression'] = get_conductance_expression(channel)
+            channel_info['ion_color'] = get_ion_color(channel.species)
+            
+            channels_info.append(channel_info)
     return channels_info
 
 
@@ -281,10 +323,15 @@ def get_channel_gates(channel):
     channel_gates = []
     for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
         channel_gates += [g.id for g in getattr(channel,gates)]
-    if not len(channel_gates):
-        raise AttributeError("No gates found in a channel with ID %s" % \
-                                channel.id)
     return channel_gates
+
+def get_conductance_expression(channel):
+    expr = 'g = gmax '
+    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
+        for g in getattr(channel,gates):
+            instances = int(g.instances)
+            expr += '* %s<sup>%s</sup> '%(g.id, g.instances) if instances >1 else '* %s '%(g.id)
+    return expr
 
 
 def make_lems_file(channel,a):
@@ -293,21 +340,23 @@ def make_lems_file(channel,a):
         channel.file, channel.id, a.min_v, 
         a.step_target_voltage, a.max_v, a.clamp_delay, 
         a.clamp_duration, a.clamp_base_voltage, a.duration, 
-        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve)
+        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, a.dat_suffix)
     new_lems_file = os.path.join(OUTPUT_DIR,
                                  "LEMS_Test_%s.xml" % channel.id)
     lf = open(new_lems_file, 'w')
     lf.write(lems_content)
     lf.close()
     if a.v:
-        print("Written generated LEMS file to %s\n" % new_lems_file)
+        print_comment_v("Written generated LEMS file to %s\n" % new_lems_file)
     return new_lems_file
 
 
 def run_lems_file(lems_file,a):
-    results = pynml.run_lems_with_jneuroml(
-                lems_file, nogui=True, 
-                load_saved_data=True, plot=False, verbose=a.v)
+    results = run_lems_with_jneuroml(lems_file, 
+                                     nogui=True, 
+                                     load_saved_data=True, 
+                                     plot=False, 
+                                     verbose=a.v)
     return results
 
 
@@ -338,7 +387,7 @@ def plot_kinetics(channel,a,results,grid=True):
         plt.gca().autoscale(enable=True, axis='x', tight=True)
         plt.legend()
 
-        if a.html:
+        if a.html or a.md:
             save_fig('%s.tau.png' % channel.id)
 
 def plot_steady_state(channel,a,results,grid=True):
@@ -360,21 +409,21 @@ def plot_steady_state(channel,a,results,grid=True):
         plt.gca().autoscale(enable=True, axis='x', tight=True)
         plt.legend()
 
-        if a.html:
+        if a.html or a.md:
             save_fig('%s.inf.png' % channel.id)
 
 
 def save_fig(name):
-    html_dir = make_html_dir()
-    png_path = os.path.join(html_dir,name)
+    overview_dir = make_overview_dir()
+    png_path = os.path.join(overview_dir,name)
     plt.savefig(png_path)
 
 
-def make_html_dir():
-    html_dir = os.path.join(OUTPUT_DIR,'html')
-    if not os.path.isdir(html_dir):
-        os.makedirs(html_dir)
-    return html_dir
+def make_overview_dir():
+    overview_dir = os.path.join(OUTPUT_DIR,'channel_summary')
+    if not os.path.isdir(overview_dir):
+        os.makedirs(overview_dir)
+    return overview_dir
 
 
 def compute_iv_curve(channel,a,results,grid=True):                  
@@ -450,7 +499,7 @@ def plot_iv_curves(channel,a,iv_data,grid=True):
 
 
 def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
-    # Holding potentials           
+    # Holding potentials      
     fig = plt.figure()
     fig.canvas.set_window_title(("Currents through voltage clamp for %s "
                                  "from %s at %s degC, erev: %s V") 
@@ -462,7 +511,7 @@ def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
     for v in hold_v:
         col = get_colour_hex(
                 float(hold_v.index(v))/len(hold_v))
-        plt.plot(times, currents[v], color=col, 
+        plt.plot(times[v], currents[v], color=col, 
                    linestyle='-', label="%s V" % v)
     plt.legend()
 
@@ -491,12 +540,21 @@ def plot_iv_curve(a,hold_v,i,grid=True,same_fig=False,**plot_args):
 
 def make_html_file(info):
     merged = merge_with_template(info, HTML_TEMPLATE_FILE)
-    html_dir = make_html_dir()
+    html_dir = make_overview_dir()
     new_html_file = os.path.join(html_dir,'ChannelInfo.html')
     lf = open(new_html_file, 'w')
     lf.write(merged)
     lf.close()
-    print('Written HTML info to: %s' % new_html_file)
+    print_comment_v('Written HTML info to: %s' % new_html_file)
+
+def make_md_file(info):
+    merged = merge_with_template(info, MD_TEMPLATE_FILE)
+    md_dir = make_overview_dir()
+    new_md_file = os.path.join(md_dir,'README.md')
+    lf = open(new_md_file, 'w')
+    lf.write(merged)
+    lf.close()
+    print_comment_v('Written Markdown info to: %s' % new_md_file)
 
 
 def build_namespace(a=None,**kwargs):
@@ -530,22 +588,50 @@ def main(args=None):
 
 def run(a=None,**kwargs): 
     a = build_namespace(a,**kwargs)
+    
+    #if (not a.nogui) or a.html:
+    #    print('mpl')
 
     info = {'info': ("Channel information at: "
                      "T = %s degC, "
                      "E_rev = %s mV, "
                      "[Ca2+] = %s mM") % (a.temperature, a.erev, a.ca_conc),
             'channels': []}
-                       
-    for channel_file in a.channel_files:
-        channel_info = process_channel_file(channel_file,a)
-        info['channels'].append(channel_info)
+            
+    na_chan_files = []
+    k_chan_files = []
+    ca_chan_files = []
+    other_chan_files = []
     
-    pp.pprint(info)                        
-    if not a.nogui and not a.html:
+    if len(a.channel_files) > 0:
+        
+        for channel_file in a.channel_files:
+            channels = get_channels_from_channel_file(channel_file)
+            #TODO look past 1st channel...
+            if channels[0].species == 'na':
+                na_chan_files.append(channel_file)
+            elif channels[0].species == 'k':
+                k_chan_files.append(channel_file)
+            elif channels[0].species == 'ca':
+                ca_chan_files.append(channel_file)
+            else:
+                other_chan_files.append(channel_file)
+            
+    channel_files = na_chan_files + k_chan_files + ca_chan_files + other_chan_files
+    print_comment_v("\nAnalysing channels from files: %s\n"%channel_files)
+    
+    for channel_file in channel_files:
+        channels_info = process_channel_file(channel_file,a)
+        for channel_info in channels_info:
+            info['channels'].append(channel_info)
+                       
+    if not a.nogui and not a.html and not a.md:
         plt.show()
-    elif a.html:
-        make_html_file(info)
+    else:
+        if a.html:
+            make_html_file(info)
+        if a.md:
+            make_md_file(info)
 
 
 if __name__ == '__main__':

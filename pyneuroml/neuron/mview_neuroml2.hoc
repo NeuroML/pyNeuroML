@@ -33,6 +33,8 @@ objref p
 
 strdef mainNotes
 
+objref file_out
+
 
 // Initialise template & set some useful strings
 proc init() {local i
@@ -47,17 +49,20 @@ proc init() {local i
 
     p = new PythonObject()
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_name")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import get_cell_file_dir")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_segment_group_name")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import get_erev_for_mechanism")
     nrnpython("from neuron import h")
 }
 
 
 // Main export procedure
 // Takes arguments: 
-//    fileName
-//    level      (1 = no biophys; 2 = include biophys (channel densities etc.))
-//    separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
-
+//    $s1 fileName          Name of file to export to
+//    $2  level             (1 = no biophys; 2 = include biophys (channel densities etc.))
+//    $3  separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
+//
 proc exportNeuroML2() {local ok
     fileref = new File($s1)
     level = $2
@@ -71,7 +76,7 @@ proc exportNeuroML2() {local ok
     }
     fileref.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
-    header(fileref, level)
+    header(fileref)
     xmlwrite(fileref, level, separateCellFiles)
     fileref.printf("</neuroml>\n")
     fileref.close()
@@ -79,11 +84,12 @@ proc exportNeuroML2() {local ok
 
 
 // Print the NeuroML2 header
-proc header() {
-    $o1.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
-    $o1.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-    $o1.printf("    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd\"\n", $2)
-    $o1.printf("    id = \"NeuroML2_file_exported_from_NEURON\">\n\n")
+proc header() { 
+    file_out = $o1
+    file_out.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
+    file_out.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+    file_out.printf("    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd\"\n")
+    file_out.printf("    id = \"NeuroML2_file_exported_from_NEURON\">\n\n")
 }
 
 
@@ -100,8 +106,6 @@ proc assoc_cell_number() {local i, j, pointcount
             segmentvec.x[i] = pointcount + 1 - i
             for j = 0, n3d() - 1 {
                 pointcount += 1
-                //$o2.printf("  <point id=\"%d\" x=\"%g\" y=\"%g\" z=\"%g\" diam=\"%g\"/>\n", pointcount, x3d(j), y3d(j), z3d(j), diam3d(j))
-                //$o2.printf("  <point id=\"%d\"><x=\"%g\"/><y=\"%g\"/><z=\"%g\"/><diam=\"%g\"/></point>\n", pointcount, x3d(j), y3d(j), z3d(j), diam3d(j))
             }
        } else {
             cm(.00001) = storecm.x[i]
@@ -114,17 +118,19 @@ proc assoc_cell_number() {local i, j, pointcount
 
 // Write main body of XML file
 // Takes arguments: 
-//    fileref           File object
-//    level             (1 = no biophys; 2 = include biophys (channel densities etc.))
-//    separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
-
+//    $o1 file_out           File object to write to
+//    $2  nml2_level         (1 = no biophys; 2 = include biophys (channel densities etc.))
+//    $3  separateCellFiles  (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
+//
 proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j, k, l, m
-    strdef date
 
+    file_out = $o1
     separateCellFiles = $3
+    nml2_level = $2
     mainnml2file = $o1
     cellnml2file = $o1
 
+    strdef date
     strdef network
     sprint(network, "\n  <network id=\"network\" type=\"networkWithTemperature\" temperature=\"%d degC\">", celsius)
 
@@ -140,12 +146,11 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
     // go over all points in all sections in all cells
 
-    assoc_cell_number(1, $o1) 
+    assoc_cell_number(1, file_out) 
 
     totalnumcells = 0
 
     oldidrootseg = -1
-
 
     for mview.realcells(cellref) {
         totalnumcells =totalnumcells+1
@@ -158,11 +163,16 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
         strdef cellName
         {cellName = p.get_cell_name(secname(), cellindex)}
 
-        print "Exporting cell: ", cellref, ", secname: ", secname(), ", named: ", cellName
+        print "Exporting cell: ", cellref, ", secname: ", secname(), ", named: ", cellName, "; network in: ", file_out.getname()
 
         if (separateCellFiles == 1) {
             strdef newcellfile
-            sprint(newcellfile, "%s.cell.nml", cellName)
+            strdef dir
+
+            {dir = p.get_cell_file_dir(file_out.getname())}
+
+            sprint(newcellfile, "%s/%s.cell.nml", dir, cellName)
+            print "Saving cell: ", cellref, ", to: ", newcellfile
             cellnml2file = new File(newcellfile)
             ok = cellnml2file.wopen()
             if (!ok) {
@@ -171,10 +181,9 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             }
             cellnml2file.printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 
-            header(cellnml2file, level)
+            header(cellnml2file)
 
-
-            mainnml2file.printf("  <include href=\"%s\"/>\n\n", newcellfile)
+            mainnml2file.printf("  <include href=\"%s.cell.nml\"/>\n\n", cellName)
         } 
 
         cellnml2file.printf("  <cell id=\"%s\">\n", cellName)
@@ -201,15 +210,16 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             segmentcount = segmentvec.x[sectioncount]
 
             sprint(segGrpsForSections, "%s\n<!-- Section: %s (segmentGroup: %s) which has %d 3D points, so %d segment(s)-->\n\n", segGrpsForSections, secname(), nmlSegGrpName, n3d(), (n3d() - 1))
-            sprint(segGrpsForSections, "%s      <segmentGroup id = \"%s\"  neuroLexId=\"sao864921383\">    <!--\n", segGrpsForSections, nmlSegGrpName)
-            sprint(segGrpsForSections, "%s             This group contains an unbranched set of segments, and all of the segmentGroups marked with\n", segGrpsForSections)
+            sprint(segGrpsForSections, "%s      <segmentGroup id = \"%s\"  neuroLexId=\"sao864921383\">\n         <notes>", segGrpsForSections, nmlSegGrpName)
+            sprint(segGrpsForSections, "%sThis group contains an unbranched set of segments, and all of the segmentGroups marked with\n", segGrpsForSections)
             sprint(segGrpsForSections, "%s             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.\n", segGrpsForSections)
-            sprint(segGrpsForSections, "%s             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections -->\n", segGrpsForSections)
+            sprint(segGrpsForSections, "%s             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>\n", segGrpsForSections)
 
             if (nseg > 1) {
-
+                sprint(segGrpsForSections, "%s        <!-- This is currently inside (old convention) & outside (new convention) the <annotation> element, as some APIs have trouble reading what's inside <annotation> (<xs:any..> in Schema) -->\n", segGrpsForSections)
+                sprint(segGrpsForSections, "%s        <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export from NEURON. Can be overridden by importing application -->\n", segGrpsForSections, nseg)
                 sprint(segGrpsForSections, "%s        <annotation>\n", segGrpsForSections)
-                sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export. Can be overridden by importing application-->\n", segGrpsForSections, nseg)
+                sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export from NEURON. Can be overridden by importing application -->\n", segGrpsForSections, nseg)
                 sprint(segGrpsForSections, "%s        </annotation>\n", segGrpsForSections)
           
             }
@@ -290,7 +300,6 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
         }
 
         cellnml2file.printf("%s", segGrpsForSections)
-        
 
         if (object_id(cellref.secanal.parmsubsets) == 0) {
             cellref.secanal.analyse()
@@ -327,13 +336,13 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                     cellnml2file.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
                 }
-                cellnml2file.printf("      </segmentGroup>\n")
+                cellnml2file.printf("      </segmentGroup>\n\n")
             }
         } else {
             cellnml2file.printf("      <!-- No cable groups present -->\n")
         }
 
-        /// Must check if there is an easier way of doing this!!!
+        /// Must check if there is an easier way of doing this...
 
         singleSecGroupsCreated = new Vector()
 
@@ -380,7 +389,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
                                 cellnml2file.printf("      <segmentGroup id=\"%s\"> %s\n", groupName, comment)
                                 cellnml2file.printf("        <include segmentGroup = \"%s\"/>\n", currsecname)
-                                cellnml2file.printf("      </segmentGroup>\n")
+                                cellnml2file.printf("      </segmentGroup>\n\n")
                             }
 
                             singleSecGroupsCreated.append(cableid)
@@ -389,171 +398,31 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                     }
                 }
             }
-
         }
-
-
 
         cellnml2file.printf("    </morphology>\n")
 
-    // biophysics element for THIS cell. Only include if level > 1
+        //////////////////////////////////////////////////////////////////////////
+        // biophysics element for THIS cell. Only include if level > 1
 
-    if ($2 > 1) { // i.e. Level 2 of NeuroML or greater
-
-        cellnml2file.printf("    <biophysics  units = \"Physiological Units\"> <!-- Note: values of cond dens are different in NEURON and phy units-->\n")
-
-        for mview.dparm.kschans(tobj) {
-            kschan_xmlwrite(cellnml2file, tobj)
-        }
-
-        // to distinguish b/w toplevel and encapsulated real cells
-        if (object_id(cellref.secanal.parmsubsets) == 0) {
-            continue
-        }
-
-
-        for i=0, cellref.secanal.dmlist.count - 1 {
-            dmech = cellref.secanal.dmlist.object(i)
-    // TODO:        for tobj.mechs(dmech) { }
-            if (dmech.parms.count > 0) {
-            }
-            if (object_id(dmech.location) == 0) { continue }
-
-
-            if (strcmp(dmech.name,"capacitance") != 0 && strcmp(dmech.name,"Ra") != 0 && hoc_sf_.substr(dmech.name, "_ion") == -1) {
-                strdef passiveAttr 
-                passiveAttr = ""
-                // If mech name is built in passive conductance in NEURON
-                if (strcmp(dmech.name,"pas") == 0) {
-                    passiveAttr = " passive_conductance=\"true\""
-                }
-                // If mech name is default passive conductance from neuroConstruct
-                if (strcmp(dmech.name,"LeakConductance") == 0) {
-                    passiveAttr = " passive_conductance=\"true\""
-                }
-                cellnml2file.printf("      <bio:mechanism name=\"%s\" type=\"Channel Mechanism\"%s>\n", dmech.name, passiveAttr)
-                for j=0, dmech.location.subset.size()-1 {
-                    secref = cellref.secanal.all.object(dmech.location.subset.x(j))
-        //              printsec(cellnml2file, secref)
-                }
-                for dmech.parmiter(dparm) {
-                    for dparm.parmiter(dpelm) {
-                        for l=0, dpelm.parms.count - 1 {
-
-                            strdef paramNameToUse 
-                            paramNameToUse = dparm.name
-
-                            strdef comment 
-                            comment = ""
-
-                // strip suffix
-                            if  (hoc_sf_.substr(paramNameToUse, "_")>=0) {
-                                hoc_sf_.left(paramNameToUse, hoc_sf_.substr(paramNameToUse, "_"))
-                            }
-
-                            if (strcmp(dparm.name,"g_pas") == 0) {
-                                paramNameToUse = "gmax"
-                                sprint(comment, "<!-- Assuming parameter g_pas refers to passive maximum cond density, so replacing it with gmax -->", paramNameToUse)
-                            }
-
-                            if (strcmp(paramNameToUse,"g") == 0) {
-                                paramNameToUse = "gmax"
-                                sprint(comment, "<!-- Assuming parameter g refers to passive maximum cond density, so replacing it with gmax -->", paramNameToUse)
-
-                            } else if (hoc_sf_.substr(paramNameToUse, "g")==0 && hoc_sf_.substr(paramNameToUse, "bar")>=1) {
-                                sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with gmax -->", paramNameToUse)
-                                paramNameToUse = "gmax"
-                            } else if (strcmp(paramNameToUse,"gl") == 0) {
-                                paramNameToUse = "gmax"
-                                sprint(comment, "<!-- Assuming parameter gl refers to the maximum cond density, so replacing it with gmax -->", paramNameToUse)
-                            } else if (hoc_sf_.substr(dmech.name, "_") >= 0) {
-
-                                strdef paramNameSuspect
-                                paramNameSuspect = dmech.name
-                                hoc_sf_.left(paramNameSuspect, hoc_sf_.substr(paramNameSuspect, "_"))
-                                sprint(paramNameSuspect, "g%s", paramNameSuspect)
-                                print "Suspecting: ",paramNameSuspect
-                                if (strcmp(paramNameToUse,paramNameSuspect) == 0) {
-                                    sprint(comment, "Assuming parameter %s refers to the maximum cond density, so replacing it with gmax", paramNameToUse)
-                                    paramNameToUse = "gmax"
-                                }
-                            }
-                            //print "Checking param: ",paramNameToUse, " in ", dmech.name
-                            //print comment
-
-
-                            factor = 1
-                            if (hoc_sf_.substr(paramNameToUse,"gmax") >= 0) {
-                                factor = 1000   /// converting S cm-2 (NEURON units) to mS cm-2 (Phys units)
-                            }
-                            printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name)
-                        }
-                    }
-                }
-                cellnml2file.printf("      </bio:mechanism>\n")
-            }
-        }
-
-        strdef noComment
-        noComment = ""
-
-        for i=0, cellref.secanal.dmlist.count - 1 {
-            dmech = cellref.secanal.dmlist.object(i)
-
-            if (object_id(dmech.location) == 0) { continue }
-
-            if (strcmp(dmech.name,"capacitance") == 0) {
-                cellnml2file.printf("      <bio:spec_capacitance>\n")
-                for dmech.parmiter(dparm) {
-                    for dparm.parmiter(dpelm) {
-                        for l=0, dpelm.parms.count - 1 {
-                            printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 1, noComment, dmech.name) // Converting μF cm-2 (NEURON units) to μF cm-2 (Phys units)
-                        }
-                    }
-                }
-                cellnml2file.printf("      </bio:spec_capacitance>\n")
-            } 
-        }
-
-
-        for i=0, cellref.secanal.dmlist.count - 1 {
-            dmech = cellref.secanal.dmlist.object(i)
-
-            if (object_id(dmech.location) == 0) { continue }
-
-            if (strcmp(dmech.name,"Ra") == 0) {
-                cellnml2file.printf("      <bio:spec_axial_resistance>\n")
-                for dmech.parmiter(dparm) {
-                    for dparm.parmiter(dpelm) {
-                        for l=0, dpelm.parms.count - 1 {
-                            printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 0.001, noComment, dmech.name)  // Converting ohm cm (NEURON units) to Kohm cm (Phys units)
-                        }
-                    }
-                }
-                cellnml2file.printf("      </bio:spec_axial_resistance>\n")
-            } 
-        }
-
-       //////////// ion_xmlwrite(cellnml2file)
-
-        cellnml2file.printf("    </biophysics>\n")   
-
-    }
+        if (nml2_level > 1) { // i.e. "Level 2" of NeuroML or greater
         
-    cellnml2file.printf("  </cell> \n")
+            xmlwrite_biophysics(file_out)
+        }
 
+        cellnml2file.printf("  </cell> \n")
 
-    sprint(network, "%s\n    <population id=\"Pop_%s\" component=\"%s\" size=\"1\"/>", network, cellName, cellName)
+        sprint(network, "%s\n    <population id=\"Pop_%s\" component=\"%s\" size=\"1\" type=\"populationList\">", network, cellName, cellName)
+        sprint(network, "%s\n        <instance id=\"0\">\n            <location x=\"0\" y=\"0\" z=\"0\"/>\n        </instance>", network)
+        sprint(network, "%s\n    </population>", network)
 
-    if (separateCellFiles == 1) {
-        cellnml2file.printf("</neuroml>\n")
-        cellnml2file.close()
+        if (separateCellFiles == 1) {
+            cellnml2file.printf("</neuroml>\n")
+            cellnml2file.close()
 
-    }
-
-
-
-    cellindex = cellindex +1
+        }
+        
+        cellindex = cellindex +1
 
     }
 
@@ -566,12 +435,301 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 }
 
 
+// Takes arguments: 
+//    $o1 file_out           File object to write to
+//
+
+proc xmlwrite_biophysics() {
+
+    file_out = $o1
+    
+    cellnml2file.printf("\n    <!-- Biophysical properties -->\n\n    <biophysicalProperties id=\"biophys\"> \n")
+    cellnml2file.printf("\n      <membraneProperties> \n\n")
+
+    /*
+    Maybe works...
+    for mview.dparm.kschans(tobj) {
+        kschan_xmlwrite(cellnml2file, tobj)
+    }
+    */
+
+    //// ???
+    // to distinguish b/w toplevel and encapsulated real cells
+    if (object_id(cellref.secanal.parmsubsets) == 0) {
+        continue
+    }
+
+    erev_dummy = 1e6
+    erev_Na = erev_dummy
+    erev_K = erev_dummy
+
+    for i=0, cellref.secanal.dmlist.count - 1 {
+        dmech = cellref.secanal.dmlist.object(i)
+        if (object_id(dmech.location) == 0) { continue }
+
+        print "---------------------------------------------"
+        print "Checking ion rev pots in  mechanism: ", dmech.name
+
+        for dmech.parmiter(dparm) {
+            for dparm.parmiter(dpelm) {
+                for l=0, dpelm.parms.count - 1 {
+                    print "    - l ", l, " dparm ", dparm.name, " dpelm ", dpelm, ", value ", dpelm.parms.object(l).value
+                    
+                    
+                    if (hoc_sf_.substr(dmech.name, "_ion") > 0) {
+
+                        strdef paramNameToUse 
+                        paramNameToUse = dparm.name
+                        strdef groupName
+                        sprint(groupName, "%s", dpelm.parms.object(l).location)
+                        value = dpelm.parms.object(l).value
+                        print "    Initial parameter name: [", paramNameToUse, "], group: ", groupName, ", value: ", value
+                        if (strcmp(paramNameToUse,"ena") == 0) {
+                            if (erev_Na != erev_dummy) {
+                                print "There is more than one ena set on the cell! Not yet supported!"
+                                quit()
+                            }
+                            erev_Na = value
+                            print "Assuming the one and only value for ena is: ", erev_Na, "mV"
+                        }
+                        if (strcmp(paramNameToUse,"ek") == 0) {
+                            if (erev_K != erev_dummy) {
+                                print "There is more than one ek set on the cell! Not yet supported!"
+                                quit()
+                            }
+                            erev_K = value
+                            print "Assuming the one and only value for ek is: ", erev_K, "mV"
+                        }
+                    } else {
+                    
+                        strdef paramNameToUse 
+                        paramNameToUse = dparm.name
+                        value = dpelm.parms.object(l).value
+                        if  (hoc_sf_.substr(paramNameToUse, "_")>=0) {
+                            hoc_sf_.left(paramNameToUse, hoc_sf_.substr(paramNameToUse, "_"))
+                        }
+                        
+                        print "    Initial parameter name: [", paramNameToUse, "], value: ", value
+                        
+                        if (strcmp(paramNameToUse, "e") == 0) {
+                        
+                            {p.set_erev_for_mechanism(dmech.name, value)}
+                            {print p.get_erev_for_mechanism(dmech.name)}
+                        }
+                    }
+                }
+            }
+        }
+
+        
+    }
+    
+
+    for i=0, cellref.secanal.dmlist.count - 1 {
+        dmech = cellref.secanal.dmlist.object(i)
+
+        // TODO:        for tobj.mechs(dmech) { }
+        if (dmech.parms.count > 0) {
+        }
+        if (object_id(dmech.location) == 0) { continue }
+
+
+        if (strcmp(dmech.name,"capacitance") != 0 && strcmp(dmech.name,"Ra") != 0 && hoc_sf_.substr(dmech.name, "_ion") == -1) {
+            
+            found_erev = 0 
+            print "---------------------------------------------"
+            print "Handling mechanism: ", dmech.name
+
+            strdef passiveAttr 
+            passiveAttr = ""
+            // If mech name is built in passive conductance in NEURON
+            if (strcmp(dmech.name,"pas") == 0) {
+                // Not used in nml2
+                //////passiveAttr = " passive_conductance=\"true\""
+            }
+            // If mech name is default passive conductance from neuroConstruct
+            if (strcmp(dmech.name,"LeakConductance") == 0) {
+                // Not used in nml2
+                /////passiveAttr = " passive_conductance=\"true\""
+            }
+            
+            for j=0, dmech.location.subset.size()-1 {
+                secref = cellref.secanal.all.object(dmech.location.subset.x(j))
+                //              printsec(cellnml2file, secref)
+            }
+            for dmech.parmiter(dparm) {
+                //print dparm
+                for dparm.parmiter(dpelm) {
+                    //print dpelm
+                    
+            
+                    for l=0, dpelm.parms.count - 1 {
+
+                        strdef paramNameToUse 
+                        paramNameToUse = dparm.name
+                        print "    Initial parameter name: ", paramNameToUse
+
+                        strdef comment 
+                        comment = ""
+
+                        // strip suffix
+                        if  (hoc_sf_.substr(paramNameToUse, "_")>=0) {
+                            hoc_sf_.left(paramNameToUse, hoc_sf_.substr(paramNameToUse, "_"))
+                        }
+
+                        if (strcmp(paramNameToUse,"gmax") == 0) {
+                            paramNameToUse = "condDensity"
+                            sprint(comment, "<!-- Assuming parameter gmax refers to maximum cond density, so replacing it with condDensity -->", paramNameToUse)
+                        }
+                        if (strcmp(dparm.name,"g_pas") == 0) {
+                            paramNameToUse = "condDensity"
+                            sprint(comment, "<!-- Assuming parameter g_pas refers to passive maximum cond density, so replacing it with condDensity -->", paramNameToUse)
+                        }
+                        if (strcmp(paramNameToUse,"g") == 0) {
+                            paramNameToUse = "condDensity"
+                            sprint(comment, "<!-- Assuming parameter g refers to passive maximum cond density, so replacing it with condDensity -->", paramNameToUse)
+                        } else if (hoc_sf_.substr(paramNameToUse, "g")==0 && hoc_sf_.substr(paramNameToUse, "bar")>=1) {
+                            sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
+                            paramNameToUse = "condDensity"
+                        } else if (strcmp(paramNameToUse,"gl") == 0) {
+                            paramNameToUse = "condDensity"
+                            sprint(comment, "<!-- Assuming parameter gl refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
+                        } else if (hoc_sf_.substr(dmech.name, "_") >= 0) {
+
+                            strdef paramNameSuspect
+                            paramNameSuspect = dmech.name
+                            hoc_sf_.left(paramNameSuspect, hoc_sf_.substr(paramNameSuspect, "_"))
+                            sprint(paramNameSuspect, "g%s", paramNameSuspect)
+                            print "Suspecting: ",paramNameSuspect
+                            if (strcmp(paramNameToUse,paramNameSuspect) == 0) {
+                                sprint(comment, "Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity", paramNameToUse)
+                                paramNameToUse = "condDensity"
+                            }
+                        }
+                        print "    Checking param: ",paramNameToUse, " in ", dmech.name
+                        if (strcmp(paramNameToUse,"e") == 0) {
+                            found_erev = 1
+                        }
+                        //print comment
+
+
+                        factor = 1
+                        strdef units 
+                        units = "???"
+
+                        if (hoc_sf_.substr(paramNameToUse,"condDensity") >= 0) {
+                            factor = 1000   /// converting S cm-2 (NEURON units) to mS cm-2 (Phys units)
+                            units = "mS_per_cm2"
+                        }
+                        if (strcmp(paramNameToUse,"e") == 0) {
+                            paramNameToUse = "erev"
+                            units = "mV"
+                        } 
+                        
+                        if (strcmp(paramNameToUse, "condDensity")==0) {
+                        
+                            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s_XXX\"%s ", dmech.name, dmech.name, passiveAttr)
+                            
+                            printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name, units)
+                            
+                            if (hoc_sf_.substr(dmech.name,"Na")>=0) {
+                                cellnml2file.printf(" erev=\"%fmV\" ", erev_Na)
+                            } else if (hoc_sf_.substr(dmech.name,"K")>=0) {
+                                cellnml2file.printf(" erev=\"%fmV\" ", erev_K)
+                            } else {
+                                value = p.get_erev_for_mechanism(dmech.name)
+                                cellnml2file.printf(" erev=\"%fmV\" ", value)
+                            }
+                            
+                            cellnml2file.printf("/>\n\n")
+                            
+                            
+                        } else if (strcmp(paramNameToUse, "e")==0) {
+                            print "Rev pot handled elsewhere..."
+                        } else if (strcmp(paramNameToUse, "erev")==0) {
+                            print "Rev pot handled elsewhere..."
+                        } else {
+                            print "Unable to handle parameter: ", paramNameToUse, "!!"
+                            quit()
+                        }
+                    }
+                    
+                   
+                }
+            }
+            
+        }
+    }
+
+
+    strdef noComment
+    noComment = ""
+
+    for i=0, cellref.secanal.dmlist.count - 1 {
+        dmech = cellref.secanal.dmlist.object(i)
+
+        if (object_id(dmech.location) == 0) { continue }
+
+        if (strcmp(dmech.name,"capacitance") == 0) {
+
+            print "---------------------------------------------"
+            print "Handling mechanism: ", dmech.name
+            strdef units 
+            units = "uF_per_cm2"
+            cellnml2file.printf("        <specificCapacitance ")
+            for dmech.parmiter(dparm) {
+                for dparm.parmiter(dpelm) {
+                    for l=0, dpelm.parms.count - 1 {
+                        printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 1, noComment, dmech.name, units) // Converting uF cm-2 (NEURON units) to uF cm-2 (Phys units)
+                    }
+                }
+            }
+            cellnml2file.printf("/>\n\n")
+        } 
+    }
+
+    cellnml2file.printf("      </membraneProperties> \n\n      <intracellularProperties>\n\n")
+
+
+    for i=0, cellref.secanal.dmlist.count - 1 {
+        dmech = cellref.secanal.dmlist.object(i)
+
+        if (object_id(dmech.location) == 0) { continue }
+
+        if (strcmp(dmech.name,"Ra") == 0) {
+
+            print "---------------------------------------------"
+            print "Handling mechanism: ", dmech.name
+            strdef units 
+            units = "kohm_cm"
+            cellnml2file.printf("        <resistivity")
+            for dmech.parmiter(dparm) {
+                for dparm.parmiter(dpelm) {
+                    for l=0, dpelm.parms.count - 1 {
+                        printparmval(cellnml2file, cellref.secanal.all, "", dpelm.parms.object(l), 0.001, noComment, dmech.name, units)  // Converting ohm cm (NEURON units) to Kohm cm (Phys units)
+                    }
+                }
+            }
+            cellnml2file.printf("/>\n\n")
+        } 
+    }
+
+    //////////// ion_xmlwrite(cellnml2file)
+
+    cellnml2file.printf("      </intracellularProperties>\n\n    </biophysicalProperties>\n\n")   
+
+    print "---------------------------------------------"
+
+}
+
+
 
 proc artcell() {local i,j,l
+    file_out = $o1
     for i=0, mview.acview.alist.count-1 {
         dmech = mview.acview.alist.object(i) 
 
-        $o1.printf("  <mechanism name=\"%s\">\n",  dmech.name)
+        file_out.printf("  <mechanism name=\"%s\">\n",  dmech.name)
 
         for j=0, dmech.parms.count-1 {
             dparm = dmech.parms.object(j)
@@ -580,19 +738,37 @@ proc artcell() {local i,j,l
                     tobj = dpelm.parms.object(l)
                     // 1 is ModelViewParmVal, 2 is ModelViewParmVec
                     if (tobj.type() == 1) {
-                        $o1.printf("    <parameter name=\"%s\" value=\"%g\"/>\n",  dpelm.name, tobj.value)
+                        file_out.printf("    <parameter name=\"%s\" value=\"%g\"/>\n",  dpelm.name, tobj.value)
                     }
                 }
             }
         }
 
-        $o1.printf("  </mechanism>\n")
+        file_out.printf("  </mechanism>\n")
     }
 }
 
+objref param_obj
+objref secanal_all
+
 proc printparmval() {
+
+    strdef param
+    strdef comment1
+    strdef ref
+    strdef units
+    file_out = $o1
+    secanal_all = $o2
+    param = $s3
+    param_obj = $o4
+    scale_factor = $5
+    comment1 = $s6
+    ref = $s7
+    units = $s8
+    
+    print "    -- Generating parameter, type: ", param_obj.type(), " param: ", param, ", val: ", param_obj.value, ", scale: ", scale_factor, ", comm: [", comment1, "], ref: ", ref, ", units: ", units
     // 1 is ModelViewParmVal, 2 is ModelViewParmVec
-    if ($o4.type() == 1) {
+    if (param_obj.type() == 1) {
 
         strdef nameattr
         nameattr = ""
@@ -600,26 +776,28 @@ proc printparmval() {
         strdef comment
         comment = ""
 
-        if (hoc_sf_.len($s3)>0) { // only incl if $s3 is set
+        if (hoc_sf_.len(param)>0) { // only incl if param is set => condDensity etc. not cap
 
             strdef newParamName 
-            newParamName = $s3
+            newParamName = param
 
-            sprint(nameattr, " name=\"%s\"",  newParamName)  
+            file_out.printf(" %s = \"%g %s\"",  newParamName, param_obj.value * scale_factor, units)  
+        } else {
+
+            file_out.printf(" value=\"%g %s\" %s", param_obj.value * scale_factor, units, comment1)   // specCapacitance, etc.
         }
 
-        $o1.printf("        <bio:parameter%s value=\"%g\">   %s\n",  nameattr, $o4.value * $5, $s6)
-
         // 8 is ModelViewParmSubset, 9 is ModelViewParmSec
-        if ($o4.location.type() == 8) {
+        if (param_obj.location.type() == 8) {
+            print "  ModelViewParmSubset..."
 
-//	        for m=0, $o4.location.subset.size()-1 {
-//		        secref = $o2.object($o4.location.subset.x(m))
-//	            printsec($o1, secref)
+//	        for m=0, param_obj.location.subset.size()-1 {
+//		        secref = secanal_all.object(param_obj.location.subset.x(m))
+//	            printsec(file_out, secref)
 //	        }
 
             strdef groupName
-            sprint(groupName, "%s", $o4.location)
+            sprint(groupName, "%s", param_obj.location)
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
@@ -634,13 +812,21 @@ proc printparmval() {
                 groupName = "all"
             }
 
-            $o1.printf("          <bio:group>%s</bio:group>\n", groupName)
+            if (strcmp(groupName,"all") == 0) {
+                // Not including as not required...
+            } else {
+                file_out.printf(" segmentGroup=\"%s\" ", groupName)
+            }
+
         } else {
-            secref = $o2.object($o4.location.isec)
-            //printsec($o1, secref)
+            print "  ModelViewParmSec..."
+            secref = secanal_all.object(param_obj.location.isec)
+            print secref
+            //printsec(file_out, secref)
 
             strdef groupName
             sprint(groupName, "%s%s", singleSecGroupPrefix, secref)
+            print groupName
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
@@ -652,14 +838,13 @@ proc printparmval() {
 
             }
 
-            $o1.printf("          <bio:group>%s</bio:group>\n", groupName)
+            file_out.printf(" segmentGroup=\"%s\" ", groupName)
 
         }
-        $o1.printf("        </bio:parameter>\n")
 
-    } else if ($o4.type() == 2) {  // ModelViewParmVec
+    } else if (param_obj.type() == 2) {  // ModelViewParmVec
 
-        secref = $o2.object($o4.location.isec)
+        secref = secanal_all.object(param_obj.location.isec)
 
         strdef groupName
         sprint(groupName, "%s%s", singleSecGroupPrefix, secref)
@@ -677,55 +862,63 @@ proc printparmval() {
         strdef currsecname
         secref.sec {currsecname = secname()}
 
-        $o1.printf("        <!-- There is an inhomogenous parameter: %s present for mechanism: %s on group: %s for section: %s! -->\n",  $s3, $s7, groupName, currsecname)
+        file_out.printf("        <!-- There is an inhomogenous parameter: %s present for mechanism: %s on group: %s for section: %s! -->\n", param, ref, groupName, currsecname)
 
         avgVal = 0
         strdef infoVals
         infoVals = ""
 
-        for i=0, $o4.vec.size - 1 {
-             sprint(infoVals, "%s %g, ", infoVals, $o4.vec.x(i))
-             avgVal = avgVal + $o4.vec.x(i)
+        for i=0, param_obj.vec.size - 1 {
+             sprint(infoVals, "%s %g, ", infoVals, param_obj.vec.x(i))
+             avgVal = avgVal + param_obj.vec.x(i)
         }
-        avgVal = avgVal / $o4.vec.size
+        avgVal = avgVal / param_obj.vec.size
 
-        $o1.printf("        <!-- Actual values along section (in NEURON units): %s but using average: %g -->\n",  infoVals, avgVal)
+        file_out.printf("        <!-- Actual values along section (in NEURON units): %s but using average: %g -->\n",  infoVals, avgVal)
 
-        //printvecvals($o1, $o4)
+        //printvecvals(file_out, param_obj)
 
-        $o1.printf("        <bio:parameter name=\"%s\" value=\"%g\"> \n",  $s3, avgVal * $5)
-        $o1.printf("          <bio:group>%s</bio:group>\n", groupName)
-        $o1.printf("        </bio:parameter>\n")
+        file_out.printf("        <bio:parameter name=\"%s\" value=\"%g\"> \n",  param, avgVal * scale_factor)
+        file_out.printf("          <bio:group>%s</bio:group>\n", groupName)
+        file_out.printf("        </bio:parameter>\n")
     }
 }
 
 
-
+objref temp_secref
 proc printsec() {
-    $o2.sec { 
-        $o1.printf("      <section name=\"%s\"/>\n", secname())
+    file_out = $o1
+    temp_secref = $o2
+    
+    temp_secref.sec { 
+        file_out.printf("      <section name=\"%s\"/>\n", secname())
     }
 }
 
 
+objref temp_param_obj
 proc printvecvals() {local i
-
-    $o2.location.realcell.all.object($o2.location.isec).sec {
-        $o1.printf("          <!-- NOTE: this mechanism is present on %s but has non uniform values. Expression for generating values cannot be retrieved! -->\n", secname())
-        ///$o1.printf("        <section name=\"%s\">\n", secname())
+    file_out = $o1
+    temp_param_obj = $o2
+    
+    temp_param_obj.location.realcell.all.object(temp_param_obj.location.isec).sec {
+        file_out.printf("          <!-- NOTE: this mechanism is present on %s but has non uniform values. Expression for generating values cannot be retrieved! -->\n", secname())
+        ///file_out.printf("        <section name=\"%s\">\n", secname())
     }
-    for i=0, $o2.vec.size - 1 {
-        //$o1.printf("        <value>%g</value>\n", $o2.vec.x(i))
-        $o1.printf("            <!-- Value %g: %g -->\n", i, $o2.vec.x(i))
+    for i=0, temp_param_obj.vec.size - 1 {
+        //file_out.printf("        <value>%g</value>\n", temp_param_obj.vec.x(i))
+        file_out.printf("            <!-- Value %g: %g -->\n", i, temp_param_obj.vec.x(i))
     }
-    //$o1.printf("      </section>\n")
+    //file_out.printf("      </section>\n")
 }
 
 
 proc ion_xmlwrite() {
+    file_out = $o1
+    
     for mview.dparm.mechs(tobj) {
         if (hoc_sf_.head(tobj.name, "_ion", tstr) != -1) {
-            $o1.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))
+            file_out.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))
         }
     }
 }
