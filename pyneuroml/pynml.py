@@ -47,10 +47,9 @@ def parse_arguments():
 
     parser.add_argument('-nogui', action='store_true',
                         help=('Simulate LEMS file with jNeuroML, '
-                              'but supress GUI, i.e. show no plots, '
+                              'but suppress GUI, i.e. show no plots, '
                               'just save results'), 
-                        default=DEFAULTS['nogui'])
-                        help='Simulate LEMS file with jNeuroML, but supress GUI, i.e. show no plots, just save results', default=False)
+                        default=DEFAULTS['nogui']),
                         
     parser.add_argument('-validate', action='store_true',
                         help=('(Via jNeuroML) Validate NeuroML2 file '
@@ -207,7 +206,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            verbose=DEFAULTS['v'],
                            exit_on_fail = True):  
                                
-    print_comment("Loading LEMS file: %s and running with jNeuroML" \ 
+    print_comment("Loading LEMS file: %s and running with jNeuroML" \
                   % lems_file_name, verbose)
     post_args = ""
     gui = " -nogui" if nogui else ""
@@ -221,7 +220,8 @@ def run_lems_with_jneuroml(lems_file_name,
                            verbose = verbose, 
                            exit_on_fail = exit_on_fail)
     
-    if not success: return False
+    if not success: 
+        return False
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
@@ -230,7 +230,8 @@ def run_lems_with_jneuroml(lems_file_name,
     
     
 
-def nml2_to_svg(nml2_file_name, max_memory=default_java_max_memory, verbose=True):           
+def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'], 
+                verbose=True):           
     print_comment("Converting NeuroML2 file: %s to SVG"%nml2_file_name, verbose)
     
     post_args = "-svg"
@@ -265,7 +266,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                            verbose = verbose, 
                            exit_on_fail = exit_on_fail)
     
-    if not success: return False
+    if not success: 
+        return False
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
@@ -401,7 +403,7 @@ def run_jneuroml(pre_args,
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
     jar = os.path.join(script_dir, "lib", 
-                       "jNeuroML-0.7.1-jar-with-dependencies.jar")
+                       "jNeuroML-0.7.2-jar-with-dependencies.jar")
     
     output = ''
     
