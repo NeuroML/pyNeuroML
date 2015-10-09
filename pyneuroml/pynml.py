@@ -329,7 +329,7 @@ def reload_saved_data(lems_file_name,
                
 
         if plot:
-            fig = pltb.figure()
+            fig = plt.figure()
             fig.canvas.set_window_title("Data loaded from %s%s" \
                                         % (file_name, ' (%s)' % simulator 
                                                       if simulator else ''))
