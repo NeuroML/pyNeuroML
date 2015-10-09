@@ -12,6 +12,7 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 from __future__ import absolute_import
 import os
 import subprocess
+import math
 
 from . import __version__
 
@@ -103,34 +104,39 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True):
                  exit_on_fail = False)
     
 
-def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, already_included=[]):  
+def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, 
+                       already_included=[]):  
     
-    print_comment("Loading NeuroML2 file: %s"%nml2_file_name, verbose)
+    print_comment("Loading NeuroML2 file: %s" % nml2_file_name, verbose)
     
     if not os.path.isfile(nml2_file_name):
-        print_comment("Unable to find file: %s!"%nml2_file_name, True)
+        print_comment("Unable to find file: %s!" % nml2_file_name, True)
         exit()
         
     nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
     
     if include_includes:
-        print_comment('Including included files (included already: %s)'%already_included)
+        print_comment('Including included files (included already: %s)' \
+                      % already_included)
         
         for include in nml2_doc.includes:
             incl_loc = '%s/%s'%(os.path.dirname(nml2_file_name),include.href)
             if incl_loc not in already_included:
-                print_comment("Loading included NeuroML2 file: %s"%incl_loc)
-                nml2_sub_doc = read_neuroml2_file(incl_loc, True, verbose=verbose, already_included=already_included)
+                print_comment("Loading included NeuroML2 file: %s" % incl_loc, 
+                              verbose)
+                nml2_sub_doc = read_neuroml2_file(incl_loc, True, 
+                    verbose=verbose, already_included=already_included)
                 already_included.append(incl_loc)
                 
                 membs = inspect.getmembers(nml2_sub_doc)
 
                 for memb in membs:
-
-                    if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
+                    if isinstance(memb[1], list) and len(memb[1])>0 \
+                            and not memb[0].endswith('_'):
                         for entry in memb[1]:
                             if memb[0] != 'includes':
-                                print_comment("  Adding %s from: %s to list: %s"%(entry, incl_loc, memb[0]))
+                                print_comment("  Adding %s from: %s to list: %s" \
+                                    %(entry, incl_loc, memb[0]))
                                 getattr(nml2_doc, memb[0]).append(entry)
                             
         nml2_doc.includes = []
@@ -145,7 +151,8 @@ def quick_summary(nml2_doc):
 
     for memb in membs:
 
-        if isinstance(memb[1], list) and len(memb[1])>0 and not memb[0].endswith('_'):
+        if isinstance(memb[1], list) and len(memb[1])>0 \
+                and not memb[0].endswith('_'):
             info+='  %s:\n    ['%memb[0]
             for entry in memb[1]:
                 extra = '???'
@@ -158,7 +165,8 @@ def quick_summary(nml2_doc):
     return info
 
 
-def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True, verbose_validate=False):
+def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True, 
+                        verbose_validate=False):
     
     writers.NeuroMLWriter.write(nml2_doc,nml2_file_name)
     
@@ -225,7 +233,8 @@ def run_lems_with_jneuroml(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 plot, 'jNeuroML')
     else:
         return True
     
@@ -271,7 +280,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 plot, 'jNeuroML')
     else:
         return True
     
@@ -307,7 +317,16 @@ def reload_saved_data(lems_file_name,
                     ns_prefix = pre
                     sim = comp
     
-    for of in sim.findall(ns_prefix+'OutputFile'):
+    output_files = sim.findall(ns_prefix+'OutputFile')
+    n_output_files = len(output_files)    
+    if plot:
+        rows = max(1,math.ceil(n_output_files/3))
+        columns = min(3,n_output_files)
+        fig,ax = plt.subplots(rows,columns,sharex=True,
+                              figsize=(4*columns,4*rows))
+        ax = ax.ravel()
+    
+    for i,of in enumerate(output_files):
         results['t'] = []
         file_name = base_dir + '/' + of.attrib['fileName']
         print_comment("Loading saved data from %s%s" \
@@ -329,32 +348,37 @@ def reload_saved_data(lems_file_name,
                
 
         if plot:
-            fig = plt.figure()
             fig.canvas.set_window_title("Data loaded from %s%s" \
                                         % (file_name, ' (%s)' % simulator 
                                                       if simulator else ''))
             
+            legend = False
             for key in cols:
+                ax[i].set_xlabel('Time (ms)')
+                ax[i].set_ylabel('(SI units...)')
+                ax[i].xaxis.grid(True)
+                ax[i].yaxis.grid(True)
 
-                plt.xlabel('Time (ms)')
-                plt.ylabel('(SI units...)')
-                plt.grid('on')
-
-                curr_plot = plt.subplot(111)
-                
                 if key != 't':
-                    curr_plot.plot(results['t'], results[key], label=key)
+                    ax[i].plot(results['t'], results[key], label=key)
                     print_comment("Adding trace for: %s, from: %s" \
-                                  % (key,file_name), True)
-                    
-                plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), 
-                             fancybox=True, shadow=True, ncol=4) 
+                                  % (key,file_name), verbose)
+                    ax[i].used = True
+                    legend = True
+                
+                if legend:
+                    ax[i].legend(loc='upper right', fancybox=True, shadow=True, 
+                                 ncol=4)#, bbox_to_anchor=(0.5, -0.05)) 
                    
     #print(results.keys())
         
     if plot:
+        for axi in ax:
+            if not hasattr(axi,'used') or not axi.used:
+                axi.axis('off')
+        plt.tight_layout()
         plt.show()
-
+        
     return results
                
                         
@@ -411,11 +435,12 @@ def run_jneuroml(pre_args,
     try:
         output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
                                         (max_memory, jar, pre_args, target_file, 
-                                         post_args), exec_in_dir, verbose=verbose)
+                                         post_args), exec_in_dir, 
+                                        verbose=verbose)
     except:
-        print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('*** Execution of jnml has failed! ***', verbose)
                              
-        print_comment(output, True)
+        print_comment(output, verbose)
         if exit_on_fail: 
             exit(-1)
         else:
@@ -444,7 +469,7 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v']):
     if os.name == 'nt':
         directory = os.path.normpath(directory)
         
-    print_comment("Executing: (%s) in dir: %s" % (command, directory), True)
+    print_comment("Executing: (%s) in dir: %s" % (command, directory), verbose)
     
     try:
         return_string = subprocess.check_output(command, cwd=directory, 
