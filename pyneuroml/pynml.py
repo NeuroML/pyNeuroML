@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
 
-Python wrapper around jnml command. Also a number of helper functions for handling/generating/running LEMS/NeuroML2 files
+Python wrapper around jnml command. 
+Also a number of helper functions for 
+handling/generating/running LEMS/NeuroML2 files
 
 Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 
@@ -20,39 +22,55 @@ import lems.model.model as lems_model
 
 import random
 
-verbose = False
+DEFAULTS = {'v': False,
+            'nogui': False,
+            'default_java_max_memory': "400M"} 
 
-default_java_max_memory = "400M"
 
 def parse_arguments():
     """Parse command line arguments"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='pyNeuroML v%s: Python utilities for NeuroML2'%__version__)
+    parser = argparse.ArgumentParser(description=('pyNeuroML v%s: Python '
+                                                  'utilities for NeuroML2' 
+                                                  %__version__))
 
     parser.add_argument('target_file', metavar='target_file', type=str,
-                        help='The LEMS/NeuroML2 file to process; without other options simulates a LEMS file (containing a <Simulation element>) natively using jNeuroML')
+                        help=('The LEMS/NeuroML2 file to process; '
+                              'without other options simulates a LEMS file '
+                              '(containing a <Simulation element>) '
+                              'natively using jNeuroML'))
 
     ##parser.add_argument('-sim', choices=('pylems', 'jlems'),
     ##                     help='Simulator to use')
 
     parser.add_argument('-nogui', action='store_true',
-                        help='Simulate LEMS file with jNeuroML, but supress GUI, i.e. show no plots, just save results', default="False")
+                        help=('Simulate LEMS file with jNeuroML, '
+                              'but supress GUI, i.e. show no plots, '
+                              'just save results'), 
+                        default=DEFAULTS['nogui'])
                         
     parser.add_argument('-validate', action='store_true',
-                        help='(Via jNeuroML) Validate NeuroML2 file against the latest Schema')
+                        help=('(Via jNeuroML) Validate NeuroML2 file '
+                              'against the latest Schema'))
                         
     parser.add_argument('-svg', action='store_true',
-                        help='(Via jNeuroML) Convert NeuroML2 file (network & cells) to SVG format view of 3D structure')
+                        help=('(Via jNeuroML) Convert NeuroML2 file '
+                              '(network & cells) to SVG format view of '
+                              '3D structure'))
                         
     parser.add_argument('-sedml', action='store_true',
-                        help='(Via jNeuroML) Load a LEMS file, and convert simulation settings (duration, dt, what to save) to SED-ML format')
+                        help=('(Via jNeuroML) Load a LEMS file, '
+                              'and convert simulation settings '
+                              '(duration, dt, what to save) to SED-ML format'))
                         
     parser.add_argument('-java_max_memory', metavar='MAX', type=str,
-                        help='Java memory for jNeuroML, e.g. 400M, 2G (used in -Xmx argument to java)', default=default_java_max_memory)
+                        help=('Java memory for jNeuroML, e.g. 400M, '
+                              '2G (used in -Xmx argument to java)'), 
+                        default=DEFAULTS['default_java_max_memory'])
                         
     parser.add_argument('-verbose', action='store_true',
-                        help='Verbose output')
+                        help='Verbose output', default=DEFAULTS['v'])
 
     ##parser.add_argument('-outputdir', nargs=1,
     ##                    help='Directory to write output scripts to')
@@ -110,10 +128,12 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         validate_lems(lems_file_name)
 
 
-def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory, 
+def run_lems_with_jneuroml(lems_file_name, 
+                           max_memory=DEFAULTS['default_java_max_memory'], 
                            nogui=False, load_saved_data=False, plot=False, 
-                           verbose=True):           
-    print_comment("Loading LEMS file: %s and running with jNeuroML"%lems_file_name, verbose)
+                           verbose=DEFAULTS['v']):           
+    print_comment("Loading LEMS file: %s and running with jNeuroML" \
+                  % lems_file_name, verbose)
     
     post_args = ""
     gui = " -nogui" if nogui else ""
@@ -126,9 +146,10 @@ def run_lems_with_jneuroml(lems_file_name, max_memory=default_java_max_memory,
 
 
 def run_lems_with_jneuroml_neuron(
-    lems_file_name, max_memory=default_java_max_memory, nogui=False, 
-    load_saved_data=False, plot=False, verbose=True):           
-    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON"%lems_file_name, verbose)
+    lems_file_name, max_memory=DEFAULTS['default_java_max_memory'], nogui=False, 
+    load_saved_data=False, plot=False, verbose=DEFAULTS['v']):           
+    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
+                  %lems_file_name, verbose)
     
     post_args = " -neuron -run"
     gui = " -nogui" if nogui else ""
@@ -141,7 +162,7 @@ def run_lems_with_jneuroml_neuron(
     
     
 def reload_saved_data(lems_file_name, plot=False, 
-                      simulator=None, verbose=verbose): 
+                      simulator=None, verbose=DEFAULTS['v']): 
     
     # Could use pylems to parse this...
 
@@ -168,7 +189,9 @@ def reload_saved_data(lems_file_name, plot=False,
     for of in sim.findall(ns_prefix+'OutputFile'):
         results['t'] = []
         file_name = of.attrib['fileName']
-        print_comment("Loading saved data from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''), verbose)
+        print_comment("Loading saved data from %s%s" \
+                      % (file_name, ' (%s)'%simulator if simulator else ''), 
+                         verbose)
 
         cols = []
         cols.append('t')
@@ -186,7 +209,9 @@ def reload_saved_data(lems_file_name, plot=False,
 
         if plot:
             fig = pylab.figure()
-            fig.canvas.set_window_title("Data loaded from %s%s"%(file_name, ' (%s)'%simulator if simulator else ''))
+            fig.canvas.set_window_title("Data loaded from %s%s" \
+                                        % (file_name, ' (%s)' % simulator 
+                                                      if simulator else ''))
             
             for key in cols:
 
@@ -198,9 +223,11 @@ def reload_saved_data(lems_file_name, plot=False,
                 
                 if key != 't':
                     curr_plot.plot(results['t'], results[key], label=key)
-                    print_comment("Adding trace for: %s, from: %s"%(key,file_name), True)
+                    print_comment("Adding trace for: %s, from: %s" \
+                                  % (key,file_name), True)
                     
-                pylab.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=4) 
+                pylab.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), 
+                             fancybox=True, shadow=True, ncol=4) 
                    
     #print(results.keys())
         
@@ -216,8 +243,8 @@ def get_next_hex_color():
 
 def evaluate_arguments(args):
     
-    global verbose 
-    verbose = args.verbose
+    global DEFAULTS
+    DEFAULTS['v'] = args.verbose
 
     pre_args = ""
     post_args = ""
@@ -237,13 +264,16 @@ def evaluate_arguments(args):
     run_jneuroml(pre_args, args.target_file, post_args, args.java_max_memory)
     
         
-def run_jneuroml(pre_args, target_file, post_args, max_memory=default_java_max_memory, verbose=True):    
+def run_jneuroml(pre_args, target_file, post_args, 
+                 max_memory=DEFAULTS['default_java_max_memory'], 
+                 verbose=DEFAULTS['v']):    
        
     exec_dir = "." 
     
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
-    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.1-jar-with-dependencies.jar")
+    jar = os.path.join(script_dir, "lib", 
+                       "jNeuroML-0.7.1-jar-with-dependencies.jar")
     
 
     output = execute_command_in_dir("java -Xmx%s -jar  %s %s %s %s" %
@@ -254,7 +284,7 @@ def run_jneuroml(pre_args, target_file, post_args, max_memory=default_java_max_m
 
     
     
-def print_comment(text, print_it=verbose):
+def print_comment(text, print_it=DEFAULTS['v']):
     
     prefix = "pyNeuroML >>> "
     if not isinstance(text, str): text = text.decode('ascii')
@@ -264,7 +294,7 @@ def print_comment(text, print_it=verbose):
 
 
 
-def execute_command_in_dir(command, directory, verbose=True):
+def execute_command_in_dir(command, directory, verbose=DEFAULTS['v']):
     
     """Execute a command in specific working directory"""
     
@@ -274,7 +304,8 @@ def execute_command_in_dir(command, directory, verbose=True):
     print_comment("Executing: (%s) in dir: %s" % (command, directory), verbose)
     
     try:
-        return_string = subprocess.check_output(command, cwd=directory, shell=True)
+        return_string = subprocess.check_output(command, cwd=directory, 
+                                                shell=True)
 
         return return_string
     
