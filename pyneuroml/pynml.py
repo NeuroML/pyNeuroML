@@ -191,10 +191,11 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
 
 def relative_path(base_dir, file_name):
     
-    if base_dir == '': return file_name
-    if base_dir == '.': return file_name
-    if base_dir == './': return file_name
-    return '%s/%s'%(base_dir,file_name)
+    if os.path.isabs(file_name): # If the file name is an absolute path...
+        return file_name # ... do not prepend the base directory.  
+    if base_dir in ['','.','./']: 
+        return file_name
+    return os.path.join(base_dir,file_name)
 
 
 def run_lems_with_jneuroml(lems_file_name, 
@@ -281,14 +282,14 @@ def reload_saved_data(lems_file_name,
                       verbose=DEFAULTS['v']): 
     
     # Could use pylems to parse this...
-
     results = {}
     
     if plot:
-        import matplotlib.pyplot as pylab
+        import matplotlib.pyplot as plt
 
-    base_dir = os.path.dirname(lems_file_name) if len(os.path.dirname(lems_file_name))>0 else '.'
-    
+    base_dir = os.path.dirname(lems_file_name) \
+               if len(os.path.dirname(lems_file_name))>0 \
+               else '.'
     
     from lxml import etree
     tree = etree.parse(lems_file_name)
@@ -328,31 +329,31 @@ def reload_saved_data(lems_file_name,
                
 
         if plot:
-            fig = pylab.figure()
+            fig = pltb.figure()
             fig.canvas.set_window_title("Data loaded from %s%s" \
                                         % (file_name, ' (%s)' % simulator 
                                                       if simulator else ''))
             
             for key in cols:
 
-                pylab.xlabel('Time (ms)')
-                pylab.ylabel('(SI units...)')
-                pylab.grid('on')
+                plt.xlabel('Time (ms)')
+                plt.ylabel('(SI units...)')
+                plt.grid('on')
 
-                curr_plot = pylab.subplot(111)
+                curr_plot = plt.subplot(111)
                 
                 if key != 't':
                     curr_plot.plot(results['t'], results[key], label=key)
                     print_comment("Adding trace for: %s, from: %s" \
                                   % (key,file_name), True)
                     
-                pylab.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), 
+                plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), 
                              fancybox=True, shadow=True, ncol=4) 
                    
     #print(results.keys())
         
     if plot:
-        pylab.show()
+        plt.show()
 
     return results
                
