@@ -39,7 +39,7 @@ setup(
         'lxml',
         'pylems',
         'airspeed>=0.4.1',
-        'libNeuroML>=0.2.5',
+        'libNeuroML>=0.2.10',
         'matplotlib'],
     dependency_links=[
       'https://github.com/purcell/airspeed.git',
