@@ -123,6 +123,15 @@ class NeuroMLController():
                             
                     chanDens.erev = '%s %s'%(value, units)
                     
+                elif variable == 'specificCapacitance': 
+                    
+                    specCap = None
+                    for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
+                        if (sc.segment_groups == None and id2 == 'all') or sc.segment_groups == id2 :
+                            specCap = sc
+                            
+                    specCap.value = '%s %s'%(value, units)
+                    
                 else:
                     print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, var_name))
                     exit()

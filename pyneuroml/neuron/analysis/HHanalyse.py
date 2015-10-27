@@ -116,56 +116,55 @@ def main():
         for temp in (args.temperature[1:-1].split(',')):
             temperatures.append(float(temp))
 
+    ## Create a section, set size & insert pas, passive channel mechanism
+
+    sec = h.Section()
+
+    sec.L=10
+    sec.nseg=1
+    for seg in sec :seg.diam = 5
+
+    sec.insert("pas")
+    sec(0.5).g_pas = 0.001
+    sec(0.5).e_pas = -65
+
+    #sec.insert("ca_ion")
+    #sec(0.5).cai = args.caConc
+
+    ## insert channel into section
+
+
+    ## Read state variables from mod file
+
+    modFileName = chanToTest+".mod"
+    if args.modFile:
+        modFileName = args.modFile
+    modFile = open(modFileName, 'r')
+    inState = 0
+    states = []
+    for line in modFile:
+        if line.count('STATE') > 0 and line.count('STEADYSTATE') == 0:
+            inState = 1
+            print("Found state block")
+
+        if inState==1:
+            if line.count('}') > 0:
+                inState = 0
+            chopped = line.split()
+            for el in chopped:
+                if el != '{' and el != '}' and el != 'STATE' and el != 'FROM' and el != '0' and el != 'TO' and el != '1': 
+                    if el.startswith('{'): states.append(el[1:])
+                    elif el.endswith('}'): states.append(el[:-1])
+                    else: states.append(el)
+
+    if verbose: 
+        print("States found in mod file: " + str(states))
+
+    sec.insert(str(chanToTest))
+
     for temperature in temperatures:
         h.celsius = temperature
         print("Set temperature for simulation to: %s"%h.celsius)
-
-        ## Create a section, set size & insert pas, passive channel mechanism
-
-        sec = h.Section()
-
-        secname = sec.name()
-        sec.L=10
-        sec.nseg=1
-        for seg in sec :seg.diam = 5
-
-        sec.insert("pas")
-        sec(0.5).g_pas = 0.001
-        sec(0.5).e_pas = -65
-
-        #sec.insert("ca_ion")
-        #sec(0.5).cai = args.caConc
-
-        ## insert channel into section
-
-        sec.insert(str(chanToTest))
-
-
-        ## Read state variables from mod file
-
-        modFileName = chanToTest+".mod"
-        if args.modFile:
-            modFileName = args.modFile
-        modFile = open(modFileName, 'r')
-        inState = 0
-        states = []
-        for line in modFile:
-            if line.count('STATE') > 0 and line.count('STEADYSTATE') == 0:
-                inState = 1
-                print("Found state block")
-
-            if inState==1:
-                if line.count('}') > 0:
-                    inState = 0
-                chopped = line.split()
-                for el in chopped:
-                    if el != '{' and el != '}' and el != 'STATE' and el != 'FROM' and el != '0' and el != 'TO' and el != '1': 
-                        if el.startswith('{'): states.append(el[1:])
-                        elif el.endswith('}'): states.append(el[:-1])
-                        else: states.append(el)
-
-        if verbose: 
-            print("States found in mod file: " + str(states))
 
 
         ## Settings for the voltage clamp test
@@ -176,8 +175,8 @@ def main():
         volts = range(minV,maxV+interval,interval)
 
         v0 = -0.5                           # Pre holding potential
-        preHold = 50                       # and duration
-        postHoldStep = 10                  # Post step holding time between steady state checks
+        preHold = 50                        # and duration
+        postHoldStep = 10                   # Post step holding time between steady state checks
         postHoldMax = postHoldStep * 1000   # Max sim run time
 
         timeToCheckTau = preHold + (10*h.dt)
@@ -188,9 +187,6 @@ def main():
         for s in states:
             steadyStateVals[s] = []
             timeCourseVals[s] = []
-
-
-
 
         if verbose: 
             figV = pylab.figure()
@@ -272,8 +268,8 @@ def main():
 
                                 if fractOfInit < 0.367879441:
                                     tau =  (h.t-timeToCheckTau)  #/ (-1*log(fractOfInit))
-                                    if vverbose:  
-                                        print("        Found! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log %s; tau %s"%(s, slope, initSlopeVal[s], rateVal, h.t-timeToCheckTau, fractOfInit, log(fractOfInit), tau))
+                                    if vverbose: 
+                                        print("        Found tau! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log: %s; tau: %s"%(s, slope, initSlopeVal[s], rateVal, h.t-timeToCheckTau, fractOfInit, log(fractOfInit), tau))
                                     foundTau.append(s)
                                     timeCourseVals[s].append(tau)
                                 else:
@@ -303,8 +299,7 @@ def main():
                             lastCheckVal[s] = val
 
 
-            if verbose: 
-                print("Finished run,  t: %f, v: %f, vh: %f, initSlopeVal: %s, timeCourseVals: %s ---  "%(h.t, sec(0.5).v, vh, str(initSlopeVal), str(timeCourseVals)))
+            print("    Finished run; t: %f, v: %f, vhold: %f, initSlopeVal: %s, timeCourses: %s ---  \n"%(h.t, sec(0.5).v, vh, str(initSlopeVal), str(timeCourseVals)))
 
             if verbose: plV.plot(tRec, vRec, solid_joinstyle ='round', solid_capstyle ='round', color='#000000', linestyle='-', marker='None')
 
