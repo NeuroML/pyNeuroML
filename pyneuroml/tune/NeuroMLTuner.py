@@ -327,17 +327,23 @@ def _run_optimisation(a):
 
     if not a.nogui:
         added =[]
-        for wref in a.weights.keys():
-            ref = wref.split(':')[0]
+        #print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
+        
+        #fig = plt.figure()
+        #fig.canvas.set_window_title(ref)
+        
+        for tref in best_candidate_v.keys():  ##################a.target_data.keys():
+            ref = tref.split(':')[0]
             if not ref in added:
                 added.append(ref)
+                print(" - Adding plot of: %s"%ref)
                 plt.plot(best_candidate_t,best_candidate_v[ref], label="%s - %i evaluations"%(ref,a.max_evaluations))
 
         plt.legend()
 
         #plt.ylim(-80.0,80.0)
         plt.xlim(0.0,a.sim_time)
-        plt.title("Models")
+        plt.title("Models %s"%a.prefix)
         plt.xlabel("Time (ms)")
         plt.ylabel("Membrane potential(mV)")
 
