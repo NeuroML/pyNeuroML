@@ -12,7 +12,6 @@ from neurotune import utils
 from matplotlib import pyplot as plt
 from pyelectro import analysis
 
-import sys
 import os
 import os.path
 import time
@@ -184,7 +183,7 @@ def process_args():
                         
 def run_optimisation(**kwargs): 
     a = build_namespace(**kwargs)
-    _run_optimisation(a)
+    return _run_optimisation(a)
 
 
 def _run_optimisation(a):  
@@ -325,8 +324,6 @@ def _run_optimisation(a):
     plot_file.write("curr_dir = os.path.dirname(__file__) if len(os.path.dirname(__file__))>0 else '.'\n")
     plot_file.write("plot_generation_evolution(parameters, individuals_file_name = '%s/ga_individuals.csv'%curr_dir)\n")
     plot_file.close()
-    
-    
 
     if not a.nogui:
         added =[]
@@ -334,7 +331,7 @@ def _run_optimisation(a):
             ref = wref.split(':')[0]
             if not ref in added:
                 added.append(ref)
-                best_candidate_plot = plt.plot(best_candidate_t,best_candidate_v[ref], label="%s - %i evaluations"%(ref,a.max_evaluations))
+                plt.plot(best_candidate_t,best_candidate_v[ref], label="%s - %i evaluations"%(ref,a.max_evaluations))
 
         plt.legend()
 
@@ -346,11 +343,12 @@ def _run_optimisation(a):
 
         utils.plot_generation_evolution(sim_var.keys(), 
                                         individuals_file_name = '%s/ga_individuals.csv'%run_dir, 
-                                        target_values=a.known_target_values)
+                                        target_values=a.known_target_values,
+                                        show_plot_already = a.show_plot_already)
         
         if a.show_plot_already:
             plt.show()
-            
+    
     return reportj
 
 
