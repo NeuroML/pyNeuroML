@@ -38,7 +38,9 @@ DEFAULTS = {'simTime':             500,
             'numElites':           1,
             'seed':                12345,
             'simulator':           'jNeuroML',
+            'knownTargetValues':   '{}',
             'nogui':               False,
+            'showPlotAlready':     True,
             'verbose':             False} 
             
             
@@ -157,10 +159,20 @@ def process_args():
                         default=DEFAULTS['simulator'],
                         help="Simulator to run")
                         
+    parser.add_argument('-knownTargetValues', 
+                        type=str,
+                        metavar='<knownTargetValues>', 
+                        help="List of name/value pairs which represent the known values of the target parameters")
+                        
     parser.add_argument('-nogui', 
                         action='store_true',
                         default=DEFAULTS['nogui'],
                         help="Should GUI elements be supressed?")
+                        
+    parser.add_argument('-showPlotAlready', 
+                        action='store_true',
+                        default=DEFAULTS['showPlotAlready'],
+                        help="Should generated plots be suppressed until show() called?")
                         
     parser.add_argument('-verbose', 
                         action='store_true',
@@ -332,9 +344,14 @@ def _run_optimisation(a):
         plt.xlabel("Time (ms)")
         plt.ylabel("Membrane potential(mV)")
 
-        plt.show()
-
-        utils.plot_generation_evolution(sim_var.keys(), individuals_file_name = '%s/ga_individuals.csv'%run_dir)
+        utils.plot_generation_evolution(sim_var.keys(), 
+                                        individuals_file_name = '%s/ga_individuals.csv'%run_dir, 
+                                        target_values=a.known_target_values)
+        
+        if a.show_plot_already:
+            plt.show()
+            
+    return reportj
 
 
         
