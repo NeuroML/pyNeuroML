@@ -342,8 +342,8 @@ def _run_optimisation(a):
         added =[]
         #print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
         
-        #fig = plt.figure()
-        #fig.canvas.set_window_title(ref)
+        fig = plt.figure()
+        fig.canvas.set_window_title("Simulation of fittest individual from run: %s"%ref)
         
         for tref in best_candidate_v.keys():  ##################a.target_data.keys():
             ref = tref.split(':')[0]
@@ -379,16 +379,21 @@ def run_2stage_optimization(prefix,
                             max_constraints_2,
                             min_constraints_1,
                             min_constraints_2,
+                            delta_constraints,
                             weights_1,
                             weights_2,
                             target_data_1,
                             target_data_2,
                             sim_time,
                             dt,
-                            population_size,
-                            max_evaluations,
-                            num_selected,
-                            num_offspring,
+                            population_size_1,
+                            population_size_2,
+                            max_evaluations_1,
+                            max_evaluations_2,
+                            num_selected_1,
+                            num_selected_2,
+                            num_offspring_1,
+                            num_offspring_2,
                             mutation_rate,
                             num_elites,
                             simulator,
@@ -398,7 +403,7 @@ def run_2stage_optimization(prefix,
                             known_target_values,
                             dry_run = False):
 
-        report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
+        report = run_optimisation(prefix = "%s_STAGE1"%prefix, 
                          neuroml_file =     neuroml_file,
                          target =           target,
                          parameters =       parameters,
@@ -408,10 +413,41 @@ def run_2stage_optimization(prefix,
                          target_data =      target_data_1,
                          sim_time =         sim_time,
                          dt =               dt,
-                         population_size =  population_size,
-                         max_evaluations =  max_evaluations,
-                         num_selected =     num_selected,
-                         num_offspring =    num_offspring,
+                         population_size =  population_size_1,
+                         max_evaluations =  max_evaluations_1,
+                         num_selected =     num_selected_1,
+                         num_offspring =    num_offspring_1,
+                         mutation_rate =    mutation_rate,
+                         num_elites =       num_elites,
+                         simulator =        simulator,
+                         nogui =            nogui,
+                         show_plot_already = False,
+                         seed =             seed,
+                         known_target_values = known_target_values,
+                         dry_run =          dry_run)
+                         
+        
+        for pi in range(len(parameters)):
+            param = parameters[pi]
+            if max_constraints_2[pi] == 'x':
+                max_constraints_2[pi] = report['fittest vars'][param]*(1+delta_constraints)
+            if min_constraints_2[pi] == 'x':
+                min_constraints_2[pi] = report['fittest vars'][param]*(1-delta_constraints)
+               
+        report = run_optimisation(prefix = "%s_STAGE2"%prefix, 
+                         neuroml_file =     neuroml_file,
+                         target =           target,
+                         parameters =       parameters,
+                         max_constraints =  max_constraints_2,
+                         min_constraints =  min_constraints_2,
+                         weights =          weights_2,
+                         target_data =      target_data_2,
+                         sim_time =         sim_time,
+                         dt =               dt,
+                         population_size =  population_size_2,
+                         max_evaluations =  max_evaluations_2,
+                         num_selected =     num_selected_2,
+                         num_offspring =    num_offspring_2,
                          mutation_rate =    mutation_rate,
                          num_elites =       num_elites,
                          simulator =        simulator,
@@ -419,7 +455,12 @@ def run_2stage_optimization(prefix,
                          show_plot_already = show_plot_already,
                          seed =             seed,
                          known_target_values = known_target_values,
-                         dry_run = dry_run)
+                         dry_run =          dry_run) 
+                
+        
+        
+                         
+        
 
         
 def main(args=None):
