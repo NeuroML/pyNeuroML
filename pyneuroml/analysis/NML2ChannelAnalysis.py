@@ -373,29 +373,40 @@ def plot_kinetics(channel,a,results,grid=True):
                                  "%s from %s at %s degC") 
                                  % (channel.id, channel.file, a.temperature))
 
-    plt.xlabel('Membrane potential (V)')
-    plt.ylabel('Time Course - tau (s)')
+    plt.xlabel('Membrane potential (mV)')
+    plt.ylabel('Time Course - tau (ms)')
     plt.grid('on' if grid else 'off')
     
+    t0 = 1e6
+    t1 = -1e6
     gates = get_channel_gates(channel)
+    
     for g in gates:
         g_tau = "rampCellPop0[0]/test/%s/%s/tau" \
                 % (channel.id, g) # Key for conductance variable.  
         col = get_state_color(g)
-        plt.plot(results[V], results[g_tau], color=col, 
+        plt.plot([v*1000 for v in results[V]], [t*1000 for t in results[g_tau]], color=col, 
                  linestyle='-', label="%s %s tau" % (channel.id, g))
-        plt.gca().autoscale(enable=True, axis='x', tight=True)
-        plt.legend()
+        plt.xlim([results[V][0]*1100,results[V][-1]*1100])
+        t0 = min(t0, min(results[g_tau])*1000)
+        t1 = max(t1, max(results[g_tau])*1000)
+        
+    if t0==t1: t0 = 0
+    plt.ylim([t0-((t1-t0)/10),t1+((t1-t0)/10)])
 
-        if a.html or a.md:
-            save_fig('%s.tau.png' % channel.id)
+    leg = plt.legend(fancybox=True)
+    leg.get_frame().set_alpha(0.5)
+        
+
+    if a.html or a.md:
+        save_fig('%s.tau.png' % channel.id)
 
 def plot_steady_state(channel,a,results,grid=True):
     fig = plt.figure()
     fig.canvas.set_window_title(("Steady state(s) of activation variables of "
                                  "%s from %s at %s degC")
                                  % (channel.id, channel.file, a.temperature))
-    plt.xlabel('Membrane potential (V)')
+    plt.xlabel('Membrane potential (mV)')
     plt.ylabel('Steady state - inf')
     plt.grid('on' if grid else 'off')
     
@@ -404,13 +415,16 @@ def plot_steady_state(channel,a,results,grid=True):
         g_inf = "rampCellPop0[0]/test/%s/%s/inf" \
                 % (channel.id, g)
         col = get_state_color(g)
-        plt.plot(results[V], results[g_inf], color=col, 
+        plt.plot([v*1000 for v in results[V]], results[g_inf], color=col, 
                  linestyle='-', label="%s %s inf" % (channel.id, g))
-        plt.gca().autoscale(enable=True, axis='x', tight=True)
-        plt.legend()
 
-        if a.html or a.md:
-            save_fig('%s.inf.png' % channel.id)
+    plt.xlim([results[V][0]*1100,results[V][-1]*1100])
+    plt.ylim([-0.05,1.05])
+    leg = plt.legend(fancybox=True, loc='center right')
+    leg.get_frame().set_alpha(0.5)
+
+    if a.html or a.md:
+        save_fig('%s.inf.png' % channel.id)
 
 
 def save_fig(name):
