@@ -19,6 +19,8 @@ import re
 
 import argparse
 
+from pyneuroml import pynml
+
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -40,7 +42,8 @@ DEFAULTS = {'simTime':             500,
             'knownTargetValues':   '{}',
             'nogui':               False,
             'showPlotAlready':     True,
-            'verbose':             False} 
+            'verbose':             False,
+            'dryRun':              False} 
             
             
 def process_args():
@@ -178,6 +181,11 @@ def process_args():
                         default=DEFAULTS['verbose'],
                         help="Verbose mode")
                         
+    parser.add_argument('-dryRun', 
+                        action='store_true',
+                        default=DEFAULTS['dryRun'],
+                        help="Dry run; just print setup information")
+                        
     return parser.parse_args()
                        
                         
@@ -188,18 +196,23 @@ def run_optimisation(**kwargs):
 
 def _run_optimisation(a):  
                          
-                         
+                      
     if isinstance(a.parameters, str): a.parameters = parse_list_arg(a.parameters)
     if isinstance(a.min_constraints, str): a.min_constraints = parse_list_arg(a.min_constraints)
     if isinstance(a.max_constraints, str): a.max_constraints = parse_list_arg(a.max_constraints)
     if isinstance(a.target_data, str): a.target_data = parse_dict_arg(a.target_data)
     if isinstance(a.weights, str): a.weights = parse_dict_arg(a.weights)
+    if isinstance(a.known_target_values, str): a.known_target_values = parse_dict_arg(a.known_target_values)
     
-    print("=====================================================================================")
-    print("Starting run_optimisation with: ")
+    pynml.print_comment_v("=====================================================================================")
+    pynml.print_comment_v("Starting run_optimisation with: ")
     for key,value in a.__dict__.items():
-        print("  %s = %s%s"%(key,' '*(30-len(key)),value))
-    print("=====================================================================================")
+        pynml.print_comment_v("  %s = %s%s"%(key,' '*(30-len(key)),value))
+    pynml.print_comment_v("=====================================================================================")
+    
+    if a.dry_run: 
+        pynml.print_comment_v("Dry run; not running optimization...")
+        return
     
     ref = a.prefix
     
@@ -286,7 +299,7 @@ def _run_optimisation(a):
     report+="FITNESS: %f\n\n"%fitness
     report+="FITTEST: %s\n\n"%pp.pformat(dict(sim_var))
     
-    print(report)
+    pynml.print_comment_v(report)
     
     reportj['fitness']=fitness
     reportj['fittest vars']=dict(sim_var)
@@ -336,7 +349,7 @@ def _run_optimisation(a):
             ref = tref.split(':')[0]
             if not ref in added:
                 added.append(ref)
-                print(" - Adding plot of: %s"%ref)
+                #pynml.print_comment(" - Adding plot of: %s"%ref)
                 plt.plot(best_candidate_t,best_candidate_v[ref], label="%s - %i evaluations"%(ref,a.max_evaluations))
 
         plt.legend()
@@ -358,6 +371,56 @@ def _run_optimisation(a):
     return reportj
 
 
+def run_2stage_optimization(prefix, 
+                            neuroml_file,
+                            target,
+                            parameters,
+                            max_constraints_1,
+                            max_constraints_2,
+                            min_constraints_1,
+                            min_constraints_2,
+                            weights_1,
+                            weights_2,
+                            target_data_1,
+                            target_data_2,
+                            sim_time,
+                            dt,
+                            population_size,
+                            max_evaluations,
+                            num_selected,
+                            num_offspring,
+                            mutation_rate,
+                            num_elites,
+                            simulator,
+                            nogui,
+                            show_plot_already,
+                            seed,
+                            known_target_values,
+                            dry_run = False):
+
+        report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
+                         neuroml_file =     neuroml_file,
+                         target =           target,
+                         parameters =       parameters,
+                         max_constraints =  max_constraints_1,
+                         min_constraints =  min_constraints_1,
+                         weights =          weights_1,
+                         target_data =      target_data_1,
+                         sim_time =         sim_time,
+                         dt =               dt,
+                         population_size =  population_size,
+                         max_evaluations =  max_evaluations,
+                         num_selected =     num_selected,
+                         num_offspring =    num_offspring,
+                         mutation_rate =    mutation_rate,
+                         num_elites =       num_elites,
+                         simulator =        simulator,
+                         nogui =            nogui,
+                         show_plot_already = show_plot_already,
+                         seed =             seed,
+                         known_target_values = known_target_values,
+                         dry_run = dry_run)
+
         
 def main(args=None):
     if args is None:
@@ -374,9 +437,10 @@ def parse_dict_arg(dict_arg):
     ret = {}
     entries = str(dict_arg[1:-1]).split(',')
     for e in entries:
-        key = e[:e.rfind(':')]
-        value = e[e.rfind(':')+1:]
-        ret[key] = float(value)
+        if len(e) > 0:
+            key = e[:e.rfind(':')]
+            value = e[e.rfind(':')+1:]
+            ret[key] = float(value)
     #print("Command line argument %s parsed as: %s"%(dict_arg,ret))
     return ret
 
