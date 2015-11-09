@@ -10,6 +10,8 @@ from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
 
 from pyneuroml.pynml import print_comment, print_comment_v
+import os
+
 
 def export_to_neuroml2(hoc_or_python_file, 
                        nml2_file_name, 
@@ -22,8 +24,10 @@ def export_to_neuroml2(hoc_or_python_file,
     
     if hoc_or_python_file is not None:
         if hoc_or_python_file.endswith(".py"):
-            print_comment_v("Importing Python scripts not yet implemented...")
+            print_comment_v("***************\nImporting Python scripts not yet implemented...\n***************")
         else:
+            if not os.path.isfile(hoc_or_python_file):
+                print_comment_v("***************\nProblem importing file %s (%s)..\n***************"%(hoc_or_python_file, os.path.abspath(hoc_or_python_file)))
             h.load_file(1, hoc_or_python_file) # Using 1 to force loading of the file, in case file with same name was loaded before...
     else:
         print_comment_v("hoc_or_python_file variable is None; exporting what's currently in memory...")
