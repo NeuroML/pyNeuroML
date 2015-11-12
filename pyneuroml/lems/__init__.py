@@ -14,7 +14,9 @@ def generate_lems_file_for_neuroml(sim_id,
                                    lems_file_name,
                                    target_dir,
                                    gen_plots_for_all_v = True,
+                                   gen_plots_for_only = [],
                                    gen_saves_for_all_v = True,
+                                   gen_saves_for_only = [],
                                    copy_neuroml = True,
                                    seed=None):
                                        
@@ -60,7 +62,7 @@ def generate_lems_file_for_neuroml(sim_id,
                 ls.include_neuroml2_file(include.href, include_included=False)
                 
                 
-    if gen_plots_for_all_v or gen_saves_for_all_v:
+    if gen_plots_for_all_v or gen_saves_for_all_v or len(gen_plots_for_only)>0 or len(gen_saves_for_only)>0 :
         
         for network in nml_doc.networks:
             for population in network.populations:
@@ -70,8 +72,8 @@ def generate_lems_file_for_neuroml(sim_id,
                 quantity_template = "%s[%i]/v"
                 if population.type and population.type == 'populationList':
                     quantity_template = "%s/%i/"+component+"/v"
-                
-                if gen_plots_for_all_v:
+                    
+                if gen_plots_for_all_v or population.id in gen_plots_for_only:
                     print_comment('Generating %i plots for %s in population %s'%(size, component, population.id))
    
                     disp0 = 'DispPop__%s'%population.id
@@ -80,7 +82,7 @@ def generate_lems_file_for_neuroml(sim_id,
                         quantity = quantity_template%(population.id, i)
                         ls.add_line_to_display(disp0, "v %s"%safe_variable(quantity), quantity, "1mV", get_next_hex_color())
                 
-                if gen_saves_for_all_v:
+                if gen_saves_for_all_v or population.id in gen_saves_for_only:
                     print_comment('Saving %i values of v for %s in population %s'%(size, component, population.id))
    
                     of0 = 'Volts_file__%s'%population.id
