@@ -134,8 +134,14 @@ def main():
     sec(0.5).g_pas = 0.001
     sec(0.5).e_pas = -65
 
-    sec.insert("ca_ion")
-    sec(0.5).cai = args.caConc
+    ca_present = True
+    try:
+        sec.insert("ca_ion")
+        sec(0.5).cai = args.caConc
+    except ValueError:
+        print("No Ca mechanism present...")
+        ca_present = False
+    
 
     ## insert channel into section
 
@@ -169,7 +175,8 @@ def main():
     for temperature in temperatures:
         h.celsius = temperature
         print("Set temperature for simulation to: %s"%h.celsius)
-        print("[Ca2+] in section: %s"%sec(0.5).cai)
+        if ca_present:
+            print("[Ca2+] in section: %s"%sec(0.5).cai)
 
 
         ## Settings for the voltage clamp test
