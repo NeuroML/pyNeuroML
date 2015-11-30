@@ -184,6 +184,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            nogui=False, 
                            load_saved_data=False, 
                            plot=False, 
+                           show_plot_already=True, 
                            exec_in_dir = ".",
                            verbose=True,
                            exit_on_fail = True):  
@@ -205,7 +206,10 @@ def run_lems_with_jneuroml(lems_file_name,
     if not success: return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 plot=plot, 
+                                 show_plot_already=show_plot_already, 
+                                 simulator='jNeuroML')
     else:
         return True
     
@@ -228,6 +232,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   nogui=False, 
                                   load_saved_data=False, 
                                   plot=False, 
+                                  show_plot_already=True, 
                                   exec_in_dir = ".",
                                   verbose=True,
                                   exit_on_fail = True):
@@ -249,13 +254,17 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     if not success: return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), plot, 'jNeuroML')
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 plot=plot, 
+                                 show_plot_already=show_plot_already, 
+                                 simulator='jNeuroML_NEURON')
     else:
         return True
     
     
 def reload_saved_data(lems_file_name, 
                       plot=False, 
+                      show_plot_already=True, 
                       simulator=None, 
                       verbose=verbose): 
     
@@ -324,7 +333,7 @@ def reload_saved_data(lems_file_name,
                    
     #print(results.keys())
         
-    if plot:
+    if plot and show_plot_already:
         pylab.show()
 
     return results

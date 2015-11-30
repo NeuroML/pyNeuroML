@@ -324,6 +324,9 @@ def _run_optimisation(a):
     reportj['sim_time']=a.sim_time
     reportj['dt']=a.dt
     
+    reportj['run_directory'] = run_dir
+    reportj['reference'] = ref
+    
     
     report_file = open("%s/report.json"%run_dir,'w')
     report_file.write(pp.pformat(reportj))
