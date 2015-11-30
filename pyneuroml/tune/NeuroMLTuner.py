@@ -406,7 +406,7 @@ def run_2stage_optimization(prefix,
                             known_target_values,
                             dry_run = False):
 
-        report = run_optimisation(prefix = "%s_STAGE1"%prefix, 
+        report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
                          neuroml_file =     neuroml_file,
                          target =           target,
                          parameters =       parameters,
@@ -433,11 +433,11 @@ def run_2stage_optimization(prefix,
         for pi in range(len(parameters)):
             param = parameters[pi]
             if max_constraints_2[pi] == 'x':
-                max_constraints_2[pi] = report['fittest vars'][param]*(1+delta_constraints)
+                max_constraints_2[pi] = report1['fittest vars'][param]*(1+delta_constraints)
             if min_constraints_2[pi] == 'x':
-                min_constraints_2[pi] = report['fittest vars'][param]*(1-delta_constraints)
+                min_constraints_2[pi] = report1['fittest vars'][param]*(1-delta_constraints)
                
-        report = run_optimisation(prefix = "%s_STAGE2"%prefix, 
+        report2 = run_optimisation(prefix = "%s_STAGE2"%prefix, 
                          neuroml_file =     neuroml_file,
                          target =           target,
                          parameters =       parameters,
@@ -461,7 +461,7 @@ def run_2stage_optimization(prefix,
                          dry_run =          dry_run) 
                 
         
-        
+        return report1, report2
                          
         
 
