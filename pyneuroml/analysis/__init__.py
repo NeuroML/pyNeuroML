@@ -2,6 +2,8 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
+from pyneuroml.pynml import print_comment_v
+
 
 def generate_current_vs_frequency_curve(nml2_file, 
                                         cell_id, 
@@ -21,6 +23,9 @@ def generate_current_vs_frequency_curve(nml2_file,
     from pyelectro.analysis import max_min
     from pyelectro.analysis import mean_spike_frequency
     import numpy as np
+    
+    print_comment_v("Generating FI curve for cell %s in %s using %s (%snA->%snA; %snA steps)"%
+        (cell_id, nml2_file, simulator, start_amp_nA, end_amp_nA, step_nA))
     
     sim_id = 'iv_%s'%cell_id
     duration = analysis_duration+analysis_delay

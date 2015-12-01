@@ -12,13 +12,14 @@ from neurotune import utils
 from matplotlib import pyplot as plt
 from pyelectro import analysis
 
-import sys
 import os
 import os.path
 import time
 import re
 
 import argparse
+
+from pyneuroml import pynml
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
@@ -38,8 +39,11 @@ DEFAULTS = {'simTime':             500,
             'numElites':           1,
             'seed':                12345,
             'simulator':           'jNeuroML',
+            'knownTargetValues':   '{}',
             'nogui':               False,
-            'verbose':             False} 
+            'showPlotAlready':     True,
+            'verbose':             False,
+            'dryRun':              False} 
             
             
 def process_args():
@@ -157,38 +161,58 @@ def process_args():
                         default=DEFAULTS['simulator'],
                         help="Simulator to run")
                         
+    parser.add_argument('-knownTargetValues', 
+                        type=str,
+                        metavar='<knownTargetValues>', 
+                        help="List of name/value pairs which represent the known values of the target parameters")
+                        
     parser.add_argument('-nogui', 
                         action='store_true',
                         default=DEFAULTS['nogui'],
                         help="Should GUI elements be supressed?")
+                        
+    parser.add_argument('-showPlotAlready', 
+                        action='store_true',
+                        default=DEFAULTS['showPlotAlready'],
+                        help="Should generated plots be suppressed until show() called?")
                         
     parser.add_argument('-verbose', 
                         action='store_true',
                         default=DEFAULTS['verbose'],
                         help="Verbose mode")
                         
+    parser.add_argument('-dryRun', 
+                        action='store_true',
+                        default=DEFAULTS['dryRun'],
+                        help="Dry run; just print setup information")
+                        
     return parser.parse_args()
                        
                         
 def run_optimisation(**kwargs): 
     a = build_namespace(**kwargs)
-    _run_optimisation(a)
+    return _run_optimisation(a)
 
 
 def _run_optimisation(a):  
                          
-                         
+                      
     if isinstance(a.parameters, str): a.parameters = parse_list_arg(a.parameters)
     if isinstance(a.min_constraints, str): a.min_constraints = parse_list_arg(a.min_constraints)
     if isinstance(a.max_constraints, str): a.max_constraints = parse_list_arg(a.max_constraints)
     if isinstance(a.target_data, str): a.target_data = parse_dict_arg(a.target_data)
     if isinstance(a.weights, str): a.weights = parse_dict_arg(a.weights)
+    if isinstance(a.known_target_values, str): a.known_target_values = parse_dict_arg(a.known_target_values)
     
-    print("=====================================================================================")
-    print("Starting run_optimisation with: ")
+    pynml.print_comment_v("=====================================================================================")
+    pynml.print_comment_v("Starting run_optimisation with: ")
     for key,value in a.__dict__.items():
-        print("  %s = %s%s"%(key,' '*(30-len(key)),value))
-    print("=====================================================================================")
+        pynml.print_comment_v("  %s = %s%s"%(key,' '*(30-len(key)),value))
+    pynml.print_comment_v("=====================================================================================")
+    
+    if a.dry_run: 
+        pynml.print_comment_v("Dry run; not running optimization...")
+        return
     
     ref = a.prefix
     
@@ -275,7 +299,7 @@ def _run_optimisation(a):
     report+="FITNESS: %f\n\n"%fitness
     report+="FITTEST: %s\n\n"%pp.pformat(dict(sim_var))
     
-    print(report)
+    pynml.print_comment_v(report)
     
     reportj['fitness']=fitness
     reportj['fittest vars']=dict(sim_var)
@@ -300,6 +324,9 @@ def _run_optimisation(a):
     reportj['sim_time']=a.sim_time
     reportj['dt']=a.dt
     
+    reportj['run_directory'] = run_dir
+    reportj['reference'] = ref
+    
     
     report_file = open("%s/report.json"%run_dir,'w')
     report_file.write(pp.pformat(reportj))
@@ -313,29 +340,130 @@ def _run_optimisation(a):
     plot_file.write("curr_dir = os.path.dirname(__file__) if len(os.path.dirname(__file__))>0 else '.'\n")
     plot_file.write("plot_generation_evolution(parameters, individuals_file_name = '%s/ga_individuals.csv'%curr_dir)\n")
     plot_file.close()
-    
-    
 
     if not a.nogui:
         added =[]
-        for wref in a.weights.keys():
-            ref = wref.split(':')[0]
+        #print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
+        
+        fig = plt.figure()
+        fig.canvas.set_window_title("Simulation of fittest individual from run: %s"%ref)
+        
+        for tref in best_candidate_v.keys():  ##################a.target_data.keys():
+            ref = tref.split(':')[0]
             if not ref in added:
                 added.append(ref)
-                best_candidate_plot = plt.plot(best_candidate_t,best_candidate_v[ref], label="%s - %i evaluations"%(ref,a.max_evaluations))
+                #pynml.print_comment(" - Adding plot of: %s"%ref)
+                plt.plot(best_candidate_t,best_candidate_v[ref], label="%s - %i evaluations"%(ref,a.max_evaluations))
 
         plt.legend()
 
         #plt.ylim(-80.0,80.0)
         plt.xlim(0.0,a.sim_time)
-        plt.title("Models")
+        plt.title("Models %s"%a.prefix)
         plt.xlabel("Time (ms)")
         plt.ylabel("Membrane potential(mV)")
 
-        plt.show()
+        utils.plot_generation_evolution(sim_var.keys(), 
+                                        individuals_file_name = '%s/ga_individuals.csv'%run_dir, 
+                                        target_values=a.known_target_values,
+                                        show_plot_already = a.show_plot_already)
+        
+        if a.show_plot_already:
+            plt.show()
+    
+    return reportj
 
-        utils.plot_generation_evolution(sim_var.keys(), individuals_file_name = '%s/ga_individuals.csv'%run_dir)
 
+def run_2stage_optimization(prefix, 
+                            neuroml_file,
+                            target,
+                            parameters,
+                            max_constraints_1,
+                            max_constraints_2,
+                            min_constraints_1,
+                            min_constraints_2,
+                            delta_constraints,
+                            weights_1,
+                            weights_2,
+                            target_data_1,
+                            target_data_2,
+                            sim_time,
+                            dt,
+                            population_size_1,
+                            population_size_2,
+                            max_evaluations_1,
+                            max_evaluations_2,
+                            num_selected_1,
+                            num_selected_2,
+                            num_offspring_1,
+                            num_offspring_2,
+                            mutation_rate,
+                            num_elites,
+                            simulator,
+                            nogui,
+                            show_plot_already,
+                            seed,
+                            known_target_values,
+                            dry_run = False):
+
+        report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
+                         neuroml_file =     neuroml_file,
+                         target =           target,
+                         parameters =       parameters,
+                         max_constraints =  max_constraints_1,
+                         min_constraints =  min_constraints_1,
+                         weights =          weights_1,
+                         target_data =      target_data_1,
+                         sim_time =         sim_time,
+                         dt =               dt,
+                         population_size =  population_size_1,
+                         max_evaluations =  max_evaluations_1,
+                         num_selected =     num_selected_1,
+                         num_offspring =    num_offspring_1,
+                         mutation_rate =    mutation_rate,
+                         num_elites =       num_elites,
+                         simulator =        simulator,
+                         nogui =            nogui,
+                         show_plot_already = False,
+                         seed =             seed,
+                         known_target_values = known_target_values,
+                         dry_run =          dry_run)
+                         
+        
+        for pi in range(len(parameters)):
+            param = parameters[pi]
+            if max_constraints_2[pi] == 'x':
+                max_constraints_2[pi] = report1['fittest vars'][param]*(1+delta_constraints)
+            if min_constraints_2[pi] == 'x':
+                min_constraints_2[pi] = report1['fittest vars'][param]*(1-delta_constraints)
+               
+        report2 = run_optimisation(prefix = "%s_STAGE2"%prefix, 
+                         neuroml_file =     neuroml_file,
+                         target =           target,
+                         parameters =       parameters,
+                         max_constraints =  max_constraints_2,
+                         min_constraints =  min_constraints_2,
+                         weights =          weights_2,
+                         target_data =      target_data_2,
+                         sim_time =         sim_time,
+                         dt =               dt,
+                         population_size =  population_size_2,
+                         max_evaluations =  max_evaluations_2,
+                         num_selected =     num_selected_2,
+                         num_offspring =    num_offspring_2,
+                         mutation_rate =    mutation_rate,
+                         num_elites =       num_elites,
+                         simulator =        simulator,
+                         nogui =            nogui,
+                         show_plot_already = show_plot_already,
+                         seed =             seed,
+                         known_target_values = known_target_values,
+                         dry_run =          dry_run) 
+                
+        
+        return report1, report2
+                         
+        
 
         
 def main(args=None):
@@ -353,9 +481,10 @@ def parse_dict_arg(dict_arg):
     ret = {}
     entries = str(dict_arg[1:-1]).split(',')
     for e in entries:
-        key = e[:e.rfind(':')]
-        value = e[e.rfind(':')+1:]
-        ret[key] = float(value)
+        if len(e) > 0:
+            key = e[:e.rfind(':')]
+            value = e[e.rfind(':')+1:]
+            ret[key] = float(value)
     #print("Command line argument %s parsed as: %s"%(dict_arg,ret))
     return ret
 

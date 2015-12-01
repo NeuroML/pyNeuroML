@@ -23,7 +23,7 @@ setup(
                             'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main']},
     package_data={
         'pyneuroml': [
-            'lib/jNeuroML-0.7.2-jar-with-dependencies.jar',
+            'lib/jNeuroML-0.7.3-jar-with-dependencies.jar',
             'analysis/LEMS_Test_TEMPLATE.xml',
             'analysis/ChannelInfo_TEMPLATE.html',
             'analysis/ChannelInfo_TEMPLATE.md',
@@ -39,7 +39,7 @@ setup(
         'lxml',
         'pylems',
         'airspeed>=0.4.1',
-        'libNeuroML>=0.2.5',
+        'libNeuroML>=0.2.10',
         'matplotlib'],
     dependency_links=[
       'https://github.com/purcell/airspeed.git',
