@@ -25,6 +25,8 @@ import lems.model.model as lems_model
 import random
 import inspect
 
+JNEUROML_VERSION = '0.7.3'
+
 DEFAULTS = {'v': False,
             'nogui': False,
             'default_java_max_memory': "400M"} 
@@ -286,13 +288,9 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
-<<<<<<< HEAD
-                                 plot, 'jNeuroML')
-=======
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML_NEURON')
->>>>>>> b3d8c2b01eee866df11bd7833006d783986d9ab1
     else:
         return True
     
@@ -384,19 +382,13 @@ def reload_saved_data(lems_file_name,
                    
     #print(results.keys())
         
-<<<<<<< HEAD
-    if plot:
+    if plot and show_plot_already:
         for axi in ax:
             if not hasattr(axi,'used') or not axi.used:
                 axi.axis('off')
         plt.tight_layout()
         plt.show()
         
-=======
-    if plot and show_plot_already:
-        pylab.show()
-
->>>>>>> b3d8c2b01eee866df11bd7833006d783986d9ab1
     return results
                
                         
@@ -445,12 +437,8 @@ def run_jneuroml(pre_args,
      
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
-<<<<<<< HEAD
     jar = os.path.join(script_dir, "lib", 
-                       "jNeuroML-0.7.2-jar-with-dependencies.jar")
-=======
-    jar = os.path.join(script_dir, "lib/jNeuroML-0.7.3-jar-with-dependencies.jar")
->>>>>>> b3d8c2b01eee866df11bd7833006d783986d9ab1
+                       "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION)
     
     output = ''
     
