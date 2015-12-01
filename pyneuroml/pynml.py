@@ -11,6 +11,7 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 
 from __future__ import absolute_import
 import os
+import sys
 import subprocess
 import math
 
@@ -111,7 +112,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
     
     if not os.path.isfile(nml2_file_name):
         print_comment("Unable to find file: %s!" % nml2_file_name, True)
-        exit()
+        sys.exit()
         
     nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
     
@@ -179,7 +180,7 @@ def read_lems_file(lems_file_name):
     
     if not os.path.isfile(lems_file_name):
         print_comment("Unable to find file: %s!"%lems_file_name, True)
-        exit()
+        sys.exit()
         
     model = lems_model.Model(include_includes=False)
 
@@ -463,7 +464,7 @@ def run_jneuroml(pre_args,
                              
         print_comment(output, verbose)
         if exit_on_fail: 
-            exit(-1)
+            sys.exit(-1)
         else:
             return False
         
