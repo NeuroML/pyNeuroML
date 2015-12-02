@@ -440,6 +440,78 @@ def execute_command_in_dir(command, directory, verbose=True):
         return_string = subprocess.Popen(command, cwd=directory, shell=True,
                                      stdout=subprocess.PIPE).communicate()[0]
         return return_string
+    
+    
+def generate_plot(xvalues, 
+                  yvalues, 
+                  title,
+                  labels = None, 
+                  colors = None, 
+                  linestyles = None, 
+                  markers = None, 
+                  xaxis = None, 
+                  yaxis = None, 
+                  grid = False,
+                  show_plot_already=True,
+                  save_figure_to=None):
+                      
+                      
+    from matplotlib import pyplot as plt
+
+    fig = plt.figure()
+    fig.canvas.set_window_title(title)
+            
+    if xaxis:
+        plt.xlabel(xaxis)
+    if yaxis:
+        plt.ylabel(yaxis)
+        
+    if grid:
+        plt.grid('on')
+
+    for i in range(len(xvalues)):
+
+        linestyle = '-' if not linestyles else linestyles[i]
+        label = '' if not labels else labels[i]
+        marker = None if not markers else markers[i]
+        
+        if colors:
+            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, linestyle=linestyle, label=label)
+        else:
+            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, linestyle=linestyle, label=label)
+
+    if labels:
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=3)
+
+    if save_figure_to:
+        plt.savefig(save_figure_to,bbox_inches='tight')
+        
+    if show_plot_already:
+        plt.show()
+        
+'''
+    As usually saved by jLEMS, etc. First column is time (in seconds), multiple ofther columns
+'''
+def reload_standard_dat_file(file_name):
+
+    dat_file = open(file_name)
+    data = {}
+    indeces = []
+    for line in dat_file:
+        words = line.split()
+
+        if not data.has_key('t'):
+            data['t'] = []
+            for i in range(len(words)-1):
+                data[i] = []
+                indeces.append(i)
+        data['t'].append(float(words[0]))
+        for i in range(len(words)-1):
+            data[i].append(float(words[i+1]))
+
+    print("Loaded data from %s; columns: %s"%(file_name, indeces))
+
+    return data, indeces
                               
 
 def main(args=None):

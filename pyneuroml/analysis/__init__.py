@@ -17,6 +17,10 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         spike_threshold_mV=0.,
                                         plot_voltage_traces=False,
                                         plot_if=True,
+                                        plot_iv=False,
+                                        show_plot_already=True, 
+                                        save_if_figure_to=None, 
+                                        save_iv_figure_to=None, 
                                         simulator="jNeuroML"):
                                             
                                             
@@ -56,7 +60,7 @@ def generate_current_vs_frequency_curve(nml2_file,
     
     for i in range(number_cells):
         stim_amp = "%snA"%stims[i]
-        input_id = ("input_%s"%stim_amp).replace('.','_')
+        input_id = ("input_%s"%stim_amp).replace('.','_').replace('-','min')
         pg = nml.PulseGenerator(id=input_id,
                                     delay="0ms",
                                     duration="%sms"%duration,
@@ -96,16 +100,19 @@ def generate_current_vs_frequency_curve(nml2_file,
         results = pynml.run_lems_with_jneuroml(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
-                                                plot=plot_voltage_traces)
+                                                plot=plot_voltage_traces,
+                                                show_plot_already=False)
     elif simulator == "jNeuroML_NEURON":
         results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
-                                                plot=plot_voltage_traces)
+                                                plot=plot_voltage_traces,
+                                                show_plot_already=False)
                                                 
     
     #print(results.keys())
     if_results = {}
+    iv_results = {}
     for i in range(number_cells):
         t = np.array(results['t'])*1000
         v = np.array(results["%s[%i]/v"%(pop.id, i)])*1000
@@ -124,19 +131,45 @@ def generate_current_vs_frequency_curve(nml2_file,
         # print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
         if_results[stims[i]] = freq
         
+        if freq == 0:
+            iv_results[stims[i]] = v[-1]
+        
     if plot_if:
         
-        from matplotlib import pyplot as plt
-        
-        plt.xlabel('Input current (nA)')
-        plt.ylabel('Firing frequency (Hz)')
-        plt.grid('on')
         stims = sorted(if_results.keys())
-        freqs = []
-        for s in stims:
-            freqs.append(if_results[s])
-        plt.plot(stims, freqs, 'o')
-         
+        freqs = [if_results[s] for s in stims]
+            
+        pynml.generate_plot([stims],
+                            [freqs], 
+                            "Frequency versus injected current for: %s"%nml2_file, 
+                            colors = ['k'], 
+                            linestyles=['-'],
+                            markers=['o'],
+                            xaxis = 'Input current (nA)', 
+                            yaxis = 'Firing frequency (Hz)', 
+                            grid = True,
+                            show_plot_already=False,
+                            save_figure_to = save_if_figure_to)
+    if plot_iv:
+        
+        stims = sorted(iv_results.keys())
+        vs = [iv_results[s] for s in stims]
+            
+        pynml.generate_plot([stims],
+                            [vs], 
+                            "Final membrane potential versus injected current for: %s"%nml2_file, 
+                            colors = ['k'], 
+                            linestyles=['-'],
+                            markers=['o'],
+                            xaxis = 'Input current (nA)', 
+                            yaxis = 'Membrane potential (mV)', 
+                            grid = True,
+                            show_plot_already=False,
+                            save_figure_to = save_iv_figure_to)
+    
+    if show_plot_already:
+        from matplotlib import pyplot as plt
         plt.show()
+        
         
     return if_results

@@ -430,7 +430,7 @@ def plot_steady_state(channel,a,results,grid=True):
 def save_fig(name):
     overview_dir = make_overview_dir()
     png_path = os.path.join(overview_dir,name)
-    plt.savefig(png_path)
+    plt.savefig(png_path,bbox_inches='tight')
 
 
 def make_overview_dir():
