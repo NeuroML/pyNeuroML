@@ -43,7 +43,7 @@ setup(
         'matplotlib'],
     dependency_links=[
       'https://github.com/purcell/airspeed.git',
-      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML-0.2.5'
+      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML-0.2.10'
     ],
     classifiers = [
         'Intended Audience :: Science/Research',

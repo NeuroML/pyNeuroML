@@ -51,3 +51,5 @@ i386
 time.dat
 examples/old
 examples/results/*.dat
+*.dat
+*.xml
