@@ -18,6 +18,10 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         plot_voltage_traces=False,
                                         plot_if=True,
                                         plot_iv=False,
+                                        xlim_if =              None,
+                                        ylim_if =              None,
+                                        xlim_iv =              None,
+                                        ylim_iv =              None,
                                         show_plot_already=True, 
                                         save_if_figure_to=None, 
                                         save_iv_figure_to=None, 
@@ -137,32 +141,39 @@ def generate_current_vs_frequency_curve(nml2_file,
     if plot_if:
         
         stims = sorted(if_results.keys())
+        stims_pA = [ii*1000 for ii in stims]
+        
         freqs = [if_results[s] for s in stims]
             
-        pynml.generate_plot([stims],
+        pynml.generate_plot([stims_pA],
                             [freqs], 
                             "Frequency versus injected current for: %s"%nml2_file, 
                             colors = ['k'], 
                             linestyles=['-'],
                             markers=['o'],
-                            xaxis = 'Input current (nA)', 
-                            yaxis = 'Firing frequency (Hz)', 
+                            xaxis = 'Input current (pA)', 
+                            yaxis = 'Firing frequency (Hz)',
+                            xlim = xlim_if,
+                            ylim = ylim_if,
                             grid = True,
                             show_plot_already=False,
                             save_figure_to = save_if_figure_to)
     if plot_iv:
         
         stims = sorted(iv_results.keys())
+        stims_pA = [ii*1000 for ii in sorted(iv_results.keys())]
         vs = [iv_results[s] for s in stims]
             
-        pynml.generate_plot([stims],
+        pynml.generate_plot([stims_pA],
                             [vs], 
                             "Final membrane potential versus injected current for: %s"%nml2_file, 
                             colors = ['k'], 
                             linestyles=['-'],
                             markers=['o'],
-                            xaxis = 'Input current (nA)', 
+                            xaxis = 'Input current (pA)', 
                             yaxis = 'Membrane potential (mV)', 
+                            xlim = xlim_iv,
+                            ylim = ylim_iv,
                             grid = True,
                             show_plot_already=False,
                             save_figure_to = save_iv_figure_to)

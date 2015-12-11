@@ -503,6 +503,8 @@ def generate_plot(xvalues,
                   markers = None, 
                   xaxis = None, 
                   yaxis = None, 
+                  xlim = None,
+                  ylim = None,
                   grid = False,
                   show_plot_already=True,
                   save_figure_to=None):
@@ -534,6 +536,11 @@ def generate_plot(xvalues,
 
     if labels:
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=3)
+        
+    if xlim:
+        plt.xlim(xlim)
+    if ylim:
+        plt.ylim(ylim)
 
     if save_figure_to:
         plt.savefig(save_figure_to,bbox_inches='tight')
