@@ -506,6 +506,7 @@ def generate_plot(xvalues,
                   xlim = None,
                   ylim = None,
                   grid = False,
+                  cols_in_legend_box=3,
                   show_plot_already=True,
                   save_figure_to=None):
                       
@@ -535,7 +536,7 @@ def generate_plot(xvalues,
             plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, linestyle=linestyle, label=label)
 
     if labels:
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=3)
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
         
     if xlim:
         plt.xlim(xlim)
