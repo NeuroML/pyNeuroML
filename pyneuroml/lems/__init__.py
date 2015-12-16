@@ -14,9 +14,11 @@ def generate_lems_file_for_neuroml(sim_id,
                                    lems_file_name,
                                    target_dir,
                                    gen_plots_for_all_v = True,
-                                   gen_plots_for_only = [],
+                                   gen_plots_for_only = [],   #  List of populations
+                                   gen_plots_for_quantities = {},   #  Dict with displays vs lists of quantity paths
                                    gen_saves_for_all_v = True,
-                                   gen_saves_for_only = [],
+                                   gen_saves_for_only = [],  #  List of populations
+                                   gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
                                    copy_neuroml = True,
                                    seed=None):
                                        
@@ -39,6 +41,7 @@ def generate_lems_file_for_neuroml(sim_id,
         print_comment_v("Including existing NeuroML file (%s) as: %s"%(neuroml_file, rel_nml_file))
         ls.include_neuroml2_file(rel_nml_file, include_included=True, relative_to_dir=os.path.abspath(target_dir))
     else:
+        print_comment_v("Copying NeuroML file (%s) to: %s (%s)"%(neuroml_file, target_dir, os.path.abspath(target_dir)))
         if os.path.abspath(os.path.dirname(neuroml_file))!=os.path.abspath(target_dir):
             shutil.copy(neuroml_file, target_dir)
         
@@ -92,10 +95,25 @@ def generate_lems_file_for_neuroml(sim_id,
                         ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
                         quantities_saved.append(quantity)
                         
+    for display in gen_plots_for_quantities.keys():
+        
+        quantities = gen_plots_for_quantities[display]
+        ls.create_display(display, "Plots of %s"%display, "-90", "50")
+        for q in quantities:
+            ls.add_line_to_display(display, safe_variable(q), q, "1", get_next_hex_color())
+            
+    for file_name in gen_saves_for_quantities.keys():
+        
+        quantities = gen_saves_for_quantities[file_name]
+        ls.create_output_file(file_name, file_name)
+        for q in quantities:
+            ls.add_column_to_output_file(file_name, safe_variable(q), q)
+                        
         
     ls.save_to_file(file_name=file_name_full)
     
     return quantities_saved
+
 
 # Mainly for NEURON etc.
 def safe_variable(quantity):
