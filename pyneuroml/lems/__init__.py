@@ -14,9 +14,11 @@ def generate_lems_file_for_neuroml(sim_id,
                                    lems_file_name,
                                    target_dir,
                                    gen_plots_for_all_v = True,
+                                   plot_all_segments = False,
                                    gen_plots_for_only = [],   #  List of populations
                                    gen_plots_for_quantities = {},   #  Dict with displays vs lists of quantity paths
                                    gen_saves_for_all_v = True,
+                                   save_all_segments = False,
                                    gen_saves_for_only = [],  #  List of populations
                                    gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
                                    copy_neuroml = True,
@@ -32,7 +34,7 @@ def generate_lems_file_for_neuroml(sim_id,
     
     ls = LEMSSimulation(sim_id, duration, dt, target)
     
-    nml_doc = read_neuroml2_file(neuroml_file)
+    nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=True)
     
     quantities_saved = []
     
@@ -69,21 +71,39 @@ def generate_lems_file_for_neuroml(sim_id,
         
         for network in nml_doc.networks:
             for population in network.populations:
-                size = population.size
-                component = population.component
                 
                 quantity_template = "%s[%i]/v"
+                component = population.component
+                size = population.size
+                cell = None
+                segment_ids = []
+                if plot_all_segments:
+                    for c in nml_doc.cells:
+                        if c.id == component:
+                            cell = c
+                    for segment in cell.morphology.segments:
+                        segment_ids.append(segment.id)
+                    segment_ids.sort()
+                        
                 if population.type and population.type == 'populationList':
                     quantity_template = "%s/%i/"+component+"/v"
+                    size = len(population.instances)
                     
                 if gen_plots_for_all_v or population.id in gen_plots_for_only:
                     print_comment('Generating %i plots for %s in population %s'%(size, component, population.id))
    
                     disp0 = 'DispPop__%s'%population.id
                     ls.create_display(disp0, "Voltages of %s"%disp0, "-90", "50")
+                    
                     for i in range(size):
-                        quantity = quantity_template%(population.id, i)
-                        ls.add_line_to_display(disp0, "v %s"%safe_variable(quantity), quantity, "1mV", get_next_hex_color())
+                        if plot_all_segments:
+                            quantity_template_seg = "%s/%i/"+component+"/%i/v"
+                            for segment_id in segment_ids:
+                                quantity = quantity_template_seg%(population.id, i, segment_id)
+                                ls.add_line_to_display(disp0, "v in seg %i %s"%(segment_id,safe_variable(quantity)), quantity, "1mV", get_next_hex_color())
+                        else:
+                            quantity = quantity_template%(population.id, i)
+                            ls.add_line_to_display(disp0, "v %s"%safe_variable(quantity), quantity, "1mV", get_next_hex_color())
                 
                 if gen_saves_for_all_v or population.id in gen_saves_for_only:
                     print_comment('Saving %i values of v for %s in population %s'%(size, component, population.id))
@@ -91,9 +111,16 @@ def generate_lems_file_for_neuroml(sim_id,
                     of0 = 'Volts_file__%s'%population.id
                     ls.create_output_file(of0, "%s.%s.v.dat"%(sim_id,population.id))
                     for i in range(size):
-                        quantity = quantity_template%(population.id, i)
-                        ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
-                        quantities_saved.append(quantity)
+                        if save_all_segments:
+                            quantity_template_seg = "%s/%i/"+component+"/%i/v"
+                            for segment_id in segment_ids:
+                                quantity = quantity_template_seg%(population.id, i, segment_id)
+                                ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
+                                quantities_saved.append(quantity)
+                        else:
+                            quantity = quantity_template%(population.id, i)
+                            ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
+                            quantities_saved.append(quantity)
                         
     for display in gen_plots_for_quantities.keys():
         

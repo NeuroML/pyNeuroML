@@ -117,13 +117,14 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
         sys.exit()
         
     nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
+    base_path = os.path.dirname(os.path.realpath(nml2_file_name))
     
     if include_includes:
         print_comment('Including included files (included already: %s)' \
                       % already_included)
         
         for include in nml2_doc.includes:
-            incl_loc = '%s/%s'%(os.path.dirname(nml2_file_name),include.href)
+            incl_loc = os.path.relpath(include.href,base_path)
             if incl_loc not in already_included:
                 print_comment("Loading included NeuroML2 file: %s" % incl_loc, 
                               verbose)
