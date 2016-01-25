@@ -197,7 +197,10 @@ def get_ion_color(ion):
 def get_state_color(s):
     col='#000000'
     if s.startswith('m'): col='#FF0000'
+    if s.startswith('k'): col='#FF0000'
+    if s.startswith('r'): col='#FF0000'
     if s.startswith('h'): col='#00FF00'
+    if s.startswith('l'): col='#00FF00'
     if s.startswith('n'): col='#0000FF'
     if s.startswith('a'): col='#FF0000'
     if s.startswith('b'): col='#00FF00'
