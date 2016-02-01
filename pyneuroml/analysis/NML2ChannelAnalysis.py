@@ -197,7 +197,10 @@ def get_ion_color(ion):
 def get_state_color(s):
     col='#000000'
     if s.startswith('m'): col='#FF0000'
+    if s.startswith('k'): col='#FF0000'
+    if s.startswith('r'): col='#FF0000'
     if s.startswith('h'): col='#00FF00'
+    if s.startswith('l'): col='#00FF00'
     if s.startswith('n'): col='#0000FF'
     if s.startswith('a'): col='#FF0000'
     if s.startswith('b'): col='#00FF00'
@@ -321,13 +324,13 @@ def process_channel_file(channel_file,a):
 
 def get_channel_gates(channel):
     channel_gates = []
-    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
+    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs', 'gate_hh_instantaneouses']:
         channel_gates += [g.id for g in getattr(channel,gates)]
     return channel_gates
 
 def get_conductance_expression(channel):
     expr = 'g = gmax '
-    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
+    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs', 'gate_hh_instantaneouses']:
         for g in getattr(channel,gates):
             instances = int(g.instances)
             expr += '* %s<sup>%s</sup> '%(g.id, g.instances) if instances >1 else '* %s '%(g.id)
