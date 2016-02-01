@@ -124,9 +124,9 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
                       % already_included)
         
         for include in nml2_doc.includes:
-            incl_loc = os.path.relpath(include.href,base_path)
+            incl_loc = os.path.abspath(os.path.join(base_path, include.href))
             if incl_loc not in already_included:
-                print_comment("Loading included NeuroML2 file: %s" % incl_loc, 
+                print_comment("Loading included NeuroML2 file: %s (base: %s, resolved: %s)" % (include.href, base_path, incl_loc), 
                               verbose)
                 nml2_sub_doc = read_neuroml2_file(incl_loc, True, 
                     verbose=verbose, already_included=already_included)
@@ -335,7 +335,8 @@ def reload_saved_data(lems_file_name,
         columns = min(3,n_output_files)
         fig,ax = plt.subplots(rows,columns,sharex=True,
                               figsize=(4*columns,4*rows))
-        ax = ax.ravel()
+        if n_output_files>1:
+            ax = ax.ravel()
     
     for i,of in enumerate(output_files):
         results['t'] = []
@@ -365,21 +366,28 @@ def reload_saved_data(lems_file_name,
             
             legend = False
             for key in cols:
-                ax[i].set_xlabel('Time (ms)')
-                ax[i].set_ylabel('(SI units...)')
-                ax[i].xaxis.grid(True)
-                ax[i].yaxis.grid(True)
+                if n_output_files>1:
+                    ax_ = ax[i]
+                else:
+                    ax_ = ax
+                ax_.set_xlabel('Time (ms)')
+                ax_.set_ylabel('(SI units...)')
+                ax_.xaxis.grid(True)
+                ax_.yaxis.grid(True)
 
                 if key != 't':
-                    ax[i].plot(results['t'], results[key], label=key)
+                    ax_.plot(results['t'], results[key], label=key)
                     print_comment("Adding trace for: %s, from: %s" \
                                   % (key,file_name), verbose)
-                    ax[i].used = True
+                    ax_.used = True
                     legend = True
                 
                 if legend:
-                    ax[i].legend(loc='upper right', fancybox=True, shadow=True, 
-                                 ncol=4)#, bbox_to_anchor=(0.5, -0.05)) 
+                    if n_output_files>1:
+                        ax_.legend(loc='upper right', fancybox=True, shadow=True, 
+                                     ncol=4)#, bbox_to_anchor=(0.5, -0.05))
+                    else:
+                        ax_.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=4) 
                    
     #print(results.keys())
         

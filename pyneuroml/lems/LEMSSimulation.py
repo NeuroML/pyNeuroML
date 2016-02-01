@@ -11,6 +11,8 @@ from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
 from pyneuroml.pynml import print_comment
+from pyneuroml.pynml import print_comment_v
+from pyneuroml.pynml import get_next_hex_color
 
 class LEMSSimulation():
     
@@ -32,6 +34,13 @@ class LEMSSimulation():
         
         if target:
             self.lems_info['target'] = target
+            
+            
+    def __setattr__(self, attr, value):
+        if attr in self.lems_info.keys():
+            self.lems_info[attr] = value
+        else:
+            raise Exception("There is not a field: %s in LEMSSimulation"%attr)
         
         
     def assign_simulation_target(self, target):
@@ -39,11 +48,14 @@ class LEMSSimulation():
         
         
     def include_neuroml2_file(self, nml2_file_name, include_included=True, relative_to_dir='.'):
+        full_path = os.path.abspath(relative_to_dir+'/'+nml2_file_name)
+        base_path = os.path.dirname(full_path)
+        print_comment_v("Including in generated LEMS file: %s (%s)"%(nml2_file_name, full_path))
         self.lems_info['include_files'].append(nml2_file_name)
         if include_included:
-            cell = read_neuroml2_file(relative_to_dir+'/'+nml2_file_name)
+            cell = read_neuroml2_file(full_path)
             for include in cell.includes:
-                self.include_neuroml2_file(include.href, include_included=True, relative_to_dir=relative_to_dir)
+                self.include_neuroml2_file(include.href, include_included=True, relative_to_dir=base_path)
         
         
     def include_lems_file(self, lems_file_name, include_included=True):
@@ -73,7 +85,7 @@ class LEMSSimulation():
         of['columns'] = []
         
         
-    def add_line_to_display(self, display_id, line_id, quantity, scale, color, timeScale="1ms"):
+    def add_line_to_display(self, display_id, line_id, quantity, scale=1, color=None, timeScale="1ms"):
         disp = None
         for d in self.lems_info['displays']:
             if d['id'] == display_id:
@@ -84,7 +96,7 @@ class LEMSSimulation():
         line['id'] = line_id
         line['quantity'] = quantity
         line['scale'] = scale
-        line['color'] = color
+        line['color'] = color if color else get_next_hex_color()
         line['time_scale'] = timeScale
         
         
