@@ -437,6 +437,10 @@ def run_jneuroml(pre_args,
        
      
     script_dir = os.path.dirname(os.path.realpath(__file__))
+    if 'nogui' in post_args:
+        pre_jar = " -Djava.awt.headless=true"
+    else:
+        pre_jar = ""
 
     jar = os.path.join(script_dir, "lib", 
                        "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION)
@@ -444,8 +448,8 @@ def run_jneuroml(pre_args,
     output = ''
     
     try:
-        output = execute_command_in_dir("java -Xmx%s -jar  '%s' %s %s %s" %
-                                        (max_memory, jar, pre_args, target_file, 
+        output = execute_command_in_dir("java -Xmx%s %s -jar  '%s' %s %s %s" %
+                                        (max_memory, pre_jar, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, 
                                         verbose=verbose)
     except:
