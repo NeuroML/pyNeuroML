@@ -46,16 +46,17 @@ Uses similar command line interface to jNeuroML, i.e. based on jnml
 Try:
 
     pynml -h
+   
 
 **Access to export & import options of jNeuroML**
 
-All export & import options of jNeuroML available through easy command line interface (coming soon...) & through Python methods.
+All export & import options of jNeuroML available through easy command line interface (see [here](https://github.com/NeuroML/pyNeuroML/issues/21) for progress) & through Python methods.
 
 Example of export of NeuroML2/LEMS to NEURON and execution of generated code using single method is [here](https://github.com/NeuroML/pyNeuroML/blob/master/examples/run_jneuroml_plot_matplotlib.py#L21).
 
 **3) Helper Python scripts**
 
-Lots of helper scripts for commonly used NeuroML2 functions, e.g.
+Lots of helper scripts for commonly used functions, e.g. [generating a firing frequency vs injected current plot](https://github.com/NeuroML/pyNeuroML/blob/master/pyneuroml/analysis/__init__.py#L8).
 
 **4) Analysis of ion channels**
 
@@ -66,6 +67,8 @@ Generation of plots of activation rates for ion channels from NeuroML2 channel f
 Generation of plots of activation rates for ion channels from NEURON mod file ([example](https://github.com/NeuroML/pyNeuroML/blob/master/examples/analyseNaMod.sh)):
 
     pynml-modchananalysis NaConductance -modFile NaConductance.mod
+    
+See [here](http://www.opensourcebrain.org/docs#Converting_To_NeuroML2) for more.
 
 **5) Home for existing functionality distributed in various places**
 
@@ -77,7 +80,7 @@ Scripts for converting NEURON to NeuroML2
 	
 - Export morphologies (plus channels, soon). See [here](https://github.com/NeuroML/pyNeuroML/blob/master/examples/export_neuroml2.py).
 
-- mod files - make best guess at initial NeuroML2 form
+- mod files - make best guess at initial NeuroML2 form...
 	
 **7) Planned functionality**
 
