@@ -31,6 +31,7 @@ class LEMSSimulation():
         self.lems_info['include_files'] = []
         self.lems_info['displays'] = []
         self.lems_info['output_files'] = []
+        self.lems_info['event_output_files'] = []
         
         if target:
             self.lems_info['target'] = target
@@ -84,6 +85,13 @@ class LEMSSimulation():
         of['file_name'] = file_name
         of['columns'] = []
         
+    def create_event_output_file(self, id, file_name):
+        eof = {}
+        self.lems_info['event_output_files'].append(eof)
+        eof['id'] = id
+        eof['file_name'] = file_name
+        eof['selections'] = []
+        
         
     def add_line_to_display(self, display_id, line_id, quantity, scale=1, color=None, timeScale="1ms"):
         disp = None
@@ -110,6 +118,18 @@ class LEMSSimulation():
         of['columns'].append(column)
         column['id'] = column_id
         column['quantity'] = quantity
+        
+    def add_selection_to_event_output_file(self, event_output_file_id, event_id, select, event_port):
+        eof = None
+        for o in self.lems_info['event_output_files']:
+            if o['id'] == event_output_file_id:
+                eof = o
+                
+        selection = {}
+        eof['selections'].append(selection)
+        selection['id'] = event_id
+        selection['select'] = select
+        selection['event_port'] = event_port
         
     
     def to_xml(self):
