@@ -16,6 +16,7 @@ import subprocess
 import math
 
 from . import __version__
+from . import JNEUROML_VERSION
 
 import neuroml.loaders as loaders
 import neuroml.writers as writers
@@ -24,8 +25,6 @@ import lems.model.model as lems_model
 
 import random
 import inspect
-
-JNEUROML_VERSION = '0.7.3'
 
 DEFAULTS = {'v': False,
             'nogui': False,
