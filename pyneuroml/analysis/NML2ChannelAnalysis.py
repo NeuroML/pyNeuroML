@@ -14,7 +14,7 @@ import re
 
 import neuroml.loaders as loaders
 
-from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v
+from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v, read_neuroml2_file
 
 import airspeed
 
@@ -245,8 +245,15 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
         target_voltages_map.append(info)
+        
+    includes = get_includes_from_channel_file(channel_file)
+    includes_relative = []
+    base_path = os.path.dirname(channel_file)
+    for inc in includes:
+        includes_relative.append(os.path.abspath(base_path+'/'+inc))
 
     model = {"channel_file":        channel_file, 
+             "includes":            includes_relative, 
              "channel":             channel, 
              "target_voltages" :    target_voltages_map,
              "clamp_delay":         clamp_delay,
@@ -276,7 +283,7 @@ def convert_case(name):
 
 
 def get_channels_from_channel_file(channel_file):
-    doc = loaders.NeuroMLLoader.load(channel_file)
+    doc = read_neuroml2_file(channel_file, include_includes=True, verbose=False, already_included=[])
     channels = list(doc.ion_channel_hhs.__iter__()) + \
                list(doc.ion_channel.__iter__())
     for channel in channels:
@@ -284,6 +291,13 @@ def get_channels_from_channel_file(channel_file):
         if not hasattr(channel,'notes'):
             setattr(channel,'notes','')
     return channels
+
+def get_includes_from_channel_file(channel_file):
+    doc = read_neuroml2_file(channel_file)
+    includes = []
+    for incl in doc.includes:
+        includes.append(incl.href)
+    return includes
 
 
 def process_channel_file(channel_file,a):
@@ -303,10 +317,10 @@ def process_channel_file(channel_file,a):
         else:
             new_lems_file = make_lems_file(channel,a)
             if not a.norun:
-                results = run_lems_file(new_lems_file,a)        
+                results = run_lems_file(new_lems_file,a.v)        
 
             if a.iv_curve:
-                iv_data = compute_iv_curve(channel,a,results)
+                iv_data = compute_iv_curve(channel,(a.clamp_delay + a.clamp_duration),results)
             else:
                 iv_data = None
 
@@ -354,12 +368,12 @@ def make_lems_file(channel,a):
     return new_lems_file
 
 
-def run_lems_file(lems_file,a):
+def run_lems_file(lems_file,verbose):
     results = run_lems_with_jneuroml(lems_file, 
                                      nogui=True, 
                                      load_saved_data=True, 
                                      plot=False, 
-                                     verbose=a.v)
+                                     verbose=verbose)
     return results
 
 
@@ -443,7 +457,7 @@ def make_overview_dir():
     return overview_dir
 
 
-def compute_iv_curve(channel,a,results,grid=True):                  
+def compute_iv_curve(channel,end_time_ms,results,grid=True):                  
     # Based on work by Rayner Lucas here: 
     # https://github.com/openworm/
     # BlueBrainProjectShowcase/blob/master/
@@ -472,8 +486,7 @@ def compute_iv_curve(channel,a,results,grid=True):
         i_max = -1*sys.float_info.min
         i_min = sys.float_info.min
         i_steady[voltage] = None
-        t_steady_end = (a.clamp_delay + \
-                        a.clamp_duration)/1000.0
+        t_steady_end = end_time_ms/1000.0
         for line in i_file:
             t = float(line.split()[0])
             times[voltage].append(t)

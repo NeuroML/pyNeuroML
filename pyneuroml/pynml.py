@@ -120,7 +120,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
     
     if include_includes:
         print_comment('Including included files (included already: %s)' \
-                      % already_included)
+                      % already_included, verbose)
         
         for include in nml2_doc.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, include.href))

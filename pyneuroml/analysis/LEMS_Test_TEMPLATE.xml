@@ -9,6 +9,9 @@
     <Include file="Simulation.xml"/>
 
     <Include file="${channel_file}"/>
+#foreach ($inc in $includes)##
+    <Include file="${inc}"/>
+#end
     
     <!-- These may eventually be moved to core NeuroML definition files -->
     
