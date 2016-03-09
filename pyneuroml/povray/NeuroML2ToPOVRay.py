@@ -9,14 +9,11 @@
 #
 #
  
-import sys
 import random
 
 import argparse
 
-import neuroml.loaders as loaders
-
-import os
+from pyneuroml import pynml
 
 _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
@@ -48,6 +45,16 @@ def process_args():
                         action='store_true',
                         default=False,
                         help="If this is specified, generate a ini file for generating a sequence of frames for a movie of the 3D structure")
+                        
+    parser.add_argument('-conns',
+                        action='store_true',
+                        default=False,
+                        help="If this is specified, show the connections present in the network with lines (under development)")
+                        
+    parser.add_argument('-v',
+                        action='store_true',
+                        default=False,
+                        help="Verbose output")
 
     parser.add_argument('-frames', 
                         type=int,
@@ -137,24 +144,6 @@ POV-Ray file generated from NeuroML network
 
 background {rgbt %s}
 
-light_source {
-  <1500,200,1500>
-  color rgb <1,1,1>
-}
-
-light_source {
-  <-500,-200,500>
-  color rgb <1,1,1>
-}
-light_source {
-  <500,-200,-500>
-  color rgb <1,1,1>
-}
-light_source {
-  <-1500,200,-1500>
-  color rgb <1,1,1>
-}
-
 
     \n''' ###    end of header
 
@@ -177,17 +166,12 @@ light_source {
     print("Converting XML file: %s to %s"%(xmlfile, pov_file_name))
 
 
-    nml_doc = loaders.NeuroMLLoader.load(xmlfile)
-    root_dir = os.path.abspath(os.path.dirname(xmlfile))
+    nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, verbose=args.v)
 
     cell_elements = []
     cell_elements.extend(nml_doc.cells)
+    cell_elements.extend(nml_doc.cell2_ca_poolses)
     
-    for include in nml_doc.includes:
-        inc_file = include.href
-        inc_doc = loaders.NeuroMLLoader.load(root_dir+"/"+inc_file)
-        cell_elements.extend(inc_doc.cells)
-        
     
     minXc = 1e9
     minYc = 1e9
@@ -284,13 +268,13 @@ light_source {
         pov_file.write("#include \""+cf+"\"\n\n")
         pov_file.write("#include \""+nf+"\"\n\n")
 
-
+    positions = {}
     popElements = nml_doc.networks[0].populations
 
     print("There are %i populations in the file"%len(popElements))
 
     for pop in popElements:
-
+        
         name = pop.id
         celltype = pop.component
         instances = pop.instances
@@ -300,27 +284,18 @@ light_source {
         print(info)
 
         colour = "1"
-        '''
-        if pop.annotation:
-            print dir(pop.annotation)
-            print pop.annotation.anytypeobjs_
-            print pop.annotation.member_data_items_[0].name
-            print dir(pop.annotation.member_data_items_[0])
-            for prop in pop.annotation.anytypeobjs_:
-                print prop
+        
+        for prop in pop.properties:
 
-                if len(prop.getElementsByTagName('meta:tag'))>0 and prop.getElementsByTagName('meta:tag')[0].childNodes[0].data == 'color':
-                    #print prop.getElementsByTagName('meta:tag')[0].childNodes
-                    colour = prop.getElementsByTagName('meta:value')[0].childNodes[0].data
-                    colour = colour.replace(" ", ",")
-                elif prop.hasAttribute('tag') and prop.getAttribute('tag') == 'color':
-                    colour = prop.getAttribute('value')
-                    colour = colour.replace(" ", ",")
-                print "Colour determined to be: "+colour
-        '''
-
+            if prop.tag == 'color':
+                colour = prop.value
+                colour = colour.replace(" ", ",")
+                #print "Colour determined to be: "+colour
+        
         net_file.write("\n\n/* "+info+" */\n\n")
 
+        pop_positions = {}
+        
         for instance in instances:
 
             location = instance.location
@@ -330,6 +305,7 @@ light_source {
             x = float(location.x)
             y = float(location.y)
             z = float(location.z)
+            pop_positions[id] = '<%s,%s,%s>'%(x,y,z)
 
             if x+minXc<minX: minX=x+minXc
             if y+minYc<minY: minY=y+minYc
@@ -350,6 +326,8 @@ light_source {
             net_file.write("\n    //%s_%s\n"%(name, id)) 
 
             net_file.write("}\n")
+        
+        positions[name] = pop_positions
             
         if len(instances) == 0 and int(pop.size>0):
             
@@ -405,8 +383,22 @@ light_source {
 
             net_file.write("}\n")
             
-
-
+    if False and args.conns: # false because segment specific connections not implemented yet... i.e. connections from dends to axons...
+        for projection in nml_doc.networks[0].projections:
+            pre = projection.presynaptic_population
+            post = projection.postsynaptic_population
+            for connection in projection.connections:
+                pre_cell = int(connection.pre_cell_id.split("/")[2])
+                post_cell = int(connection.post_cell_id.split("/")[2])
+                pre_loc = positions[pre][pre_cell]
+                post_loc = positions[post][post_cell]
+                net_file.write("// Connection from %s:%s %s -> %s:%s %s\n"%(pre, pre_cell, pre_loc, post, post_cell, post_loc)) 
+                net_file.write("cylinder{ %s, %s, .1  pigment{color Grey}}\n\n"%(pre_loc, post_loc))
+                #net_file.write("blob {\n    threshold .65\n    sphere { %s, .9, 10 pigment {Blue} }\n"%(pre_loc))
+                #net_file.write("    cylinder{ %s, %s, .4, 1 }\n"%(pre_loc, post_loc))
+                #net_file.write("    sphere { %s,5, 10 pigment {Green} }\n    finish { phong 1 }\n}\n\n"%(post_loc))
+        
+        
     plane = '''
 plane {
    y, vv(-1)
@@ -435,6 +427,27 @@ plane {
 #macro ww(xx)
     0.5 * (maxZ *(1+xx) + minZ*(1-xx))
 #end
+
+light_source {
+  <uu(5),uu(2),uu(5)>
+  color rgb <1,1,1>
+  
+}
+light_source {
+  <uu(-5),uu(2),uu(-5)>
+  color rgb <1,1,1>
+  
+}
+light_source {
+  <uu(5),uu(-2),uu(-5)>
+  color rgb <1,1,1>
+  
+}
+light_source {
+  <uu(-5),uu(-2),uu(5)>
+  color rgb <1,1,1>
+}
+
 
 // Trying to view box
 camera {
