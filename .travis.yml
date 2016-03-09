@@ -1,7 +1,7 @@
 language: python
 
 python: 
-  - "2.6"
+  # - "2.6" not supported by latest libNeuroML, due to generateds.py issue with 2.6
   - "2.7"
   #- "3.4" # should work...
   
