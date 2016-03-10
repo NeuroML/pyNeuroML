@@ -19,6 +19,7 @@ _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
 _GREY = "<0.85,0.85,0.85,0.55>"
 
+_DUMMY_CELL = 'DUMMY_CELL'
 
 def process_args():
     """ 
@@ -222,13 +223,13 @@ background {rgbt %s}
             z = float(distal.z)
             r = max(float(distal.diameter)/2.0, args.mindiam)
 
-            if x<minXc: minXc=x
-            if y<minYc: minYc=y
-            if z<minZc: minZc=z
+            if x-r<minXc: minXc=x-r
+            if y-r<minYc: minYc=y-r
+            if z-r<minZc: minZc=z-r
 
-            if x>maxXc: maxXc=x
-            if y>maxYc: maxYc=y
-            if z>maxZc: maxZc=z
+            if x+r>maxXc: maxXc=x+r
+            if y+r>maxYc: maxYc=y+r
+            if z+r>maxZc: maxZc=z+r
 
             distalpoint = "<%f, %f, %f>, %f "%(x,y,z,r)
 
@@ -267,6 +268,15 @@ background {rgbt %s}
     if splitOut:
         pov_file.write("#include \""+cf+"\"\n\n")
         pov_file.write("#include \""+nf+"\"\n\n")
+        
+    pov_file.write('''\n/*\n  Defining a dummy cell to use when cell in population is not found in NeuroML file...\n*/\n#declare %s = 
+union {
+    sphere {
+        <0.000000, 0.000000, 0.000000>, 5.000000 
+    }
+    pigment { color rgb <1,0,0> }
+}\n'''%_DUMMY_CELL)
+
 
     positions = {}
     popElements = nml_doc.networks[0].populations
@@ -296,12 +306,23 @@ background {rgbt %s}
 
         pop_positions = {}
         
+        if not celltype in declaredcells:
+            cell_definition = _DUMMY_CELL  
+            minXc = 0
+            minYc = 0
+            minZc = 0
+            maxXc = 0
+            maxYc = 0
+            maxZc = 0
+        else:
+            cell_definition = declaredcells[celltype]
+        
         for instance in instances:
 
             location = instance.location
             id = instance.id
             net_file.write("object {\n")
-            net_file.write("    %s\n"%declaredcells[celltype])
+            net_file.write("    %s\n"%cell_definition)
             x = float(location.x)
             y = float(location.y)
             z = float(location.z)
@@ -358,7 +379,7 @@ background {rgbt %s}
 
 
             net_file.write("object {\n")
-            net_file.write("    %s\n"%declaredcells[celltype])
+            net_file.write("    %s\n"%cell_definition)
             x = 0
             y = 0
             z = 0
