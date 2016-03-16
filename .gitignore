@@ -21,6 +21,7 @@
 /examples/test.level1.xml
 /examples/html
 /examples/channel_summary
+/examples/input*.mod
 /examples/NT_*
 .idea
 
