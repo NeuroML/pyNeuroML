@@ -25,7 +25,8 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         show_plot_already=True, 
                                         save_if_figure_to=None, 
                                         save_iv_figure_to=None, 
-                                        simulator="jNeuroML"):
+                                        simulator="jNeuroML",
+                                        include_included=True):
                                             
                                             
     from pyelectro.analysis import max_min
@@ -39,7 +40,7 @@ def generate_current_vs_frequency_curve(nml2_file,
     duration = analysis_duration+analysis_delay
     ls = LEMSSimulation(sim_id, duration, dt)
     
-    ls.include_neuroml2_file(nml2_file)
+    ls.include_neuroml2_file(nml2_file, include_included=include_included)
     
     stims = []
     amp = start_amp_nA
