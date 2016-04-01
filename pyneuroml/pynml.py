@@ -359,9 +359,11 @@ def reload_saved_data(lems_file_name,
                
 
         if plot:
-            fig.canvas.set_window_title("Data loaded from %s%s" \
+            info = "Data loaded from %s%s" \
                                         % (file_name, ' (%s)' % simulator 
-                                                      if simulator else ''))
+                                                      if simulator else '')
+            print_comment_v("Reloading: %s"%info)
+            fig.canvas.set_window_title(info)
             
             legend = False
             for key in cols:

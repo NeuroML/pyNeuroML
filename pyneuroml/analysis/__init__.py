@@ -3,6 +3,7 @@ from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
 from pyneuroml.pynml import print_comment_v
+from pyneuroml.lems import generate_lems_file_for_neuroml
 
 
 def generate_current_vs_frequency_curve(nml2_file, 
@@ -185,3 +186,91 @@ def generate_current_vs_frequency_curve(nml2_file,
         
         
     return if_results
+
+
+def analyse_spiketime_vs_dt(nml2_file, 
+                            target,
+                            duration,
+                            simulator,
+                            cell_v_path,
+                            dts,
+                            verbose=False,
+                            spike_threshold_mV = 0,
+                            show_plot_already=True):
+                                
+    from pyelectro.analysis import max_min
+    
+    all_results = {}
+    
+    for dt in dts:
+        if verbose:
+            print_comment_v(" == Generating simulation for dt = %s ms"%dt)
+        ref = str("Sim_dt_%s"%dt).replace('.','_')
+        lems_file_name = "LEMS_%s.xml"%ref
+        generate_lems_file_for_neuroml(ref, 
+                                   nml2_file, 
+                                   target, 
+                                   duration, 
+                                   dt, 
+                                   lems_file_name,
+                                   '.',
+                                   gen_plots_for_all_v = True,
+                                   gen_saves_for_all_v = True,
+                                   copy_neuroml = False,
+                                   seed=None)
+                                   
+        if simulator == 'jNeuroML':
+             results = pynml.run_lems_with_jneuroml(lems_file_name, nogui=True, load_saved_data=True, plot=False, verbose=verbose)
+        if simulator == 'jNeuroML_NEURON':
+             results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, nogui=True, load_saved_data=True, plot=False, verbose=verbose)
+             
+        print("Results reloaded: %s"%results.keys())
+             
+        all_results[dt] = results
+        
+
+    xs = []
+    ys = []
+    labels = []
+    
+    spxs = []
+    spys = []
+    linestyles = []
+    markers = []
+    
+    for dt in dts:
+        t = all_results[dt]['t']
+        v = all_results[dt][cell_v_path]
+        xs.append(t)
+        ys.append(v)
+        labels.append(dt)
+        
+        mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
+        spike_times = mm['maxima_times']
+        
+
+        spxs_ = []
+        spys_ = []
+        for s in spike_times:
+            spys_.append(s)
+            spxs_.append(dt)
+        
+        spys.append(spys_)
+        spxs.append(spxs_)
+        linestyles.append('')
+        markers.append('x')
+        
+    pynml.generate_plot(spxs, 
+          spys, 
+          "Spike times vs dt",
+          linestyles = linestyles,
+          markers = markers,
+          show_plot_already=show_plot_already) 
+
+        
+    if verbose:
+        pynml.generate_plot(xs, 
+                  ys, 
+                  "Membrane potentials in %s for %s"%(simulator,dts),
+                  labels = labels,
+                  show_plot_already=show_plot_already) 
