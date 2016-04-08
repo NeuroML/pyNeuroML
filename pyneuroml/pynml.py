@@ -26,58 +26,188 @@ import lems.model.model as lems_model
 import random
 import inspect
 
-DEFAULTS = {'v': False,
-            'nogui': False,
-            'default_java_max_memory': "400M"} 
+DEFAULTS = {'v':False, 'default_java_max_memory':'400M'}
 
 
 def parse_arguments():
     """Parse command line arguments"""
+
     import argparse
 
-    parser = argparse.ArgumentParser(description=('pyNeuroML v%s: Python '
-                                                  'utilities for NeuroML2' 
-                                                  %__version__))
+    parser = argparse.ArgumentParser(
+            description=('pyNeuroML v%s: Python utilities for NeuroML2'
+                         % __version__),
+            usage=('pynml.py [-h|--help] [<shared options>] '
+                   '<one of the mutually-exclusive options>'),
+            formatter_class=argparse.RawTextHelpFormatter
+            )
 
-    parser.add_argument('target_file', metavar='target_file', type=str,
-                        help=('The LEMS/NeuroML2 file to process; '
-                              'without other options simulates a LEMS file '
-                              '(containing a <Simulation element>) '
-                              'natively using jNeuroML'))
+    shared_options = parser.add_argument_group(
+            title='shared options',
+            description=('these options can be added to any of the '
+                         'mutually-exclusive options')
+            )
 
-    ##parser.add_argument('-sim', choices=('pylems', 'jlems'),
-    ##                     help='Simulator to use')
+    shared_options.add_argument(
+            '-verbose',
+            action='store_true',
+            default=DEFAULTS['v'],
+            help='Verbose output'
+            )
+    shared_options.add_argument(
+            '-java_max_memory',
+            metavar='MAX',
+            default=DEFAULTS['default_java_max_memory'],
+            help=('Java memory for jNeuroML, e.g. 400M, 2G (used in\n'
+                  '-Xmx argument to java)')
+            )
 
-    parser.add_argument('-nogui', action='store_true',
-                        help=('Simulate LEMS file with jNeuroML, '
-                              'but suppress GUI, i.e. show no plots, '
-                              'just save results'), 
-                        default=DEFAULTS['nogui']),
-                        
-    parser.add_argument('-validate', action='store_true',
-                        help=('(Via jNeuroML) Validate NeuroML2 file '
-                              'against the latest Schema'))
-                        
-    parser.add_argument('-svg', action='store_true',
-                        help=('(Via jNeuroML) Convert NeuroML2 file '
-                              '(network & cells) to SVG format view of '
-                              '3D structure'))
-                        
-    parser.add_argument('-sedml', action='store_true',
-                        help=('(Via jNeuroML) Load a LEMS file, '
-                              'and convert simulation settings '
-                              '(duration, dt, what to save) to SED-ML format'))
-                        
-    parser.add_argument('-java_max_memory', metavar='MAX', type=str,
-                        help=('Java memory for jNeuroML, e.g. 400M, '
-                              '2G (used in -Xmx argument to java)'), 
-                        default=DEFAULTS['default_java_max_memory'])
-                        
-    parser.add_argument('-verbose', action='store_true',
-                        help='Verbose output', default=DEFAULTS['v'])
-
-    ##parser.add_argument('-outputdir', nargs=1,
-    ##                    help='Directory to write output scripts to')
+    mut_exc_opts_grp = parser.add_argument_group(
+            title='mutually-exclusive options',
+            description='only one of these options can be selected'
+            )
+    mut_exc_opts = mut_exc_opts_grp.add_mutually_exclusive_group(required=True)
+    mut_exc_opts.add_argument(
+            'lems_file',
+            nargs='?',
+            metavar='<LEMS file>',
+            help='(Via jNeuroML) Load a LEMS file and simulate it'
+            )
+    mut_exc_opts.add_argument(
+            '-nogui',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Simulate LEMS file, but suppress GUI,\n'
+                  'i.e. show no plots, just save results')
+            )
+    mut_exc_opts.add_argument(
+            '-sedml',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert\n'
+                  'simulation settings (duration, dt, what to save)\n'
+                  'to SED-ML format')
+            )
+    mut_exc_opts.add_argument(
+            '-neuron',
+            nargs=argparse.REMAINDER,
+            help=('(Via jNeuroML) Load a LEMS file, and convert it to\n'
+                  'NEURON format.\n'
+                  'The full format of the \'-neuron\' option is:\n'
+                  '-neuron [-nogui] [-run] [-outputdir dir] <LEMS file>\n'
+                  '    -nogui\n'
+                  '        do not generate gtaphical elements in NEURON,\n'
+                  '        just run, save data, and quit\n'
+                  '    -run\n'
+                  '        compile NMODL files and run the main NEURON\n'
+                  '        hoc file (Linux only currently)\n'
+                  '    -outputdir <dir>\n'
+                  '        generate NEURON files in directory <dir>\n'
+                  '    <LEMS file>\n'
+                  '        the LEMS file to use')
+            )
+    mut_exc_opts.add_argument(
+            '-svg',
+            metavar='<NML file>',
+            help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
+                  'to SVG format view of 3D structure')
+            )
+    mut_exc_opts.add_argument(
+            '-dlems',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to dLEMS format, a distilled form of LEMS in JSON')
+            )
+    mut_exc_opts.add_argument(
+            '-vertex',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to VERTEX format')
+            )
+    mut_exc_opts.add_argument(
+            '-xpp',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to XPPAUT format')
+            )
+    mut_exc_opts.add_argument(
+            '-dnsim',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to DNsim format')
+            )
+    mut_exc_opts.add_argument(
+            '-brian',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to Brian format')
+            )
+    mut_exc_opts.add_argument(
+            '-sbml',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to SBML format')
+            )
+    mut_exc_opts.add_argument(
+            '-matlab',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to MATLAB format')
+            )
+    mut_exc_opts.add_argument(
+            '-cvode',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to C format using CVODE package')
+            )
+    mut_exc_opts.add_argument(
+            '-nineml',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to NineML format')
+            )
+    mut_exc_opts.add_argument(
+            '-spineml',
+            metavar='<LEMS file>',
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to SpineML format')
+            )
+    mut_exc_opts.add_argument(
+            '-sbml-import',
+            metavar=('<SBML file>', 'duration', 'dt'),
+            nargs=3,
+            help=('(Via jNeuroML) Load a SBML file, and convert it\n'
+                  'toLEMS format using values for duration & dt\n'
+                  'in ms (ignoring SBML units)')
+            )
+    mut_exc_opts.add_argument(
+            '-sbml-import-units',
+            metavar=('<SBML file>', 'duration', 'dt'),
+            nargs=3,
+            help=('(Via jNeuroML) Load a SBML file, and convert it\n'
+                  'to LEMS format using values for duration & dt\n'
+                  'in ms (attempt to extract SBML units; ensure units\n'
+                  'are valid in the SBML!)')
+            )
+    mut_exc_opts.add_argument(
+            '-vhdl',
+            metavar=('neuronid', '<LEMS file>'),
+            nargs=2,
+            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+                  'to VHDL format')
+            )
+    mut_exc_opts.add_argument(
+            '-validate',
+            metavar='<NML file>',
+            nargs='+',
+            help=('(Via jNeuroML) Validate NeuroML2 file(s) against the\n'
+                  'latest Schema')
+            )
+    mut_exc_opts.add_argument(
+            '-validatev1',
+            metavar='<NML file>',
+            nargs='+',
+            help=('(Via jNeuroML) Validate NeuroML file(s) against the\n'
+                  'v1.8.1 Schema')
+            )
 
     return parser.parse_args()
 
@@ -407,35 +537,92 @@ def get_next_hex_color():
     return "#%06x" % random.randint(0,0xFFFFFF)
 
 def evaluate_arguments(args):
-    
+
     global DEFAULTS
     DEFAULTS['v'] = args.verbose
 
     pre_args = ""
+    files = ""
     post_args = ""
-        
-    gui = " -nogui" if args.nogui==True else ""
-    post_args += gui
-    
     exit_on_fail = True
-    
-    if args.validate:
-        pre_args += " -validate"
-        exit_on_fail = False
-        
-    elif args.svg:
-        post_args += " -svg"
-        
+
+    if args.lems_file:
+        files = args.lems_file
+    elif args.nogui:
+        files = args.nogui
+        post_args = "-nogui"
     elif args.sedml:
-        post_args += " -sedml"
-        
-    run_jneuroml(pre_args, 
-                 args.target_file, 
-                 post_args, 
+        files = args.sedml
+        post_args = "-sedml"
+    elif args.neuron is not None:
+        num_neuron_args = len(args.neuron)
+        if num_neuron_args < 1 or num_neuron_args > 5:
+            print("ERROR: The \'-neuron\' option was given an invalid "
+                  "number of arguments: %d given, 1-5 required"
+                  % num_neuron_args)
+            sys.exit(-1)
+        files = args.neuron[-1]
+        post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
+    elif args.svg:
+        files = args.svg
+        post_args = "-svg"
+    elif args.dlems:
+        files = args.dlems
+        post_args = "-dlems"
+    elif args.vertex:
+        files = args.vertex
+        post_args = "-vertex"
+    elif args.xpp:
+        files = args.xpp
+        post_args = "-xpp"
+    elif args.dnsim:
+        files = args.dnsim
+        post_args = "-dnsim"
+    elif args.brian:
+        files = args.brian
+        post_args = "-brian"
+    elif args.sbml:
+        files = args.sbml
+        post_args = "-sbml"
+    elif args.matlab:
+        files = args.matlab
+        post_args = "-matlab"
+    elif args.cvode:
+        files = args.cvode
+        post_args = "-cvode"
+    elif args.nineml:
+        files = args.nineml
+        post_args = "-nineml"
+    elif args.spineml:
+        files = args.spineml
+        post_args = "-spineml"
+    elif args.sbml_import:
+        pre_args = "-sbml-import"
+        files = args.sbml_import[0]
+        post_args = ' '.join(args.sbml_import[1:])
+    elif args.sbml_import_units:
+        pre_args = "-smbl-import-units"
+        files = args.sbml_import_units[0]
+        post_args = ' '.join(args.sbml_import_units[1:])
+    elif args.vhdl:
+        files = args.vhdl[1]
+        post_args = "-vhdl %s" % args.vhdl[0]
+    elif args.validate:
+        pre_args = "-validate"
+        files = ' '.join(args.validate)
+        exit_on_fail = False
+    elif args.validatev1:
+        pre_args = "-validatev1"
+        files = ' '.join(args.validatev1)
+        exit_on_fail = False
+
+    run_jneuroml(pre_args,
+                 files,
+                 post_args,
                  max_memory = args.java_max_memory,
                  exit_on_fail = exit_on_fail)
-    
-        
+
+
 def run_jneuroml(pre_args, 
                  target_file, 
                  post_args, 
@@ -586,7 +773,7 @@ def reload_standard_dat_file(file_name):
     print("Loaded data from %s; columns: %s"%(file_name, indeces))
 
     return data, indeces
-                              
+
 
 def main(args=None):
     """Main"""
@@ -595,7 +782,7 @@ def main(args=None):
         args = parse_arguments()
 
     evaluate_arguments(args)
-    
-    
+
+
 if __name__ == "__main__":
     main()
