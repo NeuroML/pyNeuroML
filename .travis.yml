@@ -12,3 +12,4 @@ install:
 script:
     - pynml -h
     - ./test.sh
+    - ls -alt

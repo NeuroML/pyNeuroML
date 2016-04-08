@@ -1,3 +1,6 @@
+/examples/Makefile
+/examples/fn1.mod
+/examples/fn1_flat_dnsim.txt
 /examples/archive.sh
 /src
 /examples/test_data/hh_v.dat
@@ -23,6 +26,16 @@
 /examples/channel_summary
 /examples/input*.mod
 /examples/NT_*
+/examples/*.spineml
+/examples/*.9ml
+/examples/*.m
+/examples/*.sbml
+/examples/*.sedml
+/examples/*.json
+/examples/*.c
+/examples/*.ode
+/examples/*.svg
+/examples/*brian.py
 .idea
 
 /examples/LEMS_iv_hhcell.xml

@@ -29,6 +29,26 @@ pynml -validate NML2_SingleCompHHCell.nml
 
 echo
 echo "################################################"
+echo "##   Test some conversions"
+
+pynml NML2_SingleCompHHCell.nml -svg
+pynml LEMS_NML2_Ex5_DetCell.xml -sedml
+pynml LEMS_NML2_Ex9_FN.xml -dlems
+pynml LEMS_NML2_Ex9_FN.xml -brian
+pynml LEMS_NML2_Ex5_DetCell.xml -neuron
+pynml LEMS_NML2_Ex9_FN.xml -vertex
+pynml LEMS_NML2_Ex9_FN.xml -xpp
+pynml LEMS_NML2_Ex9_FN.xml -dnsim
+pynml LEMS_NML2_Ex9_FN.xml -cvode
+pynml LEMS_NML2_Ex9_FN.xml -matlab
+pynml LEMS_NML2_Ex9_FN.xml -nineml
+pynml LEMS_NML2_Ex9_FN.xml -spineml
+pynml LEMS_NML2_Ex9_FN.xml -sbml
+
+
+
+echo
+echo "################################################"
 echo "##   Running some of the examples"
 
 #  Run an example with jNeuroML
