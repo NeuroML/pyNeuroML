@@ -18,7 +18,7 @@
    
 #set( $start = -0.1 * $duration )
 #set( $end = 1.1 * $duration )
-    <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="${target}">
+    <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="${target}" seed="${seed}">  <!-- Note seed: ensures same random numbers used every run -->
         
 #foreach ($display in $displays)##
         <Display id="${display.id}" title="${display.title}" timeScale="${display.time_scale}" xmin="$start" xmax="$end" ymin="${display.ymin}" ymax="${display.ymax}">

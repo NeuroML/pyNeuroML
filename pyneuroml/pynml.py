@@ -220,7 +220,7 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
     pre_args = "-validatev1"
     post_args = ""
         
-    run_jneuroml(pre_args, 
+    return run_jneuroml(pre_args, 
                  nml1_file_name, 
                  post_args,
                  verbose = verbose_validate,
@@ -232,7 +232,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True):
     pre_args = "-validate"
     post_args = ""
         
-    run_jneuroml(pre_args, 
+    return run_jneuroml(pre_args, 
                  nml2_file_name, 
                  post_args, 
                  verbose = verbose_validate,
