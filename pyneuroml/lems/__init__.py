@@ -15,11 +15,11 @@ def generate_lems_file_for_neuroml(sim_id,
                                    target_dir,
                                    gen_plots_for_all_v = True,
                                    plot_all_segments = False,
-                                   gen_plots_for_only = [],   #  List of populations
                                    gen_plots_for_quantities = {},   #  Dict with displays vs lists of quantity paths
+                                   gen_plots_for_only_populations = [],   #  List of populations, all pops if = []
                                    gen_saves_for_all_v = True,
                                    save_all_segments = False,
-                                   gen_saves_for_only = [],  #  List of populations
+                                   gen_saves_for_only_populations = [],  #  List of populations, all pops if = []
                                    gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
                                    copy_neuroml = True,
                                    seed=None):
@@ -67,7 +67,7 @@ def generate_lems_file_for_neuroml(sim_id,
                 ls.include_neuroml2_file(include.href, include_included=False)
                 
                 
-    if gen_plots_for_all_v or gen_saves_for_all_v or len(gen_plots_for_only)>0 or len(gen_saves_for_only)>0 :
+    if gen_plots_for_all_v or gen_saves_for_all_v or len(gen_plots_for_only_populations)>0 or len(gen_saves_for_only_populations)>0 :
         
         for network in nml_doc.networks:
             for population in network.populations:
@@ -81,37 +81,37 @@ def generate_lems_file_for_neuroml(sim_id,
                     for c in nml_doc.cells:
                         if c.id == component:
                             cell = c
-                    for segment in cell.morphology.segments:
-                        segment_ids.append(segment.id)
-                    segment_ids.sort()
+                            for segment in cell.morphology.segments:
+                                segment_ids.append(segment.id)
+                            segment_ids.sort()
                         
                 if population.type and population.type == 'populationList':
                     quantity_template = "%s/%i/"+component+"/v"
                     size = len(population.instances)
                     
-                if gen_plots_for_all_v or population.id in gen_plots_for_only:
+                if gen_plots_for_all_v or population.id in gen_plots_for_only_populations:
                     print_comment('Generating %i plots for %s in population %s'%(size, component, population.id))
    
                     disp0 = 'DispPop__%s'%population.id
-                    ls.create_display(disp0, "Voltages of %s"%disp0, "-90", "50")
+                    ls.create_display(disp0, "Membrane potentials of cells in %s"%population.id, "-90", "50")
                     
                     for i in range(size):
-                        if plot_all_segments:
+                        if cell!=None and plot_all_segments:
                             quantity_template_seg = "%s/%i/"+component+"/%i/v"
                             for segment_id in segment_ids:
                                 quantity = quantity_template_seg%(population.id, i, segment_id)
-                                ls.add_line_to_display(disp0, "v in seg %i %s"%(segment_id,safe_variable(quantity)), quantity, "1mV", get_next_hex_color())
+                                ls.add_line_to_display(disp0, "%s[%i] seg %i: v"%(population.id, i, segment_id), quantity, "1mV", get_next_hex_color())
                         else:
                             quantity = quantity_template%(population.id, i)
-                            ls.add_line_to_display(disp0, "v %s"%safe_variable(quantity), quantity, "1mV", get_next_hex_color())
+                            ls.add_line_to_display(disp0, "%s[%i]: v"%(population.id, i), quantity, "1mV", get_next_hex_color())
                 
-                if gen_saves_for_all_v or population.id in gen_saves_for_only:
+                if gen_saves_for_all_v or population.id in gen_saves_for_only_populations:
                     print_comment('Saving %i values of v for %s in population %s'%(size, component, population.id))
    
                     of0 = 'Volts_file__%s'%population.id
                     ls.create_output_file(of0, "%s.%s.v.dat"%(sim_id,population.id))
                     for i in range(size):
-                        if save_all_segments:
+                        if cell!=None and save_all_segments:
                             quantity_template_seg = "%s/%i/"+component+"/%i/v"
                             for segment_id in segment_ids:
                                 quantity = quantity_template_seg%(population.id, i, segment_id)

@@ -15,6 +15,8 @@ import argparse
 
 from pyneuroml import pynml
 
+from pyneuroml.pynml import print_comment_v
+
 _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
 _GREY = "<0.85,0.85,0.85,0.55>"
@@ -162,9 +164,9 @@ background {rgbt %s}
         splitOut = True
         cells_file = open(cf, "w")
         net_file = open(nf, "w")
-        print("Saving into %s and %s and %s"%(pov_file_name, cf, nf))
+        print_comment_v("Saving into %s and %s and %s"%(pov_file_name, cf, nf))
 
-    print("Converting XML file: %s to %s"%(xmlfile, pov_file_name))
+    print_comment_v("Converting XML file: %s to %s"%(xmlfile, pov_file_name))
 
 
     nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, verbose=args.v)
@@ -190,12 +192,12 @@ background {rgbt %s}
 
     declaredcells = {}
 
-    print("There are %i cells in the file"%len(cell_elements))
+    print_comment_v("There are %i cells in the file"%len(cell_elements))
 
     for cell in cell_elements:
         
         cellName = cell.id
-        print("Handling cell: %s"%cellName)
+        print_comment_v("Handling cell: %s"%cellName)
 
         
         declaredcell = "cell_"+cellName
@@ -250,7 +252,7 @@ background {rgbt %s}
                 
             if ( shape == "cone" and (proximalpoint.split('>')[0] == distalpoint.split('>')[0])):
                 comment = "Ignoring zero length segment (id = %i): %s -> %s\n"%(id, proximalpoint, distalpoint)
-                print(comment)
+                print_comment_v(comment)
                 cells_file.write("    // "+comment)
                 
             else:
@@ -281,7 +283,7 @@ union {
     positions = {}
     popElements = nml_doc.networks[0].populations
 
-    print("There are %i populations in the file"%len(popElements))
+    print_comment_v("There are %i populations in the file"%len(popElements))
 
     for pop in popElements:
         
@@ -291,7 +293,7 @@ union {
         
 
         info = "Population: %s has %i positioned cells of type: %s"%(name,len(instances),celltype)
-        print(info)
+        print_comment_v(info)
 
         colour = "1"
         
@@ -353,7 +355,7 @@ union {
         if len(instances) == 0 and int(pop.size>0):
             
             info = "Population: %s has %i unpositioned cells of type: %s"%(name,pop.size,celltype)
-            print(info)
+            print_comment_v(info)
 
             colour = "1"
             '''
@@ -510,12 +512,12 @@ Pause_when_Done=off
         ini_file.write(ini_movie%(pov_file_name, args.frames))
         ini_file.close()
         
-        print("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n"%(args.frames,ini_file_name,ini_file_name))
+        print_comment_v("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n"%(args.frames,ini_file_name,ini_file_name))
         
     else:
         
-        print("Created file for generating image of network. To run this type:\n\n    povray %s\n"%(pov_file_name))
-        print("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n"%(pov_file_name))
+        print_comment_v("Created file for generating image of network. To run this type:\n\n    povray %s\n"%(pov_file_name))
+        print_comment_v("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n"%(pov_file_name))
 
 
 if __name__ == '__main__':

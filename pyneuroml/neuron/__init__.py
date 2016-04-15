@@ -12,11 +12,14 @@ from pyneuroml.pynml import validate_neuroml2
 from pyneuroml.pynml import print_comment, print_comment_v
 import os
 
+from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
+
 
 def export_to_neuroml2(hoc_or_python_file, 
                        nml2_file_name, 
                        includeBiophysicalProperties=True, 
                        separateCellFiles=False, 
+                       known_rev_potentials={},
                        validate=True):
     
     from neuron import *
@@ -31,7 +34,9 @@ def export_to_neuroml2(hoc_or_python_file,
             h.load_file(1, hoc_or_python_file) # Using 1 to force loading of the file, in case file with same name was loaded before...
     else:
         print_comment_v("hoc_or_python_file variable is None; exporting what's currently in memory...")
-            
+
+    for ion in known_rev_potentials.keys():
+        set_erev_for_mechanism(ion,known_rev_potentials[ion])
 
     print_comment_v("Loaded NEURON file: %s"%hoc_or_python_file)
 

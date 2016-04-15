@@ -13,6 +13,9 @@ import colorsys
 
 import argparse
 import sys
+import os.path
+
+from pyneuroml.pynml import print_comment_v
 
 scale_font = 1
 
@@ -108,7 +111,7 @@ def main (argv):
     
     args = process_args()
     
-    print("Making a movie....")
+    print_comment_v("Making a movie...")
     
     img_files_pre = []
     img_files_post = []
@@ -127,8 +130,14 @@ def main (argv):
         for i in range(args.frames):
             index = str(i+1)
             while len(index)<(len(str(args.frames))): index="0"+index
-            img_files_pre.append("%s%s.png"%(pref,index))
+            file_name = "%s%s.png"%(pref,index)
+            if not os.path.isfile(file_name):
+                print_comment_v("File does not exist: %s!"%file_name)
+                print_comment_v("Change network prefix parameter (currently %s) and/or number of frames to load (currently %i)"%(pref,args.frames))
+                exit(1)
+            img_files_pre.append(file_name)
             
+        print_comment_v("Found %i image files: [%s, ..., %s]"%(len(img_files_pre),img_files_pre[0],img_files_pre[-1]))
 
         for i in range(len(img_files_pre)):
             img_file = img_files_pre[i]
@@ -136,7 +145,7 @@ def main (argv):
             
             height , width , layers =  img.shape
 
-            print("Read in file: %s (%sx%s)"%(img_file, width, height))
+            print_comment_v("Read in file: %s (%sx%s)"%(img_file, width, height))
             show = False
             if show:
                 cv2.imshow('Image: '+img_file,img)
@@ -158,7 +167,7 @@ def main (argv):
             
             new_file = args.name+'_'+img_file
             cv2.imwrite(new_file,img)
-            print("Written %s"%new_file)
+            print_comment_v("Written %s"%new_file)
 
 
 
@@ -174,7 +183,7 @@ def main (argv):
         for i in range(len(img_files_post)):
             img_file = img_files_post[i]
             img = cv2.imread(img_file)
-            print("Read in %s"%img_file)
+            print_comment_v("Read in %s"%img_file)
             imgs.append(img)
 
         format = 'avi'
@@ -202,15 +211,15 @@ def main (argv):
 
         f = 0
         for img in imgs:
-            print("Writing frame %i"%f)
+            print_comment_v("Writing frame %i"%f)
             f+=1
             out.write(img)
 
         out.release()
-        print("Saved movie file %s"%mov_file)
+        print_comment_v("Saved movie file %s"%mov_file)
 
 
-    print("Done!")
+    print_comment_v("Done!")
 
 
 

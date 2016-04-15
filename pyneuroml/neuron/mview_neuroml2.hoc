@@ -590,7 +590,7 @@ proc xmlwrite_biophysics() {
                             sprint(comment, "<!-- Assuming parameter g refers to passive maximum cond density, so replacing it with condDensity -->", paramNameToUse)
                         } else if (hoc_sf_.substr(paramNameToUse, "g")==0 && hoc_sf_.substr(paramNameToUse, "bar")>=1) {
                             sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
-                            paramNameToUse = "condDensity"
+                            paramNameToUse = "condDensity"                        
                         } else if (strcmp(paramNameToUse,"gl") == 0) {
                             paramNameToUse = "condDensity"
                             sprint(comment, "<!-- Assuming parameter gl refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
@@ -605,9 +605,14 @@ proc xmlwrite_biophysics() {
                                 sprint(comment, "Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity", paramNameToUse)
                                 paramNameToUse = "condDensity"
                             }
-                        }
+                        } else if (hoc_sf_.substr(paramNameToUse, "g")==0) {
+                            sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
+                            paramNameToUse = "condDensity"
+                        } 
                         print "    Checking param: ",paramNameToUse, " in ", dmech.name
                         if (strcmp(paramNameToUse,"e") == 0) {
+                            found_erev = 1
+                        } else if (strcmp(paramNameToUse,"el") == 0) {
                             found_erev = 1
                         }
                         //print comment
@@ -650,7 +655,7 @@ proc xmlwrite_biophysics() {
                             print "Rev pot handled elsewhere..."
                         } else {
                             print "Unable to handle parameter: ", paramNameToUse, "!!"
-                            quit()
+                            //quit()
                         }
                     }
                     
