@@ -10,10 +10,14 @@ import os.path
 #
 #
 
+
+from pyneuroml.pynml import print_comment_v
+
 import sys
 import os
 import argparse
 
+from pyneuroml import pynml
 
 povArgs = "-D Antialias=On Antialias_Threshold=0.3 Antialias_Depth=4"
 
@@ -27,6 +31,11 @@ def process_args():
                         type=str, 
                         metavar='<network prefix>', 
                         help='Prefix for files in PovRay, e.g. use PREFIX is files are PREFIX.pov, PREFIX_net.inc, etc.')
+                        
+    parser.add_argument('lems_file_name', 
+                        type=str, 
+                        metavar='<lems file>', 
+                        help="LEMS file describing simulatin & what's recorded")
                         
 
     parser.add_argument('-maxV', 
@@ -62,7 +71,7 @@ def process_args():
     parser.add_argument('-skip', 
                         type=int,
                         metavar='<skip>',
-                        default=50,
+                        default=49,
                         help='Number of time points to skip before generating the next frame')
 
     parser.add_argument('-singlecell',
@@ -90,63 +99,60 @@ def main (argv):
     #for v in range(int(args.minV),int(args.maxV)+5,5): print get_rainbow_color_for_volts(v, args)
     #exit()
 
-    ## Open the time.dat file & get time points
-
-    time_file = open("time.dat", 'r')
-
-    times = []
-
-    for line in time_file:
-        if len(line.strip()) > 0 :
-            t = float(line)
-            times.append(t)
-
+    results = pynml.reload_saved_data(args.lems_file_name, 
+                      plot=False)
+    
+    times = [t*1000 for t in results['t']]
     dt = times[1]-times[0]
-    stepTime = (args.skip+1)*dt
-    print "There are %i time points. Max: %f ms, dt: %f"%(len(times),times[-1], dt)
+        
+    #stepTime = (args.skip+1)*dt
 
-    file_names = os.listdir('.')
+    t = 0
+    times_used = []
+    frame_indices = []
+    to_skip = 0
+    index = 0
+    while t<=args.endTime:
+        if to_skip == 0:
+            times_used.append(t)
+            frame_indices.append(index)
+            to_skip = args.skip
+        else:
+            to_skip -=1
+            
+        index+=1
+        t = times[index]
+        
+    
+    print_comment_v("There are %i time points total, max: %f ms, dt: %f ms"%(len(times),times[-1], dt))
+    print_comment_v("times_used: %s; frame_indices %s"%(times_used, frame_indices))
+    print_comment_v("All refs: %s"%results.keys())
 
     populations = []
 
-    volts = {}
+    volt_colors = {}
+    
+    for ref in results.keys():
+        if ref!='t':
+            pathBits = ref.split('/')
+            pop = pathBits[0]
+            index = pathBits[1]
+            seg = pathBits[3]
+            
+            populations.append(pop)
+            ref2 = '%s_%s'%(pop, index)
+            if seg == '0':
+                volt_color =[]
+                for i in frame_indices:
+                    v = results[ref][i]*1000
+                    colour = get_rainbow_color_for_volts(v, args) if args.rainbow else get_color_for_volts(v, args)
+                    volt_color.append(colour)
 
-    for file_name in file_names:
+                volt_colors[ref2] = volt_color
+            
 
-      if file_name.endswith('.dat') and file_name.find('_')>0:
-        print "Looking at file: %s"%file_name
-        cell_ref = file_name[:-4]
-        pop_name = cell_ref[:cell_ref.rfind('_')]
-
-        if populations.count(pop_name)==0 : populations.append(pop_name)
-
-        file = open(file_name)
-        
-        volt = []
-        t=0.0
-       
-        line = " " 
-        
-        while t<=args.endTime and len(line)>0:
-            line = file.readline()
-            #print("t: %s, line: %s"%(t, line))
-            if len(line)>0:
-                if t>=args.startTime:
-                    if len(line.split('\t')) > 1:
-                        value = float(line.split('\t')[1])
-                    else:
-                        value = float(line)
-                    colour = get_rainbow_color_for_volts(value, args) if args.rainbow else get_color_for_volts(value, args)
-                    volt.append(colour)
-                    for i in range(args.skip-1):
-                        line = file.readline()
-                        t=t+dt
-                t=t+dt
-
-        volts[cell_ref] = volt
-        print "Saved data for cell ref %s, %i points "%(cell_ref,len(volt))
-
-    print("All refs: %s"%volts.keys())
+    print_comment_v("All refs: %s"%volt_colors.keys())
+    print_comment_v("All volt_colors: %s"%volt_colors)
 
     t=args.startTime
     index = 0
@@ -161,8 +167,9 @@ def main (argv):
     sh_file_name = "%s_pov.sh"%(args.prefix)
     sh_file = open(sh_file_name, 'w')
     
-    while t<=args.endTime:
-        print "\n----  Exporting for time: %f, index %i  ----\n"%(t, index)
+    for fi in frame_indices:
+        t = times[fi]
+        print "\n----  Exporting for time: %f, index %i frame index %i  ----\n"%(t, index, fi)
 
         if not args.singlecell:
             in_file_name = args.prefix+"_net.inc"
@@ -175,12 +182,13 @@ def main (argv):
             for line in in_file:
                 if line.strip().startswith("//"):
                     ref = line.strip()[2:]
-                    if volts.has_key(ref):
-                        vs = volts[ref]
-                        out_file.write("         "+vs[index]+" //"+ref+" t= "+str(t)+"\n")
-                    elif volts.has_key(ref+".0"):
-                        vs = volts[ref+".0"]
-                        out_file.write("         "+vs[index]+" //"+ref+" t= "+str(t)+"\n")
+                    if volt_colors.has_key(ref):
+                        vs = volt_colors[ref]
+                        print('-- %s: %s '%(ref,len(vs)))
+                        out_file.write("    %s // %s t= %s\n" %(vs[index], ref, t))
+                    elif volt_colors.has_key(ref+".0"):
+                        vs = volt_colors[ref+".0"]
+                        out_file.write("     "+vs[index]+" //"+ref+" t= "+str(t)+"\n")
                     else:
                         out_file.write("//       No ref there: "+ref+"\n")
                         print("Missing ref: "+ref)
@@ -272,7 +280,6 @@ def main (argv):
             sh_file.write("povray %s %s\n"%(args.povrayOptions,toEx) )
 
         index=index+1
-        t=t+stepTime
 
 
     print "All populations: "+str(populations)

@@ -526,7 +526,12 @@ def reload_saved_data(lems_file_name,
     #print(results.keys())
         
     if plot and show_plot_already:
-        for axi in ax:
+        
+        if n_output_files>1:
+            ax_ = ax
+        else:
+            ax_ = [ax]
+        for axi in ax_:
             if not hasattr(axi,'used') or not axi.used:
                 axi.axis('off')
         plt.tight_layout()
