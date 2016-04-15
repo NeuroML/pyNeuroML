@@ -130,12 +130,17 @@ def main (argv):
         for i in range(args.frames):
             index = str(i+1)
             while len(index)<(len(str(args.frames))): index="0"+index
-            file_name = "%s%s.png"%(pref,index)
-            if not os.path.isfile(file_name):
-                print_comment_v("File does not exist: %s!"%file_name)
-                print_comment_v("Change network prefix parameter (currently %s) and/or number of frames to load (currently %i)"%(pref,args.frames))
-                exit(1)
-            img_files_pre.append(file_name)
+            file_name1 = "%s%s.png"%(pref,index)
+            file_name2 = "%s%s.png"%(pref,str(i+1))
+            if not os.path.isfile(file_name1):
+                
+                if not os.path.isfile(file_name2):
+                    print_comment_v("File does not exist: %s (neither does %s)"%(file_name1, file_name2))
+                    print_comment_v("Change network prefix parameter (currently %s) and/or number of frames to load (currently %i)"%(pref,args.frames))
+                    exit(1)
+                else:
+                    file_name1 = file_name2
+            img_files_pre.append(file_name1)
             
         print_comment_v("Found %i image files: [%s, ..., %s]"%(len(img_files_pre),img_files_pre[0],img_files_pre[-1]))
 

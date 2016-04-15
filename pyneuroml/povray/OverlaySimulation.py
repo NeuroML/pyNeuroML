@@ -128,7 +128,6 @@ def main (argv):
     print_comment_v("times_used: %s; frame_indices %s"%(times_used, frame_indices))
     print_comment_v("All refs: %s"%results.keys())
 
-    populations = []
 
     volt_colors = {}
     
@@ -139,9 +138,8 @@ def main (argv):
             index = pathBits[1]
             seg = pathBits[3]
             
-            populations.append(pop)
             ref2 = '%s_%s'%(pop, index)
-            if seg == '0':
+            if seg == '0' or seg == 'v':
                 volt_color =[]
                 for i in frame_indices:
                     v = results[ref][i]*1000
@@ -169,7 +167,7 @@ def main (argv):
     
     for fi in frame_indices:
         t = times[fi]
-        print "\n----  Exporting for time: %f, index %i frame index %i  ----\n"%(t, index, fi)
+        print_comment_v("\n----  Exporting for time: %f, index %i frame index %i  ----\n"%(t, index, fi))
 
         if not args.singlecell:
             in_file_name = args.prefix+"_net.inc"
@@ -177,21 +175,21 @@ def main (argv):
             out_file_name = args.prefix+"_net.inc"+str(index)
             out_file = open(out_file_name, 'w')
             
-            print("in_file_name %s; out_file_name: %s"%(in_file_name,out_file_name))
+            print_comment_v("in_file_name %s; out_file_name: %s"%(in_file_name,out_file_name))
 
             for line in in_file:
                 if line.strip().startswith("//"):
                     ref = line.strip()[2:]
                     if volt_colors.has_key(ref):
                         vs = volt_colors[ref]
-                        print('-- %s: %s '%(ref,len(vs)))
+                        #print_comment_v(('-- %s: %s '%(ref,len(vs)))
                         out_file.write("    %s // %s t= %s\n" %(vs[index], ref, t))
                     elif volt_colors.has_key(ref+".0"):
                         vs = volt_colors[ref+".0"]
                         out_file.write("     "+vs[index]+" //"+ref+" t= "+str(t)+"\n")
                     else:
                         out_file.write("//       No ref there: "+ref+"\n")
-                        print("Missing ref: "+ref)
+                        print_comment_v("Missing ref: "+ref)
 
 
                 else:
@@ -199,7 +197,7 @@ def main (argv):
 
             in_file.close()
             out_file.close()
-            print "Written file: %s for time: %f"%(out_file_name, t)
+            print_comment_v("Written file: %s for time: %f"%(out_file_name, t))
 
             in_file = open(args.prefix+".pov")
             out_file_name = "%s_T%i.pov"%(args.prefix, index)
@@ -212,7 +210,7 @@ def main (argv):
             post = '%s_net.inc%i'%(args.prefix,index)
             post = post.split('/')[-1]
 
-            print "Swapping %s for %s"%(pre, post)
+            print_comment_v("Swapping %s for %s"%(pre, post))
 
             for line in in_file:
                 if line.find(pre)>=0:
@@ -220,7 +218,7 @@ def main (argv):
                 else:
                     out_file.write(line.replace("clock", str(clock)))
 
-            print "Written file: %s for time: %f"%(out_file_name, t)
+            print_comment_v("Written file: %s for time: %f"%(out_file_name, t))
             in_file.close()
             out_file.close()
 
@@ -254,7 +252,7 @@ def main (argv):
 
             in_file.close()
             out_file.close()
-            print "Written file: %s for time: %f"%(out_file_name, t)
+            print_comment_v("Written file: %s for time: %f"%(out_file_name, t))
 
             in_file = open(args.prefix+".pov")
             out_file_name = "%s_T%s%i.pov"%(args.prefix, ind, index)
@@ -270,7 +268,7 @@ def main (argv):
                     clock = args.rotations * (t-args.startTime)/(args.endTime-args.startTime)
                     out_file.write(line.replace("clock", str(clock)))
 
-            print "Written file: %s for time: %f"%(out_file_name, t)
+            print_comment_v("Written file: %s for time: %f"%(out_file_name, t))
             in_file.close()
             out_file.close()
 
@@ -282,7 +280,8 @@ def main (argv):
         index=index+1
 
 
-    print "All populations: "+str(populations)
+    print_comment_v("Done!: ")
+    print_comment_v("\nTo generate images type:\n\n   bash %s_pov.sh\n\n"%args.prefix)
 
 def get_color_for_volts(v, args):
 
