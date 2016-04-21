@@ -15,5 +15,7 @@ or:
 To (re)tune the cell:
 
     python tunePyr.py -tune
+    
+![pic](https://raw.githubusercontent.com/NeuroML/pyNeuroML/master/examples/tune/Selection_817.jpg)
 
     
