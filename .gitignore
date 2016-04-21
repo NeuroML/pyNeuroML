@@ -74,3 +74,12 @@ examples/old
 examples/results/*.dat
 *.dat
 *.xml
+/examples/tune/temp/Ca_conc.mod
+/examples/tune/temp/Ca_pyr.mod
+/examples/tune/temp/Input_1.mod
+/examples/tune/temp/Kahp_pyr.mod
+/examples/tune/temp/Kdr_pyr.mod
+/examples/tune/temp/LeakConductance_pyr.mod
+/examples/tune/temp/Na_pyr.mod
+/examples/tune/temp/OnePyr.net.nml
+/examples/tune/temp/pyr_4_sym.hoc
