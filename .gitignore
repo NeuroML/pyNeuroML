@@ -41,6 +41,13 @@
 /examples/LEMS_iv_hhcell.xml
 /examples/iv_hhcell.net.nml
 /examples/iv_hhcell.v.dat
+
+/examples/tune/NT*
+/examples/tune/*.mod
+/examples/tune/*.hoc
+/examples/tune/*nrn.py
+
+
 /pyneuroml/lems/mysim.v.dat
 /pyneuroml/lems/LEMS_mysim.xml
 
