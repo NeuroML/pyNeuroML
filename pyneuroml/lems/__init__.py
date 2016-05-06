@@ -13,6 +13,7 @@ def generate_lems_file_for_neuroml(sim_id,
                                    dt, 
                                    lems_file_name,
                                    target_dir,
+                                   include_extra_files = [],
                                    gen_plots_for_all_v = True,
                                    plot_all_segments = False,
                                    gen_plots_for_quantities = {},   #  Dict with displays vs lists of quantity paths
@@ -37,6 +38,9 @@ def generate_lems_file_for_neuroml(sim_id,
     nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=True)
     
     quantities_saved = []
+    
+    for f in include_extra_files:
+        ls.include_neuroml2_file(f, include_included=False)
     
     if not copy_neuroml:
         rel_nml_file = os.path.relpath(os.path.abspath(neuroml_file), os.path.abspath(target_dir))
