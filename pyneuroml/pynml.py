@@ -38,8 +38,9 @@ def parse_arguments():
     import argparse
 
     parser = argparse.ArgumentParser(
-            description=('pyNeuroML v%s: Python utilities for NeuroML2'
-                         % __version__ + "\n    libNeuroML v%s"%(neuroml.__version__)),
+            description=('pyNeuroML v%s: Python utilities for NeuroML2' % __version__ 
+                          + "\n    libNeuroML v%s"%(neuroml.__version__)
+                          + "\n    jNeuroML v%s"%JNEUROML_VERSION),
             usage=('pynml [-v|-h|--help] [<shared options>] '
                    '<one of the mutually-exclusive options>'),
             formatter_class=argparse.RawTextHelpFormatter
@@ -556,11 +557,6 @@ def evaluate_arguments(args):
     exit_on_fail = True
     
     files = args.lems_file
-        
-    if args.v:
-        print('pyNeuroML v%s: Python utilities for NeuroML2'
-                         % __version__)
-        print('    libNeuroML version: %s'%libNeuroML.__version__)
         
     if args.nogui:
         post_args = "-nogui"
