@@ -18,6 +18,7 @@ import math
 from . import __version__
 from . import JNEUROML_VERSION
 
+import neuroml
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 
@@ -38,15 +39,15 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(
             description=('pyNeuroML v%s: Python utilities for NeuroML2'
-                         % __version__),
-            usage=('pynml [-h|--help] [<shared options>] '
+                         % __version__ + "\n    libNeuroML v%s"%(neuroml.__version__)),
+            usage=('pynml [-v|-h|--help] [<shared options>] '
                    '<one of the mutually-exclusive options>'),
             formatter_class=argparse.RawTextHelpFormatter
             )
 
     shared_options = parser.add_argument_group(
-            title='shared options',
-            description=('these options can be added to any of the '
+            title='Shared options',
+            description=('These options can be added to any of the '
                          'mutually-exclusive options')
             )
 
@@ -79,11 +80,11 @@ def parse_arguments():
             )
             
     mut_exc_opts_grp = parser.add_argument_group(
-            title='mutually-exclusive options',
-            description='only one of these options can be selected'
+            title='Mutually-exclusive options',
+            description='Only one of these options can be selected'
             )
     mut_exc_opts = mut_exc_opts_grp.add_mutually_exclusive_group(required=False)
-
+    
     mut_exc_opts.add_argument(
             '-sedml',
             action='store_true',
@@ -555,6 +556,11 @@ def evaluate_arguments(args):
     exit_on_fail = True
     
     files = args.lems_file
+        
+    if args.v:
+        print('pyNeuroML v%s: Python utilities for NeuroML2'
+                         % __version__)
+        print('    libNeuroML version: %s'%libNeuroML.__version__)
         
     if args.nogui:
         post_args = "-nogui"
