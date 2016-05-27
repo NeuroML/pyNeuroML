@@ -640,7 +640,7 @@ def run_jneuroml(pre_args,
     output = ''
     
     try:
-        output = execute_command_in_dir("java -Xmx%s %s -jar  '%s' %s %s %s" %
+        output = execute_command_in_dir('java -Xmx%s %s -jar  "%s" %s %s %s' %
                                         (max_memory, pre_jar, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, 
                                         verbose=verbose)
