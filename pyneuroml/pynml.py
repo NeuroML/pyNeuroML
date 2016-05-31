@@ -644,7 +644,7 @@ def run_jneuroml(pre_args,
                                         (max_memory, pre_jar, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, 
                                         verbose=verbose,
-                                        prefix = ' jNeuroML > ')
+                                        prefix = ' jNeuroML >>  ')
         
     except:
         print_comment('*** Execution of jnml has failed! ***', verbose)
@@ -699,7 +699,7 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
     except subprocess.CalledProcessError as e:        
         
         print_comment_v('*** Problem running command: %s'%e)
-        print_comment_v('%s'%e.output)
+        print_comment_v(prefix+'%s'%e.output.replace('\n','\n'+prefix))
         
     
     
