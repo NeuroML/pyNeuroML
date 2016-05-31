@@ -12,9 +12,9 @@ import numpy as np
 
 def generate_Vm_vs_time_plot(nml2_file, 
                                         cell_id, 
-                                        inj_amp_nA = 5.0,
+                                        inj_amp_nA = 80,
                                         delay_ms = 20,
-                                        inj_dur_ms = 0.5,
+                                        inj_dur_ms = 60,
                                         sim_dur_ms = 100, 
                                         dt = 0.05,
                                         temperature = "32degC",
@@ -39,29 +39,36 @@ def generate_Vm_vs_time_plot(nml2_file,
     ls.assign_simulation_target('network')
     nml_doc = nml.NeuroMLDocument(id=cell_id)
     
+    nml_doc.includes.append(nml.IncludeType(href=nml2_file))
+    
     net = nml.Network(id="network")
     nml_doc.networks.append(net)
     
     input_id = ("input_%s"%str(inj_amp_nA).replace('.','_'))
     pg = nml.PulseGenerator(id=input_id,
-                                    delay="0ms",
-                                    duration='%sms'%sim_dur_ms,
+                                    delay="%sms"%delay_ms,
+                                    duration='%sms'%inj_dur_ms,
                                     amplitude='%spA'%inj_amp_nA)
     nml_doc.pulse_generators.append(pg)
     
+    
+    pop_id = 'hhpop'
+    pop = nml.Population(id=pop_id, component='hhcell', size=1, type="populationList")
+    
+    inst = nml.Instance(id=0)
+    pop.instances.append(inst)
+    inst.location = nml.Location(x=0, y=0, z=0)
+    net.populations.append(pop)
+    
     # Add these to cells
-    input_list = nml.InputList(id=input_id,
-                                 component=pg.id)
-    input = nml.Input(id='0',  target=cell_id,
+    input_list = nml.InputList(id='il_%s'%input_id,
+                                 component=pg.id,
+                                 populations=pop_id)
+    input = nml.Input(id='0',  target='../hhpop/0/hhcell',
                               destination="synapses")  
     
     input_list.input.append(input)
-    #???.input_lists.append(input_list)
-    
-    pop_id = 'hhpop'
-    pop = nml.Population(id=pop_id, component='hhcell', size=1)
-    net.populations.append(pop)
-    
+    net.input_lists.append(input_list)
     
     sim_file_name = '%s.sim.nml'%sim_id
     pynml.write_neuroml2_file(nml_doc, sim_file_name)
@@ -70,13 +77,14 @@ def generate_Vm_vs_time_plot(nml2_file,
 
     disp0 = 'Voltage_display'
     ls.create_display(disp0,"Voltages", "-90", "50")
-    ls.add_line_to_display(disp0, "V", "hhpop[0]/v", scale='1mV')
+    ls.add_line_to_display(disp0, "V", "hhpop/0/hhcell/v", scale='1mV')
     
     of0 = 'Volts_file'
     ls.create_output_file(of0, "%s.v.dat"%sim_id)
+    ls.add_column_to_output_file(of0, "V", "hhpop/0/hhcell/v")
     
     lems_file_name = ls.save_to_file()
-    '''
+    
     if simulator == "jNeuroML":
         results = pynml.run_lems_with_jneuroml(lems_file_name, 
                                                 nogui=True, 
@@ -93,7 +101,7 @@ def generate_Vm_vs_time_plot(nml2_file,
  
     if show_plot_already:
         from matplotlib import pyplot as plt
-        plt.show()'''
+        plt.show()
         
         
     return of0     
