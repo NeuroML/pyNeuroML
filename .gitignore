@@ -83,3 +83,5 @@ examples/results/*.dat
 /examples/tune/temp/Na_pyr.mod
 /examples/tune/temp/OnePyr.net.nml
 /examples/tune/temp/pyr_4_sym.hoc
+
+*.tmp
