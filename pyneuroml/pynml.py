@@ -643,7 +643,9 @@ def run_jneuroml(pre_args,
         output = execute_command_in_dir('java -Xmx%s %s -jar  "%s" %s %s %s' %
                                         (max_memory, pre_jar, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, 
-                                        verbose=verbose)
+                                        verbose=verbose,
+                                        prefix = ' jNeuroML > ')
+        
     except:
         print_comment('*** Execution of jnml has failed! ***', verbose)
                              
@@ -669,26 +671,36 @@ def print_comment(text, print_it=DEFAULTS['v']):
         print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
 
 
-def execute_command_in_dir(command, directory, verbose=DEFAULTS['v']):
+def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Output: "):
     
     """Execute a command in specific working directory"""
     
     if os.name == 'nt':
         directory = os.path.normpath(directory)
         
-    print_comment_v("Executing: (%s) in dir: %s" % (command, directory))
+    print_comment_v("Executing: (%s) in directory: %s" % (command, directory))
     
     try:
         return_string = subprocess.check_output(command, cwd=directory, 
-                                                shell=True)
+                                                shell=True, stderr=subprocess.STDOUT)
+                                
+        print_comment_v('Command completed. Output: \n '+prefix+'%s'%return_string.replace('\n','\n '+prefix))
 
         return return_string
     
     except AttributeError:
         # For python 2.6...
+        print_comment_v('Assuming Python 2.6...')
+        
         return_string = subprocess.Popen(command, cwd=directory, shell=True,
                                      stdout=subprocess.PIPE).communicate()[0]
         return return_string
+    
+    except subprocess.CalledProcessError as e:        
+        
+        print_comment_v('*** Problem running command: %s'%e)
+        print_comment_v('%s'%e.output)
+        
     
     
 def generate_plot(xvalues, 
