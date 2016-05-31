@@ -85,3 +85,4 @@ examples/results/*.dat
 /examples/tune/temp/pyr_4_sym.hoc
 
 *.tmp
+/examples/Vm_Test.sim.nml
