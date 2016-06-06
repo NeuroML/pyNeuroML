@@ -106,7 +106,7 @@
 #set( $end = 1.1 * $duration )
 #set( $startv = $min_target_voltage - (0.1 * ($max_target_voltage-$min_target_voltage)) )
 #set( $endv =   $max_target_voltage + (0.1 * ($max_target_voltage-$min_target_voltage)) )
-#set( $dt = 0.000025 * $duration )
+#set( $dt = 0.000025 * $duration * $scale_dt )
 
     <Simulation id="sim1" length="${duration}ms" step="${dt}ms" target="net1">
         

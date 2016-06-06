@@ -45,6 +45,7 @@ DEFAULTS = {'v': False,
             'clampBaseVoltage': -70,
             'stepTargetVoltage': 20,
             'erev': 0,
+            'scaleDt': 1,
             'caConc': 5e-5,
             'datSuffix': '',
             'ivCurve': False,
@@ -78,63 +79,68 @@ def process_args():
                         type=int,
                         metavar='<min v>',
                         default=DEFAULTS['minV'],
-                        help="Minimum voltage to test (integer, mV)")
+                        help="Minimum voltage to test (integer, mV), default: %smV"%DEFAULTS['minV'])
                         
     parser.add_argument('-maxV', 
                         type=int,
                         metavar='<max v>',
                         default=DEFAULTS['maxV'],
-                        help="Maximum voltage to test (integer, mV)")
+                        help="Maximum voltage to test (integer, mV), default: %smV"%DEFAULTS['maxV'])
                         
     parser.add_argument('-temperature', 
                         type=float,
                         metavar='<temperature>',
                         default=DEFAULTS['temperature'],
-                        help="Temperature (float, celsius)")
+                        help="Temperature (float, celsius), default: %sdegC"%DEFAULTS['temperature'])
                         
     parser.add_argument('-duration', 
                         type=float,
                         metavar='<duration>',
                         default=DEFAULTS['duration'],
-                        help="Duration of simulation in ms")
+                        help="Duration of simulation in ms, default: %sms"%DEFAULTS['duration'])
                         
     parser.add_argument('-clampDelay', 
                         type=float,
                         metavar='<clamp delay>',
                         default=DEFAULTS['clampDelay'],
-                        help="Delay before voltage clamp is activated in ms")
+                        help="Delay before voltage clamp is activated in ms, default: %sms"%DEFAULTS['clampDelay'])
                         
     parser.add_argument('-clampDuration', 
                         type=float,
                         metavar='<clamp duration>',
                         default=DEFAULTS['clampDuration'],
-                        help="Duration of voltage clamp in ms")
+                        help="Duration of voltage clamp in ms, default: %sms"%DEFAULTS['clampDuration'])
                         
     parser.add_argument('-clampBaseVoltage', 
                         type=float,
                         metavar='<clamp base voltage>',
                         default=DEFAULTS['clampBaseVoltage'],
-                        help="Clamp base (starting/finishing) voltage in mV")
+                        help="Clamp base (starting/finishing) voltage in mV, default: %smV"%DEFAULTS['clampBaseVoltage'])
                         
     parser.add_argument('-stepTargetVoltage', 
                         type=float,
                         metavar='<step target voltage>',
                         default=DEFAULTS['stepTargetVoltage'],
-                        help=("Voltage in mV through which to step voltage "
-                              "clamps"))
+                        help=("Voltage in mV through which to step voltage clamps, default: %smV"%DEFAULTS['stepTargetVoltage']))
                         
     parser.add_argument('-erev', 
                         type=float,
                         metavar='<reversal potential>',
                         default=DEFAULTS['erev'],
-                        help="Reversal potential of channel for currents")
+                        help="Reversal potential of channel for currents, default: %smV"%DEFAULTS['erev'])
+                        
+    parser.add_argument('-scaleDt', 
+                        type=float,
+                        metavar='<scale dt in generated LEMS>',
+                        default=DEFAULTS['scaleDt'],
+                        help="Scale dt in generated LEMS, default: %s"%DEFAULTS['scaleDt'])
                         
     parser.add_argument('-caConc', 
                         type=float,
                         metavar='<Ca2+ concentration>',
                         default=DEFAULTS['caConc'],
                         help=("Internal concentration of Ca2+ (float, "
-                              "concentration in mM)"))
+                              "concentration in mM), default: %smM"%DEFAULTS['caConc']))
                               
                         
     parser.add_argument('-datSuffix', 
@@ -226,7 +232,7 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
-                      gates, temperature, ca_conc, iv_curve, dat_suffix=''):
+                      gates, temperature, ca_conc, iv_curve, scale_dt=1, dat_suffix=''):
                           
     print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
                      channel_file, min_target_voltage, max_target_voltage, temperature))
@@ -262,6 +268,7 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
              "min_target_voltage":  min_target_voltage,
              "max_target_voltage":  max_target_voltage,
              "duration":  duration,
+             "scale_dt":  scale_dt,
              "erev":  erev,
              "gates":  gates,
              "temperature":  temperature,
@@ -357,7 +364,9 @@ def make_lems_file(channel,a):
         channel.file, channel.id, a.min_v, 
         a.step_target_voltage, a.max_v, a.clamp_delay, 
         a.clamp_duration, a.clamp_base_voltage, a.duration, 
-        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, a.dat_suffix)
+        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, 
+        scale_dt = a.scale_dt, 
+        dat_suffix = a.dat_suffix)
     new_lems_file = os.path.join(OUTPUT_DIR,
                                  "LEMS_Test_%s.xml" % channel.id)
     lf = open(new_lems_file, 'w')
