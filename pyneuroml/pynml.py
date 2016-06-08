@@ -401,12 +401,17 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   plot=False, 
                                   show_plot_already=True, 
                                   exec_in_dir = ".",
+                                  only_generate_scripts = False,
                                   verbose=DEFAULTS['v'],
                                   exit_on_fail = True):
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
                   % lems_file_name, verbose)
-    post_args = " -neuron -run"
+                  
+    post_args = " -neuron"
+    if not only_generate_scripts:
+        post_args += ' -run'
+    
     gui = " -nogui" if nogui else ""
     post_args += gui
     
