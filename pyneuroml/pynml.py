@@ -250,7 +250,11 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
         print_comment("Unable to find file: %s!" % nml2_file_name, True)
         sys.exit()
         
-    nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
+    if nml2_file_name.endswith('.h5') or nml2_file_name.endswith('.hdf5'):
+        nml2_doc = loaders.NeuroMLHdf5Loader.load(nml2_file_name)
+    else:
+        nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
+    
     base_path = os.path.dirname(os.path.realpath(nml2_file_name))
     
     if include_includes:

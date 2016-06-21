@@ -30,7 +30,7 @@ def process_args():
     parser = argparse.ArgumentParser(description="A file for converting NeuroML v2 files into POVRay files for 3D rendering")
 
     parser.add_argument('neuroml_file', type=str, metavar='<NeuroML file>', 
-                        help='NeuroML (version 2 beta 3+) file to be converted to PovRay format')
+                        help='NeuroML (version 2 beta 3+) file to be converted to PovRay format (XML or HDF5 format)')
                         
     parser.add_argument('-split',
                         action='store_true',
@@ -132,7 +132,7 @@ def main ():
         
     xmlfile = args.neuroml_file
 
-    pov_file_name = xmlfile.replace(".xml", ".pov").replace(".nml1", ".pov").replace(".nml", ".pov")
+    pov_file_name = xmlfile.replace(".xml", ".pov").replace(".nml1", ".pov").replace(".nml.h5", ".pov").replace(".nml", ".pov")
 
     pov_file = open(pov_file_name, "w")
 
