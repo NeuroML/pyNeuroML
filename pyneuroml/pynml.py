@@ -649,16 +649,16 @@ def run_jneuroml(pre_args,
     output = ''
     
     try:
-        output = execute_command_in_dir('java -Xmx%s %s -jar  "%s" %s %s %s' %
-                                        (max_memory, pre_jar, jar, pre_args, target_file, 
-                                         post_args), exec_in_dir, 
+        command = 'java -Xmx%s %s -jar  "%s" %s %s %s' % (max_memory, pre_jar, jar, pre_args, target_file, 
+                                         post_args)
+        output = execute_command_in_dir(command, exec_in_dir, 
                                         verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
         
     except:
-        print_comment('*** Execution of jnml has failed! ***', verbose)
-                             
-        print_comment(output, verbose)
+        print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('*** Command: %s ***'%command, True)
+        print_comment('Output: %s'%output, True)
         if exit_on_fail: 
             sys.exit(-1)
         else:
@@ -697,6 +697,8 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
                                                 shell=True, 
                                                 stderr=subprocess.STDOUT,
                                                 env=env)
+                                                
+        return_string = return_string.decode("utf-8") # For Python 3
                                 
         print_comment_v('Command completed. Output: \n '+prefix+'%s'%return_string.replace('\n','\n '+prefix))
 
@@ -714,6 +716,11 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
         
         print_comment_v('*** Problem running command: %s'%e)
         print_comment_v(prefix+'%s'%e.output.replace('\n','\n'+prefix))
+        
+    except:
+        print_comment_v('*** Unknown problem running command: %s'%e)
+        
+    print_comment("Finished execution", verbose)
         
     
     
