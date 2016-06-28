@@ -360,12 +360,11 @@ def get_conductance_expression(channel):
 
 def make_lems_file(channel,a):
     gates = get_channel_gates(channel)
-    lems_content = generate_lems_channel_analyser(
-        channel.file, channel.id, a.min_v, 
-        a.step_target_voltage, a.max_v, a.clamp_delay, 
-        a.clamp_duration, a.clamp_base_voltage, a.duration, 
-        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, 
-        scale_dt = a.scale_dt, 
+    lems_content = generate_lems_channel_analyser(channel.file, channel.id, a.min_v, \
+        a.step_target_voltage, a.max_v, a.clamp_delay, \
+        a.clamp_duration, a.clamp_base_voltage, a.duration, \
+        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, \
+        scale_dt = a.scale_dt, \
         dat_suffix = a.dat_suffix)
     new_lems_file = os.path.join(OUTPUT_DIR,
                                  "LEMS_Test_%s.xml" % channel.id)
