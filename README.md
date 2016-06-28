@@ -8,6 +8,18 @@ Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS]
 Installation
 ------------
 
+### Pip 
+
+pyNeuroML can be installed with pip:
+
+    sudo pip install pyneuroml
+
+You may need to install lxml on Linux with:
+
+    sudo apt-get install python-lxml
+
+### Installation from source
+
 Clone the repository:
 
     git clone https://github.com/NeuroML/pyNeuroML.git
