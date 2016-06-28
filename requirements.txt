@@ -1,6 +1,6 @@
 --allow-unverified libNeuroML
 
--e git+https://github.com/NeuralEnsemble/libNeuroML.git@development
--e git+https://github.com/purcell/airspeed.git
+-e git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML
+-e git+https://github.com/purcell/airspeed.git#egg=airspeed
 
 
