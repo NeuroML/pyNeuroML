@@ -86,3 +86,4 @@ examples/results/*.dat
 
 *.tmp
 /examples/Vm_Test.sim.nml
+/dockx
