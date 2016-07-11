@@ -250,7 +250,11 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
         print_comment("Unable to find file: %s!" % nml2_file_name, True)
         sys.exit()
         
-    nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
+    if nml2_file_name.endswith('.h5') or nml2_file_name.endswith('.hdf5'):
+        nml2_doc = loaders.NeuroMLHdf5Loader.load(nml2_file_name)
+    else:
+        nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
+    
     base_path = os.path.dirname(os.path.realpath(nml2_file_name))
     
     if include_includes:
@@ -645,16 +649,16 @@ def run_jneuroml(pre_args,
     output = ''
     
     try:
-        output = execute_command_in_dir('java -Xmx%s %s -jar  "%s" %s %s %s' %
-                                        (max_memory, pre_jar, jar, pre_args, target_file, 
-                                         post_args), exec_in_dir, 
+        command = 'java -Xmx%s %s -jar  "%s" %s %s %s' % (max_memory, pre_jar, jar, pre_args, target_file, 
+                                         post_args)
+        output = execute_command_in_dir(command, exec_in_dir, 
                                         verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
         
     except:
-        print_comment('*** Execution of jnml has failed! ***', verbose)
-                             
-        print_comment(output, verbose)
+        print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('*** Command: %s ***'%command, True)
+        print_comment('Output: %s'%output, True)
         if exit_on_fail: 
             sys.exit(-1)
         else:
@@ -676,7 +680,7 @@ def print_comment(text, print_it=DEFAULTS['v']):
         print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
 
 
-def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Output: "):
+def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Output: ", env=None):
     
     """Execute a command in specific working directory"""
     
@@ -684,10 +688,17 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
         directory = os.path.normpath(directory)
         
     print_comment_v("Executing: (%s) in directory: %s" % (command, directory))
+    if env is not None:
+        print_comment_v("Extra env variables %s" % (env))
     
     try:
-        return_string = subprocess.check_output(command, cwd=directory, 
-                                                shell=True, stderr=subprocess.STDOUT)
+        return_string = subprocess.check_output(command, 
+                                                cwd=directory, 
+                                                shell=True, 
+                                                stderr=subprocess.STDOUT,
+                                                env=env)
+                                                
+        return_string = return_string.decode("utf-8") # For Python 3
                                 
         print_comment_v('Command completed. Output: \n '+prefix+'%s'%return_string.replace('\n','\n '+prefix))
 
@@ -705,6 +716,11 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
         
         print_comment_v('*** Problem running command: %s'%e)
         print_comment_v(prefix+'%s'%e.output.replace('\n','\n'+prefix))
+        
+    except:
+        print_comment_v('*** Unknown problem running command: %s'%e)
+        
+    print_comment("Finished execution", verbose)
         
     
     

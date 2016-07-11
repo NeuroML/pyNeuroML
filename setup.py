@@ -39,12 +39,11 @@ setup(
         'argparse',
         'lxml',
         'pylems',
-        'airspeed>=0.4.1',
-        'libNeuroML>=0.2.10',
+        'airspeed==0.5.4dev-20150515',
+        'libNeuroML>=0.2.17',
         'matplotlib'],
     dependency_links=[
-      'https://github.com/purcell/airspeed.git',
-      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML-0.2.10'
+      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML'
     ],
     classifiers = [
         'Intended Audience :: Science/Research',
