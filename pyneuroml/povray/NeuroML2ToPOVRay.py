@@ -322,7 +322,7 @@ union {
         for instance in instances:
 
             location = instance.location
-            id = instance.id
+            id = int(instance.id)
             net_file.write("object {\n")
             net_file.write("    %s\n"%cell_definition)
             x = float(location.x)
@@ -406,15 +406,27 @@ union {
 
             net_file.write("}\n")
             
-    if False and args.conns: # false because segment specific connections not implemented yet... i.e. connections from dends to axons...
+    #print positions
+            
+    if args.conns: # Note: segment specific connections not implemented yet... i.e. connections from dends to axons...
+        print_comment_v("************************\n*\n*  Note: connection lines in 3D do not yet target dendritic locations!\n*\n************************")
         for projection in nml_doc.networks[0].projections:
             pre = projection.presynaptic_population
             post = projection.postsynaptic_population
-            for connection in projection.connections:
-                pre_cell = int(connection.pre_cell_id.split("/")[2])
-                post_cell = int(connection.post_cell_id.split("/")[2])
-                pre_loc = positions[pre][pre_cell]
-                post_loc = positions[post][post_cell]
+            connections = projection.connections + projection.connection_wds
+            print("Adding %i connections %s -> %s "%(len(connections),pre,post))
+            for connection in connections:
+                pre_cell = connection.get_pre_cell_id()
+                post_cell = connection.get_post_cell_id()
+                
+                pre_loc = '<0,0,0>' 
+                if positions.has_key(pre): 
+                    if len(positions[pre])>0:
+                        pre_loc = positions[pre][pre_cell] 
+                post_loc = '<0,0,0>'
+                if positions.has_key(post):
+                    post_loc = positions[post][post_cell] 
+                
                 net_file.write("// Connection from %s:%s %s -> %s:%s %s\n"%(pre, pre_cell, pre_loc, post, post_cell, post_loc)) 
                 net_file.write("cylinder{ %s, %s, .1  pigment{color Grey}}\n\n"%(pre_loc, post_loc))
                 #net_file.write("blob {\n    threshold .65\n    sphere { %s, .9, 10 pigment {Blue} }\n"%(pre_loc))
