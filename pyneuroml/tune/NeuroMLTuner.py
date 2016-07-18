@@ -219,7 +219,14 @@ def _run_optimisation(a):
     run_dir = "NT_%s_%s"%(ref, time.ctime().replace(' ','_' ).replace(':','.' ))
     os.mkdir(run_dir)
 
-    my_controller = NeuroMLController(ref, a.neuroml_file, a.target, a.sim_time, a.dt, simulator = a.simulator, generate_dir=run_dir)
+    my_controller = NeuroMLController(ref, 
+                                      a.neuroml_file, 
+                                      a.target, 
+                                      a.sim_time, 
+                                      a.dt, 
+                                      simulator = a.simulator, 
+                                      generate_dir=run_dir,
+                                      num_local_procesors_to_use = 1)
 
     peak_threshold = 0
 
