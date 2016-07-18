@@ -37,6 +37,7 @@ DEFAULTS = {'simTime':             500,
             'numOffspring':        20,
             'mutationRate':        0.5,
             'numElites':           1,
+            'numParallelEvaluations':1,
             'seed':                12345,
             'simulator':           'jNeuroML',
             'knownTargetValues':   '{}',
@@ -149,6 +150,12 @@ def process_args():
                         default=DEFAULTS['numElites'],
                         help="Number of elites")
                         
+    parser.add_argument('-numParallelEvaluations', 
+                        type=int,
+                        metavar='<numParallelEvaluations>', 
+                        default=DEFAULTS['numParallelEvaluations'],
+                        help="Number of evaluations to run in parallel")
+                        
     parser.add_argument('-seed', 
                         type=int,
                         metavar='<seed>', 
@@ -226,7 +233,7 @@ def _run_optimisation(a):
                                       a.dt, 
                                       simulator = a.simulator, 
                                       generate_dir=run_dir,
-                                      num_local_procesors_to_use = 1)
+                                      num_parallel_evaluations = a.num_parallel_evaluations)
 
     peak_threshold = 0
 

@@ -59,7 +59,8 @@ if __name__ == '__main__':
                      seed =                12345,
                      simulator =           simulator,
                      nogui =               nogui,
-                     known_target_values = known_target_values)
+                     known_target_values = known_target_values,
+                     num_parallel_evaluations = 10)
 
 
 

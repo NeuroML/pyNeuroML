@@ -27,7 +27,7 @@ class NeuroMLController():
                  dt=0.05, 
                  simulator='jNeuroML', 
                  generate_dir = './',
-                 num_local_procesors_to_use=1):
+                 num_parallel_evaluations=1):
             
         
         self.ref = ref
@@ -37,11 +37,11 @@ class NeuroMLController():
         self.dt = dt
         self.simulator = simulator
         self.generate_dir = generate_dir if generate_dir.endswith('/') else generate_dir+'/'
-        self.num_local_procesors_to_use = num_local_procesors_to_use
+        self.num_parallel_evaluations = num_parallel_evaluations
         
-        if int(num_local_procesors_to_use) != num_local_procesors_to_use or \
-            num_local_procesors_to_use < 1:
-                raise Exception('Error with num_local_procesors_to_use = %s\nPlease use an integer value greater then 1.'%num_local_procesors_to_use)
+        if int(num_parallel_evaluations) != num_parallel_evaluations or \
+            num_parallel_evaluations < 1:
+                raise Exception('Error with num_parallel_evaluations = %s\nPlease use an integer value greater then 1.'%num_parallel_evaluations)
         
         self.count = 0
         
@@ -59,7 +59,7 @@ class NeuroMLController():
         start_time = time.time()
         
         
-        if self.num_local_procesors_to_use == 1:
+        if self.num_parallel_evaluations == 1:
             
             for candidate_i in range(len(candidates)):
                 
@@ -73,7 +73,7 @@ class NeuroMLController():
         else:
             import pp
             ppservers = ()
-            job_server = pp.Server(self.num_local_procesors_to_use, ppservers=ppservers)
+            job_server = pp.Server(self.num_parallel_evaluations, ppservers=ppservers)
             pyneuroml.pynml.print_comment_v('Running %i candidates across %i local processors'%(len(candidates),job_server.get_ncpus()))
             jobs = []
             
@@ -272,7 +272,7 @@ if __name__ == '__main__':
                             dt, 
                             'jNeuroML_NEURON', 
                             'temp/',
-                            num_local_procesors_to_use = 1)
+                            num_parallel_evaluations = 1)
     
     num_cands = 12
     
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         
         print('Using %s & %s'%(parameters, candidates))
         
-        cont.num_local_procesors_to_use = num_cands
+        cont.num_parallel_evaluations = num_cands
         
         traces = cont.run(candidates,parameters)
         
