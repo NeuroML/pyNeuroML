@@ -9,12 +9,10 @@
 import os.path
 import os
 import sys
+import time
 
 from collections import OrderedDict
 import pyneuroml.pynml
-
-
-import time
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)

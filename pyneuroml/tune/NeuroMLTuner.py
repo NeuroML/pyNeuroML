@@ -271,7 +271,7 @@ def _run_optimisation(a):
     secs = time.time()-start
     
     reportj = {}
-    info = "Ran %s evaluations (pop: %s) in %f seconds (%f mins)\n\n"%(a.max_evaluations, a.population_size, secs, secs/60.0)
+    info = "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"%(a.max_evaluations, a.population_size, secs, secs/60.0, (secs/a.max_evaluations))
     report = "----------------------------------------------------\n\n"+ info
              
              
