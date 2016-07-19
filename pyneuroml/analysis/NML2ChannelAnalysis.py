@@ -346,7 +346,8 @@ def process_channel_file(channel_file,a):
 def get_channel_gates(channel):
     channel_gates = []
     for gates in ['gates','gate_hh_rates','gate_hh_tau_infs', 'gate_hh_instantaneouses']:
-        channel_gates += [g.id for g in getattr(channel,gates)]
+        if hasattr(channel,gates):
+            channel_gates += [g.id for g in getattr(channel,gates)]
     return channel_gates
 
 def get_conductance_expression(channel):
