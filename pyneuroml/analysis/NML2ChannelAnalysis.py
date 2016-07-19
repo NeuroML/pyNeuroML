@@ -14,7 +14,7 @@ import re
 
 import neuroml.loaders as loaders
 
-from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v
+from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v, read_neuroml2_file
 
 import airspeed
 
@@ -45,6 +45,7 @@ DEFAULTS = {'v': False,
             'clampBaseVoltage': -70,
             'stepTargetVoltage': 20,
             'erev': 0,
+            'scaleDt': 1,
             'caConc': 5e-5,
             'datSuffix': '',
             'ivCurve': False,
@@ -78,63 +79,68 @@ def process_args():
                         type=int,
                         metavar='<min v>',
                         default=DEFAULTS['minV'],
-                        help="Minimum voltage to test (integer, mV)")
+                        help="Minimum voltage to test (integer, mV), default: %smV"%DEFAULTS['minV'])
                         
     parser.add_argument('-maxV', 
                         type=int,
                         metavar='<max v>',
                         default=DEFAULTS['maxV'],
-                        help="Maximum voltage to test (integer, mV)")
+                        help="Maximum voltage to test (integer, mV), default: %smV"%DEFAULTS['maxV'])
                         
     parser.add_argument('-temperature', 
                         type=float,
                         metavar='<temperature>',
                         default=DEFAULTS['temperature'],
-                        help="Temperature (float, celsius)")
+                        help="Temperature (float, celsius), default: %sdegC"%DEFAULTS['temperature'])
                         
     parser.add_argument('-duration', 
                         type=float,
                         metavar='<duration>',
                         default=DEFAULTS['duration'],
-                        help="Duration of simulation in ms")
+                        help="Duration of simulation in ms, default: %sms"%DEFAULTS['duration'])
                         
     parser.add_argument('-clampDelay', 
                         type=float,
                         metavar='<clamp delay>',
                         default=DEFAULTS['clampDelay'],
-                        help="Delay before voltage clamp is activated in ms")
+                        help="Delay before voltage clamp is activated in ms, default: %sms"%DEFAULTS['clampDelay'])
                         
     parser.add_argument('-clampDuration', 
                         type=float,
                         metavar='<clamp duration>',
                         default=DEFAULTS['clampDuration'],
-                        help="Duration of voltage clamp in ms")
+                        help="Duration of voltage clamp in ms, default: %sms"%DEFAULTS['clampDuration'])
                         
     parser.add_argument('-clampBaseVoltage', 
                         type=float,
                         metavar='<clamp base voltage>',
                         default=DEFAULTS['clampBaseVoltage'],
-                        help="Clamp base (starting/finishing) voltage in mV")
+                        help="Clamp base (starting/finishing) voltage in mV, default: %smV"%DEFAULTS['clampBaseVoltage'])
                         
     parser.add_argument('-stepTargetVoltage', 
                         type=float,
                         metavar='<step target voltage>',
                         default=DEFAULTS['stepTargetVoltage'],
-                        help=("Voltage in mV through which to step voltage "
-                              "clamps"))
+                        help=("Voltage in mV through which to step voltage clamps, default: %smV"%DEFAULTS['stepTargetVoltage']))
                         
     parser.add_argument('-erev', 
                         type=float,
                         metavar='<reversal potential>',
                         default=DEFAULTS['erev'],
-                        help="Reversal potential of channel for currents")
+                        help="Reversal potential of channel for currents, default: %smV"%DEFAULTS['erev'])
+                        
+    parser.add_argument('-scaleDt', 
+                        type=float,
+                        metavar='<scale dt in generated LEMS>',
+                        default=DEFAULTS['scaleDt'],
+                        help="Scale dt in generated LEMS, default: %s"%DEFAULTS['scaleDt'])
                         
     parser.add_argument('-caConc', 
                         type=float,
                         metavar='<Ca2+ concentration>',
                         default=DEFAULTS['caConc'],
                         help=("Internal concentration of Ca2+ (float, "
-                              "concentration in mM)"))
+                              "concentration in mM), default: %smM"%DEFAULTS['caConc']))
                               
                         
     parser.add_argument('-datSuffix', 
@@ -197,7 +203,10 @@ def get_ion_color(ion):
 def get_state_color(s):
     col='#000000'
     if s.startswith('m'): col='#FF0000'
+    if s.startswith('k'): col='#FF0000'
+    if s.startswith('r'): col='#FF0000'
     if s.startswith('h'): col='#00FF00'
+    if s.startswith('l'): col='#00FF00'
     if s.startswith('n'): col='#0000FF'
     if s.startswith('a'): col='#FF0000'
     if s.startswith('b'): col='#00FF00'
@@ -223,7 +232,7 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
-                      gates, temperature, ca_conc, iv_curve, dat_suffix=''):
+                      gates, temperature, ca_conc, iv_curve, scale_dt=1, dat_suffix=''):
                           
     print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
                      channel_file, min_target_voltage, max_target_voltage, temperature))
@@ -242,8 +251,15 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
         target_voltages_map.append(info)
+        
+    includes = get_includes_from_channel_file(channel_file)
+    includes_relative = []
+    base_path = os.path.dirname(channel_file)
+    for inc in includes:
+        includes_relative.append(os.path.abspath(base_path+'/'+inc))
 
     model = {"channel_file":        channel_file, 
+             "includes":            includes_relative, 
              "channel":             channel, 
              "target_voltages" :    target_voltages_map,
              "clamp_delay":         clamp_delay,
@@ -252,6 +268,7 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
              "min_target_voltage":  min_target_voltage,
              "max_target_voltage":  max_target_voltage,
              "duration":  duration,
+             "scale_dt":  scale_dt,
              "erev":  erev,
              "gates":  gates,
              "temperature":  temperature,
@@ -273,7 +290,7 @@ def convert_case(name):
 
 
 def get_channels_from_channel_file(channel_file):
-    doc = loaders.NeuroMLLoader.load(channel_file)
+    doc = read_neuroml2_file(channel_file, include_includes=True, verbose=False, already_included=[])
     channels = list(doc.ion_channel_hhs.__iter__()) + \
                list(doc.ion_channel.__iter__())
     for channel in channels:
@@ -281,6 +298,13 @@ def get_channels_from_channel_file(channel_file):
         if not hasattr(channel,'notes'):
             setattr(channel,'notes','')
     return channels
+
+def get_includes_from_channel_file(channel_file):
+    doc = read_neuroml2_file(channel_file)
+    includes = []
+    for incl in doc.includes:
+        includes.append(incl.href)
+    return includes
 
 
 def process_channel_file(channel_file,a):
@@ -300,10 +324,10 @@ def process_channel_file(channel_file,a):
         else:
             new_lems_file = make_lems_file(channel,a)
             if not a.norun:
-                results = run_lems_file(new_lems_file,a)        
+                results = run_lems_file(new_lems_file,a.v)        
 
             if a.iv_curve:
-                iv_data = compute_iv_curve(channel,a,results)
+                iv_data = compute_iv_curve(channel,(a.clamp_delay + a.clamp_duration),results)
             else:
                 iv_data = None
 
@@ -321,13 +345,13 @@ def process_channel_file(channel_file,a):
 
 def get_channel_gates(channel):
     channel_gates = []
-    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
+    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs', 'gate_hh_instantaneouses']:
         channel_gates += [g.id for g in getattr(channel,gates)]
     return channel_gates
 
 def get_conductance_expression(channel):
     expr = 'g = gmax '
-    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs']:
+    for gates in ['gates','gate_hh_rates','gate_hh_tau_infs', 'gate_hh_instantaneouses']:
         for g in getattr(channel,gates):
             instances = int(g.instances)
             expr += '* %s<sup>%s</sup> '%(g.id, g.instances) if instances >1 else '* %s '%(g.id)
@@ -336,11 +360,12 @@ def get_conductance_expression(channel):
 
 def make_lems_file(channel,a):
     gates = get_channel_gates(channel)
-    lems_content = generate_lems_channel_analyser(
-        channel.file, channel.id, a.min_v, 
-        a.step_target_voltage, a.max_v, a.clamp_delay, 
-        a.clamp_duration, a.clamp_base_voltage, a.duration, 
-        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, a.dat_suffix)
+    lems_content = generate_lems_channel_analyser(channel.file, channel.id, a.min_v, \
+        a.step_target_voltage, a.max_v, a.clamp_delay, \
+        a.clamp_duration, a.clamp_base_voltage, a.duration, \
+        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, \
+        scale_dt = a.scale_dt, \
+        dat_suffix = a.dat_suffix)
     new_lems_file = os.path.join(OUTPUT_DIR,
                                  "LEMS_Test_%s.xml" % channel.id)
     lf = open(new_lems_file, 'w')
@@ -351,12 +376,12 @@ def make_lems_file(channel,a):
     return new_lems_file
 
 
-def run_lems_file(lems_file,a):
+def run_lems_file(lems_file,verbose):
     results = run_lems_with_jneuroml(lems_file, 
                                      nogui=True, 
                                      load_saved_data=True, 
                                      plot=False, 
-                                     verbose=a.v)
+                                     verbose=verbose)
     return results
 
 
@@ -430,7 +455,7 @@ def plot_steady_state(channel,a,results,grid=True):
 def save_fig(name):
     overview_dir = make_overview_dir()
     png_path = os.path.join(overview_dir,name)
-    plt.savefig(png_path)
+    plt.savefig(png_path,bbox_inches='tight')
 
 
 def make_overview_dir():
@@ -440,7 +465,7 @@ def make_overview_dir():
     return overview_dir
 
 
-def compute_iv_curve(channel,a,results,grid=True):                  
+def compute_iv_curve(channel,end_time_ms,results,grid=True):                  
     # Based on work by Rayner Lucas here: 
     # https://github.com/openworm/
     # BlueBrainProjectShowcase/blob/master/
@@ -469,8 +494,7 @@ def compute_iv_curve(channel,a,results,grid=True):
         i_max = -1*sys.float_info.min
         i_min = sys.float_info.min
         i_steady[voltage] = None
-        t_steady_end = (a.clamp_delay + \
-                        a.clamp_duration)/1000.0
+        t_steady_end = end_time_ms/1000.0
         for line in i_file:
             t = float(line.split()[0])
             times[voltage].append(t)

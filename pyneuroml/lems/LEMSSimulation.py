@@ -11,6 +11,8 @@ from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
 from pyneuroml.pynml import print_comment
+from pyneuroml.pynml import print_comment_v
+from pyneuroml.pynml import get_next_hex_color
 
 class LEMSSimulation():
     
@@ -19,19 +21,35 @@ class LEMSSimulation():
     lems_info = {}
     
     
-    def __init__(self, sim_id, duration, dt, target=None, \
-                 comment="\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "%(pynml_ver, libnml_ver)):
+    def __init__(self, 
+                 sim_id, 
+                 duration, 
+                 dt, 
+                 target=None, \
+                 comment="\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "%(pynml_ver, libnml_ver),
+                 lems_seed = 12345):
+                     
+        
         self.lems_info['sim_id'] = sim_id
         self.lems_info['duration'] = duration
         self.lems_info['dt'] = dt
         self.lems_info['comment'] = comment
+        self.lems_info['seed'] = lems_seed
         
         self.lems_info['include_files'] = []
         self.lems_info['displays'] = []
         self.lems_info['output_files'] = []
+        self.lems_info['event_output_files'] = []
         
         if target:
             self.lems_info['target'] = target
+            
+            
+    def __setattr__(self, attr, value):
+        if attr in self.lems_info.keys():
+            self.lems_info[attr] = value
+        else:
+            raise Exception("There is not a field: %s in LEMSSimulation"%attr)
         
         
     def assign_simulation_target(self, target):
@@ -39,11 +57,14 @@ class LEMSSimulation():
         
         
     def include_neuroml2_file(self, nml2_file_name, include_included=True, relative_to_dir='.'):
+        full_path = os.path.abspath(relative_to_dir+'/'+nml2_file_name)
+        base_path = os.path.dirname(full_path)
+        print_comment_v("Including in generated LEMS file: %s (%s)"%(nml2_file_name, full_path))
         self.lems_info['include_files'].append(nml2_file_name)
         if include_included:
-            cell = read_neuroml2_file(relative_to_dir+'/'+nml2_file_name)
+            cell = read_neuroml2_file(full_path)
             for include in cell.includes:
-                self.include_neuroml2_file(include.href, include_included=True, relative_to_dir=relative_to_dir)
+                self.include_neuroml2_file(include.href, include_included=True, relative_to_dir=base_path)
         
         
     def include_lems_file(self, lems_file_name, include_included=True):
@@ -72,8 +93,15 @@ class LEMSSimulation():
         of['file_name'] = file_name
         of['columns'] = []
         
+    def create_event_output_file(self, id, file_name):
+        eof = {}
+        self.lems_info['event_output_files'].append(eof)
+        eof['id'] = id
+        eof['file_name'] = file_name
+        eof['selections'] = []
         
-    def add_line_to_display(self, display_id, line_id, quantity, scale, color, timeScale="1ms"):
+        
+    def add_line_to_display(self, display_id, line_id, quantity, scale=1, color=None, timeScale="1ms"):
         disp = None
         for d in self.lems_info['displays']:
             if d['id'] == display_id:
@@ -84,7 +112,7 @@ class LEMSSimulation():
         line['id'] = line_id
         line['quantity'] = quantity
         line['scale'] = scale
-        line['color'] = color
+        line['color'] = color if color else get_next_hex_color()
         line['time_scale'] = timeScale
         
         
@@ -98,6 +126,18 @@ class LEMSSimulation():
         of['columns'].append(column)
         column['id'] = column_id
         column['quantity'] = quantity
+        
+    def add_selection_to_event_output_file(self, event_output_file_id, event_id, select, event_port):
+        eof = None
+        for o in self.lems_info['event_output_files']:
+            if o['id'] == event_output_file_id:
+                eof = o
+                
+        selection = {}
+        eof['selections'].append(selection)
+        selection['id'] = event_id
+        selection['select'] = select
+        selection['event_port'] = event_port
         
     
     def to_xml(self):

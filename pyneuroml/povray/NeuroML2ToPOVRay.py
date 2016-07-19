@@ -9,19 +9,19 @@
 #
 #
  
-import sys
 import random
 
 import argparse
 
-import neuroml.loaders as loaders
+from pyneuroml import pynml
 
-import os
+from pyneuroml.pynml import print_comment_v
 
 _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
 _GREY = "<0.85,0.85,0.85,0.55>"
 
+_DUMMY_CELL = 'DUMMY_CELL'
 
 def process_args():
     """ 
@@ -30,7 +30,7 @@ def process_args():
     parser = argparse.ArgumentParser(description="A file for converting NeuroML v2 files into POVRay files for 3D rendering")
 
     parser.add_argument('neuroml_file', type=str, metavar='<NeuroML file>', 
-                        help='NeuroML (version 2 beta 3+) file to be converted to PovRay format')
+                        help='NeuroML (version 2 beta 3+) file to be converted to PovRay format (XML or HDF5 format)')
                         
     parser.add_argument('-split',
                         action='store_true',
@@ -48,6 +48,16 @@ def process_args():
                         action='store_true',
                         default=False,
                         help="If this is specified, generate a ini file for generating a sequence of frames for a movie of the 3D structure")
+                        
+    parser.add_argument('-conns',
+                        action='store_true',
+                        default=False,
+                        help="If this is specified, show the connections present in the network with lines (under development)")
+                        
+    parser.add_argument('-v',
+                        action='store_true',
+                        default=False,
+                        help="Verbose output")
 
     parser.add_argument('-frames', 
                         type=int,
@@ -122,7 +132,7 @@ def main ():
         
     xmlfile = args.neuroml_file
 
-    pov_file_name = xmlfile.replace(".xml", ".pov").replace(".nml1", ".pov").replace(".nml", ".pov")
+    pov_file_name = xmlfile.replace(".xml", ".pov").replace(".nml1", ".pov").replace(".nml.h5", ".pov").replace(".nml", ".pov")
 
     pov_file = open(pov_file_name, "w")
 
@@ -136,24 +146,6 @@ POV-Ray file generated from NeuroML network
 #include "colors.inc"
 
 background {rgbt %s}
-
-light_source {
-  <1500,200,1500>
-  color rgb <1,1,1>
-}
-
-light_source {
-  <-500,-200,500>
-  color rgb <1,1,1>
-}
-light_source {
-  <500,-200,-500>
-  color rgb <1,1,1>
-}
-light_source {
-  <-1500,200,-1500>
-  color rgb <1,1,1>
-}
 
 
     \n''' ###    end of header
@@ -172,22 +164,17 @@ light_source {
         splitOut = True
         cells_file = open(cf, "w")
         net_file = open(nf, "w")
-        print("Saving into %s and %s and %s"%(pov_file_name, cf, nf))
+        print_comment_v("Saving into %s and %s and %s"%(pov_file_name, cf, nf))
 
-    print("Converting XML file: %s to %s"%(xmlfile, pov_file_name))
+    print_comment_v("Converting XML file: %s to %s"%(xmlfile, pov_file_name))
 
 
-    nml_doc = loaders.NeuroMLLoader.load(xmlfile)
-    root_dir = os.path.abspath(os.path.dirname(xmlfile))
+    nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, verbose=args.v)
 
     cell_elements = []
     cell_elements.extend(nml_doc.cells)
+    cell_elements.extend(nml_doc.cell2_ca_poolses)
     
-    for include in nml_doc.includes:
-        inc_file = include.href
-        inc_doc = loaders.NeuroMLLoader.load(root_dir+"/"+inc_file)
-        cell_elements.extend(inc_doc.cells)
-        
     
     minXc = 1e9
     minYc = 1e9
@@ -205,12 +192,12 @@ light_source {
 
     declaredcells = {}
 
-    print("There are %i cells in the file"%len(cell_elements))
+    print_comment_v("There are %i cells in the file"%len(cell_elements))
 
     for cell in cell_elements:
         
         cellName = cell.id
-        print("Handling cell: %s"%cellName)
+        print_comment_v("Handling cell: %s"%cellName)
 
         
         declaredcell = "cell_"+cellName
@@ -238,13 +225,13 @@ light_source {
             z = float(distal.z)
             r = max(float(distal.diameter)/2.0, args.mindiam)
 
-            if x<minXc: minXc=x
-            if y<minYc: minYc=y
-            if z<minZc: minZc=z
+            if x-r<minXc: minXc=x-r
+            if y-r<minYc: minYc=y-r
+            if z-r<minZc: minZc=z-r
 
-            if x>maxXc: maxXc=x
-            if y>maxYc: maxYc=y
-            if z>maxZc: maxZc=z
+            if x+r>maxXc: maxXc=x+r
+            if y+r>maxYc: maxYc=y+r
+            if z+r>maxZc: maxZc=z+r
 
             distalpoint = "<%f, %f, %f>, %f "%(x,y,z,r)
 
@@ -265,7 +252,7 @@ light_source {
                 
             if ( shape == "cone" and (proximalpoint.split('>')[0] == distalpoint.split('>')[0])):
                 comment = "Ignoring zero length segment (id = %i): %s -> %s\n"%(id, proximalpoint, distalpoint)
-                print(comment)
+                print_comment_v(comment)
                 cells_file.write("    // "+comment)
                 
             else:
@@ -283,53 +270,65 @@ light_source {
     if splitOut:
         pov_file.write("#include \""+cf+"\"\n\n")
         pov_file.write("#include \""+nf+"\"\n\n")
+        
+    pov_file.write('''\n/*\n  Defining a dummy cell to use when cell in population is not found in NeuroML file...\n*/\n#declare %s = 
+union {
+    sphere {
+        <0.000000, 0.000000, 0.000000>, 5.000000 
+    }
+    pigment { color rgb <1,0,0> }
+}\n'''%_DUMMY_CELL)
 
 
+    positions = {}
     popElements = nml_doc.networks[0].populations
 
-    print("There are %i populations in the file"%len(popElements))
+    print_comment_v("There are %i populations in the file"%len(popElements))
 
     for pop in popElements:
-
+        
         name = pop.id
         celltype = pop.component
         instances = pop.instances
         
 
         info = "Population: %s has %i positioned cells of type: %s"%(name,len(instances),celltype)
-        print(info)
+        print_comment_v(info)
 
         colour = "1"
-        '''
-        if pop.annotation:
-            print dir(pop.annotation)
-            print pop.annotation.anytypeobjs_
-            print pop.annotation.member_data_items_[0].name
-            print dir(pop.annotation.member_data_items_[0])
-            for prop in pop.annotation.anytypeobjs_:
-                print prop
+        
+        for prop in pop.properties:
 
-                if len(prop.getElementsByTagName('meta:tag'))>0 and prop.getElementsByTagName('meta:tag')[0].childNodes[0].data == 'color':
-                    #print prop.getElementsByTagName('meta:tag')[0].childNodes
-                    colour = prop.getElementsByTagName('meta:value')[0].childNodes[0].data
-                    colour = colour.replace(" ", ",")
-                elif prop.hasAttribute('tag') and prop.getAttribute('tag') == 'color':
-                    colour = prop.getAttribute('value')
-                    colour = colour.replace(" ", ",")
-                print "Colour determined to be: "+colour
-        '''
-
+            if prop.tag == 'color':
+                colour = prop.value
+                colour = colour.replace(" ", ",")
+                #print "Colour determined to be: "+colour
+        
         net_file.write("\n\n/* "+info+" */\n\n")
 
+        pop_positions = {}
+        
+        if not celltype in declaredcells:
+            cell_definition = _DUMMY_CELL  
+            minXc = 0
+            minYc = 0
+            minZc = 0
+            maxXc = 0
+            maxYc = 0
+            maxZc = 0
+        else:
+            cell_definition = declaredcells[celltype]
+        
         for instance in instances:
 
             location = instance.location
-            id = instance.id
+            id = int(instance.id)
             net_file.write("object {\n")
-            net_file.write("    %s\n"%declaredcells[celltype])
+            net_file.write("    %s\n"%cell_definition)
             x = float(location.x)
             y = float(location.y)
             z = float(location.z)
+            pop_positions[id] = '<%s,%s,%s>'%(x,y,z)
 
             if x+minXc<minX: minX=x+minXc
             if y+minYc<minY: minY=y+minYc
@@ -350,11 +349,13 @@ light_source {
             net_file.write("\n    //%s_%s\n"%(name, id)) 
 
             net_file.write("}\n")
+        
+        positions[name] = pop_positions
             
         if len(instances) == 0 and int(pop.size>0):
             
             info = "Population: %s has %i unpositioned cells of type: %s"%(name,pop.size,celltype)
-            print(info)
+            print_comment_v(info)
 
             colour = "1"
             '''
@@ -380,7 +381,7 @@ light_source {
 
 
             net_file.write("object {\n")
-            net_file.write("    %s\n"%declaredcells[celltype])
+            net_file.write("    %s\n"%cell_definition)
             x = 0
             y = 0
             z = 0
@@ -405,8 +406,34 @@ light_source {
 
             net_file.write("}\n")
             
-
-
+    #print positions
+            
+    if args.conns: # Note: segment specific connections not implemented yet... i.e. connections from dends to axons...
+        print_comment_v("************************\n*\n*  Note: connection lines in 3D do not yet target dendritic locations!\n*\n************************")
+        for projection in nml_doc.networks[0].projections:
+            pre = projection.presynaptic_population
+            post = projection.postsynaptic_population
+            connections = projection.connections + projection.connection_wds
+            print("Adding %i connections %s -> %s "%(len(connections),pre,post))
+            for connection in connections:
+                pre_cell = connection.get_pre_cell_id()
+                post_cell = connection.get_post_cell_id()
+                
+                pre_loc = '<0,0,0>' 
+                if positions.has_key(pre): 
+                    if len(positions[pre])>0:
+                        pre_loc = positions[pre][pre_cell] 
+                post_loc = '<0,0,0>'
+                if positions.has_key(post):
+                    post_loc = positions[post][post_cell] 
+                
+                net_file.write("// Connection from %s:%s %s -> %s:%s %s\n"%(pre, pre_cell, pre_loc, post, post_cell, post_loc)) 
+                net_file.write("cylinder{ %s, %s, .1  pigment{color Grey}}\n\n"%(pre_loc, post_loc))
+                #net_file.write("blob {\n    threshold .65\n    sphere { %s, .9, 10 pigment {Blue} }\n"%(pre_loc))
+                #net_file.write("    cylinder{ %s, %s, .4, 1 }\n"%(pre_loc, post_loc))
+                #net_file.write("    sphere { %s,5, 10 pigment {Green} }\n    finish { phong 1 }\n}\n\n"%(post_loc))
+        
+        
     plane = '''
 plane {
    y, vv(-1)
@@ -435,6 +462,27 @@ plane {
 #macro ww(xx)
     0.5 * (maxZ *(1+xx) + minZ*(1-xx))
 #end
+
+light_source {
+  <uu(5),uu(2),uu(5)>
+  color rgb <1,1,1>
+  
+}
+light_source {
+  <uu(-5),uu(2),uu(-5)>
+  color rgb <1,1,1>
+  
+}
+light_source {
+  <uu(5),uu(-2),uu(-5)>
+  color rgb <1,1,1>
+  
+}
+light_source {
+  <uu(-5),uu(-2),uu(5)>
+  color rgb <1,1,1>
+}
+
 
 // Trying to view box
 camera {
@@ -476,12 +524,12 @@ Pause_when_Done=off
         ini_file.write(ini_movie%(pov_file_name, args.frames))
         ini_file.close()
         
-        print("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n"%(args.frames,ini_file_name,ini_file_name))
+        print_comment_v("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n"%(args.frames,ini_file_name,ini_file_name))
         
     else:
         
-        print("Created file for generating image of network. To run this type:\n\n    povray %s\n"%(pov_file_name))
-        print("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n"%(pov_file_name))
+        print_comment_v("Created file for generating image of network. To run this type:\n\n    povray %s\n"%(pov_file_name))
+        print_comment_v("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n"%(pov_file_name))
 
 
 if __name__ == '__main__':

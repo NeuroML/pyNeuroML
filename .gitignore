@@ -1,3 +1,6 @@
+/examples/Makefile
+/examples/fn1.mod
+/examples/fn1_flat_dnsim.txt
 /examples/archive.sh
 /src
 /examples/test_data/hh_v.dat
@@ -21,12 +24,30 @@
 /examples/test.level1.xml
 /examples/html
 /examples/channel_summary
+/examples/input*.mod
 /examples/NT_*
+/examples/*.spineml
+/examples/*.9ml
+/examples/*.m
+/examples/*.sbml
+/examples/*.sedml
+/examples/*.json
+/examples/*.c
+/examples/*.ode
+/examples/*.svg
+/examples/*brian.py
 .idea
 
 /examples/LEMS_iv_hhcell.xml
 /examples/iv_hhcell.net.nml
 /examples/iv_hhcell.v.dat
+
+/examples/tune/NT*
+/examples/tune/*.mod
+/examples/tune/*.hoc
+/examples/tune/*nrn.py
+
+
 /pyneuroml/lems/mysim.v.dat
 /pyneuroml/lems/LEMS_mysim.xml
 
@@ -53,3 +74,17 @@ examples/old
 examples/results/*.dat
 *.dat
 *.xml
+/examples/tune/temp/Ca_conc.mod
+/examples/tune/temp/Ca_pyr.mod
+/examples/tune/temp/Input_1.mod
+/examples/tune/temp/Kahp_pyr.mod
+/examples/tune/temp/Kdr_pyr.mod
+/examples/tune/temp/LeakConductance_pyr.mod
+/examples/tune/temp/Na_pyr.mod
+/examples/tune/temp/OnePyr.net.nml
+/examples/tune/temp/pyr_4_sym.hoc
+
+*.tmp
+/examples/Vm_Test.sim.nml
+/dockx
+/dockx~

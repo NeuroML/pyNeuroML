@@ -37,6 +37,7 @@ DEFAULTS = {'simTime':             500,
             'numOffspring':        20,
             'mutationRate':        0.5,
             'numElites':           1,
+            'numParallelEvaluations':1,
             'seed':                12345,
             'simulator':           'jNeuroML',
             'knownTargetValues':   '{}',
@@ -149,6 +150,12 @@ def process_args():
                         default=DEFAULTS['numElites'],
                         help="Number of elites")
                         
+    parser.add_argument('-numParallelEvaluations', 
+                        type=int,
+                        metavar='<numParallelEvaluations>', 
+                        default=DEFAULTS['numParallelEvaluations'],
+                        help="Number of evaluations to run in parallel")
+                        
     parser.add_argument('-seed', 
                         type=int,
                         metavar='<seed>', 
@@ -219,7 +226,14 @@ def _run_optimisation(a):
     run_dir = "NT_%s_%s"%(ref, time.ctime().replace(' ','_' ).replace(':','.' ))
     os.mkdir(run_dir)
 
-    my_controller = NeuroMLController(ref, a.neuroml_file, a.target, a.sim_time, a.dt, simulator = a.simulator, generate_dir=run_dir)
+    my_controller = NeuroMLController(ref, 
+                                      a.neuroml_file, 
+                                      a.target, 
+                                      a.sim_time, 
+                                      a.dt, 
+                                      simulator = a.simulator, 
+                                      generate_dir=run_dir,
+                                      num_parallel_evaluations = a.num_parallel_evaluations)
 
     peak_threshold = 0
 
@@ -264,7 +278,7 @@ def _run_optimisation(a):
     secs = time.time()-start
     
     reportj = {}
-    info = "Ran %s evaluations (pop: %s) in %f seconds (%f mins)\n\n"%(a.max_evaluations, a.population_size, secs, secs/60.0)
+    info = "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"%(a.max_evaluations, a.population_size, secs, secs/60.0, (secs/a.max_evaluations))
     report = "----------------------------------------------------\n\n"+ info
              
              

@@ -2,6 +2,7 @@ from setuptools import setup
 
 import pyneuroml
 version = pyneuroml.__version__
+jnml_version = pyneuroml.JNEUROML_VERSION
 
 setup(
     name='pyNeuroML',
@@ -23,7 +24,7 @@ setup(
                             'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main']},
     package_data={
         'pyneuroml': [
-            'lib/jNeuroML-0.7.3-jar-with-dependencies.jar',
+            'lib/jNeuroML-%s-jar-with-dependencies.jar'%jnml_version,
             'analysis/LEMS_Test_TEMPLATE.xml',
             'analysis/ChannelInfo_TEMPLATE.html',
             'analysis/ChannelInfo_TEMPLATE.md',
@@ -38,12 +39,11 @@ setup(
         'argparse',
         'lxml',
         'pylems',
-        'airspeed>=0.4.1',
-        'libNeuroML>=0.2.10',
+        'airspeed==0.5.4dev-20150515',
+        'libNeuroML>=0.2.17',
         'matplotlib'],
     dependency_links=[
-      'https://github.com/purcell/airspeed.git',
-      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML-0.2.10'
+      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML'
     ],
     classifiers = [
         'Intended Audience :: Science/Research',
