@@ -327,7 +327,7 @@ def process_channel_file(channel_file,a):
                 results = run_lems_file(new_lems_file,a.v)        
 
             if a.iv_curve:
-                iv_data = compute_iv_curve(channel,(a.clamp_delay + a.clamp_duration),results)
+                iv_data = compute_iv_curve(channel,a,results)
             else:
                 iv_data = None
 
@@ -466,11 +466,12 @@ def make_overview_dir():
     return overview_dir
 
 
-def compute_iv_curve(channel,end_time_ms,results,grid=True):                  
+def compute_iv_curve(channel, a, results, grid=True):                  
     # Based on work by Rayner Lucas here: 
     # https://github.com/openworm/
     # BlueBrainProjectShowcase/blob/master/
-    # Channelpedia/iv_analyse.py              
+    # Channelpedia/iv_analyse.py         
+    end_time_ms = (a.clamp_delay + a.clamp_duration)     
     dat_path = os.path.join(OUTPUT_DIR,
                             '%s.i_*.lems.dat' % channel.id)
     file_names = glob.glob(dat_path)                        
