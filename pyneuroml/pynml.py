@@ -338,7 +338,17 @@ def reload_saved_data(lems_file_name,
     
     for i,of in enumerate(output_files):
         results['t'] = []
-        file_name = base_dir + '/' + of.attrib['fileName']
+        name = of.attrib['fileName']
+        file_name = os.path.join(base_dir,name)
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            file_name = os.path.join(os.getcwd(),name) 
+            # ... try relative to cwd.  
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
+            # ... try relative to cwd in NeuroML2/results subdir.  
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            raise OSError(('Could not find simulation output '
+                           'file %s' % file_name))
         print_comment("Loading saved data from %s%s" \
                       % (file_name, ' (%s)'%simulator if simulator else ''), 
                          verbose)
@@ -443,7 +453,7 @@ def run_jneuroml(pre_args,
     output = ''
     
     try:
-        output = execute_command_in_dir("java -Xmx%s -jar  '%s' %s %s %s" %
+        output = execute_command_in_dir("java -Xmx%s -jar  '%s' %s '%s' %s" %
                                         (max_memory, jar, pre_args, target_file, 
                                          post_args), exec_in_dir, 
                                         verbose=verbose)
