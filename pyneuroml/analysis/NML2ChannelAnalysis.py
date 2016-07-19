@@ -561,20 +561,23 @@ def make_iv_curve_fig(a,grid=True):
     fig.canvas.set_window_title(
         "Currents vs. holding potentials at erev = %s V"\
         % a.erev)
-    plt.xlabel('Membrane potential (V)')
-    plt.ylabel('Current (A)')
+    plt.xlabel('Membrane potential (mV)')
+    plt.ylabel('Current (pA)')
     plt.grid('on' if grid else 'off')
 
 
-def plot_iv_curve(a,hold_v,i,grid=True,same_fig=False,**plot_args):     
+def plot_iv_curve(a, hold_v, i, *plt_args, grid=True, same_fig=False, 
+                  **plt_kwargs):     
     # A single IV curve.  
+    if not len(plt_args):
+        plt_args = ('ko-',)
+    if 'label' not in plt_kwargs:
+        plt_kwargs['label'] = 'Current'
     if not same_fig:
-        make_iv_curve_fig(a,grid=grid)
+        make_iv_curve_fig(a, grid=grid)
     if type(i) is dict:
         i = [i[v] for v in hold_v]
-    if 'label' not in plot_args:
-        plot_args['label'] = 'Current'
-    plt.plot(hold_v, i, 'ko-', **plot_args)
+    plt.plot(hold_v*1e3, i*1e12, *plt_args, **plt_kwargs)
     plt.legend(loc=2)
             
 
