@@ -375,7 +375,8 @@ def reload_saved_data(lems_file_name,
             results[quantity] = []
             cols.append(quantity)
             
-        for line in open(file_name):
+        with open(file_name) as f:
+          for line in f:
             values = line.split()
             
             for vi in range(len(values)):
