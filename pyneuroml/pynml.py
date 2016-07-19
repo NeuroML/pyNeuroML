@@ -14,6 +14,8 @@ import os
 import sys
 import subprocess
 import math
+from datetime import datetime
+import warnings
 
 from . import __version__
 
@@ -261,6 +263,7 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
                                   max_memory=DEFAULTS['default_java_max_memory'], 
+                                  skip_run=False,
                                   nogui=False, 
                                   load_saved_data=False, 
                                   plot=False, 
@@ -275,7 +278,11 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    success = run_jneuroml("", 
+    t_run = datetime.now()
+    if skip_run:
+      success = True
+    else:
+      success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
@@ -288,6 +295,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML_NEURON')
@@ -296,6 +304,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     
     
 def reload_saved_data(lems_file_name, 
+                      t_run=datetime(1900,1,1),
                       plot=False, 
                       show_plot_already=True, 
                       simulator=None, 
@@ -349,6 +358,12 @@ def reload_saved_data(lems_file_name,
         if not os.path.isfile(file_name): # If not relative to the LEMS file...
             raise OSError(('Could not find simulation output '
                            'file %s' % file_name))
+        t_file_mod = datetime.fromtimestamp(os.path.getmtime(file_name))
+        if t_file_mod < t_run:
+          warnings.warn(("Expected output file %s has not been modified since "
+                         "%s but the simulation was run later at %s." 
+                         % (file_name,t_file_mod,t_run)))
+
         print_comment("Loading saved data from %s%s" \
                       % (file_name, ' (%s)'%simulator if simulator else ''), 
                          verbose)
