@@ -319,7 +319,7 @@ def reload_saved_data(lems_file_name,
     base_dir = os.path.dirname(lems_file_name) \
                if len(os.path.dirname(lems_file_name))>0 \
                else '.'
-    
+
     from lxml import etree
     tree = etree.parse(lems_file_name)
     
@@ -367,7 +367,7 @@ def reload_saved_data(lems_file_name,
         print_comment("Loading saved data from %s%s" \
                       % (file_name, ' (%s)'%simulator if simulator else ''), 
                          verbose)
-
+        
         cols = []
         cols.append('t')
         for col in of.findall(ns_prefix+'OutputColumn'):
@@ -380,7 +380,7 @@ def reload_saved_data(lems_file_name,
             values = line.split()
             
             for vi in range(len(values)):
-               results[cols[vi]].append(float(values[vi]))
+              results[cols[vi]].append(float(values[vi]))
                
 
         if plot:
