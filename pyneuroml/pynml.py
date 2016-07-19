@@ -343,7 +343,10 @@ def reload_saved_data(lems_file_name,
         columns = min(3,n_output_files)
         fig,ax = plt.subplots(rows,columns,sharex=True,
                               figsize=(4*columns,4*rows))
-        ax = ax.ravel()
+        if rows*columns > 1:
+            ax = ax.ravel()
+        else:
+            ax = [ax]
     
     for i,of in enumerate(output_files):
         results['t'] = []
