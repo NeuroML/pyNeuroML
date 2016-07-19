@@ -374,7 +374,7 @@ def reload_saved_data(lems_file_name,
         cols = []
         cols.append('t')
         for col in of.findall(ns_prefix+'OutputColumn'):
-            quantity = col.attrib['quantity']
+            quantity = col.attrib['id']
             results[quantity] = []
             cols.append(quantity)
             
