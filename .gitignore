@@ -88,3 +88,4 @@ examples/results/*.dat
 /examples/Vm_Test.sim.nml
 /dockx
 /dockx~
+/pyneuroml/__init__$py.class
