@@ -197,11 +197,15 @@ def analyse_spiketime_vs_dt(nml2_file,
                             verbose=False,
                             spike_threshold_mV = 0,
                             show_plot_already=True,
-                            save_figure_to=None):
+                            save_figure_to=None,
+                            num_of_last_spikes=None):
                                 
     from pyelectro.analysis import max_min
+    import numpy as np
     
     all_results = {}
+    
+    dts=list(np.sort(dts))
     
     for dt in dts:
         if verbose:
@@ -229,7 +233,6 @@ def analyse_spiketime_vs_dt(nml2_file,
              
         all_results[dt] = results
         
-
     xs = []
     ys = []
     labels = []
@@ -238,6 +241,9 @@ def analyse_spiketime_vs_dt(nml2_file,
     spys = []
     linestyles = []
     markers = []
+    colors=[]
+    spike_times_final=[]
+    array_of_num_of_spikes=[]
     
     for dt in dts:
         t = all_results[dt]['t']
@@ -248,52 +254,90 @@ def analyse_spiketime_vs_dt(nml2_file,
         
         mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
         spike_times = mm['maxima_times']
+        spike_times_final.append(spike_times)
+        array_of_num_of_spikes.append(len(spike_times))
+    
+    min_dt_spikes=spike_times_final[0]
+    
+    bound_dts=[dts[0],dts[-1]]
+    
+    if num_of_last_spikes == None:
+    
+       num_of_spikes=array_of_num_of_spikes[0]
+       
+    else:
+       
+       if array_of_num_of_spikes[0] >=num_of_last_spikes:
+       
+          num_of_spikes=num_of_last_spikes
+          
+       else:
+       
+          num_of_spikes=array_of_num_of_spikes[0]
+    
+    collecting_spikes=True
+       
+    last_spike_index=-1
+       
+    spike_counter=0
+    
+    while collecting_spikes:
+       
+       spike_time_values=[]
         
-
-        spxs_ = []
-        spys_ = []
-        for s in spike_times:
-            spys_.append(s)
-            spxs_.append(dt)
+       dt_values=[]
         
-        spys.append(spys_)
-        spxs.append(spxs_)
-        linestyles.append('-')
-        markers.append('x')
+       for dt in range(0,len(dts)):
         
-    num_of_spikes=len(spys[0])
-    all_equal=True
-    for dt_value in range(0,len(dts)):
-        if len(spys[dt_value]) != num_of_spikes:
-           all_equal=False
-           break
-    if all_equal:
-       line_spxs=[]
-       line_spys=[]
-       linestyles=[]
-       markers=[]
-       for spike in range(0,num_of_spikes):
-           linestyles.append('-')
-           markers.append('x')
-           line_spxs.append(dts)
-           spike_var=[]
-           for dt_value in range(0,len(dts)):
-               spike_var.append(spys[dt_value][spike])
-           line_spys.append(spike_var)
-       spxs=line_spxs
-       spys=line_spys
-                   
+           if spike_times_final[dt] !=[]:
+           
+              if len(spike_times_final[dt]) > abs(last_spike_index)-1:
+             
+                 spike_time_values.append(spike_times_final[dt][last_spike_index])
+               
+                 dt_values.append(dts[dt])       
+        
+       linestyles.append('-')
+               
+       markers.append('o')
+       
+       colors.append('g')
+       
+       spxs.append(dt_values)
+       
+       spys.append(spike_time_values)
+       
+       vertical_line=[min_dt_spikes[last_spike_index],min_dt_spikes[last_spike_index] ]
+          
+       spxs.append(bound_dts)
+          
+       spys.append(vertical_line)
+          
+       linestyles.append('--')
+          
+       markers.append('')
+       
+       colors.append('k')
+       
+       last_spike_index-=1
+          
+       spike_counter+=1
+          
+       if spike_counter==num_of_spikes:
+          
+          collecting_spikes=False
+             
     pynml.generate_plot(spxs, 
           spys, 
           "Spike times vs dt",
+          colors=colors,
           linestyles = linestyles,
           markers = markers,
           xaxis = 'dt  (ms)', 
           yaxis = 'Spike times (s)',
           show_plot_already=show_plot_already,
           save_figure_to=save_figure_to) 
-
-        
+    
     if verbose:
         pynml.generate_plot(xs, 
                   ys, 
@@ -303,5 +347,3 @@ def analyse_spiketime_vs_dt(nml2_file,
                   save_figure_to=save_figure_to)
                   
 
-                  
-                  
