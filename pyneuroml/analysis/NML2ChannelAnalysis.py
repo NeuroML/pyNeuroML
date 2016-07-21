@@ -566,9 +566,10 @@ def make_iv_curve_fig(a,grid=True):
     plt.grid('on' if grid else 'off')
 
 
-def plot_iv_curve(a, hold_v, i, *plt_args, grid=True, same_fig=False, 
-                  **plt_kwargs):     
-    # A single IV curve.  
+def plot_iv_curve(a, hold_v, i, *plt_args, **plt_kwargs):    
+    """A single IV curve"""
+    plt_kwargs['grid'] = plt_kwargs.get('grid',True)
+    plt_kwargs['same_fig'] = plt_kwargs('same_fig',False) 
     if not len(plt_args):
         plt_args = ('ko-',)
     if 'label' not in plt_kwargs:
