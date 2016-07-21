@@ -327,7 +327,7 @@ def process_channel_file(channel_file,a):
                 results = run_lems_file(new_lems_file,a.v)        
 
             if a.iv_curve:
-                iv_data = compute_iv_curve(channel,(a.clamp_delay + a.clamp_duration),results)
+                iv_data = compute_iv_curve(channel,a,results)
             else:
                 iv_data = None
 
@@ -346,7 +346,8 @@ def process_channel_file(channel_file,a):
 def get_channel_gates(channel):
     channel_gates = []
     for gates in ['gates','gate_hh_rates','gate_hh_tau_infs', 'gate_hh_instantaneouses']:
-        channel_gates += [g.id for g in getattr(channel,gates)]
+        if hasattr(channel,gates):
+            channel_gates += [g.id for g in getattr(channel,gates)]
     return channel_gates
 
 def get_conductance_expression(channel):
@@ -465,11 +466,12 @@ def make_overview_dir():
     return overview_dir
 
 
-def compute_iv_curve(channel,end_time_ms,results,grid=True):                  
+def compute_iv_curve(channel, a, results, grid=True):                  
     # Based on work by Rayner Lucas here: 
     # https://github.com/openworm/
     # BlueBrainProjectShowcase/blob/master/
-    # Channelpedia/iv_analyse.py              
+    # Channelpedia/iv_analyse.py         
+    end_time_ms = (a.clamp_delay + a.clamp_duration)     
     dat_path = os.path.join(OUTPUT_DIR,
                             '%s.i_*.lems.dat' % channel.id)
     file_names = glob.glob(dat_path)                        
@@ -559,20 +561,23 @@ def make_iv_curve_fig(a,grid=True):
     fig.canvas.set_window_title(
         "Currents vs. holding potentials at erev = %s V"\
         % a.erev)
-    plt.xlabel('Membrane potential (V)')
-    plt.ylabel('Current (A)')
+    plt.xlabel('Membrane potential (mV)')
+    plt.ylabel('Current (pA)')
     plt.grid('on' if grid else 'off')
 
 
-def plot_iv_curve(a,hold_v,i,grid=True,same_fig=False,**plot_args):     
+def plot_iv_curve(a, hold_v, i, *plt_args, grid=True, same_fig=False, 
+                  **plt_kwargs):     
     # A single IV curve.  
+    if not len(plt_args):
+        plt_args = ('ko-',)
+    if 'label' not in plt_kwargs:
+        plt_kwargs['label'] = 'Current'
     if not same_fig:
-        make_iv_curve_fig(a,grid=grid)
+        make_iv_curve_fig(a, grid=grid)
     if type(i) is dict:
         i = [i[v] for v in hold_v]
-    if 'label' not in plot_args:
-        plot_args['label'] = 'Current'
-    plt.plot(hold_v, i, 'ko-', **plot_args)
+    plt.plot(hold_v*1e3, i*1e12, *plt_args, **plt_kwargs)
     plt.legend(loc=2)
             
 
