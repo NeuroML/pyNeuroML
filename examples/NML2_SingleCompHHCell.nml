@@ -34,7 +34,7 @@
 
             <membraneProperties>
                         
-                <channelDensity id="leak" ionChannel="LeakConductance" condDensity="3.0 S_per_m2" erev="-54.3mV"/>
+                <channelDensity id="leak" ionChannel="LeakConductance" condDensity="3.0 S_per_m2" erev="-54.3mV" ion="non_specific"/>
                 <channelDensity id="NaConductances" ionChannel="NaConductance" condDensity="120.0 mS_per_cm2" erev="50.0 mV" ion="na"/>
                 <channelDensity id="KConductances" ionChannel="KConductance" condDensity="360 S_per_m2" erev="-77mV" ion="k"/>
 
