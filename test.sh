@@ -78,7 +78,6 @@ echo "##   Generate a frequency vs current plot"
 
     python generate_if_curve.py -nogui  
 
-fi 
 
 echo
 echo "################################################"
@@ -86,6 +85,7 @@ echo "##   Generate a dt dependence plot"
 
     python dt_dependence.py -nogui  
 
+fi 
 
 
 

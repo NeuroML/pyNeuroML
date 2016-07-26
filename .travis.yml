@@ -4,10 +4,11 @@ python:
   - "2.6" 
   - "2.7"
   - "3.2"
-  - "3.4" # should work...
+  - "3.4"
   
 install:
-    - pip install git+https://github.com/NeuralEnsemble/pyelectro.git
+    #  This requires numpy etc...
+    #- pip install git+https://github.com/NeuralEnsemble/pyelectro.git
     
     - pip install . -r requirements.txt
     
