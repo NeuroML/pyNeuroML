@@ -33,16 +33,16 @@ NEURON {
     RANGE m_rateScale                       : exposure
     
     RANGE m_fcond                           : exposure
-    RANGE m_reverseRate_rate                : parameter
-    RANGE m_reverseRate_midpoint            : parameter
-    RANGE m_reverseRate_scale               : parameter
-    
-    RANGE m_reverseRate_r                   : exposure
     RANGE m_forwardRate_rate                : parameter
     RANGE m_forwardRate_midpoint            : parameter
     RANGE m_forwardRate_scale               : parameter
     
     RANGE m_forwardRate_r                   : exposure
+    RANGE m_reverseRate_rate                : parameter
+    RANGE m_reverseRate_midpoint            : parameter
+    RANGE m_reverseRate_scale               : parameter
+    
+    RANGE m_reverseRate_r                   : exposure
     RANGE h_instances                       : parameter
     
     RANGE h_alpha                           : exposure
@@ -56,16 +56,16 @@ NEURON {
     RANGE h_rateScale                       : exposure
     
     RANGE h_fcond                           : exposure
-    RANGE h_reverseRate_rate                : parameter
-    RANGE h_reverseRate_midpoint            : parameter
-    RANGE h_reverseRate_scale               : parameter
-    
-    RANGE h_reverseRate_r                   : exposure
     RANGE h_forwardRate_rate                : parameter
     RANGE h_forwardRate_midpoint            : parameter
     RANGE h_forwardRate_scale               : parameter
     
     RANGE h_forwardRate_r                   : exposure
+    RANGE h_reverseRate_rate                : parameter
+    RANGE h_reverseRate_midpoint            : parameter
+    RANGE h_reverseRate_scale               : parameter
+    
+    RANGE h_reverseRate_r                   : exposure
     RANGE m_forwardRate_x                   : derived variable
     RANGE conductanceScale                  : derived variable
     RANGE fopen0                            : derived variable
@@ -96,19 +96,19 @@ PARAMETER {
     
     conductance = 1.0E-5 (uS)
     m_instances = 3 
-    m_reverseRate_rate = 4 (kHz)
-    m_reverseRate_midpoint = -65 (mV)
-    m_reverseRate_scale = -18 (mV)
     m_forwardRate_rate = 1 (kHz)
     m_forwardRate_midpoint = -40 (mV)
     m_forwardRate_scale = 10 (mV)
+    m_reverseRate_rate = 4 (kHz)
+    m_reverseRate_midpoint = -65 (mV)
+    m_reverseRate_scale = -18 (mV)
     h_instances = 1 
-    h_reverseRate_rate = 1 (kHz)
-    h_reverseRate_midpoint = -35 (mV)
-    h_reverseRate_scale = 10 (mV)
     h_forwardRate_rate = 0.07 (kHz)
     h_forwardRate_midpoint = -65 (mV)
     h_forwardRate_scale = -20 (mV)
+    h_reverseRate_rate = 1 (kHz)
+    h_reverseRate_midpoint = -35 (mV)
+    h_reverseRate_scale = 10 (mV)
 }
 
 ASSIGNED {
@@ -121,11 +121,11 @@ ASSIGNED {
     ina (mA/cm2)
     
     
-    m_reverseRate_r (kHz)                  : derived variable
-    
     m_forwardRate_x                        : derived variable
     
     m_forwardRate_r (kHz)                  : conditional derived var...
+    
+    m_reverseRate_r (kHz)                  : derived variable
     
     m_rateScale                            : derived variable
     
@@ -139,9 +139,9 @@ ASSIGNED {
     
     m_tau (ms)                             : derived variable
     
-    h_reverseRate_r (kHz)                  : derived variable
-    
     h_forwardRate_r (kHz)                  : derived variable
+    
+    h_reverseRate_r (kHz)                  : derived variable
     
     h_rateScale                            : derived variable
     
@@ -217,7 +217,6 @@ DERIVATIVE states {
 
 PROCEDURE rates() {
     
-    m_reverseRate_r = m_reverseRate_rate  * exp((v -  m_reverseRate_midpoint )/ m_reverseRate_scale ) ? evaluable
     m_forwardRate_x = (v -  m_forwardRate_midpoint ) /  m_forwardRate_scale ? evaluable
     if (m_forwardRate_x  != 0)  { 
         m_forwardRate_r = m_forwardRate_rate  *  m_forwardRate_x  / (1 - exp(0 -  m_forwardRate_x )) ? evaluable cdv
@@ -225,6 +224,7 @@ PROCEDURE rates() {
         m_forwardRate_r = m_forwardRate_rate ? evaluable cdv
     }
     
+    m_reverseRate_r = m_reverseRate_rate  * exp((v -  m_reverseRate_midpoint )/ m_reverseRate_scale ) ? evaluable
     ? DerivedVariable is based on path: q10Settings[*]/q10, on: Component(id=m type=gateHHrates), from q10Settings; null
     ? Path not present in component, using factor: 1
     
@@ -239,8 +239,8 @@ PROCEDURE rates() {
     m_fcond = m_q ^ m_instances ? evaluable
     m_inf = m_alpha /( m_alpha + m_beta ) ? evaluable
     m_tau = 1/(( m_alpha + m_beta ) *  m_rateScale ) ? evaluable
-    h_reverseRate_r = h_reverseRate_rate  / (1 + exp(0 - (v -  h_reverseRate_midpoint )/ h_reverseRate_scale )) ? evaluable
     h_forwardRate_r = h_forwardRate_rate  * exp((v -  h_forwardRate_midpoint )/ h_forwardRate_scale ) ? evaluable
+    h_reverseRate_r = h_reverseRate_rate  / (1 + exp(0 - (v -  h_reverseRate_midpoint )/ h_reverseRate_scale )) ? evaluable
     ? DerivedVariable is based on path: q10Settings[*]/q10, on: Component(id=h type=gateHHrates), from q10Settings; null
     ? Path not present in component, using factor: 1
     
