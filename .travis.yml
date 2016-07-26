@@ -7,6 +7,8 @@ python:
   - "3.4" # should work...
   
 install:
+    - pip install git+https://github.com/NeuralEnsemble/pyelectro.git
+    
     - pip install . -r requirements.txt
     
 script:
