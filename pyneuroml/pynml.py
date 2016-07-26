@@ -15,7 +15,6 @@ import sys
 import subprocess
 import math
 from datetime import datetime
-import warnings
 
 from . import __version__
 from . import JNEUROML_VERSION
@@ -489,8 +488,6 @@ def reload_saved_data(lems_file_name,
                               figsize=(4*columns,4*rows))
         if n_output_files>1:
             ax = ax.ravel()
-        else:
-            ax = [ax]
     
     for i,of in enumerate(output_files):
         results['t'] = []
@@ -507,9 +504,9 @@ def reload_saved_data(lems_file_name,
                            'file %s' % file_name))
         t_file_mod = datetime.fromtimestamp(os.path.getmtime(file_name))
         if t_file_mod < t_run:
-          warnings.warn(("Expected output file %s has not been modified since "
+          raise Exception("Expected output file %s has not been modified since "
                          "%s but the simulation was run later at %s." 
-                         % (file_name,t_file_mod,t_run)))
+                         % (file_name,t_file_mod,t_run))
 
         print_comment("Loading saved data from %s%s" \
                       % (file_name, ' (%s)'%simulator if simulator else ''), 
@@ -518,7 +515,7 @@ def reload_saved_data(lems_file_name,
         cols = []
         cols.append('t')
         for col in of.findall(ns_prefix+'OutputColumn'):
-            quantity = col.attrib['id']
+            quantity = col.attrib['quantity']
             results[quantity] = []
             cols.append(quantity)
             
