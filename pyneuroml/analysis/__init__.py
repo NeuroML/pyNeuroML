@@ -4,6 +4,7 @@ import neuroml as nml
 
 from pyneuroml.pynml import print_comment_v
 from pyneuroml.lems import generate_lems_file_for_neuroml
+import math
 
 
 def generate_current_vs_frequency_curve(nml2_file, 
@@ -196,11 +197,16 @@ def analyse_spiketime_vs_dt(nml2_file,
                             dts,
                             verbose=False,
                             spike_threshold_mV = 0,
-                            show_plot_already=True):
+                            show_plot_already=True,
+                            save_figure_to=None,
+                            num_of_last_spikes=None):
                                 
     from pyelectro.analysis import max_min
+    import numpy as np
     
     all_results = {}
+    
+    dts=list(np.sort(dts))
     
     for dt in dts:
         if verbose:
@@ -228,7 +234,6 @@ def analyse_spiketime_vs_dt(nml2_file,
              
         all_results[dt] = results
         
-
     xs = []
     ys = []
     labels = []
@@ -237,6 +242,9 @@ def analyse_spiketime_vs_dt(nml2_file,
     spys = []
     linestyles = []
     markers = []
+    colors=[]
+    spike_times_final=[]
+    array_of_num_of_spikes=[]
     
     for dt in dts:
         t = all_results[dt]['t']
@@ -246,31 +254,102 @@ def analyse_spiketime_vs_dt(nml2_file,
         labels.append(dt)
         
         mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
+        
         spike_times = mm['maxima_times']
         
-
-        spxs_ = []
-        spys_ = []
-        for s in spike_times:
-            spys_.append(s)
-            spxs_.append(dt)
+        spike_times_final.append(spike_times)
         
-        spys.append(spys_)
-        spxs.append(spxs_)
+        array_of_num_of_spikes.append(len(spike_times))
+        
+    max_num_of_spikes=max(array_of_num_of_spikes)
+    
+    min_dt_spikes=spike_times_final[0]
+    
+    bound_dts=[math.log(dts[0]),math.log(dts[-1])]
+    
+    if num_of_last_spikes == None:
+    
+       num_of_spikes=len(min_dt_spikes)
+       
+    else:
+       
+       if len(min_dt_spikes) >=num_of_last_spikes:
+       
+          num_of_spikes=num_of_last_spikes
+          
+       else:
+       
+          num_of_spikes=len(min_dt_spikes)
+    
+    spike_indices=[(-1)*ind for ind in range(1,num_of_spikes+1) ]
+    
+    if len(min_dt_spikes) > abs(spike_indices[-1]):
+    
+       earliest_spike_time=min_dt_spikes[spike_indices[-1]-1]
+       
+    else:
+     
+       earliest_spike_time=min_dt_spikes[spike_indices[-1]]
+       
+    for spike_ind in range(0,max_num_of_spikes):
+    
+        spike_time_values=[]
+        
+        dt_values=[]
+        
+        for dt in range(0,len(dts)):
+        
+            if spike_times_final[dt] !=[]:
+           
+               if len(spike_times_final[dt]) >= spike_ind+1:
+               
+                  if spike_times_final[dt][spike_ind] >= earliest_spike_time:
+             
+                     spike_time_values.append(spike_times_final[dt][spike_ind])
+               
+                     dt_values.append(math.log(dts[dt]))       
+        
         linestyles.append('')
-        markers.append('x')
-        
+               
+        markers.append('o')
+       
+        colors.append('g')
+       
+        spxs.append(dt_values)
+       
+        spys.append(spike_time_values)
+    
+    for last_spike_index in spike_indices:
+       
+       vertical_line=[min_dt_spikes[last_spike_index],min_dt_spikes[last_spike_index] ]
+          
+       spxs.append(bound_dts)
+          
+       spys.append(vertical_line)
+          
+       linestyles.append('--')
+          
+       markers.append('')
+       
+       colors.append('k')
+    
     pynml.generate_plot(spxs, 
           spys, 
           "Spike times vs dt",
+          colors=colors,
           linestyles = linestyles,
           markers = markers,
-          show_plot_already=show_plot_already) 
-
-        
+          xaxis = 'ln ( dt (ms) )', 
+          yaxis = 'Spike times (s)',
+          show_plot_already=show_plot_already,
+          save_figure_to=save_figure_to) 
+    
     if verbose:
         pynml.generate_plot(xs, 
                   ys, 
                   "Membrane potentials in %s for %s"%(simulator,dts),
                   labels = labels,
-                  show_plot_already=show_plot_already) 
+                  show_plot_already=show_plot_already,
+                  save_figure_to=save_figure_to)
+                  
+
