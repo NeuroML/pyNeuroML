@@ -80,6 +80,13 @@ echo "##   Generate a frequency vs current plot"
 
 fi 
 
+echo
+echo "################################################"
+echo "##   Generate a dt dependence plot"
+
+    python dt_dependence.py -nogui  
+
+
 
 
 # Only run these if NEURON is installed & -neuron flag is used
