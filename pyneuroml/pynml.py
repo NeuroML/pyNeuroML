@@ -615,10 +615,10 @@ def evaluate_arguments(args):
         post_args = "-vhdl %s" % args.vhdl[0]
     elif args.validate:
         pre_args = "-validate"
-        exit_on_fail = False
+        exit_on_fail = True
     elif args.validatev1:
         pre_args = "-validatev1"
-        exit_on_fail = False
+        exit_on_fail = True
         
 
     run_jneuroml(pre_args,
@@ -654,6 +654,13 @@ def run_jneuroml(pre_args,
         output = execute_command_in_dir(command, exec_in_dir, 
                                         verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
+                                        
+        if not output:
+            if exit_on_fail: 
+                sys.exit(-1)
+            else:
+                return False
+            
         
     except:
         print_comment('*** Execution of jnml has failed! ***', True)
@@ -696,7 +703,8 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
                                                 cwd=directory, 
                                                 shell=True, 
                                                 stderr=subprocess.STDOUT,
-                                                env=env)
+                                                env=env,
+                                                close_fds=True)
                                                 
         return_string = return_string.decode("utf-8") # For Python 3
                                 
@@ -708,8 +716,10 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
         # For python 2.6...
         print_comment_v('Assuming Python 2.6...')
         
-        return_string = subprocess.Popen(command, cwd=directory, shell=True,
-                                     stdout=subprocess.PIPE).communicate()[0]
+        return_string = subprocess.Popen(command, 
+                                         cwd=directory, 
+                                         shell=True,
+                                         stdout=subprocess.PIPE).communicate()[0]
         return return_string
     
     except subprocess.CalledProcessError as e:        
@@ -717,8 +727,12 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
         print_comment_v('*** Problem running command: %s'%e)
         print_comment_v(prefix+'%s'%e.output.replace('\n','\n'+prefix))
         
+        return None
+        
     except:
         print_comment_v('*** Unknown problem running command: %s'%e)
+        
+        return None
         
     print_comment("Finished execution", verbose)
         
