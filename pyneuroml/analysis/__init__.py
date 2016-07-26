@@ -63,6 +63,7 @@ def generate_current_vs_frequency_curve(nml2_file,
     ls.assign_simulation_target(net_id)
     net_doc = nml.NeuroMLDocument(id=net.id)
     net_doc.networks.append(net)
+    net_doc.includes.append(nml.IncludeType(nml2_file))
     net.populations.append(pop)
     
     for i in range(number_cells):

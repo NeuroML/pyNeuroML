@@ -837,6 +837,8 @@ def reload_standard_dat_file(file_name):
             data[i].append(float(words[i+1]))
 
     print("Loaded data from %s; columns: %s"%(file_name, indeces))
+    
+    dat_file.close()
 
     return data, indeces
 
