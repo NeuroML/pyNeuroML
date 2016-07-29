@@ -24,14 +24,17 @@ import neuroml.loaders as loaders
 import neuroml.writers as writers
 
 import lems.model.model as lems_model
+from lems.parser.LEMS import LEMSFileParser
 
 import random
 import inspect
+import zipfile
 
 DEFAULTS = {'v':False, 
             'default_java_max_memory':'400M',
             'nogui': False}
 
+lems_model_with_units = None
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -216,6 +219,66 @@ def parse_arguments():
             )
 
     return parser.parse_args()
+
+
+
+def get_lems_model_with_units():
+    
+    global lems_model_with_units
+    
+    if lems_model_with_units == None:
+        jar_path = get_path_to_jnml_jar()
+        print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
+        jar = zipfile.ZipFile(jar_path, 'r')
+        dims_units = jar.read('NeuroML2CoreTypes/NeuroMLCoreDimensions.xml')
+        lems_model_with_units = lems_model.Model(include_includes=False)
+        parser = LEMSFileParser(lems_model_with_units)
+        parser.parse(dims_units)
+        
+        
+    return lems_model_with_units
+
+    
+def split_nml2_quantity(nml2_quantity):
+
+    magnitude = None
+    i = len(nml2_quantity)
+    while magnitude is None:
+        try:
+            part = nml2_quantity[0:i]
+            nn = float(part)
+            magnitude = nn
+            unit = nml2_quantity[i:]
+        except ValueError:
+            i = i-1
+    
+    return magnitude, unit
+
+    
+def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
+     
+    model = get_lems_model_with_units()
+    m, u = split_nml2_quantity(nml2_quantity)
+    si_value = None
+    dim = None
+    for un in model.units:
+        if un.symbol == u:
+            si_value =  (m + un.offset) * un.scale * pow(10, un.power)
+            dim = un.dimension
+            
+    for un in model.units:
+        if un.symbol == unit:
+            
+            new_value = si_value / (un.scale * pow(10, un.power)) - un.offset 
+            if not un.dimension == dim:
+                raise Exception("Cannot convert %s to %s. Dimensions of units (%s/%s) do not match!"% \
+                                (nml2_quantity,unit,dim,un.dimension))
+    
+    
+    print_comment("Converting %s %s to %s: %s (%s in SI units)"%(m,u,unit,new_value,si_value),verbose)
+    
+    return new_value
+
 
 
 def validate_neuroml1(nml1_file_name, verbose_validate=True):
@@ -652,6 +715,14 @@ def evaluate_arguments(args):
                  max_memory = args.java_max_memory,
                  exit_on_fail = exit_on_fail)
 
+def get_path_to_jnml_jar():
+
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+
+    jar_path = os.path.join(script_dir, "lib", 
+                       "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION)
+            
+    return jar_path
 
 def run_jneuroml(pre_args, 
                  target_file, 
@@ -661,21 +732,18 @@ def run_jneuroml(pre_args,
                  verbose      = DEFAULTS['v'],
                  exit_on_fail = True):    
 
-
-    script_dir = os.path.dirname(os.path.realpath(__file__))
     if 'nogui' in post_args:
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
-
-    jar = os.path.join(script_dir, "lib", 
-                       "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION)
+        
+    jar_path = get_path_to_jnml_jar()
     
     output = ''
     
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
-          (max_memory, pre_jar, jar, pre_args, target_file, post_args)
+          (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
         output = execute_command_in_dir(command, exec_in_dir, verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
                           

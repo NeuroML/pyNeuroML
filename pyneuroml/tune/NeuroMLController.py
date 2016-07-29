@@ -81,7 +81,7 @@ class NeuroMLController():
                 
                 candidate = candidates[candidate_i]
                 sim_var = dict(zip(parameters,candidate))
-                pyneuroml.pynml.print_comment_v('\n\n  - PARALLEL RUN %i (%i/%i in population); variables: %s\n'%(self.count,candidate_i+1,len(candidates),sim_var))
+                pyneuroml.pynml.print_comment_v('\n\n  - PARALLEL RUN %i (%i/%i of curr candidates); variables: %s\n'%(self.count,candidate_i+1,len(candidates),sim_var))
                 self.count+=1
                 cand_dir = self.generate_dir+"/CANDIDATE_%s"%candidate_i
                 if not os.path.exists(cand_dir):
@@ -100,7 +100,7 @@ class NeuroMLController():
             
             for job_i in range(len(jobs)):
                 job = jobs[job_i]
-                pyneuroml.pynml.print_comment_v("Checking job %i"%job_i)
+                pyneuroml.pynml.print_comment_v("Checking parallel job %i/%i; run %i"%(job_i,len(jobs),self.count))
                 t,v = job()
                 traces.append([t,v])
                 
