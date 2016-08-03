@@ -14,6 +14,7 @@ import os
 import sys
 import subprocess
 import math
+from datetime import datetime
 
 from . import __version__
 from . import JNEUROML_VERSION
@@ -23,14 +24,17 @@ import neuroml.loaders as loaders
 import neuroml.writers as writers
 
 import lems.model.model as lems_model
+from lems.parser.LEMS import LEMSFileParser
 
 import random
 import inspect
+import zipfile
 
 DEFAULTS = {'v':False, 
             'default_java_max_memory':'400M',
             'nogui': False}
 
+lems_model_with_units = None
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -217,6 +221,66 @@ def parse_arguments():
     return parser.parse_args()
 
 
+
+def get_lems_model_with_units():
+    
+    global lems_model_with_units
+    
+    if lems_model_with_units == None:
+        jar_path = get_path_to_jnml_jar()
+        print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
+        jar = zipfile.ZipFile(jar_path, 'r')
+        dims_units = jar.read('NeuroML2CoreTypes/NeuroMLCoreDimensions.xml')
+        lems_model_with_units = lems_model.Model(include_includes=False)
+        parser = LEMSFileParser(lems_model_with_units)
+        parser.parse(dims_units)
+        
+        
+    return lems_model_with_units
+
+    
+def split_nml2_quantity(nml2_quantity):
+
+    magnitude = None
+    i = len(nml2_quantity)
+    while magnitude is None:
+        try:
+            part = nml2_quantity[0:i]
+            nn = float(part)
+            magnitude = nn
+            unit = nml2_quantity[i:]
+        except ValueError:
+            i = i-1
+    
+    return magnitude, unit
+
+    
+def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
+     
+    model = get_lems_model_with_units()
+    m, u = split_nml2_quantity(nml2_quantity)
+    si_value = None
+    dim = None
+    for un in model.units:
+        if un.symbol == u:
+            si_value =  (m + un.offset) * un.scale * pow(10, un.power)
+            dim = un.dimension
+            
+    for un in model.units:
+        if un.symbol == unit:
+            
+            new_value = si_value / (un.scale * pow(10, un.power)) - un.offset 
+            if not un.dimension == dim:
+                raise Exception("Cannot convert %s to %s. Dimensions of units (%s/%s) do not match!"% \
+                                (nml2_quantity,unit,dim,un.dimension))
+    
+    
+    print_comment("Converting %s %s to %s: %s (%s in SI units)"%(m,u,unit,new_value,si_value),verbose)
+    
+    return new_value
+
+
+
 def validate_neuroml1(nml1_file_name, verbose_validate=True):
     
     pre_args = "-validatev1"
@@ -400,6 +464,7 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
                                   max_memory=DEFAULTS['default_java_max_memory'], 
+                                  skip_run=False,
                                   nogui=False, 
                                   load_saved_data=False, 
                                   plot=False, 
@@ -419,7 +484,11 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    success = run_jneuroml("", 
+    t_run = datetime.now()
+    if skip_run:
+      success = True
+    else:
+      success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
@@ -432,6 +501,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML_NEURON')
@@ -440,6 +510,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     
     
 def reload_saved_data(lems_file_name, 
+                      t_run=datetime(1900,1,1),
                       plot=False, 
                       show_plot_already=True, 
                       simulator=None, 
@@ -454,7 +525,7 @@ def reload_saved_data(lems_file_name,
     base_dir = os.path.dirname(lems_file_name) \
                if len(os.path.dirname(lems_file_name))>0 \
                else '.'
-    
+
     from lxml import etree
     tree = etree.parse(lems_file_name)
     
@@ -483,11 +554,27 @@ def reload_saved_data(lems_file_name,
     
     for i,of in enumerate(output_files):
         results['t'] = []
-        file_name = base_dir + '/' + of.attrib['fileName']
+        name = of.attrib['fileName']
+        file_name = os.path.join(base_dir,name)
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            file_name = os.path.join(os.getcwd(),name) 
+            # ... try relative to cwd.  
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
+            # ... try relative to cwd in NeuroML2/results subdir.  
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            raise OSError(('Could not find simulation output '
+                           'file %s' % file_name))
+        t_file_mod = datetime.fromtimestamp(os.path.getmtime(file_name))
+        if t_file_mod < t_run:
+          raise Exception("Expected output file %s has not been modified since "
+                         "%s but the simulation was run later at %s." 
+                         % (file_name,t_file_mod,t_run))
+
         print_comment("Loading saved data from %s%s" \
                       % (file_name, ' (%s)'%simulator if simulator else ''), 
                          verbose)
-
+        
         cols = []
         cols.append('t')
         for col in of.findall(ns_prefix+'OutputColumn'):
@@ -495,11 +582,12 @@ def reload_saved_data(lems_file_name,
             results[quantity] = []
             cols.append(quantity)
             
-        for line in open(file_name):
+        with open(file_name) as f:
+          for line in f:
             values = line.split()
             
             for vi in range(len(values)):
-               results[cols[vi]].append(float(values[vi]))
+              results[cols[vi]].append(float(values[vi]))
                
 
         if plot:
@@ -627,6 +715,14 @@ def evaluate_arguments(args):
                  max_memory = args.java_max_memory,
                  exit_on_fail = exit_on_fail)
 
+def get_path_to_jnml_jar():
+
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+
+    jar_path = os.path.join(script_dir, "lib", 
+                       "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION)
+            
+    return jar_path
 
 def run_jneuroml(pre_args, 
                  target_file, 
@@ -636,32 +732,27 @@ def run_jneuroml(pre_args,
                  verbose      = DEFAULTS['v'],
                  exit_on_fail = True):    
 
-
-    script_dir = os.path.dirname(os.path.realpath(__file__))
     if 'nogui' in post_args:
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
-
-    jar = os.path.join(script_dir, "lib", 
-                       "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION)
+        
+    jar_path = get_path_to_jnml_jar()
     
     output = ''
     
     try:
-        command = 'java -Xmx%s %s -jar  "%s" %s %s %s' % (max_memory, pre_jar, jar, pre_args, target_file, 
-                                         post_args)
-        output = execute_command_in_dir(command, exec_in_dir, 
-                                        verbose=verbose,
+        command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
+          (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
+        output = execute_command_in_dir(command, exec_in_dir, verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
-                                        
+                          
         if not output:
             if exit_on_fail: 
                 sys.exit(-1)
             else:
                 return False
             
-        
     except:
         print_comment('*** Execution of jnml has failed! ***', True)
         print_comment('*** Command: %s ***'%command, True)
@@ -814,6 +905,8 @@ def reload_standard_dat_file(file_name):
             data[i].append(float(words[i+1]))
 
     print("Loaded data from %s; columns: %s"%(file_name, indeces))
+    
+    dat_file.close()
 
     return data, indeces
 

@@ -418,7 +418,8 @@ def run_2stage_optimization(prefix,
                             show_plot_already,
                             seed,
                             known_target_values,
-                            dry_run = False):
+                            dry_run = False,
+                            num_parallel_evaluations = 1):
 
         report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
                          neuroml_file =     neuroml_file,
@@ -441,7 +442,8 @@ def run_2stage_optimization(prefix,
                          show_plot_already = False,
                          seed =             seed,
                          known_target_values = known_target_values,
-                         dry_run =          dry_run)
+                         dry_run =          dry_run,
+                         num_parallel_evaluations = num_parallel_evaluations)
                          
         
         for pi in range(len(parameters)):
@@ -472,7 +474,8 @@ def run_2stage_optimization(prefix,
                          show_plot_already = show_plot_already,
                          seed =             seed,
                          known_target_values = known_target_values,
-                         dry_run =          dry_run) 
+                         dry_run =          dry_run,
+                         num_parallel_evaluations = num_parallel_evaluations) 
                 
         
         return report1, report2
