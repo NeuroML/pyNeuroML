@@ -293,16 +293,27 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
                  exit_on_fail = False)
 
 
-def validate_neuroml2(nml2_file_name, verbose_validate=True):
+def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
     
     pre_args = "-validate"
     post_args = ""
         
-    return run_jneuroml(pre_args, 
-                 nml2_file_name, 
-                 post_args, 
-                 verbose = verbose_validate,
-                 exit_on_fail = False)
+    if max_memory !=None:
+    
+       return run_jneuroml(pre_args, 
+                          nml2_file_name, 
+                          post_args, 
+                          max_memory=max_memory,
+                          verbose = verbose_validate,
+                          exit_on_fail = False)
+    
+    else:    
+    
+      return run_jneuroml(pre_args, 
+                          nml2_file_name, 
+                          post_args, 
+                          verbose = verbose_validate,
+                          exit_on_fail = False)
     
 
 def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, 
