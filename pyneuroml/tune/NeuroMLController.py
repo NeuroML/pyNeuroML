@@ -106,6 +106,8 @@ class NeuroMLController():
                 
                 #pyneuroml.pynml.print_comment_v("Obtained: %s"%result) 
                 
+            job_server.destroy()
+                
                 
             
         end_time = time.time()
