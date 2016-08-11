@@ -14,7 +14,8 @@ import re
 
 import neuroml.loaders as loaders
 
-from pyneuroml.pynml import run_lems_with_jneuroml, print_comment_v, read_neuroml2_file
+from pyneuroml.pynml import run_lems_with_jneuroml, print_comment, \
+                            print_comment_v, read_neuroml2_file
 
 import airspeed
 
@@ -232,10 +233,12 @@ def merge_with_template(model, templfile):
 def generate_lems_channel_analyser(channel_file, channel, min_target_voltage, 
                       step_target_voltage, max_target_voltage, clamp_delay, 
                       clamp_duration, clamp_base_voltage, duration, erev, 
-                      gates, temperature, ca_conc, iv_curve, scale_dt=1, dat_suffix=''):
+                      gates, temperature, ca_conc, iv_curve, scale_dt=1, 
+                      dat_suffix='',verbose=True):
                           
-    print_comment_v("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC"%(channel, \
-                     channel_file, min_target_voltage, max_target_voltage, temperature))
+    print_comment(("Generating LEMS file to investigate %s in %s, %smV->%smV, "
+                   "%sdegC") % (channel,channel_file, min_target_voltage, 
+                                 max_target_voltage, temperature), verbose)
                                       
     target_voltages = []
     v = min_target_voltage
@@ -362,11 +365,12 @@ def get_conductance_expression(channel):
 def make_lems_file(channel,a):
     gates = get_channel_gates(channel)
     lems_content = generate_lems_channel_analyser(channel.file, channel.id, a.min_v, \
-        a.step_target_voltage, a.max_v, a.clamp_delay, \
-        a.clamp_duration, a.clamp_base_voltage, a.duration, \
-        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, \
-        scale_dt = a.scale_dt, \
-        dat_suffix = a.dat_suffix)
+        a.step_target_voltage, a.max_v, a.clamp_delay, 
+        a.clamp_duration, a.clamp_base_voltage, a.duration, 
+        a.erev, gates, a.temperature, a.ca_conc, a.iv_curve, 
+        scale_dt = a.scale_dt, 
+        dat_suffix = a.dat_suffix,
+        verbose=a.v)
     new_lems_file = os.path.join(OUTPUT_DIR,
                                  "LEMS_Test_%s.xml" % channel.id)
     lf = open(new_lems_file, 'w')
@@ -568,8 +572,8 @@ def make_iv_curve_fig(a,grid=True):
 
 def plot_iv_curve(a, hold_v, i, *plt_args, **plt_kwargs):    
     """A single IV curve"""
-    plt_kwargs['grid'] = plt_kwargs.get('grid',True)
-    plt_kwargs['same_fig'] = plt_kwargs('same_fig',False) 
+    grid = plt_kwargs.pop('grid',True)
+    same_fig = plt_kwargs.pop('same_fig',False) 
     if not len(plt_args):
         plt_args = ('ko-',)
     if 'label' not in plt_kwargs:
@@ -614,13 +618,20 @@ def build_namespace(a=None,**kwargs):
         if not hasattr(a,key):
             setattr(a,key,value)
 
-    # Change all values to under_score from camelCase.  
-    for key,value in a.__dict__.items():
-        new_key = convert_case(key)
-        if new_key != key:
-            setattr(a,new_key,value)
-            delattr(a,key)
-
+    # Change all values from camelCase to under_score.
+    # This should have always worked in one pass, but for some reason
+    # it is failing (stochastically) on some keys, so it needs to keep 
+    # trying until all keys are under_score.  
+    flag = True
+    while flag:
+        flag = False
+        for key,value in a.__dict__.items():
+            new_key = convert_case(key)
+            if new_key != key:
+                setattr(a,new_key,value)
+                delattr(a,key)
+                flag = True
+    
     return a
 
 
