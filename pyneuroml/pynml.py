@@ -706,16 +706,18 @@ def print_comment(text, print_it=DEFAULTS['v']):
         print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
 
 
-def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Output: ", env=None):
+def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], 
+                           prefix="Output: ", env=None):
     
     """Execute a command in specific working directory"""
     
     if os.name == 'nt':
         directory = os.path.normpath(directory)
         
-    print_comment_v("Executing: (%s) in directory: %s" % (command, directory))
+    print_comment("Executing: (%s) in directory: %s" % (command, directory),
+                  verbose)
     if env is not None:
-        print_comment_v("Extra env variables %s" % (env))
+        print_comment("Extra env variables %s" % (env), verbose)
     
     try:
         return_string = subprocess.check_output(command, 
@@ -726,7 +728,9 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], prefix="Ou
                                                 
         return_string = return_string.decode("utf-8") # For Python 3
                                 
-        print_comment_v('Command completed. Output: \n '+prefix+'%s'%return_string.replace('\n','\n '+prefix))
+        print_comment('Command completed. Output: \n %s%s' % \
+                      (prefix,return_string.replace('\n','\n '+prefix)), 
+                      verbose)
 
         return return_string
     
