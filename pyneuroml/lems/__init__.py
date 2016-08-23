@@ -136,9 +136,10 @@ def generate_lems_file_for_neuroml(sim_id,
     for file_name in gen_saves_for_quantities.keys():
         
         quantities = gen_saves_for_quantities[file_name]
-        ls.create_output_file(file_name, file_name)
+        of_id = safe_variable(file_name)
+        ls.create_output_file(of_id, file_name)
         for q in quantities:
-            ls.add_column_to_output_file(file_name, safe_variable(q), q)
+            ls.add_column_to_output_file(of_id, safe_variable(q), q)
                         
         
     ls.save_to_file(file_name=file_name_full)
@@ -148,4 +149,4 @@ def generate_lems_file_for_neuroml(sim_id,
 
 # Mainly for NEURON etc.
 def safe_variable(quantity):
-    return quantity.replace(' ','_').replace('[','_').replace(']','_').replace('/','_')
+    return quantity.replace(' ','_').replace('[','_').replace(']','_').replace('/','_').replace('.','_')
