@@ -16,8 +16,8 @@ import subprocess
 import math
 from datetime import datetime
 
-from . import __version__
-from . import JNEUROML_VERSION
+from pyneuroml import __version__
+from pyneuroml import JNEUROML_VERSION
 
 import neuroml
 import neuroml.loaders as loaders
@@ -45,7 +45,7 @@ def parse_arguments():
             description=('pyNeuroML v%s: Python utilities for NeuroML2' % __version__ 
                           + "\n    libNeuroML v%s"%(neuroml.__version__)
                           + "\n    jNeuroML v%s"%JNEUROML_VERSION),
-            usage=('pynml [-v|-h|--help] [<shared options>] '
+            usage=('pynml [-h|--help] [<shared options>] '
                    '<one of the mutually-exclusive options>'),
             formatter_class=argparse.RawTextHelpFormatter
             )
@@ -89,7 +89,7 @@ def parse_arguments():
             description='Only one of these options can be selected'
             )
     mut_exc_opts = mut_exc_opts_grp.add_mutually_exclusive_group(required=False)
-    
+     
     mut_exc_opts.add_argument(
             '-sedml',
             action='store_true',
@@ -454,7 +454,8 @@ def run_lems_with_jneuroml(lems_file_name,
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
-                                 simulator='jNeuroML')
+                                 simulator='jNeuroML',
+                                 reload_events=False)
     else:
         return True
     
@@ -515,7 +516,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                  t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
-                                 simulator='jNeuroML_NEURON')
+                                 simulator='jNeuroML_NEURON',
+                                 reload_events=False)
     else:
         return True
     
@@ -525,10 +527,12 @@ def reload_saved_data(lems_file_name,
                       plot=False, 
                       show_plot_already=True, 
                       simulator=None, 
+                      reload_events=False, 
                       verbose=DEFAULTS['v']): 
     
-    # Could use pylems to parse this...
-    results = {}
+    # Could use pylems to parse all this...
+    traces = {}
+    events = {}
     
     if plot:
         import matplotlib.pyplot as plt
@@ -552,6 +556,43 @@ def reload_saved_data(lems_file_name,
                 if comp.attrib['type'] == 'Simulation':
                     ns_prefix = pre
                     sim = comp
+        
+    if reload_events:
+        event_output_files = sim.findall(ns_prefix+'EventOutputFile')
+        for i,of in enumerate(event_output_files):
+            name = of.attrib['fileName']
+            file_name = os.path.join(base_dir,name)
+            if not os.path.isfile(file_name): # If not relative to the LEMS file...
+                file_name = os.path.join(os.getcwd(),name) 
+                # ... try relative to cwd.  
+            if not os.path.isfile(file_name): # If not relative to the LEMS file...
+                file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
+                # ... try relative to cwd in NeuroML2/results subdir.  
+            if not os.path.isfile(file_name): # If not relative to the LEMS file...
+                raise OSError(('Could not find simulation output '
+                               'file %s' % file_name))
+            format = of.attrib['format']
+            print_comment("Loading saved events from %s (format: %s)"%(file_name, format), 
+                             True)
+            selections = {}
+            for col in of.findall(ns_prefix+'EventSelection'):
+                id = int(col.attrib['id'])
+                select = col.attrib['select']
+                events[select] = []
+                selections[id] = select
+
+            with open(file_name) as f:
+              for line in f:
+                values = line.split() 
+                if format == 'TIME_ID':
+                    t = float(values[0])
+                    id = int(values[1])
+                elif format == 'ID_TIME':
+                    id = int(values[0])
+                    t = float(values[1])
+                #print_comment("Found a event in cell %s (%s) at t = %s"%(id,selections[id],t))
+                events[selections[id]].append(t)
+
     
     output_files = sim.findall(ns_prefix+'OutputFile')
     n_output_files = len(output_files)    
@@ -564,7 +605,7 @@ def reload_saved_data(lems_file_name,
             ax = ax.ravel()
     
     for i,of in enumerate(output_files):
-        results['t'] = []
+        traces['t'] = []
         name = of.attrib['fileName']
         file_name = os.path.join(base_dir,name)
         if not os.path.isfile(file_name): # If not relative to the LEMS file...
@@ -590,7 +631,7 @@ def reload_saved_data(lems_file_name,
         cols.append('t')
         for col in of.findall(ns_prefix+'OutputColumn'):
             quantity = col.attrib['quantity']
-            results[quantity] = []
+            traces[quantity] = []
             cols.append(quantity)
             
         with open(file_name) as f:
@@ -598,7 +639,7 @@ def reload_saved_data(lems_file_name,
             values = line.split()
             
             for vi in range(len(values)):
-              results[cols[vi]].append(float(values[vi]))
+              traces[cols[vi]].append(float(values[vi]))
                
 
         if plot:
@@ -620,7 +661,7 @@ def reload_saved_data(lems_file_name,
                 ax_.yaxis.grid(True)
 
                 if key != 't':
-                    ax_.plot(results['t'], results[key], label=key)
+                    ax_.plot(traces['t'], traces[key], label=key)
                     print_comment("Adding trace for: %s, from: %s" \
                                   % (key,file_name), verbose)
                     ax_.used = True
@@ -633,7 +674,7 @@ def reload_saved_data(lems_file_name,
                     else:
                         ax_.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=4) 
                    
-    #print(results.keys())
+    #print(traces.keys())
         
     if plot and show_plot_already:
         
@@ -647,7 +688,10 @@ def reload_saved_data(lems_file_name,
         plt.tight_layout()
         plt.show()
         
-    return results
+    if reload_events:
+        return traces, events
+    else:
+        return traces
                
                         
 def get_next_hex_color():
