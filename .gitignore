@@ -89,3 +89,4 @@ examples/results/*.dat
 /dockx
 /dockx~
 /pyneuroml/__init__$py.class
+/pyneuroml/neuron/mod/NaConductance2.channel.nml
