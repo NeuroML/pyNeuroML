@@ -15,7 +15,7 @@ import argparse
 
 from pyneuroml import pynml
 
-from pyneuroml.pynml import print_comment_v
+from pyneuroml.pynml import print_comment_v, print_comment
 
 _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
@@ -52,7 +52,12 @@ def process_args():
     parser.add_argument('-conns',
                         action='store_true',
                         default=False,
-                        help="If this is specified, show the connections present in the network with lines (under development)")
+                        help="If this is specified, show the connections present in the network with lines")
+                        
+    parser.add_argument('-conn_points',
+                        action='store_true',
+                        default=False,
+                        help="If this is specified, show the end points of the connections present in the network")
                         
     parser.add_argument('-v',
                         action='store_true',
@@ -193,12 +198,18 @@ background {rgbt %s}
     declaredcells = {}
 
     print_comment_v("There are %i cells in the file"%len(cell_elements))
+    
+    cell_id_vs_seg_id_vs_proximal = {}
+    cell_id_vs_seg_id_vs_distal = {}
+    cell_id_vs_cell = {}
 
     for cell in cell_elements:
         
-        cellName = cell.id
+        cellName = cell.id 
+        cell_id_vs_cell[cell.id] = cell
         print_comment_v("Handling cell: %s"%cellName)
-
+        cell_id_vs_seg_id_vs_proximal[cell.id] = {}
+        cell_id_vs_seg_id_vs_distal[cell.id] = {}
         
         declaredcell = "cell_"+cellName
 
@@ -213,6 +224,7 @@ background {rgbt %s}
         segments = cell.morphology.segments
 
         distpoints = {}
+        proxpoints = {}
 
         for segment in segments:
 
@@ -236,14 +248,21 @@ background {rgbt %s}
             distalpoint = "<%f, %f, %f>, %f "%(x,y,z,r)
 
             distpoints[id] = distalpoint
+            cell_id_vs_seg_id_vs_distal[cell.id][id] = (x,y,z)
 
             proximalpoint = ""
             if segment.proximal is not None:
                 proximal = segment.proximal
                 proximalpoint = "<%f, %f, %f>, %f "%(float(proximal.x),float(proximal.y),float(proximal.z),max(float(proximal.diameter)/2.0, args.mindiam))
+                
+                cell_id_vs_seg_id_vs_proximal[cell.id][id] = (float(proximal.x),float(proximal.y),float(proximal.z))
             else:
                 parent = int(segment.parent.segments)
                 proximalpoint = distpoints[parent]
+                cell_id_vs_seg_id_vs_proximal[cell.id][id] = cell_id_vs_seg_id_vs_distal[cell.id][parent]
+                
+            
+            proxpoints[id] = proximalpoint
 
             shape = "cone"
             if proximalpoint == distalpoint:
@@ -261,6 +280,7 @@ background {rgbt %s}
                 if len(proximalpoint): cells_file.write("        %s\n"%proximalpoint)
                 cells_file.write("        //%s_%s.%s\n"%('CELL_GROUP_NAME','0', id))
                 cells_file.write("    }\n")
+                
 
         cells_file.write("    pigment { color rgb <%f,%f,%f> }\n"%(random.random(),random.random(),random.random()))
 
@@ -278,10 +298,26 @@ union {
     }
     pigment { color rgb <1,0,0> }
 }\n'''%_DUMMY_CELL)
+        
+    pov_file.write('''\n/*\n  Defining the spheres to use for end points of connections...\n*/\n#declare conn_start_point = 
+union {
+    sphere {
+        <0.000000, 0.000000, 0.000000>, 3.000000 
+    }
+    pigment { color rgb <0,1,0> }
+}\n\n#declare conn_end_point = 
+union {
+    sphere {
+        <0.000000, 0.000000, 0.000000>, 3.000000 
+    }
+    pigment { color rgb <1,0,0> }
+}\n''')
 
 
     positions = {}
     popElements = nml_doc.networks[0].populations
+    
+    pop_id_vs_cell = {}
 
     print_comment_v("There are %i populations in the file"%len(popElements))
 
@@ -291,6 +327,8 @@ union {
         celltype = pop.component
         instances = pop.instances
         
+        if cell_id_vs_cell.has_key(pop.component):
+            pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
 
         info = "Population: %s has %i positioned cells of type: %s"%(name,len(instances),celltype)
         print_comment_v(info)
@@ -328,7 +366,7 @@ union {
             x = float(location.x)
             y = float(location.y)
             z = float(location.z)
-            pop_positions[id] = '<%s,%s,%s>'%(x,y,z)
+            pop_positions[id] = (x,y,z)
 
             if x+minXc<minX: minX=x+minXc
             if y+minYc<minY: minY=y+minYc
@@ -408,30 +446,55 @@ union {
             
     #print positions
             
-    if args.conns: # Note: segment specific connections not implemented yet... i.e. connections from dends to axons...
-        print_comment_v("************************\n*\n*  Note: connection lines in 3D do not yet target dendritic locations!\n*\n************************")
+    if args.conns or args.conn_points: # Note: segment specific connections not implemented yet... i.e. connections from dends to axons...
+        #print_comment_v("************************\n*\n*  Note: connection lines in 3D do not yet target dendritic locations!\n*\n************************")
         for projection in nml_doc.networks[0].projections:
             pre = projection.presynaptic_population
             post = projection.postsynaptic_population
             connections = projection.connections + projection.connection_wds
-            print("Adding %i connections %s -> %s "%(len(connections),pre,post))
+            print_comment_v("Adding %i connections %s -> %s "%(len(connections),pre,post))
+            #print cell_id_vs_seg_id_vs_distal
+            #print cell_id_vs_seg_id_vs_proximal
             for connection in connections:
-                pre_cell = connection.get_pre_cell_id()
-                post_cell = connection.get_post_cell_id()
+                pre_cell_id = connection.get_pre_cell_id()
+                post_cell_id = connection.get_post_cell_id()
                 
-                pre_loc = '<0,0,0>' 
+                pre_loc = (0,0,0) 
                 if positions.has_key(pre): 
                     if len(positions[pre])>0:
-                        pre_loc = positions[pre][pre_cell] 
-                post_loc = '<0,0,0>'
+                        pre_loc = positions[pre][pre_cell_id] 
+                post_loc = (0,0,0)
                 if positions.has_key(post):
-                    post_loc = positions[post][post_cell] 
-                
-                net_file.write("// Connection from %s:%s %s -> %s:%s %s\n"%(pre, pre_cell, pre_loc, post, post_cell, post_loc)) 
-                net_file.write("cylinder{ %s, %s, .1  pigment{color Grey}}\n\n"%(pre_loc, post_loc))
-                #net_file.write("blob {\n    threshold .65\n    sphere { %s, .9, 10 pigment {Blue} }\n"%(pre_loc))
-                #net_file.write("    cylinder{ %s, %s, .4, 1 }\n"%(pre_loc, post_loc))
-                #net_file.write("    sphere { %s,5, 10 pigment {Green} }\n    finish { phong 1 }\n}\n\n"%(post_loc))
+                    post_loc = positions[post][post_cell_id] 
+                    
+                if pop_id_vs_cell.has_key(projection.presynaptic_population):
+                    pre_cell = pop_id_vs_cell[projection.presynaptic_population]
+                    d = cell_id_vs_seg_id_vs_distal[pre_cell.id][int(connection.pre_segment_id)]
+                    p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][int(connection.pre_segment_id)]
+                    m = [ p[i]+float(connection.pre_fraction_along)*(d[i]-p[i]) for i in [0,1,2] ]
+                    print_comment("Pre point is %s, %s between %s and %s"%(m,connection.pre_fraction_along,p,d))
+                    pre_loc = [ pre_loc[i]+m[i] for i in [0,1,2] ]
+                    
+                if pop_id_vs_cell.has_key(projection.postsynaptic_population):
+                    post_cell = pop_id_vs_cell[projection.postsynaptic_population]
+                    d = cell_id_vs_seg_id_vs_distal[post_cell.id][int(connection.post_segment_id)]
+                    p = cell_id_vs_seg_id_vs_proximal[post_cell.id][int(connection.post_segment_id)]
+                    m = [ p[i]+float(connection.post_fraction_along)*(d[i]-p[i]) for i in [0,1,2] ]
+                    print_comment("Post point is %s, %s between %s and %s"%(m,connection.post_fraction_along,p,d))
+                    post_loc = [ post_loc[i]+m[i] for i in [0,1,2] ]
+                  
+                if post_loc != pre_loc:
+                    info = "// Connection from %s:%s %s -> %s:%s %s\n"%(pre, pre_cell_id, pre_loc, post, post_cell_id, post_loc)
+
+                    print_comment(info)
+                    net_file.write("// %s"%info) 
+                    if args.conns:
+                        net_file.write("cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color Grey}}\n"%(pre_loc[0],pre_loc[1],pre_loc[2], post_loc[0],post_loc[1],post_loc[2]))
+                    if args.conn_points:
+                        net_file.write("object { conn_start_point translate <%s,%s,%s> }\n"%(pre_loc[0],pre_loc[1],pre_loc[2]))
+                        net_file.write("object { conn_end_point translate <%s,%s,%s> }\n"%(post_loc[0],post_loc[1],post_loc[2]))
+                    
+
         
         
     plane = '''

@@ -74,14 +74,14 @@ class NeuroMLController():
             import pp
             ppservers = ()
             job_server = pp.Server(self.num_parallel_evaluations, ppservers=ppservers)
-            pyneuroml.pynml.print_comment_v('Running %i candidates across %i local processors'%(len(candidates),job_server.get_ncpus()))
+            pyneuroml.pynml.print_comment_v('Running %i candidates across %i local processes'%(len(candidates),job_server.get_ncpus()))
             jobs = []
             
             for candidate_i in range(len(candidates)):
                 
                 candidate = candidates[candidate_i]
                 sim_var = dict(zip(parameters,candidate))
-                pyneuroml.pynml.print_comment_v('\n\n  - PARALLEL RUN %i (%i/%i); variables: %s\n'%(self.count,candidate_i+1,len(candidates),sim_var))
+                pyneuroml.pynml.print_comment_v('\n\n  - PARALLEL RUN %i (%i/%i of curr candidates); variables: %s\n'%(self.count,candidate_i+1,len(candidates),sim_var))
                 self.count+=1
                 cand_dir = self.generate_dir+"/CANDIDATE_%s"%candidate_i
                 if not os.path.exists(cand_dir):
@@ -100,11 +100,13 @@ class NeuroMLController():
             
             for job_i in range(len(jobs)):
                 job = jobs[job_i]
-                pyneuroml.pynml.print_comment_v("Checking job %i"%job_i)
+                pyneuroml.pynml.print_comment_v("Checking parallel job %i/%i; run %i"%(job_i,len(jobs),self.count))
                 t,v = job()
                 traces.append([t,v])
                 
                 #pyneuroml.pynml.print_comment_v("Obtained: %s"%result) 
+                
+            job_server.destroy()
                 
                 
             

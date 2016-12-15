@@ -1,3 +1,4 @@
+jdk1.8.0_*
 /examples/Makefile
 /examples/fn1.mod
 /examples/fn1_flat_dnsim.txt
@@ -88,3 +89,5 @@ examples/results/*.dat
 /examples/Vm_Test.sim.nml
 /dockx
 /dockx~
+/pyneuroml/__init__$py.class
+/pyneuroml/neuron/mod/NaConductance2.channel.nml

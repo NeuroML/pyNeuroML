@@ -37,7 +37,7 @@
         
 #end## 
 #foreach ($event_output_file in $event_output_files)##
-        <EventOutputFile id="${event_output_file.id}" fileName="${event_output_file.file_name}" format="ID_TIME">
+        <EventOutputFile id="${event_output_file.id}" fileName="${event_output_file.file_name}" format="${event_output_file.format}">
 #foreach ($selection in $event_output_file.selections)##
             <EventSelection id="${selection.id}" select="${selection.select}" eventPort="${selection.event_port}"/> 
 #end## 

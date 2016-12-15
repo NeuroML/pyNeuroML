@@ -93,11 +93,12 @@ class LEMSSimulation():
         of['file_name'] = file_name
         of['columns'] = []
         
-    def create_event_output_file(self, id, file_name):
+    def create_event_output_file(self, id, file_name,format='ID_TIME'):
         eof = {}
         self.lems_info['event_output_files'].append(eof)
         eof['id'] = id
         eof['file_name'] = file_name
+        eof['format'] = format
         eof['selections'] = []
         
         

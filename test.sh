@@ -55,6 +55,10 @@ echo "##   Running some of the examples"
 python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 
 
+#  Run tests on units
+python units.py
+
+
     
 echo
 echo "################################################"
@@ -77,6 +81,13 @@ echo "################################################"
 echo "##   Generate a frequency vs current plot"
 
     python generate_if_curve.py -nogui  
+
+
+echo
+echo "################################################"
+echo "##   Generate a dt dependence plot"
+
+    python dt_dependence.py -nogui  
 
 fi 
 
