@@ -582,7 +582,7 @@ def plot_iv_curve(a, hold_v, i, *plt_args, **plt_kwargs):
         make_iv_curve_fig(a, grid=grid)
     if type(i) is dict:
         i = [i[v] for v in hold_v]
-    plt.plot([v*1e3 for v in hold_v], [ii*1e12 for ii in i], *plt_args)
+    plt.plot([v*1e3 for v in hold_v], [ii*1e12 for ii in i], *plt_args, **plt_kwargs)
     plt.legend(loc=2)
             
 
