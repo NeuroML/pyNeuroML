@@ -91,3 +91,6 @@ examples/results/*.dat
 /dockx~
 /pyneuroml/__init__$py.class
 /pyneuroml/neuron/mod/NaConductance2.channel.nml
+/examples/HHSim.v.spikes
+/examples/test_data/Simple.Pop0.spikes
+/examples/test_data/Simple.Pop1.spikes

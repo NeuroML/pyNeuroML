@@ -1,13 +1,17 @@
 '''
 
-Example to create a new LEMS file from scratch for running a NML2 model
+Example to create some new LEMS files for running NML2 models
 
 '''
 
 from pyneuroml.lems import LEMSSimulation
+from pyneuroml.lems import generate_lems_file_for_neuroml
 import os
 
 if __name__ == '__main__':
+    
+    ############################################
+    ###  Create a LEMS file "manually"...
     
     sim_id = 'HHSim'
     ls = LEMSSimulation(sim_id, 500, 0.05, 'net1')
@@ -22,6 +26,11 @@ if __name__ == '__main__':
     ls.create_output_file(of0, "%s.v.dat"%sim_id)
     ls.add_column_to_output_file(of0, 'v', "hhpop[0]/v")
     
+    eof0 = 'Events_file'
+    ls.create_event_output_file(eof0, "%s.v.spikes"%sim_id,format='ID_TIME')
+    
+    ls.add_selection_to_event_output_file(eof0, '0', "hhpop[0]", "spike")
+    
     print("Using information to generate LEMS: ")
     print(ls.lems_info)
     print("\nLEMS: ")
@@ -29,3 +38,36 @@ if __name__ == '__main__':
     
     ls.save_to_file()
     assert os.path.isfile('LEMS_%s.xml'%sim_id)
+    
+    
+    ############################################
+    ###  Create the LEMS file with helper method
+    
+    
+    sim_id = 'Simple'
+    neuroml_file = "test_data/simplenet.nml"
+    target = "simplenet"
+    duration=1000
+    dt = 0.025
+    lems_file_name = 'LEMS_%s.xml'%sim_id
+    target_dir = "test_data"
+    
+    generate_lems_file_for_neuroml(sim_id, 
+                                   neuroml_file, 
+                                   target, 
+                                   duration, 
+                                   dt, 
+                                   lems_file_name,
+                                   target_dir,
+                                   include_extra_files = [],
+                                   gen_plots_for_all_v = True,
+                                   plot_all_segments = False,
+                                   gen_plots_for_quantities = {},   #  Dict with displays vs lists of quantity paths
+                                   gen_plots_for_only_populations = [],   #  List of populations, all pops if = []
+                                   gen_saves_for_all_v = True,
+                                   save_all_segments = False,
+                                   gen_saves_for_only_populations = [],  #  List of populations, all pops if = []
+                                   gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
+                                   gen_spike_saves_for_all_somas = True,
+                                   copy_neuroml = True,
+                                   seed=None)
