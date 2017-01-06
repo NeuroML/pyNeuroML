@@ -94,3 +94,4 @@ examples/results/*.dat
 /examples/HHSim.v.spikes
 /examples/test_data/Simple.Pop0.spikes
 /examples/test_data/Simple.Pop1.spikes
+/pyneuroml/neuron/mod/NaConductance.channel.nml
