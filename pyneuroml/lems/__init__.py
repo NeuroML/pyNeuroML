@@ -88,7 +88,7 @@ def generate_lems_file_for_neuroml(sim_id,
                 size = population.size
                 cell = None
                 segment_ids = []
-                if plot_all_segments:
+                if plot_all_segments or gen_spike_saves_for_all_somas:
                     for c in nml_doc.cells:
                         if c.id == component:
                             cell = c
@@ -99,6 +99,10 @@ def generate_lems_file_for_neuroml(sim_id,
                 if population.type and population.type == 'populationList':
                     quantity_template = "%s/%i/"+component+"/v"
                     quantity_template_e = "%s/%i/"+component+""
+                    # Multicompartmental cell
+                    ### Needs to be supported in NeuronWriter
+                    ###if len(segment_ids)>1:
+                    ###    quantity_template_e = "%s/%i/"+component+"/0"
                     size = len(population.instances)
                     
                 if gen_plots_for_all_v or population.id in gen_plots_for_only_populations:

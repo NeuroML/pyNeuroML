@@ -100,13 +100,15 @@ class NeuroMLController():
             
             for job_i in range(len(jobs)):
                 job = jobs[job_i]
-                pyneuroml.pynml.print_comment_v("Checking parallel job %i/%i; run %i"%(job_i,len(jobs),self.count))
+                pyneuroml.pynml.print_comment_v("Checking parallel job %i/%i; set running so far: %i"%(job_i,len(jobs),self.count))
                 t,v = job()
                 traces.append([t,v])
                 
                 #pyneuroml.pynml.print_comment_v("Obtained: %s"%result) 
                 
+            ####job_server.print_stats()
             job_server.destroy()
+            print("-------------------------------------------")
                 
                 
             
