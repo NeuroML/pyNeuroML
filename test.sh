@@ -79,6 +79,12 @@ if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then
     fi
 fi
 
+echo
+echo "################################################"
+echo "##   Test export to PovRay"
+
+ pynml-povray NML2_SingleCompHHCell.nml
+
 
     
 if [ "$TRAVIS" != "true" ]; then   # Requires pyelectro, not in .travis.yml yet...

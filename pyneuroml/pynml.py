@@ -950,7 +950,7 @@ def reload_standard_dat_file(file_name):
     for line in dat_file:
         words = line.split()
 
-        if not data.has_key('t'):
+        if not 't' in data.keys():
             data['t'] = []
             for i in range(len(words)-1):
                 data[i] = []

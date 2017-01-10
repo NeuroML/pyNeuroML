@@ -327,7 +327,7 @@ union {
         celltype = pop.component
         instances = pop.instances
         
-        if cell_id_vs_cell.has_key(pop.component):
+        if pop.component in cell_id_vs_cell.keys():
             pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
 
         info = "Population: %s has %i positioned cells of type: %s"%(name,len(instances),celltype)
@@ -460,14 +460,14 @@ union {
                 post_cell_id = connection.get_post_cell_id()
                 
                 pre_loc = (0,0,0) 
-                if positions.has_key(pre): 
+                if pre in positions.keys(): 
                     if len(positions[pre])>0:
                         pre_loc = positions[pre][pre_cell_id] 
                 post_loc = (0,0,0)
-                if positions.has_key(post):
+                if post in positions.keys():
                     post_loc = positions[post][post_cell_id] 
                     
-                if pop_id_vs_cell.has_key(projection.presynaptic_population):
+                if projection.presynaptic_population in pop_id_vs_cell.keys():
                     pre_cell = pop_id_vs_cell[projection.presynaptic_population]
                     d = cell_id_vs_seg_id_vs_distal[pre_cell.id][int(connection.pre_segment_id)]
                     p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][int(connection.pre_segment_id)]
@@ -475,7 +475,7 @@ union {
                     print_comment("Pre point is %s, %s between %s and %s"%(m,connection.pre_fraction_along,p,d))
                     pre_loc = [ pre_loc[i]+m[i] for i in [0,1,2] ]
                     
-                if pop_id_vs_cell.has_key(projection.postsynaptic_population):
+                if projection.postsynaptic_population in pop_id_vs_cell.keys():
                     post_cell = pop_id_vs_cell[projection.postsynaptic_population]
                     d = cell_id_vs_seg_id_vs_distal[post_cell.id][int(connection.post_segment_id)]
                     p = cell_id_vs_seg_id_vs_proximal[post_cell.id][int(connection.post_segment_id)]

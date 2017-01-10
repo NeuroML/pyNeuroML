@@ -180,11 +180,11 @@ def main (argv):
             for line in in_file:
                 if line.strip().startswith("//"):
                     ref = line.strip()[2:]
-                    if volt_colors.has_key(ref):
+                    if ref in volt_colors.keys():
                         vs = volt_colors[ref]
                         #print_comment_v(('-- %s: %s '%(ref,len(vs)))
                         out_file.write("    %s // %s t= %s\n" %(vs[index], ref, t))
-                    elif volt_colors.has_key(ref+".0"):
+                    elif ref+".0" in volt_colors.keys():
                         vs = volt_colors[ref+".0"]
                         out_file.write("     "+vs[index]+" //"+ref+" t= "+str(t)+"\n")
                     else:
@@ -240,7 +240,7 @@ def main (argv):
                 if line.strip().startswith("//"):
                     ref = line.strip()[2:]
                     ref = ref.replace(dummy_ref, args.singlecell)
-                    if volts.has_key(ref):
+                    if ref in volts.keys():
                         vs = volts[ref]
                         out_file.write("         "+vs[index]+"\n//"+ref+" t= "+ind+str(t)+"\n")
                     else:
