@@ -902,13 +902,16 @@ def generate_plot(xvalues,
                   grid = False,
                   cols_in_legend_box=3,
                   show_plot_already=True,
-                  save_figure_to=None):
+                  save_figure_to=None,
+                  title_above_plot=False):
                       
                       
     from matplotlib import pyplot as plt
 
     fig = plt.figure()
     fig.canvas.set_window_title(title)
+    if title_above_plot:
+        plt.title(title)
             
     if xaxis:
         plt.xlabel(xaxis)
