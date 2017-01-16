@@ -137,7 +137,14 @@ def main ():
         
     xmlfile = args.neuroml_file
 
-    pov_file_name = xmlfile.replace(".xml", ".pov").replace(".nml1", ".pov").replace(".nml.h5", ".pov").replace(".nml", ".pov")
+    pov_file_name = xmlfile
+    endings = [".xml",".h5",".nml"]
+    for e in endings:
+        if pov_file_name.endswith(e):
+            pov_file_name.replace(e, ".pov")
+            
+    if pov_file_name == xmlfile:
+        pov_file_name+='.pov'
 
     pov_file = open(pov_file_name, "w")
 

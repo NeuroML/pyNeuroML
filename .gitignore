@@ -96,3 +96,6 @@ examples/results/*.dat
 /examples/test_data/Simple.Pop1.spikes
 /pyneuroml/neuron/mod/NaConductance.channel.nml
 /examples/NML2_SingleCompHHCell.pov
+/examples/KConductance.mod
+/examples/NaConductance.mod
+/examples/LEMS_NML2_Ex9_FN.proj
