@@ -122,6 +122,12 @@ def parse_arguments():
                   'to SVG format view of 3D structure')
             )
     mut_exc_opts.add_argument(
+            '-png',
+            action='store_true',
+            help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
+                  'to PNG format view of 3D structure')
+            )
+    mut_exc_opts.add_argument(
             '-dlems',
             action='store_true',
             help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
@@ -317,7 +323,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
     
 
 def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, 
-                       already_included=[]):  
+                       already_included=[], optimized=False):  
     
     print_comment("Loading NeuroML2 file: %s" % nml2_file_name, verbose)
     
@@ -326,7 +332,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
         sys.exit()
         
     if nml2_file_name.endswith('.h5') or nml2_file_name.endswith('.hdf5'):
-        nml2_doc = loaders.NeuroMLHdf5Loader.load(nml2_file_name)
+        nml2_doc = loaders.NeuroMLHdf5Loader.load(nml2_file_name, optimized=optimized)
     else:
         nml2_doc = loaders.NeuroMLLoader.load(nml2_file_name)
     
@@ -466,6 +472,19 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
     print_comment("Converting NeuroML2 file: %s to SVG"%nml2_file_name, verbose)
     
     post_args = "-svg"
+    
+    run_jneuroml("", 
+                 nml2_file_name, 
+                 post_args, 
+                 max_memory = max_memory, 
+                 verbose = verbose)
+    
+
+def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'], 
+                verbose=True):           
+    print_comment("Converting NeuroML2 file: %s to PNG"%nml2_file_name, verbose)
+    
+    post_args = "-png"
     
     run_jneuroml("", 
                  nml2_file_name, 
@@ -725,6 +744,8 @@ def evaluate_arguments(args):
         post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
     elif args.svg:
         post_args = "-svg"
+    elif args.png:
+        post_args = "-png"
     elif args.dlems:
         post_args = "-dlems"
     elif args.vertex:

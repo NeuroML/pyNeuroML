@@ -181,7 +181,7 @@ background {rgbt %s}
     print_comment_v("Converting XML file: %s to %s"%(xmlfile, pov_file_name))
 
 
-    nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, verbose=args.v)
+    nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, verbose=args.v, optimized=True)
 
     cell_elements = []
     cell_elements.extend(nml_doc.cells)
