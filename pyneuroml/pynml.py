@@ -433,6 +433,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            max_memory=DEFAULTS['default_java_max_memory'], 
                            nogui=False, 
                            load_saved_data=False, 
+                           reload_events=False,
                            plot=False, 
                            show_plot_already=True, 
                            exec_in_dir = ".",
@@ -461,7 +462,7 @@ def run_lems_with_jneuroml(lems_file_name,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML',
-                                 reload_events=False)
+                                 reload_events=reload_events)
     else:
         return True
     
@@ -498,6 +499,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   skip_run=False,
                                   nogui=False, 
                                   load_saved_data=False, 
+                                  reload_events=False,
                                   plot=False, 
                                   show_plot_already=True, 
                                   exec_in_dir = ".",
@@ -536,7 +538,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML_NEURON',
-                                 reload_events=False)
+                                 reload_events=reload_events)
     else:
         return True
     
