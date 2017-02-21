@@ -618,7 +618,7 @@ def reload_saved_data(lems_file_name,
     output_files = sim.findall(ns_prefix+'OutputFile')
     n_output_files = len(output_files)    
     if plot:
-        rows = max(1,math.ceil(n_output_files/3))
+        rows = int(max(1,math.ceil(n_output_files/float(3))))
         columns = min(3,n_output_files)
         fig,ax = plt.subplots(rows,columns,sharex=True,
                               figsize=(4*columns,4*rows))
