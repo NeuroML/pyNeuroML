@@ -162,25 +162,4 @@ class LEMSSimulation():
         return file_name
         
         
-
-if __name__ == '__main__':
-    
-    sim_id = 'mysim'
-    ls = LEMSSimulation(sim_id, 500, 0.05, 'net1')
-    ls.include_neuroml2_file('../../examples/NML2_SingleCompHHCell.nml')
-    
-    disp0 = 'display0'
-    ls.create_display(disp0,"Voltages", "-90", "50")
-    
-    ls.add_line_to_display(disp0, "v", "hhpop[0]/v", "1mV", "#ffffff")
-    
-    of0 = 'Volts_file'
-    ls.create_output_file(of0, "%s.v.dat"%sim_id)
-    ls.add_column_to_output_file(of0, 'v', "hhpop[0]/v")
-    
-    print(ls.lems_info)
-    print(ls.to_xml())
-    
-    ls.save_to_file()
-    
-    
+# main method example moved to examples/create_new_lems_file.py

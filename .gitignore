@@ -1,3 +1,4 @@
+jdk1.8.0_*
 /examples/Makefile
 /examples/fn1.mod
 /examples/fn1_flat_dnsim.txt
@@ -90,3 +91,13 @@ examples/results/*.dat
 /dockx~
 /pyneuroml/__init__$py.class
 /pyneuroml/neuron/mod/NaConductance2.channel.nml
+/examples/HHSim.v.spikes
+/examples/test_data/Simple.Pop0.spikes
+/examples/test_data/Simple.Pop1.spikes
+/pyneuroml/neuron/mod/NaConductance.channel.nml
+/examples/NML2_SingleCompHHCell.pov
+/examples/KConductance.mod
+/examples/NaConductance.mod
+/examples/LEMS_NML2_Ex9_FN.proj
+/examples/NML2_SingleCompHHCell.nml.pov
+/examples/NML2_SingleCompHHCell.png

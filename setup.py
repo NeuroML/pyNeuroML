@@ -21,7 +21,8 @@ setup(
                             'pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main',
                             'pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main',
                             'pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main',
-                            'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main']},
+                            'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main',
+                            'pynml-summary         = neuroml.utils:main']},
     package_data={
         'pyneuroml': [
             'lib/jNeuroML-%s-jar-with-dependencies.jar'%jnml_version,

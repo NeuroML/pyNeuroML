@@ -1,3 +1,10 @@
+'''
+
+Example showing how to manually create a NeuroML network file which includes an existing NML2 file,
+create a population for a cell in the file and add a current input. A LEMS file to run the network,
+and plot the voltage of the cell is created. The simulation is then executed.
+
+'''
 
 import sys
 
@@ -6,9 +13,7 @@ from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
 from pyneuroml.pynml import print_comment_v
-from pyneuroml.lems import generate_lems_file_for_neuroml
 
-import numpy as np
 
 def generate_Vm_vs_time_plot(nml2_file, 
                                         cell_id, 
@@ -17,16 +22,11 @@ def generate_Vm_vs_time_plot(nml2_file,
                                         inj_dur_ms = 60,
                                         sim_dur_ms = 100, 
                                         dt = 0.05,
-                                        temperature = "32degC",
-                                        spike_threshold_mV=0.,
                                         plot_voltage_traces=False,
                                         show_plot_already=True, 
                                         simulator="jNeuroML",
                                         include_included=True):
                                             
-	# simulation parameters                                            
-    nogui = '-nogui' in sys.argv  # Used to supress GUI in tests for Travis-CI
-    
     ref = "Test"
     print_comment_v("Generating Vm(mV) vs Time(ms) plot for cell %s in %s using %s (Inj %snA / %sms dur after %sms delay)"%
         (cell_id, nml2_file, simulator, inj_amp_nA, inj_dur_ms, delay_ms))
@@ -107,5 +107,6 @@ def generate_Vm_vs_time_plot(nml2_file,
     return of0     
     
 
+nogui = '-nogui' in sys.argv  # Used to supress GUI in tests for Travis-CI
     
-generate_Vm_vs_time_plot('NML2_SingleCompHHCell.nml', 'hhcell', plot_voltage_traces =  True)
+generate_Vm_vs_time_plot('NML2_SingleCompHHCell.nml', 'hhcell', plot_voltage_traces =  not nogui)

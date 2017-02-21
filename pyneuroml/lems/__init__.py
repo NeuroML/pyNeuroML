@@ -22,6 +22,8 @@ def generate_lems_file_for_neuroml(sim_id,
                                    save_all_segments = False,
                                    gen_saves_for_only_populations = [],  #  List of populations, all pops if = []
                                    gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
+                                   gen_spike_saves_for_all_somas = False,
+                                   spike_time_format='ID_TIME',
                                    copy_neuroml = True,
                                    seed=None):
                                        
@@ -71,17 +73,22 @@ def generate_lems_file_for_neuroml(sim_id,
                 ls.include_neuroml2_file(include.href, include_included=False)
                 
                 
-    if gen_plots_for_all_v or gen_saves_for_all_v or len(gen_plots_for_only_populations)>0 or len(gen_saves_for_only_populations)>0 :
+    if gen_plots_for_all_v \
+       or gen_saves_for_all_v \
+       or len(gen_plots_for_only_populations)>0 \
+       or len(gen_saves_for_only_populations)>0 \
+       or gen_spike_saves_for_all_somas :
         
         for network in nml_doc.networks:
             for population in network.populations:
                 
                 quantity_template = "%s[%i]/v"
+                quantity_template_e = "%s[%i]"
                 component = population.component
                 size = population.size
                 cell = None
                 segment_ids = []
-                if plot_all_segments:
+                if plot_all_segments or gen_spike_saves_for_all_somas:
                     for c in nml_doc.cells:
                         if c.id == component:
                             cell = c
@@ -91,6 +98,11 @@ def generate_lems_file_for_neuroml(sim_id,
                         
                 if population.type and population.type == 'populationList':
                     quantity_template = "%s/%i/"+component+"/v"
+                    quantity_template_e = "%s/%i/"+component+""
+                    # Multicompartmental cell
+                    ### Needs to be supported in NeuronWriter
+                    ###if len(segment_ids)>1:
+                    ###    quantity_template_e = "%s/%i/"+component+"/0"
                     size = len(population.instances)
                     
                 if gen_plots_for_all_v or population.id in gen_plots_for_only_populations:
@@ -125,7 +137,17 @@ def generate_lems_file_for_neuroml(sim_id,
                             quantity = quantity_template%(population.id, i)
                             ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
                             quantities_saved.append(quantity)
-                        
+                            
+                if gen_spike_saves_for_all_somas:
+                    print_comment('Saving spikes in %i somas for %s in population %s'%(size, component, population.id))
+                    
+                    eof0 = 'Spikes_file__%s'%population.id
+                    ls.create_event_output_file(eof0, "%s.%s.spikes"%(sim_id,population.id), format=spike_time_format)
+                    for i in range(size):
+                        quantity = quantity_template_e%(population.id, i)
+                        ls.add_selection_to_event_output_file(eof0, i, quantity, "spike")
+                        quantities_saved.append(quantity)
+                            
     for display in gen_plots_for_quantities.keys():
         
         quantities = gen_plots_for_quantities[display]

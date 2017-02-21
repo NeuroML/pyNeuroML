@@ -32,6 +32,7 @@ echo "################################################"
 echo "##   Test some conversions"
 
 pynml NML2_SingleCompHHCell.nml -svg
+pynml NML2_SingleCompHHCell.nml -png
 pynml LEMS_NML2_Ex5_DetCell.xml -sedml
 pynml LEMS_NML2_Ex9_FN.xml -dlems
 pynml LEMS_NML2_Ex9_FN.xml -brian
@@ -58,6 +59,12 @@ python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 #  Run tests on units
 python units.py
 
+#  Run test for generating LEMS file
+python create_new_lems_file.py
+
+#  Run test for generating LEMS file
+python Vm_plot.py -nogui
+
 
     
 echo
@@ -72,6 +79,12 @@ if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then
         pynml-channelanalysis NaConductance.channel.nml KConductance.channel.nml -html
     fi
 fi
+
+echo
+echo "################################################"
+echo "##   Test export to PovRay"
+
+ pynml-povray NML2_SingleCompHHCell.nml
 
 
     
