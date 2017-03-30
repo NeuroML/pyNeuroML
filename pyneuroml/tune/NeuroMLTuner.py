@@ -44,7 +44,8 @@ DEFAULTS = {'simTime':             500,
             'nogui':               False,
             'showPlotAlready':     True,
             'verbose':             False,
-            'dryRun':              False} 
+            'dryRun':              False,
+            'extraReportInfo':     None} 
             
             
 def process_args():
@@ -193,6 +194,12 @@ def process_args():
                         default=DEFAULTS['dryRun'],
                         help="Dry run; just print setup information")
                         
+    parser.add_argument('-extraReportInfo', 
+                        type=str,
+                        metavar='<extraReportInfo>', 
+                        default=DEFAULTS['extraReportInfo'],
+                        help='Extra tag/value pairs can be put into the report.json:  -extraReportInfo=["tag":"value"]')
+                        
     return parser.parse_args()
                        
                         
@@ -210,6 +217,7 @@ def _run_optimisation(a):
     if isinstance(a.target_data, str): a.target_data = parse_dict_arg(a.target_data)
     if isinstance(a.weights, str): a.weights = parse_dict_arg(a.weights)
     if isinstance(a.known_target_values, str): a.known_target_values = parse_dict_arg(a.known_target_values)
+    if isinstance(a.extra_report_info, str): a.extra_report_info = parse_dict_arg(a.extra_report_info)
     
     pynml.print_comment_v("=====================================================================================")
     pynml.print_comment_v("Starting run_optimisation with: ")
@@ -341,6 +349,9 @@ def _run_optimisation(a):
     reportj['run_directory'] = run_dir
     reportj['reference'] = ref
     
+    for key in a.extra_report_info:
+        reportj[key] = a.extra_report_info[key]
+    
     
     report_file = open("%s/report.json"%run_dir,'w')
     report_file.write(pp.pformat(reportj))
@@ -419,6 +430,7 @@ def run_2stage_optimization(prefix,
                             seed,
                             known_target_values,
                             dry_run = False,
+                            extra_report_info = {},
                             num_parallel_evaluations = 1):
 
         report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
@@ -443,6 +455,7 @@ def run_2stage_optimization(prefix,
                          seed =             seed,
                          known_target_values = known_target_values,
                          dry_run =          dry_run,
+                         extra_report_info = extra_report_info,
                          num_parallel_evaluations = num_parallel_evaluations)
                          
         
@@ -475,6 +488,7 @@ def run_2stage_optimization(prefix,
                          seed =             seed,
                          known_target_values = known_target_values,
                          dry_run =          dry_run,
+                         extra_report_info = extra_report_info,
                          num_parallel_evaluations = num_parallel_evaluations) 
                 
         
@@ -501,7 +515,10 @@ def parse_dict_arg(dict_arg):
         if len(e) > 0:
             key = e[:e.rfind(':')]
             value = e[e.rfind(':')+1:]
-            ret[key] = float(value)
+            try:
+                ret[key] = float(value)
+            except: 
+                ret[key] = value
     #print("Command line argument %s parsed as: %s"%(dict_arg,ret))
     return ret
 

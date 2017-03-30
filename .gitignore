@@ -101,3 +101,5 @@ examples/results/*.dat
 /examples/LEMS_NML2_Ex9_FN.proj
 /examples/NML2_SingleCompHHCell.nml.pov
 /examples/NML2_SingleCompHHCell.png
+/examples/quick.png
+/examples/test_data/HHCellNetwork.net.nml_channeldens.svg

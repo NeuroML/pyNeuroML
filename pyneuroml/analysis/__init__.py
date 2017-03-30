@@ -9,48 +9,64 @@ import math
 
 def generate_current_vs_frequency_curve(nml2_file, 
                                         cell_id, 
-                                        start_amp_nA, 
-                                        end_amp_nA, 
-                                        step_nA, 
-                                        analysis_duration, 
-                                        analysis_delay, 
-                                        dt = 0.05,
-                                        temperature = "32degC",
-                                        spike_threshold_mV=0.,
-                                        plot_voltage_traces=False,
-                                        plot_if=True,
-                                        plot_iv=False,
-                                        xlim_if =              None,
-                                        ylim_if =              None,
-                                        xlim_iv =              None,
-                                        ylim_iv =              None,
-                                        show_plot_already=True, 
-                                        save_if_figure_to=None, 
-                                        save_iv_figure_to=None, 
-                                        simulator="jNeuroML",
-                                        include_included=True):
+                                        start_amp_nA =          -0.1, 
+                                        end_amp_nA =            0.1,
+                                        step_nA =               0.01, 
+                                        custom_amps_nA =        [], 
+                                        analysis_duration =     1000, 
+                                        analysis_delay =        0, 
+                                        pre_zero_pulse =        0,
+                                        post_zero_pulse =       0,
+                                        dt =                    0.05,
+                                        temperature =           "32degC",
+                                        spike_threshold_mV =    0.,
+                                        plot_voltage_traces =   False,
+                                        plot_if =               True,
+                                        plot_iv =               False,
+                                        xlim_if =               None,
+                                        ylim_if =               None,
+                                        xlim_iv =               None,
+                                        ylim_iv =               None,
+                                        grid =                  True,
+                                        font_size =             12,
+                                        bottom_left_spines_only = False,
+                                        show_plot_already =     True, 
+                                        save_voltage_traces_to = None, 
+                                        save_if_figure_to =     None, 
+                                        save_iv_figure_to =     None, 
+                                        simulator =             "jNeuroML",
+                                        include_included =      True,
+                                        title_above_plot =      False,
+                                        return_axes =           False):
                                             
                                             
     from pyelectro.analysis import max_min
     from pyelectro.analysis import mean_spike_frequency
     import numpy as np
+    traces_ax = None
+    if_ax = None
+    iv_ax = None
     
-    print_comment_v("Generating FI curve for cell %s in %s using %s (%snA->%snA; %snA steps)"%
+    print_comment_v("Generating an FI curve for cell %s in %s using %s (%snA->%snA; %snA steps)"%
         (cell_id, nml2_file, simulator, start_amp_nA, end_amp_nA, step_nA))
     
     sim_id = 'iv_%s'%cell_id
-    duration = analysis_duration+analysis_delay
-    ls = LEMSSimulation(sim_id, duration, dt)
+    total_duration = pre_zero_pulse+analysis_duration+analysis_delay+post_zero_pulse
+    pulse_duration = analysis_duration+analysis_delay
+    end_stim = pre_zero_pulse+analysis_duration+analysis_delay
+    ls = LEMSSimulation(sim_id, total_duration, dt)
     
     ls.include_neuroml2_file(nml2_file, include_included=include_included)
     
     stims = []
-    amp = start_amp_nA
-    while amp<=end_amp_nA : 
-        stims.append(amp)
-        amp+=step_nA
+    if len(custom_amps_nA)>0:
+        stims = [float(a) for a in custom_amps_nA]
+    else:
+        amp = start_amp_nA
+        while amp<=end_amp_nA : 
+            stims.append(amp)
+            amp+=step_nA
         
-    
     number_cells = len(stims)
     pop = nml.Population(id="population_of_%s"%cell_id,
                         component=cell_id,
@@ -65,13 +81,13 @@ def generate_current_vs_frequency_curve(nml2_file,
     net_doc.networks.append(net)
     net_doc.includes.append(nml.IncludeType(nml2_file))
     net.populations.append(pop)
-    
+
     for i in range(number_cells):
         stim_amp = "%snA"%stims[i]
         input_id = ("input_%s"%stim_amp).replace('.','_').replace('-','min')
         pg = nml.PulseGenerator(id=input_id,
-                                    delay="0ms",
-                                    duration="%sms"%duration,
+                                    delay="%sms"%pre_zero_pulse,
+                                    duration="%sms"%pulse_duration,
                                     amplitude=stim_amp)
         net_doc.pulse_generators.append(pg)
 
@@ -103,44 +119,76 @@ def generate_current_vs_frequency_curve(nml2_file,
         ls.add_column_to_output_file(of0, ref, quantity)
     
     lems_file_name = ls.save_to_file()
-    
+
     if simulator == "jNeuroML":
         results = pynml.run_lems_with_jneuroml(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
-                                                plot=plot_voltage_traces,
+                                                plot=False,
                                                 show_plot_already=False)
     elif simulator == "jNeuroML_NEURON":
         results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
-                                                plot=plot_voltage_traces,
+                                                plot=False,
                                                 show_plot_already=False)
-                                                
-    
+                                      
+        
     #print(results.keys())
+    times_results = []
+    volts_results = []
+    volts_labels = []
     if_results = {}
     iv_results = {}
     for i in range(number_cells):
         t = np.array(results['t'])*1000
         v = np.array(results["%s[%i]/v"%(pop.id, i)])*1000
-        
+
+        if plot_voltage_traces:
+            times_results.append(t)
+            volts_results.append(v)
+            volts_labels.append("%s nA"%stims[i])
+            
         mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
         spike_times = mm['maxima_times']
         freq = 0
         if len(spike_times) > 2:
             count = 0
             for s in spike_times:
-                if s >= analysis_delay and s < (analysis_duration+analysis_delay):
+                if s >= pre_zero_pulse + analysis_delay and s < (pre_zero_pulse + analysis_duration+analysis_delay):
                     count+=1
             freq = 1000 * count/float(analysis_duration)
                     
         mean_freq = mean_spike_frequency(spike_times) 
-        # print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
+        #print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
         if_results[stims[i]] = freq
         
         if freq == 0:
-            iv_results[stims[i]] = v[-1]
+            if post_zero_pulse==0:
+                iv_results[stims[i]] = v[-1]
+            else:
+                v_end = None
+                for j in range(len(t)):
+                    if v_end==None and t[j]>=end_stim:
+                        v_end = v[j]
+                iv_results[stims[i]] = v_end
+            
+    if plot_voltage_traces:
+            
+        traces_ax = pynml.generate_plot(times_results,
+                            volts_results, 
+                            "Membrane potential traces for: %s"%nml2_file, 
+                            xaxis = 'Time (ms)', 
+                            yaxis = 'Membrane potential (mV)',
+                            xlim = [total_duration*-0.05,total_duration*1.05],
+                            font_size = font_size,
+                            bottom_left_spines_only = bottom_left_spines_only,
+                            grid = False,
+                            labels = volts_labels,
+                            show_plot_already=False,
+                            save_figure_to = save_voltage_traces_to,
+                            title_above_plot = title_above_plot)
+    
         
     if plot_if:
         
@@ -149,9 +197,9 @@ def generate_current_vs_frequency_curve(nml2_file,
         
         freqs = [if_results[s] for s in stims]
             
-        pynml.generate_plot([stims_pA],
+        if_ax = pynml.generate_plot([stims_pA],
                             [freqs], 
-                            "Frequency versus injected current for: %s"%nml2_file, 
+                            "Firing frequency versus injected current for: %s"%nml2_file, 
                             colors = ['k'], 
                             linestyles=['-'],
                             markers=['o'],
@@ -159,18 +207,21 @@ def generate_current_vs_frequency_curve(nml2_file,
                             yaxis = 'Firing frequency (Hz)',
                             xlim = xlim_if,
                             ylim = ylim_if,
-                            grid = True,
+                            font_size = font_size,
+                            bottom_left_spines_only = bottom_left_spines_only,
+                            grid = grid,
                             show_plot_already=False,
-                            save_figure_to = save_if_figure_to)
+                            save_figure_to = save_if_figure_to,
+                            title_above_plot = title_above_plot)
     if plot_iv:
         
         stims = sorted(iv_results.keys())
         stims_pA = [ii*1000 for ii in sorted(iv_results.keys())]
         vs = [iv_results[s] for s in stims]
             
-        pynml.generate_plot([stims_pA],
+        iv_ax = pynml.generate_plot([stims_pA],
                             [vs], 
-                            "Final membrane potential versus injected current for: %s"%nml2_file, 
+                            "V at %sms versus I below threshold for: %s"%(end_stim,nml2_file), 
                             colors = ['k'], 
                             linestyles=['-'],
                             markers=['o'],
@@ -178,14 +229,19 @@ def generate_current_vs_frequency_curve(nml2_file,
                             yaxis = 'Membrane potential (mV)', 
                             xlim = xlim_iv,
                             ylim = ylim_iv,
-                            grid = True,
+                            font_size = font_size,
+                            bottom_left_spines_only = bottom_left_spines_only,
+                            grid = grid,
                             show_plot_already=False,
-                            save_figure_to = save_iv_figure_to)
+                            save_figure_to = save_iv_figure_to,
+                            title_above_plot = title_above_plot)
     
     if show_plot_already:
         from matplotlib import pyplot as plt
         plt.show()
         
+    if return_axes:
+        return traces_ax, if_ax, iv_ax
         
     return if_results
 

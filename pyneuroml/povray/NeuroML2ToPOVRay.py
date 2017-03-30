@@ -13,6 +13,7 @@ import random
 
 import argparse
 
+import neuroml
 from pyneuroml import pynml
 
 from pyneuroml.pynml import print_comment_v, print_comment
@@ -451,15 +452,25 @@ union {
 
             net_file.write("}\n")
             
-    #print positions
             
-    if args.conns or args.conn_points: # Note: segment specific connections not implemented yet... i.e. connections from dends to axons...
-        #print_comment_v("************************\n*\n*  Note: connection lines in 3D do not yet target dendritic locations!\n*\n************************")
-        for projection in nml_doc.networks[0].projections:
+    if args.conns or args.conn_points: 
+    
+        projections = nml_doc.networks[0].projections + nml_doc.networks[0].electrical_projections + nml_doc.networks[0].continuous_projections
+        for projection in projections:
             pre = projection.presynaptic_population
             post = projection.postsynaptic_population
-            connections = projection.connections + projection.connection_wds
-            print_comment_v("Adding %i connections %s -> %s "%(len(connections),pre,post))
+            
+            if isinstance(projection, neuroml.Projection):
+                connections = projection.connections + projection.connection_wds
+                color='Grey'
+            elif isinstance(projection, neuroml.ElectricalProjection):
+                connections = projection.electrical_connections + projection.electrical_connection_instances + projection.electricalConnectionInstanceW
+                color='Yellow'
+            elif isinstance(projection, neuroml.ContinuousProjection):
+                connections = projection.continuous_connections + projection.continuous_connection_instances + projection.continuousConnectionInstanceW
+                color='Blue'
+                
+            print_comment_v("Adding %i connections for %s: %s -> %s "%(len(connections),projection.id,pre,post))
             #print cell_id_vs_seg_id_vs_distal
             #print cell_id_vs_seg_id_vs_proximal
             for connection in connections:
@@ -476,18 +487,18 @@ union {
                     
                 if projection.presynaptic_population in pop_id_vs_cell.keys():
                     pre_cell = pop_id_vs_cell[projection.presynaptic_population]
-                    d = cell_id_vs_seg_id_vs_distal[pre_cell.id][int(connection.pre_segment_id)]
-                    p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][int(connection.pre_segment_id)]
-                    m = [ p[i]+float(connection.pre_fraction_along)*(d[i]-p[i]) for i in [0,1,2] ]
-                    print_comment("Pre point is %s, %s between %s and %s"%(m,connection.pre_fraction_along,p,d))
+                    d = cell_id_vs_seg_id_vs_distal[pre_cell.id][connection.get_pre_segment_id()]
+                    p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][connection.get_pre_segment_id()]
+                    m = [ p[i]+connection.get_pre_fraction_along()*(d[i]-p[i]) for i in [0,1,2] ]
+                    print_comment("Pre point is %s, %s between %s and %s"%(m,connection.get_pre_fraction_along(),p,d))
                     pre_loc = [ pre_loc[i]+m[i] for i in [0,1,2] ]
                     
                 if projection.postsynaptic_population in pop_id_vs_cell.keys():
                     post_cell = pop_id_vs_cell[projection.postsynaptic_population]
-                    d = cell_id_vs_seg_id_vs_distal[post_cell.id][int(connection.post_segment_id)]
-                    p = cell_id_vs_seg_id_vs_proximal[post_cell.id][int(connection.post_segment_id)]
-                    m = [ p[i]+float(connection.post_fraction_along)*(d[i]-p[i]) for i in [0,1,2] ]
-                    print_comment("Post point is %s, %s between %s and %s"%(m,connection.post_fraction_along,p,d))
+                    d = cell_id_vs_seg_id_vs_distal[post_cell.id][connection.get_post_segment_id()]
+                    p = cell_id_vs_seg_id_vs_proximal[post_cell.id][connection.get_post_segment_id()]
+                    m = [ p[i]+connection.get_post_fraction_along()*(d[i]-p[i]) for i in [0,1,2] ]
+                    print_comment("Post point is %s, %s between %s and %s"%(m,connection.get_post_fraction_along(),p,d))
                     post_loc = [ post_loc[i]+m[i] for i in [0,1,2] ]
                   
                 if post_loc != pre_loc:
@@ -496,7 +507,7 @@ union {
                     print_comment(info)
                     net_file.write("// %s"%info) 
                     if args.conns:
-                        net_file.write("cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color Grey}}\n"%(pre_loc[0],pre_loc[1],pre_loc[2], post_loc[0],post_loc[1],post_loc[2]))
+                        net_file.write("cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color %s}}\n"%(pre_loc[0],pre_loc[1],pre_loc[2], post_loc[0],post_loc[1],post_loc[2],color))
                     if args.conn_points:
                         net_file.write("object { conn_start_point translate <%s,%s,%s> }\n"%(pre_loc[0],pre_loc[1],pre_loc[2]))
                         net_file.write("object { conn_end_point translate <%s,%s,%s> }\n"%(post_loc[0],post_loc[1],post_loc[2]))

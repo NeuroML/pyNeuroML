@@ -260,6 +260,16 @@ def split_nml2_quantity(nml2_quantity):
     
     return magnitude, unit
 
+def get_value_in_si(nml2_quantity):
+    
+    model = get_lems_model_with_units()
+    m, u = split_nml2_quantity(nml2_quantity)
+    si_value = None
+    for un in model.units:
+        if un.symbol == u:
+            si_value =  (m + un.offset) * un.scale * pow(10, un.power)
+            
+    return si_value
     
 def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
      
@@ -917,21 +927,30 @@ def generate_plot(xvalues,
                   labels = None, 
                   colors = None, 
                   linestyles = None, 
+                  linewidths = None, 
                   markers = None, 
                   xaxis = None, 
                   yaxis = None, 
                   xlim = None,
                   ylim = None,
                   grid = False,
+                  font_size = 12,
+                  bottom_left_spines_only = False,
                   cols_in_legend_box=3,
                   show_plot_already=True,
                   save_figure_to=None,
                   title_above_plot=False):
-                      
+               
+    print_comment_v("Generating plot: %s"%(title))       
                       
     from matplotlib import pyplot as plt
+    from matplotlib import rcParams
+    
+    rcParams.update({'font.size': font_size})
 
     fig = plt.figure()
+    ax = fig.add_subplot(111)
+    
     fig.canvas.set_window_title(title)
     if title_above_plot:
         plt.title(title)
@@ -943,17 +962,24 @@ def generate_plot(xvalues,
         
     if grid:
         plt.grid('on')
+        
+    if bottom_left_spines_only:
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)       
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
 
     for i in range(len(xvalues)):
 
         linestyle = '-' if not linestyles else linestyles[i]
         label = '' if not labels else labels[i]
         marker = None if not markers else markers[i]
+        linewidth = 1 if not linewidths else linewidths[i]
         
         if colors:
-            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, linestyle=linestyle, label=label)
+            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
         else:
-            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, linestyle=linestyle, label=label)
+            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
 
     if labels:
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
@@ -965,9 +991,12 @@ def generate_plot(xvalues,
 
     if save_figure_to:
         plt.savefig(save_figure_to,bbox_inches='tight')
+        print_comment_v("Saved image to %s of plot: %s"%(save_figure_to,title))
         
     if show_plot_already:
         plt.show()
+        
+    return ax
         
 '''
     As usually saved by jLEMS, etc. First column is time (in seconds), multiple ofther columns

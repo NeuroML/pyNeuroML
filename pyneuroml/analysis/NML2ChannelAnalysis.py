@@ -191,7 +191,7 @@ def get_colour_hex(fract):
     for c in rgb: col+= ( c[2:4] if len(c)==4 else "00")
     return col
 
-# Better off elsewhere
+# Better off elsewhere..?
 def get_ion_color(ion):
     
     if ion.lower()=='na': col='#1E90FF'
