@@ -464,10 +464,10 @@ union {
                 connections = projection.connections + projection.connection_wds
                 color='Grey'
             elif isinstance(projection, neuroml.ElectricalProjection):
-                connections = projection.electrical_connections + projection.electrical_connection_instances + projection.electricalConnectionInstanceW
+                connections = projection.electrical_connections + projection.electrical_connection_instances + projection.electrical_connection_instance_ws
                 color='Yellow'
             elif isinstance(projection, neuroml.ContinuousProjection):
-                connections = projection.continuous_connections + projection.continuous_connection_instances + projection.continuousConnectionInstanceW
+                connections = projection.continuous_connections + projection.continuous_connection_instances + projection.continuous_connection_instance_ws
                 color='Blue'
                 
             print_comment_v("Adding %i connections for %s: %s -> %s "%(len(connections),projection.id,pre,post))
