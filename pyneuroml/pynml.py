@@ -448,7 +448,8 @@ def run_lems_with_jneuroml(lems_file_name,
                            show_plot_already=True, 
                            exec_in_dir = ".",
                            verbose=DEFAULTS['v'],
-                           exit_on_fail = True):  
+                           exit_on_fail = True,
+                           cleanup=False):  
                                
     print_comment("Loading LEMS file: %s and running with jNeuroML" \
                   % lems_file_name, verbose)
@@ -472,7 +473,8 @@ def run_lems_with_jneuroml(lems_file_name,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML',
-                                 reload_events=reload_events)
+                                 reload_events=reload_events,
+                                 remove_dat_files_after_load=cleanup)
     else:
         return True
     
@@ -515,7 +517,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   exec_in_dir = ".",
                                   only_generate_scripts = False,
                                   verbose=DEFAULTS['v'],
-                                  exit_on_fail = True):
+                                  exit_on_fail = True,
+                                  cleanup=False):
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
                   % lems_file_name, verbose)
@@ -548,7 +551,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML_NEURON',
-                                 reload_events=reload_events)
+                                 reload_events=reload_events,
+                                 remove_dat_files_after_load=cleanup)
     else:
         return True
     
@@ -559,7 +563,8 @@ def reload_saved_data(lems_file_name,
                       show_plot_already=True, 
                       simulator=None, 
                       reload_events=False, 
-                      verbose=DEFAULTS['v']): 
+                      verbose=DEFAULTS['v'],
+                      remove_dat_files_after_load=False): 
     
     # Could use pylems to parse all this...
     traces = {}
@@ -623,6 +628,10 @@ def reload_saved_data(lems_file_name,
                     t = float(values[1])
                 #print_comment("Found a event in cell %s (%s) at t = %s"%(id,selections[id],t))
                 events[selections[id]].append(t)
+                
+            if remove_dat_files_after_load:
+                print_comment_v("Removing file %s after having loading its data!"%file_name)
+                os.remove(file_name)
 
     
     output_files = sim.findall(ns_prefix+'OutputFile')
@@ -671,7 +680,10 @@ def reload_saved_data(lems_file_name,
             
             for vi in range(len(values)):
               traces[cols[vi]].append(float(values[vi]))
-               
+
+        if remove_dat_files_after_load:
+            print_comment_v("Removing file %s after having loading its data!"%file_name)
+            os.remove(file_name)
 
         if plot:
             info = "Data loaded from %s%s" \

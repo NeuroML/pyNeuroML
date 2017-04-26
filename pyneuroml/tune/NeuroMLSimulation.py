@@ -36,7 +36,8 @@ class NeuroMLSimulation(object):
                  sim_time=1000, 
                  dt=0.05, 
                  simulator='jNeuroML', 
-                 generate_dir = './'):
+                 generate_dir = './',
+                 cleanup = True):
 
         self.sim_time = sim_time
         self.dt = dt
@@ -46,6 +47,7 @@ class NeuroMLSimulation(object):
         self.reference = reference
         self.target = target
         self.neuroml_file = neuroml_file
+        self.cleanup = cleanup
         
         self.already_run = False
         
@@ -97,14 +99,16 @@ class NeuroMLSimulation(object):
                                                    load_saved_data=True, 
                                                    plot=False, 
                                                    exec_in_dir = self.generate_dir,
-                                                   verbose=False)
+                                                   verbose=False,
+                                                   cleanup=self.cleanup)
         elif self.simulator == 'jNeuroML_NEURON':
             results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, 
                                                           nogui=True, 
                                                           load_saved_data=True, 
                                                           plot=False, 
                                                           exec_in_dir = self.generate_dir,
-                                                          verbose=False)
+                                                          verbose=False,
+                                                          cleanup=self.cleanup)
         else:
             pynml.print_comment_v('Unsupported simulator: %s'%self.simulator)
             exit()

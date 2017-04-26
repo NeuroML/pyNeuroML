@@ -27,7 +27,8 @@ class NeuroMLController():
                  dt=0.05, 
                  simulator='jNeuroML', 
                  generate_dir = './',
-                 num_parallel_evaluations=1):
+                 num_parallel_evaluations=1,
+                 cleanup = True):
             
         
         self.ref = ref
@@ -38,6 +39,7 @@ class NeuroMLController():
         self.simulator = simulator
         self.generate_dir = generate_dir if generate_dir.endswith('/') else generate_dir+'/'
         self.num_parallel_evaluations = num_parallel_evaluations
+        self.cleanup = cleanup
         
         if int(num_parallel_evaluations) != num_parallel_evaluations or \
             num_parallel_evaluations < 1:
@@ -127,7 +129,8 @@ class NeuroMLController():
                               self.sim_time,
                               self.dt,
                               self.simulator,
-                              show)
+                              cleanup = self.cleanup,
+                              show=show)
         
 
         
@@ -140,6 +143,7 @@ def run_individual(sim_var,
                    sim_time, 
                    dt, 
                    simulator,
+                   cleanup = True,
                    show=False):
     """
     Run an individual simulation.
@@ -245,7 +249,8 @@ def run_individual(sim_var,
                          sim_time = sim_time, 
                          dt = dt, 
                          simulator = simulator, 
-                         generate_dir = generate_dir)
+                         generate_dir = generate_dir,
+                         cleanup = cleanup)
 
     sim.go()
 

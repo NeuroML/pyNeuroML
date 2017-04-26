@@ -38,6 +38,7 @@ DEFAULTS = {'simTime':             500,
             'mutationRate':        0.5,
             'numElites':           1,
             'numParallelEvaluations':1,
+            'cleanup':             True,
             'seed':                12345,
             'simulator':           'jNeuroML',
             'knownTargetValues':   '{}',
@@ -200,6 +201,11 @@ def process_args():
                         default=DEFAULTS['extraReportInfo'],
                         help='Extra tag/value pairs can be put into the report.json:  -extraReportInfo=["tag":"value"]')
                         
+    parser.add_argument('-cleanup', 
+                        action='store_true',
+                        default=DEFAULTS['cleanup'],
+                        help="Should (some) generated files, e.g. *.dat, be deleted as optimisation progresses?")
+                        
     return parser.parse_args()
                        
                         
@@ -241,7 +247,8 @@ def _run_optimisation(a):
                                       a.dt, 
                                       simulator = a.simulator, 
                                       generate_dir=run_dir,
-                                      num_parallel_evaluations = a.num_parallel_evaluations)
+                                      num_parallel_evaluations = a.num_parallel_evaluations,
+                                      cleanup = a.cleanup)
 
     peak_threshold = 0
 
@@ -349,8 +356,9 @@ def _run_optimisation(a):
     reportj['run_directory'] = run_dir
     reportj['reference'] = ref
     
-    for key in a.extra_report_info:
-        reportj[key] = a.extra_report_info[key]
+    if a.extra_report_info:
+        for key in a.extra_report_info:
+            reportj[key] = a.extra_report_info[key]
     
     
     report_file = open("%s/report.json"%run_dir,'w')
@@ -431,7 +439,8 @@ def run_2stage_optimization(prefix,
                             known_target_values,
                             dry_run = False,
                             extra_report_info = {},
-                            num_parallel_evaluations = 1):
+                            num_parallel_evaluations = 1,
+                            cleanup = True):
 
         report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
                          neuroml_file =     neuroml_file,
@@ -456,7 +465,8 @@ def run_2stage_optimization(prefix,
                          known_target_values = known_target_values,
                          dry_run =          dry_run,
                          extra_report_info = extra_report_info,
-                         num_parallel_evaluations = num_parallel_evaluations)
+                         num_parallel_evaluations = num_parallel_evaluations,
+                         cleanup = cleanup)
                          
         
         for pi in range(len(parameters)):
