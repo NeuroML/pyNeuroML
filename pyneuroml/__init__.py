@@ -1,5 +1,5 @@
 
 
-__version__ = '0.2.11'
+__version__ = '0.2.12'
 
-JNEUROML_VERSION = '0.8.0'
+JNEUROML_VERSION = '0.8.1'
