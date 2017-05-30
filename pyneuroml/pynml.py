@@ -946,6 +946,8 @@ def generate_plot(xvalues,
                   xlim = None,
                   ylim = None,
                   grid = False,
+                  logx = False,
+                  logy = False,
                   font_size = 12,
                   bottom_left_spines_only = False,
                   cols_in_legend_box=3,
@@ -974,6 +976,11 @@ def generate_plot(xvalues,
         
     if grid:
         plt.grid('on')
+        
+    if logx:
+        ax.set_xscale("log")
+    if logy:
+        ax.set_yscale("log")
         
     if bottom_left_spines_only:
         ax.spines['right'].set_visible(False)
