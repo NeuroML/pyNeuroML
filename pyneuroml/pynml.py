@@ -352,32 +352,42 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
         print_comment('Including included files (included already: %s)' \
                       % already_included, verbose)
         
+        incl_to_remove = []
         for include in nml2_doc.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, include.href))
             if incl_loc not in already_included:
                 print_comment("Loading included NeuroML2 file: %s (base: %s, resolved: %s)" % (include.href, base_path, incl_loc), 
                               verbose)
-                nml2_sub_doc = read_neuroml2_file(incl_loc, True, 
-                    verbose=verbose, already_included=already_included)
-                already_included.append(incl_loc)
-                
-                membs = inspect.getmembers(nml2_sub_doc)
+                valid = validate_neuroml2(incl_loc, verbose_validate=False)
+                if valid:
+                    nml2_sub_doc = read_neuroml2_file(incl_loc, True, 
+                        verbose=verbose, already_included=already_included)
+                    already_included.append(incl_loc)
 
-                for memb in membs:
-                    if isinstance(memb[1], list) and len(memb[1])>0 \
-                            and not memb[0].endswith('_'):
-                        for entry in memb[1]:
-                            if memb[0] != 'includes':
-                                print_comment("  Adding %s from: %s to list: %s" \
-                                    %(entry, incl_loc, memb[0]))
-                                getattr(nml2_doc, memb[0]).append(entry)
-                            
-        nml2_doc.includes = []
+                    membs = inspect.getmembers(nml2_sub_doc)
+
+                    for memb in membs:
+                        if isinstance(memb[1], list) and len(memb[1])>0 \
+                                and not memb[0].endswith('_'):
+                            for entry in memb[1]:
+                                if memb[0] != 'includes':
+                                    print_comment("  Adding %s from: %s to list: %s" \
+                                        %(entry, incl_loc, memb[0]))
+                                    getattr(nml2_doc, memb[0]).append(entry)
+                    incl_to_remove.append(include)
+                else:
+                    print_comment("Not including file as it's not valid...",verbose)
+                      
+        for include in incl_to_remove:
+            nml2_doc.includes.remove(include)
             
     return nml2_doc
 
 
 def quick_summary(nml2_doc):
+    '''
+    Or better just use nml2_doc.summary(show_includes=False)
+    '''
     
     info = 'Contents of NeuroML 2 document: %s\n'%nml2_doc.id
     membs = inspect.getmembers(nml2_doc)
@@ -389,8 +399,9 @@ def quick_summary(nml2_doc):
             info+='  %s:\n    ['%memb[0]
             for entry in memb[1]:
                 extra = '???'
-                extra = entry.id if hasattr(entry,'id') else extra
+                extra = entry.name if hasattr(entry,'name') else extra
                 extra = entry.href if hasattr(entry,'href') else extra
+                extra = entry.id if hasattr(entry,'id') else extra
                 
                 info+=" %s (%s),"%(entry, extra)
             
@@ -457,6 +468,8 @@ def run_lems_with_jneuroml(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
+    t_run = datetime.now()
+    
     success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
@@ -470,6 +483,7 @@ def run_lems_with_jneuroml(lems_file_name,
     
     if load_saved_data:
         return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML',
@@ -524,6 +538,61 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                   % lems_file_name, verbose)
                   
     post_args = " -neuron"
+    if not only_generate_scripts:
+        post_args += ' -run'
+    
+    gui = " -nogui" if nogui else ""
+    post_args += gui
+    
+    t_run = datetime.now()
+    if skip_run:
+      success = True
+    else:
+      success = run_jneuroml("", 
+                           lems_file_name, 
+                           post_args, 
+                           max_memory = max_memory, 
+                           exec_in_dir = exec_in_dir, 
+                           verbose = verbose, 
+                           exit_on_fail = exit_on_fail)
+    
+    if not success: 
+        return False
+    
+    if load_saved_data:
+        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+                                 t_run=t_run,
+                                 plot=plot, 
+                                 show_plot_already=show_plot_already, 
+                                 simulator='jNeuroML_NEURON',
+                                 reload_events=reload_events,
+                                 remove_dat_files_after_load=cleanup)
+    else:
+        return True
+
+
+def run_lems_with_jneuroml_netpyne(lems_file_name, 
+                                  max_memory=DEFAULTS['default_java_max_memory'], 
+                                  skip_run=False,
+                                  nogui=False, 
+                                  num_processors=1, 
+                                  load_saved_data=False, 
+                                  reload_events=False,
+                                  plot=False, 
+                                  show_plot_already=True, 
+                                  exec_in_dir = ".",
+                                  only_generate_scripts = False,
+                                  verbose=DEFAULTS['v'],
+                                  exit_on_fail = True,
+                                  cleanup=False):
+                                      
+    print_comment("Loading LEMS file: %s and running with jNeuroML_NetPyNE" \
+                  % lems_file_name, verbose)
+                  
+    post_args = " -netpyne"
+    
+    if num_processors!=1:
+        post_args += ' -np '+num_processors
     if not only_generate_scripts:
         post_args += ' -run'
     

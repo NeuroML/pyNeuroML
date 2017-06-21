@@ -10,6 +10,7 @@ import os.path
 import os
 import sys
 import time
+import shutil
 
 from collections import OrderedDict
 import pyneuroml.pynml
@@ -43,7 +44,18 @@ class NeuroMLController():
         
         if int(num_parallel_evaluations) != num_parallel_evaluations or \
             num_parallel_evaluations < 1:
-                raise Exception('Error with num_parallel_evaluations = %s\nPlease use an integer value greater then 1.'%num_parallel_evaluations)
+                raise Exception('Error with num_parallel_evaluations = %s\nPlease use an integer value greater than 1.'%num_parallel_evaluations)
+            
+
+        self.nml_doc = pyneuroml.pynml.read_neuroml2_file(neuroml_file, 
+                                     include_includes=True,
+                                     verbose = True,
+                                     already_included = [])
+
+        # Due to the included files not being valid nml2 => libNeuroML can't load them...
+        self.still_included = []
+        for include in self.nml_doc.includes:
+            self.still_included.append(include.href)
         
         self.count = 0
         
@@ -59,7 +71,6 @@ class NeuroMLController():
 
         traces = []
         start_time = time.time()
-        
         
         if self.num_parallel_evaluations == 1:
             
@@ -91,13 +102,15 @@ class NeuroMLController():
                 vars = (sim_var,
                         self.ref,
                         self.neuroml_file,
+                        self.nml_doc,
+                        self.still_included,
                         cand_dir,
                         self.target,
                         self.sim_time,
                         self.dt,
                         self.simulator)
                         
-                job = job_server.submit(run_individual, vars, (), ("pyneuroml.pynml",'pyneuroml.tune.NeuroMLSimulation'))
+                job = job_server.submit(run_individual, vars, (), ("pyneuroml.pynml",'pyneuroml.tune.NeuroMLSimulation','shutil','neuroml'))
                 jobs.append(job)
             
             for job_i in range(len(jobs)):
@@ -120,16 +133,18 @@ class NeuroMLController():
 
         return traces
     
-    def run_individual(self, sim_var, show=False):
+    def run_individual(self, sim_var, show=False, cleanup=None):
         return run_individual(sim_var,
                               self.ref,
                               self.neuroml_file,
+                              self.nml_doc,
+                              self.still_included,
                               self.generate_dir,
                               self.target,
                               self.sim_time,
                               self.dt,
                               self.simulator,
-                              cleanup = self.cleanup,
+                              cleanup = self.cleanup if cleanup==None else cleanup,
                               show=show)
         
 
@@ -138,6 +153,8 @@ class NeuroMLController():
 def run_individual(sim_var, 
                    reference,
                    neuroml_file,
+                   nml_doc,
+                   still_included,
                    generate_dir,
                    target,
                    sim_time, 
@@ -153,92 +170,90 @@ def run_individual(sim_var,
     applied to the model before it is simulated.
 
     """
-    
-    nml_doc = pyneuroml.pynml.read_neuroml2_file(neuroml_file, 
-                                 include_includes=True,
-                                 verbose = True,
-                                 already_included = [])
-
  
     for var_name in sim_var.keys():
-        words = var_name.split('/')
-        type, id1 = words[0].split(':')
-        if ':' in words[1]:
-            variable, id2 = words[1].split(':')
-        else:
-            variable = words[1]
-            id2 = None
+        
+        individual_var_names = var_name.split('+')
+        
+        for individual_var_name in individual_var_names:
+            words = individual_var_name.split('/')
+            type, id1 = words[0].split(':')
+            if ':' in words[1]:
+                variable, id2 = words[1].split(':')
+            else:
+                variable = words[1]
+                id2 = None
 
-        units = words[2]
-        value = sim_var[var_name]
+            units = words[2]
+            value = sim_var[var_name]
 
-        pyneuroml.pynml.print_comment_v('  Changing value of %s (%s) in %s (%s) to: %s %s'%(variable, id2, type, id1, value, units))
+            pyneuroml.pynml.print_comment_v('  Changing value of %s (%s) in %s (%s) to: %s %s'%(variable, id2, type, id1, value, units))
 
-        if type == 'cell':
-            cell = None
-            for c in nml_doc.cells:
-                if c.id == id1:
-                    cell = c
+            if type == 'cell':
+                cell = None
+                for c in nml_doc.cells:
+                    if c.id == id1:
+                        cell = c
 
-            if variable == 'channelDensity':
+                if variable == 'channelDensity':
 
-                chanDens = None
-                for cd in cell.biophysical_properties.membrane_properties.channel_densities:
-                    if cd.id == id2:
-                        chanDens = cd
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                        if cd.id == id2:
+                            chanDens = cd
 
-                chanDens.cond_density = '%s %s'%(value, units)
+                    chanDens.cond_density = '%s %s'%(value, units)
 
-            elif variable == 'erev_id': # change all values of erev in channelDensity elements with only this id
+                elif variable == 'erev_id': # change all values of erev in channelDensity elements with only this id
 
-                chanDens = None
-                for cd in cell.biophysical_properties.membrane_properties.channel_densities:
-                    if cd.id == id2:
-                        chanDens = cd
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                        if cd.id == id2:
+                            chanDens = cd
 
-                chanDens.erev = '%s %s'%(value, units)
+                    chanDens.erev = '%s %s'%(value, units)
 
-            elif variable == 'erev_ion': # change all values of erev in channelDensity elements with this ion
+                elif variable == 'erev_ion': # change all values of erev in channelDensity elements with this ion
 
-                chanDens = None
-                for cd in cell.biophysical_properties.membrane_properties.channel_densities:
-                    if cd.ion == id2:
-                        chanDens = cd
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                        if cd.ion == id2:
+                            chanDens = cd
 
-                chanDens.erev = '%s %s'%(value, units)
+                    chanDens.erev = '%s %s'%(value, units)
 
-            elif variable == 'specificCapacitance': 
+                elif variable == 'specificCapacitance': 
 
-                specCap = None
-                for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
-                    if (sc.segment_groups == None and id2 == 'all') or sc.segment_groups == id2 :
-                        specCap = sc
+                    specCap = None
+                    for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
+                        if (sc.segment_groups == None and id2 == 'all') or sc.segment_groups == id2 :
+                            specCap = sc
 
-                specCap.value = '%s %s'%(value, units)
+                    specCap.value = '%s %s'%(value, units)
 
-            elif variable == 'resistivity': 
+                elif variable == 'resistivity': 
 
-                resistivity = None
-                for rs in cell.biophysical_properties.intracellular_properties.resistivities:
-                    if (rs.segment_groups == None and id2 == 'all') or rs.segment_groups == id2 :
-                        resistivity = rs
+                    resistivity = None
+                    for rs in cell.biophysical_properties.intracellular_properties.resistivities:
+                        if (rs.segment_groups == None and id2 == 'all') or rs.segment_groups == id2 :
+                            resistivity = rs
 
-                resistivity.value = '%s %s'%(value, units)
+                    resistivity.value = '%s %s'%(value, units)
+
+                else:
+                    pyneuroml.pynml.print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, individual_var_name))
+                    exit()
+
+            elif type == 'izhikevich2007Cell':
+                izhcell = None
+                for c in nml_doc.izhikevich2007_cells:
+                    if c.id == id1:
+                        izhcell = c
+
+                izhcell.__setattr__(variable, '%s %s'%(value, units))
 
             else:
-                pyneuroml.pynml.print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, var_name))
-                exit()
-
-        elif type == 'izhikevich2007Cell':
-            izhcell = None
-            for c in nml_doc.izhikevich2007_cells:
-                if c.id == id1:
-                    izhcell = c
-
-            izhcell.__setattr__(variable, '%s %s'%(value, units))
-
-        else:
-            pyneuroml.pynml.print_comment_v('Unknown type (%s) in variable expression: %s'%(type, var_name))
+                pyneuroml.pynml.print_comment_v('Unknown type (%s) in variable expression: %s'%(type, individual_var_name))
 
 
 
@@ -249,6 +264,12 @@ def run_individual(sim_var,
 
     pyneuroml.pynml.write_neuroml2_file(nml_doc, new_neuroml_file)
 
+    for include in still_included:
+        inc_loc = '%s/%s'%(os.path.dirname(os.path.abspath(neuroml_file)),include)
+        pyneuroml.pynml.print_comment_v("Copying non included file %s to %s (%s) beside %s"%(inc_loc, generate_dir,os.path.abspath(generate_dir), new_neuroml_file))
+        shutil.copy(inc_loc, generate_dir)
+        
+        
 
     from pyneuroml.tune.NeuroMLSimulation import NeuroMLSimulation
 
@@ -259,7 +280,8 @@ def run_individual(sim_var,
                          dt = dt, 
                          simulator = simulator, 
                          generate_dir = generate_dir,
-                         cleanup = cleanup)
+                         cleanup = cleanup,
+                         nml_doc = nml_doc)
 
     sim.go()
 
@@ -292,7 +314,7 @@ if __name__ == '__main__':
                             'temp/',
                             num_parallel_evaluations = 1)
     
-    num_cands = 12
+    num_cands = 4
     
     if '-many' in sys.argv:
         

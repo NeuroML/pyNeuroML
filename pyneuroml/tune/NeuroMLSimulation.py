@@ -37,7 +37,8 @@ class NeuroMLSimulation(object):
                  dt=0.05, 
                  simulator='jNeuroML', 
                  generate_dir = './',
-                 cleanup = True):
+                 cleanup = True,
+                 nml_doc = None):
 
         self.sim_time = sim_time
         self.dt = dt
@@ -47,6 +48,7 @@ class NeuroMLSimulation(object):
         self.reference = reference
         self.target = target
         self.neuroml_file = neuroml_file
+        self.nml_doc = nml_doc
         self.cleanup = cleanup
         
         self.already_run = False
@@ -86,7 +88,8 @@ class NeuroMLSimulation(object):
                                        self.sim_time, 
                                        self.dt, 
                                        lems_file_name = lems_file_name,
-                                       target_dir = self.generate_dir)
+                                       target_dir = self.generate_dir,
+                                       nml_doc = self.nml_doc)
         
         pynml.print_comment_v("Running a simulation of %s ms with timestep %s ms: %s"%(self.sim_time, self.dt, lems_file_name))
         

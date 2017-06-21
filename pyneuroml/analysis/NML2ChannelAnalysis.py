@@ -197,6 +197,7 @@ def get_ion_color(ion):
     if ion.lower()=='na': col='#1E90FF'
     elif ion.lower()=='k': col='#CD5C5C'
     elif ion.lower()=='ca': col='#8FBC8F'
+    elif ion.lower()=='h': col='#ffd9b3'
     else: col='#A9A9A9'
     
     return col
