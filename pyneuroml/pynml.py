@@ -332,8 +332,9 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
                           exit_on_fail = False)
     
 
-def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False, 
-                       already_included=[], optimized=False):  
+def read_neuroml2_file(nml2_file_name, include_includes=False, 
+                       verbose=False, already_included=[], 
+                       optimized=False, check_validity_pre_include=False):  
     
     print_comment("Loading NeuroML2 file: %s" % nml2_file_name, verbose)
     
@@ -356,12 +357,17 @@ def read_neuroml2_file(nml2_file_name, include_includes=False, verbose=False,
         for include in nml2_doc.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, include.href))
             if incl_loc not in already_included:
-                print_comment("Loading included NeuroML2 file: %s (base: %s, resolved: %s)" % (include.href, base_path, incl_loc), 
+                              
+                inc = True
+                if check_validity_pre_include:
+                    inc = validate_neuroml2(incl_loc, verbose_validate=False)
+                    
+                print_comment("Loading included NeuroML2 file: %s (base: %s, resolved: %s, checking %s)" % (include.href, base_path, incl_loc,check_validity_pre_include), 
                               verbose)
-                valid = validate_neuroml2(incl_loc, verbose_validate=False)
-                if valid:
+                if inc:
                     nml2_sub_doc = read_neuroml2_file(incl_loc, True, 
-                        verbose=verbose, already_included=already_included)
+                        verbose=verbose, already_included=already_included, 
+                        check_validity_pre_include=check_validity_pre_include)
                     already_included.append(incl_loc)
 
                     membs = inspect.getmembers(nml2_sub_doc)
@@ -592,7 +598,7 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
     post_args = " -netpyne"
     
     if num_processors!=1:
-        post_args += ' -np '+num_processors
+        post_args += ' -np %i'%num_processors
     if not only_generate_scripts:
         post_args += ' -run'
     

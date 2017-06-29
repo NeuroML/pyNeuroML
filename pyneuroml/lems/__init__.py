@@ -66,7 +66,8 @@ def generate_lems_file_for_neuroml(sim_id,
             print_comment_v(' - Including %s located at %s, copying to %s'%(include.href, incl_curr,target_dir))
             
             if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
-               not os.path.isfile("%s/%s"%(target_dir, incl_curr)):
+               not os.path.isfile("%s/%s"%(target_dir, incl_curr)) and \
+               not os.path.isfile(incl_curr):
                 shutil.copy(incl_curr, target_dir)
                 
             ls.include_neuroml2_file(include.href, include_included=False)
@@ -169,7 +170,7 @@ def generate_lems_file_for_neuroml(sim_id,
         scale = "1"
         
         # Check for v ...
-        if quantities[0].endswith('/v'):
+        if quantities and len(quantities)>0 and quantities[0].endswith('/v'):
             max_ = "40"
             min_ = "-80"
             scale = "1mV"

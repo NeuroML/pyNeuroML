@@ -46,11 +46,12 @@ class NeuroMLController():
             num_parallel_evaluations < 1:
                 raise Exception('Error with num_parallel_evaluations = %s\nPlease use an integer value greater than 1.'%num_parallel_evaluations)
             
-
+            
         self.nml_doc = pyneuroml.pynml.read_neuroml2_file(neuroml_file, 
                                      include_includes=True,
                                      verbose = True,
-                                     already_included = [])
+                                     already_included = [],
+                                     check_validity_pre_include = True)
 
         # Due to the included files not being valid nml2 => libNeuroML can't load them...
         self.still_included = []
@@ -199,6 +200,15 @@ def run_individual(sim_var,
 
                     chanDens = None
                     for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                        if cd.id == id2:
+                            chanDens = cd
+
+                    chanDens.cond_density = '%s %s'%(value, units)
+
+                elif variable == 'channelDensityNernst':
+
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_density_nernsts:
                         if cd.id == id2:
                             chanDens = cd
 
