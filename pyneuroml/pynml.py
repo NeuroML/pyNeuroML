@@ -1057,13 +1057,16 @@ def _get_attr_in_element(el, name, rdf=False):
     ns = 'http://www.neuroml.org/schema/neuroml2'
     if rdf:
         ns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-    return el.attrib['{%s}%s'%(ns,name)]
+    aname = '{%s}%s'%(ns,name)
+    return el.attrib[aname] if aname in el.attrib else None
 
 
 
 def extract_annotations(nml2_file):
     
     from lxml import etree
+    
+    import pprint; pp = pprint.PrettyPrinter()
 
     test_file = open(nml2_file)
 
@@ -1077,18 +1080,22 @@ def extract_annotations(nml2_file):
             
             desc = _get_attr_in_element(r,'about',rdf=True)
             
-            annotations[desc] = {}
+            annotations[desc] = []
 
             for info in r:
-                
-                kind = info.tag.replace('{http://biomodels.net/biology-qualifiers/}','bqbiol:')
-                kind = kind.replace('{http://biomodels.net/model-qualifiers/}','bqmodel:')
+                if isinstance(info.tag, str):
+                    kind = info.tag.replace('{http://biomodels.net/biology-qualifiers/}','bqbiol:')
+                    kind = kind.replace('{http://biomodels.net/model-qualifiers/}','bqmodel:')
 
-                for li in _find_elements(a,'li',rdf=True):
-                    annotations[desc][kind] = _get_attr_in_element(li,'resource',rdf=True)
+                    for li in _find_elements(info,'li',rdf=True):
+
+                        attr = _get_attr_in_element(li,'resource',rdf=True)
+                        if attr:
+                            annotations[desc].append({kind: attr})
 
 
-    print_comment_v("Annotations in %s: %s"%(nml2_file,annotations))
+    print_comment_v("Annotations in %s: "%(nml2_file))
+    pp.pprint(annotations)
 
 
 def main(args=None):
