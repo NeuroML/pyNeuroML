@@ -1112,11 +1112,65 @@ def reload_standard_dat_file(file_name):
         for i in range(len(words)-1):
             data[i].append(float(words[i+1]))
 
-    print("Loaded data from %s; columns: %s"%(file_name, indeces))
+    print_comment_v("Loaded data from %s; columns: %s"%(file_name, indeces))
     
     dat_file.close()
 
     return data, indeces
+
+
+
+
+def _find_elements(el, name, rdf=False):
+    ns = 'http://www.neuroml.org/schema/neuroml2'
+    if rdf:
+        ns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+    return el.findall('.//{%s}%s'%(ns,name))
+
+
+def _get_attr_in_element(el, name, rdf=False):
+    ns = 'http://www.neuroml.org/schema/neuroml2'
+    if rdf:
+        ns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+    aname = '{%s}%s'%(ns,name)
+    return el.attrib[aname] if aname in el.attrib else None
+
+
+
+def extract_annotations(nml2_file):
+    
+    from lxml import etree
+    
+    import pprint; pp = pprint.PrettyPrinter()
+
+    test_file = open(nml2_file)
+
+    root = etree.parse(test_file).getroot()
+    
+    annotations = {}
+
+    for a in _find_elements(root,'annotation'):
+
+        for r in _find_elements(a,'Description',rdf=True):
+            
+            desc = _get_attr_in_element(r,'about',rdf=True)
+            
+            annotations[desc] = []
+
+            for info in r:
+                if isinstance(info.tag, str):
+                    kind = info.tag.replace('{http://biomodels.net/biology-qualifiers/}','bqbiol:')
+                    kind = kind.replace('{http://biomodels.net/model-qualifiers/}','bqmodel:')
+
+                    for li in _find_elements(info,'li',rdf=True):
+
+                        attr = _get_attr_in_element(li,'resource',rdf=True)
+                        if attr:
+                            annotations[desc].append({kind: attr})
+
+
+    print_comment_v("Annotations in %s: "%(nml2_file))
+    pp.pprint(annotations)
 
 
 def main(args=None):
