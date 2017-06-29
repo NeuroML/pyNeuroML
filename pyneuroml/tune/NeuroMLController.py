@@ -216,6 +216,15 @@ def run_individual(sim_var,
 
                 specCap.value = '%s %s'%(value, units)
 
+            elif variable == 'resistivity': 
+
+                resistivity = None
+                for rs in cell.biophysical_properties.intracellular_properties.resistivities:
+                    if (rs.segment_groups == None and id2 == 'all') or rs.segment_groups == id2 :
+                        resistivity = rs
+
+                resistivity.value = '%s %s'%(value, units)
+
             else:
                 pyneuroml.pynml.print_comment_v('Unknown variable (%s) in variable expression: %s'%(variable, var_name))
                 exit()
