@@ -129,6 +129,11 @@ def process_args():
                         action='store_true',
                         default=False,
                         help="If this is specified, add a 2D plane below cell/network")
+
+    parser.add_argument('-segids',
+                        action='store_true',
+                        default=False,
+                        help="Show segment ids")
     
     return parser.parse_args()
 
@@ -290,9 +295,19 @@ background {rgbt %s}
                 cells_file.write("    }\n")
                 
 
+            if args.segids:
+                cells_file.write('    text {\n')
+                cells_file.write('        ttf "timrom.ttf" "------- Segment: %s" .1, 0.01\n'%(segment.id))
+                cells_file.write('        pigment { Red }\n')
+                cells_file.write('        rotate <0,180,0>\n')
+                cells_file.write('        scale <10,10,10>')
+                cells_file.write('        translate %s>\n'%distalpoint.split('>')[0])
+                cells_file.write('    }\n')
+
         cells_file.write("    pigment { color rgb <%f,%f,%f> }\n"%(random.random(),random.random(),random.random()))
 
         cells_file.write("}\n\n")
+        
 
 
     if splitOut:
