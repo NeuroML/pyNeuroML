@@ -13,7 +13,8 @@ from pyneuroml.pynml import print_comment, print_comment_v
 import os
 
 from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
-
+from neuron import *
+from nrn import *
 
 def export_to_neuroml2(hoc_or_python_file, 
                        nml2_file_name, 
@@ -21,9 +22,6 @@ def export_to_neuroml2(hoc_or_python_file,
                        separateCellFiles=False, 
                        known_rev_potentials={},
                        validate=True):
-    
-    from neuron import *
-    from nrn import *
     
     if hoc_or_python_file is not None:
         if hoc_or_python_file.endswith(".py"):

@@ -202,7 +202,7 @@ def generate_channel_density_plots(nml2_file, text_densities=False, passives_ere
             
         sb="<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""+str(width+text_densities*200)+"\" height=\""+str((height+spacing)*row)+"\">\n"+sb+"</svg>\n"
 
-        print sb
+        print(sb)
         svg_file = nml2_file+"_channeldens.svg"
         if target_directory:
             svg_file = target_directory+"/"+svg_file.split('/')[-1]
