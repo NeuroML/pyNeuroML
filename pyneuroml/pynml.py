@@ -440,7 +440,8 @@ def relative_path(base_dir, file_name):
 
 
 def run_lems_with_jneuroml(lems_file_name, 
-                           max_memory=DEFAULTS['default_java_max_memory'], 
+                           max_memory=DEFAULTS['default_java_max_memory'],
+                           skip_run=False, 
                            nogui=False, 
                            load_saved_data=False, 
                            reload_events=False,
@@ -457,7 +458,8 @@ def run_lems_with_jneuroml(lems_file_name,
     gui = " -nogui" if nogui else ""
     post_args += gui
     
-    success = run_jneuroml("", 
+    if not skip_run:
+        success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
@@ -640,7 +642,7 @@ def reload_saved_data(lems_file_name,
         rows = int(max(1,math.ceil(n_output_files/float(3))))
         columns = min(3,n_output_files)
         fig,ax = plt.subplots(rows,columns,sharex=True,
-                              figsize=(4*columns,4*rows))
+                              figsize=(8*columns,4*rows))
         if n_output_files>1:
             ax = ax.ravel()
     

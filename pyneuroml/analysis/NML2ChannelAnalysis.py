@@ -496,21 +496,21 @@ def compute_iv_curve(channel, a, results, grid=True):
         times[voltage] = []
         
         currents[voltage] = []                
-        i_file  = open(name)
         i_max = -1*sys.float_info.min
         i_min = sys.float_info.min
         i_steady[voltage] = None
         t_steady_end = end_time_ms/1000.0
-        for line in i_file:
-            t = float(line.split()[0])
-            times[voltage].append(t)
-            i = float(line.split()[1])
-            currents[voltage].append(i)
-            if i>i_max: i_max = i
-            if i<i_min: i_min = i
-            if t < t_steady_end:
-                i_steady[voltage] = i
-            
+        with open(name) as i_file:
+            for line in i_file:
+                t = float(line.split()[0])
+                times[voltage].append(t)
+                i = float(line.split()[1])
+                currents[voltage].append(i)
+                if i>i_max: i_max = i
+                if i<i_min: i_min = i
+                if t < t_steady_end:
+                    i_steady[voltage] = i
+                
         i_peak_ = i_max if abs(i_max) > abs(i_min)\
                        else i_min
         i_peak[voltage] = -1 * i_peak_
