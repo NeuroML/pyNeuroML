@@ -9,6 +9,8 @@ from pyneuroml.pynml import print_comment, get_value_in_si,\
                             
 from pyneuroml.analysis.NML2ChannelAnalysis import get_ion_color
 
+from neuroml import Cell, Cell2CaPools
+
 import os
 import math
 
@@ -32,6 +34,8 @@ def get_ion_color(ion):
         col=[205,	92,	92]
     elif ion.lower() == "ca": 
         col=[143,	188,	143]
+    elif ion.lower() == "h": 
+        col=[255, 217, 179]
     else:
         col=[169,	169,	169]
             
@@ -109,8 +113,12 @@ def generate_channel_density_plots(nml2_file, text_densities=False, passives_ere
         ca_ions = []
         other_ions = []
         
-        cds = cell.biophysical_properties.membrane_properties.channel_densities + \
-              cell.biophysical_properties.membrane_properties.channel_density_nernsts
+        if isinstance(cell, Cell2CaPools):
+            cds = cell.biophysical_properties2_ca_pools.membrane_properties2_ca_pools.channel_densities + \
+                cell.biophysical_properties2_ca_pools.membrane_properties2_ca_pools.channel_density_nernsts
+        elif isinstance(cell, Cell):
+            cds = cell.biophysical_properties.membrane_properties.channel_densities + \
+                cell.biophysical_properties.membrane_properties.channel_density_nernsts
               
         epas = None
         ena = None

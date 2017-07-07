@@ -60,7 +60,9 @@ class LEMSSimulation():
         full_path = os.path.abspath(relative_to_dir+'/'+nml2_file_name)
         base_path = os.path.dirname(full_path)
         #print_comment_v("Including in generated LEMS file: %s (%s)"%(nml2_file_name, full_path))
-        self.lems_info['include_files'].append(nml2_file_name)
+        if not nml2_file_name in self.lems_info['include_files']:
+            self.lems_info['include_files'].append(nml2_file_name)
+            
         if include_included:
             cell = read_neuroml2_file(full_path)
             for include in cell.includes:
@@ -68,7 +70,9 @@ class LEMSSimulation():
         
         
     def include_lems_file(self, lems_file_name, include_included=True):
-        self.lems_info['include_files'].append(lems_file_name)
+        if not lems_file_name in self.lems_info['include_files']:
+            self.lems_info['include_files'].append(lems_file_name)
+            
         if include_included:
             model = read_lems_file(lems_file_name)
             for inc in model.included_files:

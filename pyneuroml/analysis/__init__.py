@@ -47,8 +47,6 @@ def generate_current_vs_frequency_curve(nml2_file,
     if_ax = None
     iv_ax = None
     
-    print_comment_v("Generating an FI curve for cell %s in %s using %s (%snA->%snA; %snA steps)"%
-        (cell_id, nml2_file, simulator, start_amp_nA, end_amp_nA, step_nA))
     
     sim_id = 'iv_%s'%cell_id
     total_duration = pre_zero_pulse+analysis_duration+analysis_delay+post_zero_pulse
@@ -61,11 +59,17 @@ def generate_current_vs_frequency_curve(nml2_file,
     stims = []
     if len(custom_amps_nA)>0:
         stims = [float(a) for a in custom_amps_nA]
+        stim_info = ['%snA'%float(a) for a in custom_amps_nA]
     else:
         amp = start_amp_nA
         while amp<=end_amp_nA : 
             stims.append(amp)
             amp+=step_nA
+        
+        stim_info = '(%snA->%snA; %s steps of %snA)'%(start_amp_nA, end_amp_nA, len(stims), step_nA)
+        
+    print_comment_v("Generating an FI curve for cell %s in %s using %s %s"%
+        (cell_id, nml2_file, simulator, stim_info))
         
     number_cells = len(stims)
     pop = nml.Population(id="population_of_%s"%cell_id,
