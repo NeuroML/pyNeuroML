@@ -368,7 +368,8 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
                     nml2_sub_doc = read_neuroml2_file(incl_loc, True, 
                         verbose=verbose, already_included=already_included, 
                         check_validity_pre_include=check_validity_pre_include)
-                    already_included.append(incl_loc)
+                    if not incl_loc in already_included:
+                        already_included.append(incl_loc)
 
                     membs = inspect.getmembers(nml2_sub_doc)
 
