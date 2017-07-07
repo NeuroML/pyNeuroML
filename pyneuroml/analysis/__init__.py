@@ -34,7 +34,10 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         save_voltage_traces_to = None, 
                                         save_if_figure_to =     None, 
                                         save_iv_figure_to =     None, 
+                                        save_if_data_to =       None, 
+                                        save_iv_data_to =       None, 
                                         simulator =             "jNeuroML",
+                                        num_processors =        1,
                                         include_included =      True,
                                         title_above_plot =      False,
                                         return_axes =           False):
@@ -68,7 +71,7 @@ def generate_current_vs_frequency_curve(nml2_file,
         
         stim_info = '(%snA->%snA; %s steps of %snA)'%(start_amp_nA, end_amp_nA, len(stims), step_nA)
         
-    print_comment_v("Generating an FI curve for cell %s in %s using %s %s"%
+    print_comment_v("Generating an IF curve for cell %s in %s using %s %s"%
         (cell_id, nml2_file, simulator, stim_info))
         
     number_cells = len(stims)
@@ -136,6 +139,15 @@ def generate_current_vs_frequency_curve(nml2_file,
                                                 load_saved_data=True, 
                                                 plot=False,
                                                 show_plot_already=False)
+    elif simulator == "jNeuroML_NetPyNE":
+        results = pynml.run_lems_with_jneuroml_netpyne(lems_file_name, 
+                                                nogui=True, 
+                                                load_saved_data=True, 
+                                                plot=False,
+                                                show_plot_already=False,
+                                                num_processors = num_processors)
+    else:
+        raise Exception("Sorry, cannot yet run current vs frequency analysis using simulator %s"%simulator)
                                       
         
     #print(results.keys())
@@ -217,6 +229,11 @@ def generate_current_vs_frequency_curve(nml2_file,
                             show_plot_already=False,
                             save_figure_to = save_if_figure_to,
                             title_above_plot = title_above_plot)
+                            
+        if save_if_data_to:
+            with open(save_if_data_to,'w') as if_file:
+                for i in range(len(stims_pA)):
+                    if_file.write("%s\t%s\n"%(stims_pA[i],freqs[i]))
     if plot_iv:
         
         stims = sorted(iv_results.keys())
@@ -239,6 +256,12 @@ def generate_current_vs_frequency_curve(nml2_file,
                             show_plot_already=False,
                             save_figure_to = save_iv_figure_to,
                             title_above_plot = title_above_plot)
+                            
+                            
+        if save_iv_data_to:
+            with open(save_iv_data_to,'w') as iv_file:
+                for i in range(len(stims_pA)):
+                    iv_file.write("%s\t%s\n"%(stims_pA[i],vs[i]))
     
     if show_plot_already:
         from matplotlib import pyplot as plt
