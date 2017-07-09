@@ -471,7 +471,8 @@ def run_lems_with_jneuroml(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+        return reload_saved_data(exec_in_dir,
+                                 lems_file_name, 
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
                                  simulator='jNeuroML',
@@ -548,7 +549,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+        return reload_saved_data(exec_in_dir,
+                                 lems_file_name, 
                                  t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
@@ -559,7 +561,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         return True
     
     
-def reload_saved_data(lems_file_name, 
+def reload_saved_data(base_dir,
+                      lems_file_name, 
                       t_run=datetime(1900,1,1),
                       plot=False, 
                       show_plot_already=True, 
@@ -574,10 +577,6 @@ def reload_saved_data(lems_file_name,
     
     if plot:
         import matplotlib.pyplot as plt
-
-    base_dir = os.path.dirname(lems_file_name) \
-               if len(os.path.dirname(lems_file_name))>0 \
-               else '.'
 
     from lxml import etree
     tree = etree.parse(lems_file_name)
@@ -600,13 +599,13 @@ def reload_saved_data(lems_file_name,
         for i,of in enumerate(event_output_files):
             name = of.attrib['fileName']
             file_name = os.path.join(base_dir,name)
-            if not os.path.isfile(file_name): # If not relative to the LEMS file...
-                file_name = os.path.join(os.getcwd(),name) 
+            #if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            #    file_name = os.path.join(os.getcwd(),name) 
                 # ... try relative to cwd.  
-            if not os.path.isfile(file_name): # If not relative to the LEMS file...
-                file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
+            #if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            #    file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
                 # ... try relative to cwd in NeuroML2/results subdir.  
-            if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            if not os.path.isfile(file_name): # If not relative to the base dir...
                 raise OSError(('Could not find simulation output '
                                'file %s' % file_name))
             format = of.attrib['format']
@@ -679,7 +678,6 @@ def reload_saved_data(lems_file_name,
         with open(file_name) as f:
           for line in f:
             values = line.split()
-            
             for vi in range(len(values)):
               traces[cols[vi]].append(float(values[vi]))
 
