@@ -304,7 +304,7 @@ def _run_optimisation(a):
         sim_var[key]=value
 
 
-    best_candidate_t, best_candidate_v = my_controller.run_individual(sim_var,show=False)
+    best_candidate_t, best_candidate_v = my_controller.run_individual(sim_var, show=False, cleanup=False)
 
     best_candidate_analysis = analysis.NetworkAnalysis(best_candidate_v,
                                                best_candidate_t,
@@ -399,7 +399,8 @@ def _run_optimisation(a):
         utils.plot_generation_evolution(sim_var.keys(), 
                                         individuals_file_name = '%s/ga_individuals.csv'%run_dir, 
                                         target_values=a.known_target_values,
-                                        show_plot_already = a.show_plot_already)
+                                        show_plot_already = a.show_plot_already,
+                                        title_prefix=ref)
         
         if a.show_plot_already:
             plt.show()
