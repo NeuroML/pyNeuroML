@@ -448,15 +448,6 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
         validate_lems(lems_file_name)
 
 
-def relative_path(base_dir, file_name):
-    
-    if os.path.isabs(file_name): # If the file name is an absolute path...
-        return file_name # ... do not prepend the base directory.  
-    if base_dir in ['','.','./']: 
-        return file_name
-    return os.path.join(base_dir,file_name)
-
-
 def run_lems_with_jneuroml(lems_file_name, 
                            max_memory=DEFAULTS['default_java_max_memory'],
                            skip_run=False, 
@@ -626,7 +617,8 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
+        return reload_saved_data(exec_in_dir,
+                                 lems_file_name, 
                                  t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
