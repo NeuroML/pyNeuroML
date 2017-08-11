@@ -137,6 +137,19 @@ def process_args():
     
     return parser.parse_args()
 
+
+def define_dummy_cell(pop_id, radius, pov_file):
+    dummy_cell_name = '%s_%s'%(_DUMMY_CELL,pop_id)
+    pov_file.write('''\n/*\n  Defining a dummy cell to use for population %s with radius %s...\n*/\n#declare %s = 
+union {
+    sphere {
+        <0.000000, 0.000000, 0.000000>, %s 
+    }
+    pigment { color rgb <1,0,0> }
+}\n'''%(pop_id, radius, dummy_cell_name, radius))
+
+    return dummy_cell_name
+
 def main ():
 
     args = process_args()
@@ -357,6 +370,7 @@ union {
         print_comment_v(info)
 
         colour = "1"
+        substitute_radius = None
         
         for prop in pop.properties:
 
@@ -364,19 +378,25 @@ union {
                 colour = prop.value
                 colour = colour.replace(" ", ",")
                 #print "Colour determined to be: "+colour
+            if prop.tag == 'radius':
+                substitute_radius = float(prop.value)
         
         net_file.write("\n\n/* "+info+" */\n\n")
 
         pop_positions = {}
         
         if not celltype in declaredcells:
-            cell_definition = _DUMMY_CELL  
             minXc = 0
             minYc = 0
             minZc = 0
             maxXc = 0
             maxYc = 0
             maxZc = 0
+            if substitute_radius:
+                dummy_cell_name = define_dummy_cell(name, substitute_radius, pov_file)
+                cell_definition = dummy_cell_name
+            else:
+                cell_definition = _DUMMY_CELL  
         else:
             cell_definition = declaredcells[celltype]
         
