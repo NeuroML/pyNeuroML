@@ -107,6 +107,9 @@ def generate_lems_file_for_neuroml(sim_id,
                 for c in nml_doc.spike_generator_poissons:
                     if c.id == component:
                         variable = "tsince"
+                for c in nml_doc.SpikeSourcePoisson:
+                    if c.id == component:
+                        variable = "tsince"
                             
                 quantity_template = "%s[%i]/"+variable
                 if plot_all_segments or gen_spike_saves_for_all_somas:
