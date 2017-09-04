@@ -542,12 +542,13 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   verbose=DEFAULTS['v'],
                                   exit_on_fail = True,
                                   cleanup=False):
+                                  #jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
                   % lems_file_name, verbose)
                   
     post_args = " -neuron"
-    if not only_generate_scripts:
+    if not only_generate_scripts:# and jnml_runs_neuron:
         post_args += ' -run'
     
     gui = " -nogui" if nogui else ""
@@ -557,13 +558,28 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     if skip_run:
       success = True
     else:
-      success = run_jneuroml("", 
+        
+        # Fix PYTHONPATH for NEURON: has been an issue on HBP Collaboratory...
+        for path in sys.path:
+            if not path+":" in os.environ['PYTHONPATH']:
+                os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
+
+        print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+        
+        success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
                            exit_on_fail = exit_on_fail)
+                          
+        #TODO: Work in progress!!!
+        #if not jnml_runs_neuron:
+        #    print_comment("Running...",verbose)
+        #    from LEMS_NML2_Ex5_DetCell_nrn import NeuronSimulation
+        #    ns = NeuronSimulation(tstop=300, dt=0.01, seed=123456789)
+        #    ns.run()
     
     if not success: 
         return False
