@@ -2,9 +2,10 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
-from pyneuroml.pynml import print_comment_v
+from pyneuroml.pynml import print_comment_v, print_comment
 from pyneuroml.lems import generate_lems_file_for_neuroml
 import math
+import os
 
 
 def generate_current_vs_frequency_curve(nml2_file, 
@@ -40,9 +41,10 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         num_processors =        1,
                                         include_included =      True,
                                         title_above_plot =      False,
-                                        return_axes =           False):
+                                        return_axes =           False,
+                                        verbose =               False):
                                             
-                                            
+    print_comment("Running generate_current_vs_frequency_curve() on %s (%s)"%(nml2_file,os.path.abspath(nml2_file)), verbose)                
     from pyelectro.analysis import max_min
     from pyelectro.analysis import mean_spike_frequency
     import numpy as np
@@ -126,29 +128,35 @@ def generate_current_vs_frequency_curve(nml2_file,
         ls.add_column_to_output_file(of0, ref, quantity)
     
     lems_file_name = ls.save_to_file()
+    
+    print_comment("Written LEMS file %s (%s)"%(lems_file_name,os.path.abspath(lems_file_name)), verbose)   
 
     if simulator == "jNeuroML":
         results = pynml.run_lems_with_jneuroml(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
                                                 plot=False,
-                                                show_plot_already=False)
+                                                show_plot_already=False,
+                                                verbose=verbose)
     elif simulator == "jNeuroML_NEURON":
         results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
                                                 plot=False,
-                                                show_plot_already=False)
+                                                show_plot_already=False,
+                                                verbose=verbose)
     elif simulator == "jNeuroML_NetPyNE":
         results = pynml.run_lems_with_jneuroml_netpyne(lems_file_name, 
                                                 nogui=True, 
                                                 load_saved_data=True, 
                                                 plot=False,
                                                 show_plot_already=False,
-                                                num_processors = num_processors)
+                                                num_processors = num_processors,
+                                                verbose=verbose)
     else:
         raise Exception("Sorry, cannot yet run current vs frequency analysis using simulator %s"%simulator)
-                                      
+    
+    print_comment("Completed run in simulator %s (results: %s)"%(simulator,results.keys()), verbose)  
         
     #print(results.keys())
     times_results = []
@@ -203,7 +211,8 @@ def generate_current_vs_frequency_curve(nml2_file,
                             labels = volts_labels,
                             show_plot_already=False,
                             save_figure_to = save_voltage_traces_to,
-                            title_above_plot = title_above_plot)
+                            title_above_plot = title_above_plot,
+                            verbose=verbose)
     
         
     if plot_if:
@@ -228,7 +237,8 @@ def generate_current_vs_frequency_curve(nml2_file,
                             grid = grid,
                             show_plot_already=False,
                             save_figure_to = save_if_figure_to,
-                            title_above_plot = title_above_plot)
+                            title_above_plot = title_above_plot,
+                            verbose=verbose)
                             
         if save_if_data_to:
             with open(save_if_data_to,'w') as if_file:
@@ -255,7 +265,8 @@ def generate_current_vs_frequency_curve(nml2_file,
                             grid = grid,
                             show_plot_already=False,
                             save_figure_to = save_iv_figure_to,
-                            title_above_plot = title_above_plot)
+                            title_above_plot = title_above_plot,
+                            verbose=verbose)
                             
                             
         if save_iv_data_to:

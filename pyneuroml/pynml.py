@@ -1031,7 +1031,8 @@ def generate_plot(xvalues,
                   cols_in_legend_box=3,
                   show_plot_already=True,
                   save_figure_to=None,
-                  title_above_plot=False):
+                  title_above_plot=False,
+                  verbose=False):
                
     print_comment_v("Generating plot: %s"%(title))       
                       
@@ -1087,6 +1088,7 @@ def generate_plot(xvalues,
         plt.ylim(ylim)
 
     if save_figure_to:
+        print_comment("Saving image to %s of plot: %s"%(os.path.abspath(save_figure_to),title),verbose)
         plt.savefig(save_figure_to,bbox_inches='tight')
         print_comment_v("Saved image to %s of plot: %s"%(save_figure_to,title))
         
