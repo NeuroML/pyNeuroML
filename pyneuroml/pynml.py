@@ -926,7 +926,7 @@ def run_jneuroml(pre_args,
                  verbose      = DEFAULTS['v'],
                  exit_on_fail = True):    
 
-    if 'nogui' in post_args:
+    if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
@@ -986,13 +986,20 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
         print_comment("Extra env variables %s" % (env), verbose)
     
     try:
-        return_string = subprocess.check_output(command, 
-                                                cwd=directory, 
-                                                shell=True, 
-                                                stderr=subprocess.STDOUT,
-                                                env=env,
-                                                close_fds=True)
-                                                
+        if os.name == 'nt':
+            return_string = subprocess.check_output(command, 
+                                                    cwd=directory, 
+                                                    shell=True, 
+                                                    env=env,
+                                                    close_fds=False)
+        else:
+            return_string = subprocess.check_output(command, 
+                                                    cwd=directory, 
+                                                    shell=True, 
+                                                    stderr=subprocess.STDOUT,
+                                                    env=env,
+                                                    close_fds=True)
+        
         return_string = return_string.decode("utf-8") # For Python 3
                                 
         print_comment('Command completed. Output: \n %s%s' % \
