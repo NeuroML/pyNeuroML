@@ -560,6 +560,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     else:
         
         # Fix PYTHONPATH for NEURON: has been an issue on HBP Collaboratory...
+        if not 'PYTHONPATH' in os.environ:
+            os.environ['PYTHONPATH']=''
         for path in sys.path:
             if not path+":" in os.environ['PYTHONPATH']:
                 os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
