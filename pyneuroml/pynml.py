@@ -491,8 +491,8 @@ def run_lems_with_jneuroml(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(exec_in_dir,
-                                 lems_file_name, 
+        return reload_saved_data(lems_file_name, 
+                                 base_dir = exec_in_dir,
                                  t_run=t_run,
                                  plot=plot, 
                                  show_plot_already=show_plot_already, 
@@ -531,18 +531,18 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
-                                  max_memory=DEFAULTS['default_java_max_memory'], 
-                                  skip_run=False,
-                                  nogui=False, 
-                                  load_saved_data=False, 
-                                  reload_events=False,
-                                  plot=False, 
-                                  show_plot_already=True, 
+                                  max_memory = DEFAULTS['default_java_max_memory'], 
+                                  skip_run = False,
+                                  nogui = False, 
+                                  load_saved_data = False, 
+                                  reload_events = False,
+                                  plot = False, 
+                                  show_plot_already = True, 
                                   exec_in_dir = ".",
                                   only_generate_scripts = False,
-                                  verbose=DEFAULTS['v'],
+                                  verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
-                                  cleanup=False):
+                                  cleanup = False):
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
                   % lems_file_name, verbose)
@@ -570,32 +570,32 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(exec_in_dir,
-                                 lems_file_name, 
-                                 t_run=t_run,
-                                 plot=plot, 
-                                 show_plot_already=show_plot_already, 
-                                 simulator='jNeuroML_NEURON',
-                                 reload_events=reload_events,
-                                 remove_dat_files_after_load=cleanup)
+        return reload_saved_data(lems_file_name, 
+                                 base_dir = exec_in_dir, 
+                                 t_run = t_run,
+                                 plot = plot, 
+                                 show_plot_already = show_plot_already, 
+                                 simulator = 'jNeuroML_NEURON',
+                                 reload_events = reload_events,
+                                 remove_dat_files_after_load = cleanup)
     else:
         return True
 
 
 def run_lems_with_jneuroml_netpyne(lems_file_name, 
-                                  max_memory=DEFAULTS['default_java_max_memory'], 
-                                  skip_run=False,
-                                  nogui=False, 
-                                  num_processors=1, 
-                                  load_saved_data=False, 
-                                  reload_events=False,
-                                  plot=False, 
-                                  show_plot_already=True, 
+                                  max_memory = DEFAULTS['default_java_max_memory'], 
+                                  skip_run = False,
+                                  nogui = False, 
+                                  num_processors = 1, 
+                                  load_saved_data = False, 
+                                  reload_events = False,
+                                  plot = False, 
+                                  show_plot_already = True, 
                                   exec_in_dir = ".",
                                   only_generate_scripts = False,
-                                  verbose=DEFAULTS['v'],
+                                  verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
-                                  cleanup=False):
+                                  cleanup = False):
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NetPyNE" \
                   % lems_file_name, verbose)
@@ -626,26 +626,27 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
         return False
     
     if load_saved_data:
-        return reload_saved_data(relative_path(exec_in_dir,lems_file_name), 
-                                 t_run=t_run,
-                                 plot=plot, 
-                                 show_plot_already=show_plot_already, 
-                                 simulator='jNeuroML_NEURON',
-                                 reload_events=reload_events,
-                                 remove_dat_files_after_load=cleanup)
+        return reload_saved_data(lems_file_name, 
+                                 base_dir = exec_in_dir,
+                                 t_run = t_run,
+                                 plot = plot, 
+                                 show_plot_already = show_plot_already, 
+                                 simulator = 'jNeuroML_NEURON',
+                                 reload_events = reload_events,
+                                 remove_dat_files_after_load = cleanup)
     else:
         return True
     
     
-def reload_saved_data(base_dir,
-                      lems_file_name, 
-                      t_run=datetime(1900,1,1),
-                      plot=False, 
-                      show_plot_already=True, 
-                      simulator=None, 
-                      reload_events=False, 
-                      verbose=DEFAULTS['v'],
-                      remove_dat_files_after_load=False): 
+def reload_saved_data(lems_file_name, 
+                      base_dir = '.',
+                      t_run = datetime(1900,1,1),
+                      plot = False, 
+                      show_plot_already = True, 
+                      simulator = None, 
+                      reload_events = False, 
+                      verbose = DEFAULTS['v'],
+                      remove_dat_files_after_load = False): 
     
     # Could use pylems to parse all this...
     traces = {}
