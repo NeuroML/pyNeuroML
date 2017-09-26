@@ -190,7 +190,20 @@ def run_individual(sim_var,
 
             pyneuroml.pynml.print_comment_v('  Changing value of %s (%s) in %s (%s) to: %s %s'%(variable, id2, type, id1, value, units))
 
-            if type == 'cell':
+            if type == 'channel':
+                channel = nml_doc.get_by_id(id1)
+                
+                if channel:
+                    print("Setting channel %s"%(channel))
+                    if variable == 'vShift':
+                        channel.v_shift = '%s %s'%(value, units)
+                else:
+                    
+                    pyneuroml.pynml.print_comment_v('Could not find channel with id %s from expression: %s'%(id1, individual_var_name))
+                    exit()
+                    
+
+            elif type == 'cell':
                 cell = None
                 for c in nml_doc.cells:
                     if c.id == id1:
@@ -199,11 +212,20 @@ def run_individual(sim_var,
                 if variable == 'channelDensity':
 
                     chanDens = None
-                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities + cell.biophysical_properties.membrane_properties.channel_density_v_shifts:
                         if cd.id == id2:
                             chanDens = cd
 
                     chanDens.cond_density = '%s %s'%(value, units)
+                    
+                elif variable == 'vShift_channelDensity':
+
+                    chanDens = None
+                    for cd in cell.biophysical_properties.membrane_properties.channel_density_v_shifts:
+                        if cd.id == id2:
+                            chanDens = cd
+
+                    chanDens.v_shift = '%s %s'%(value, units)
 
                 elif variable == 'channelDensityNernst':
 
@@ -217,7 +239,7 @@ def run_individual(sim_var,
                 elif variable == 'erev_id': # change all values of erev in channelDensity elements with only this id
 
                     chanDens = None
-                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities + cell.biophysical_properties.membrane_properties.channel_density_v_shifts:
                         if cd.id == id2:
                             chanDens = cd
 
@@ -226,7 +248,7 @@ def run_individual(sim_var,
                 elif variable == 'erev_ion': # change all values of erev in channelDensity elements with this ion
 
                     chanDens = None
-                    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+                    for cd in cell.biophysical_properties.membrane_properties.channel_densities + cell.biophysical_properties.membrane_properties.channel_density_v_shifts:
                         if cd.ion == id2:
                             chanDens = cd
 

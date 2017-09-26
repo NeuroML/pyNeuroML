@@ -96,12 +96,22 @@ def generate_lems_file_for_neuroml(sim_id,
         for network in nml_doc.networks:
             for population in network.populations:
                 
-                quantity_template = "%s[%i]/v"
+                variable = "v" # 
                 quantity_template_e = "%s[%i]"
+
                 component = population.component
                 size = population.size
                 cell = None
                 segment_ids = []
+                
+                for c in nml_doc.spike_generator_poissons:
+                    if c.id == component:
+                        variable = "tsince"
+                for c in nml_doc.SpikeSourcePoisson:
+                    if c.id == component:
+                        variable = "tsince"
+                            
+                quantity_template = "%s[%i]/"+variable
                 if plot_all_segments or gen_spike_saves_for_all_somas:
                     for c in nml_doc.cells:
                         if c.id == component:
@@ -110,8 +120,9 @@ def generate_lems_file_for_neuroml(sim_id,
                                 segment_ids.append(segment.id)
                             segment_ids.sort()
                         
+                
                 if population.type and population.type == 'populationList':
-                    quantity_template = "%s/%i/"+component+"/v"
+                    quantity_template = "%s/%i/"+component+"/"+variable
                     quantity_template_e = "%s/%i/"+component+""
                     # Multicompartmental cell
                     ### Needs to be supported in NeuronWriter
@@ -136,10 +147,10 @@ def generate_lems_file_for_neuroml(sim_id,
                             ls.add_line_to_display(disp0, "%s[%i]: v"%(population.id, i), quantity, "1mV", get_next_hex_color())
                 
                 if gen_saves_for_all_v or population.id in gen_saves_for_only_populations:
-                    print_comment('Saving %i values of v for %s in population %s'%(size, component, population.id))
+                    print_comment('Saving %i values of %s for %s in population %s'%(size, variable, component, population.id))
    
                     of0 = 'Volts_file__%s'%population.id
-                    ls.create_output_file(of0, "%s.%s.v.dat"%(sim_id,population.id))
+                    ls.create_output_file(of0, "%s.%s.%s.dat"%(sim_id,population.id,variable))
                     for i in range(size):
                         if cell!=None and save_all_segments:
                             quantity_template_seg = "%s/%i/"+component+"/%i/v"

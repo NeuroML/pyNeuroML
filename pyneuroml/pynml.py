@@ -533,13 +533,14 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   only_generate_scripts = False,
                                   verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
-                                  cleanup = False):
+                                  cleanup=False):
+                                  #jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
                   % lems_file_name, verbose)
                   
     post_args = " -neuron"
-    if not only_generate_scripts:
+    if not only_generate_scripts:# and jnml_runs_neuron:
         post_args += ' -run'
     
     gui = " -nogui" if nogui else ""
@@ -549,13 +550,30 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     if skip_run:
       success = True
     else:
-      success = run_jneuroml("", 
+        
+        # Fix PYTHONPATH for NEURON: has been an issue on HBP Collaboratory...
+        if not 'PYTHONPATH' in os.environ:
+            os.environ['PYTHONPATH']=''
+        for path in sys.path:
+            if not path+":" in os.environ['PYTHONPATH']:
+                os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
+
+        print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+        
+        success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
                            exit_on_fail = exit_on_fail)
+                          
+        #TODO: Work in progress!!!
+        #if not jnml_runs_neuron:
+        #    print_comment("Running...",verbose)
+        #    from LEMS_NML2_Ex5_DetCell_nrn import NeuronSimulation
+        #    ns = NeuronSimulation(tstop=300, dt=0.01, seed=123456789)
+        #    ns.run()
     
     if not success: 
         return False
@@ -900,7 +918,7 @@ def run_jneuroml(pre_args,
                  verbose      = DEFAULTS['v'],
                  exit_on_fail = True):    
 
-    if 'nogui' in post_args:
+    if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
@@ -960,13 +978,20 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
         print_comment("Extra env variables %s" % (env), verbose)
     
     try:
-        return_string = subprocess.check_output(command, 
-                                                cwd=directory, 
-                                                shell=True, 
-                                                stderr=subprocess.STDOUT,
-                                                env=env,
-                                                close_fds=True)
-                                                
+        if os.name == 'nt':
+            return_string = subprocess.check_output(command, 
+                                                    cwd=directory, 
+                                                    shell=True, 
+                                                    env=env,
+                                                    close_fds=False)
+        else:
+            return_string = subprocess.check_output(command, 
+                                                    cwd=directory, 
+                                                    shell=True, 
+                                                    stderr=subprocess.STDOUT,
+                                                    env=env,
+                                                    close_fds=True)
+        
         return_string = return_string.decode("utf-8") # For Python 3
                                 
         print_comment('Command completed. Output: \n %s%s' % \
@@ -1021,7 +1046,8 @@ def generate_plot(xvalues,
                   cols_in_legend_box=3,
                   show_plot_already=True,
                   save_figure_to=None,
-                  title_above_plot=False):
+                  title_above_plot=False,
+                  verbose=False):
                
     print_comment_v("Generating plot: %s"%(title))       
                       
@@ -1077,6 +1103,7 @@ def generate_plot(xvalues,
         plt.ylim(ylim)
 
     if save_figure_to:
+        print_comment("Saving image to %s of plot: %s"%(os.path.abspath(save_figure_to),title),verbose)
         plt.savefig(save_figure_to,bbox_inches='tight')
         print_comment_v("Saved image to %s of plot: %s"%(save_figure_to,title))
         
