@@ -103,6 +103,7 @@ def get_states(txt):
     state_list = []
     for state in re.finditer(r'(\w+)', state_txt):
         state_list.append(state.group(0))
+    state_list = [x for x in state_list if x not in ['FROM', '0', 'TO', '1']]
     return state_list
 
 
