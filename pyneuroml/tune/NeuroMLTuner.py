@@ -227,7 +227,10 @@ def _run_optimisation(a):
     
     pynml.print_comment_v("=====================================================================================")
     pynml.print_comment_v("Starting run_optimisation with: ")
-    for key,value in a.__dict__.items():
+    keys = sorted(a.__dict__.keys())
+    
+    for key in keys:
+        value = a.__dict__[key]
         pynml.print_comment_v("  %s = %s%s"%(key,' '*(30-len(key)),value))
     pynml.print_comment_v("=====================================================================================")
     
@@ -443,6 +446,8 @@ def run_2stage_optimization(prefix,
                             num_parallel_evaluations = 1,
                             cleanup = True):
 
+        mut_rat_1 = mutation_rate[0] if isinstance(mutation_rate, list) else mutation_rate
+        
         report1 = run_optimisation(prefix = "%s_STAGE1"%prefix, 
                          neuroml_file =     neuroml_file,
                          target =           target,
@@ -457,7 +462,7 @@ def run_2stage_optimization(prefix,
                          max_evaluations =  max_evaluations_1,
                          num_selected =     num_selected_1,
                          num_offspring =    num_offspring_1,
-                         mutation_rate =    mutation_rate,
+                         mutation_rate =    mut_rat_1,
                          num_elites =       num_elites,
                          simulator =        simulator,
                          nogui =            nogui,
@@ -476,6 +481,8 @@ def run_2stage_optimization(prefix,
                 max_constraints_2[pi] = report1['fittest vars'][param]*(1+delta_constraints)
             if min_constraints_2[pi] == 'x':
                 min_constraints_2[pi] = report1['fittest vars'][param]*(1-delta_constraints)
+                
+        mut_rat_2 = mutation_rate[1] if isinstance(mutation_rate, list) else mutation_rate
                
         report2 = run_optimisation(prefix = "%s_STAGE2"%prefix, 
                          neuroml_file =     neuroml_file,
@@ -491,7 +498,7 @@ def run_2stage_optimization(prefix,
                          max_evaluations =  max_evaluations_2,
                          num_selected =     num_selected_2,
                          num_offspring =    num_offspring_2,
-                         mutation_rate =    mutation_rate,
+                         mutation_rate =    mut_rat_2,
                          num_elites =       num_elites,
                          simulator =        simulator,
                          nogui =            nogui,
