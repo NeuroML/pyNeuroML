@@ -449,6 +449,7 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
 
 
 def run_lems_with_jneuroml(lems_file_name, 
+                           include=[],
                            max_memory=DEFAULTS['default_java_max_memory'],
                            skip_run=False, 
                            nogui=False, 
@@ -465,7 +466,9 @@ def run_lems_with_jneuroml(lems_file_name,
                   % lems_file_name, verbose)
     post_args = ""
     gui = " -nogui" if nogui else ""
+    include = " -I %s"%':'.join(include) if include else ""
     post_args += gui
+    post_args += include
     
     t_run = datetime.now()
     
@@ -522,6 +525,7 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
+                                  include = [],
                                   max_memory = DEFAULTS['default_java_max_memory'], 
                                   skip_run = False,
                                   nogui = False, 
@@ -543,7 +547,9 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         post_args += ' -run'
     
     gui = " -nogui" if nogui else ""
+    include = " -I %s"%':'.join(include) if include else ""
     post_args += gui
+    post_args += include
     
     t_run = datetime.now()
     if skip_run:
@@ -573,7 +579,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         return True
 
 
-def run_lems_with_jneuroml_netpyne(lems_file_name, 
+def run_lems_with_jneuroml_netpyne(lems_file_name,
+                                  include = [], 
                                   max_memory = DEFAULTS['default_java_max_memory'], 
                                   skip_run = False,
                                   nogui = False, 
@@ -599,7 +606,9 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
         post_args += ' -run'
     
     gui = " -nogui" if nogui else ""
+    include = " -I %s"%':'.join(include) if include else ""
     post_args += gui
+    post_args += include
     
     t_run = datetime.now()
     if skip_run:
