@@ -465,10 +465,8 @@ def run_lems_with_jneuroml(lems_file_name,
     print_comment("Loading LEMS file: %s and running with jNeuroML" \
                   % lems_file_name, verbose)
     post_args = ""
-    gui = " -nogui" if nogui else ""
-    include = " -I %s"%':'.join(include) if include else ""
-    post_args += gui
-    post_args += include
+    post_args += gui_string(nogui)
+    post_args += include_string(include)
     
     t_run = datetime.now()
     
@@ -524,6 +522,21 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                  verbose = verbose)
 
 
+def include_string(include):
+  if include:
+    if type(include) is str:
+      include = [include]
+    if type(include) in (tuple,list):
+      result = " -I '%s'" % ':'.join(include)
+  else:
+    result = ""
+  return result
+
+
+def gui_string(nogui):
+  return " -nogui" if nogui else ""
+
+
 def run_lems_with_jneuroml_neuron(lems_file_name, 
                                   include = [],
                                   max_memory = DEFAULTS['default_java_max_memory'], 
@@ -547,10 +560,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     if not only_generate_scripts:# and jnml_runs_neuron:
         post_args += ' -run'
     
-    gui = " -nogui" if nogui else ""
-    include = " -I %s"%':'.join(include) if include else ""
-    post_args += gui
-    post_args += include
+    post_args += gui_string(nogui)
+    post_args += include_string(include)
     
     t_run = datetime.now()
     if skip_run:
@@ -623,10 +634,8 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
     if not only_generate_scripts:
         post_args += ' -run'
     
-    gui = " -nogui" if nogui else ""
-    include = " -I %s"%':'.join(include) if include else ""
-    post_args += gui
-    post_args += include
+    post_args += gui_string(nogui)
+    post_args += include_string(include)
     
     t_run = datetime.now()
     if skip_run:
