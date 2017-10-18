@@ -449,7 +449,7 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
 
 
 def run_lems_with_jneuroml(lems_file_name, 
-                           include=[],
+                           paths_to_include=[],
                            max_memory=DEFAULTS['default_java_max_memory'],
                            skip_run=False, 
                            nogui=False, 
@@ -466,7 +466,7 @@ def run_lems_with_jneuroml(lems_file_name,
                   % lems_file_name, verbose)
     post_args = ""
     post_args += gui_string(nogui)
-    post_args += include_string(include)
+    post_args += include_string(paths_to_include)
     
     t_run = datetime.now()
     
@@ -522,12 +522,12 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                  verbose = verbose)
 
 
-def include_string(include):
-  if include:
-    if type(include) is str:
-      include = [include]
-    if type(include) in (tuple,list):
-      result = " -I '%s'" % ':'.join(include)
+def include_string(paths_to_include):
+  if paths_to_include:
+    if type(paths_to_include) is str:
+      paths_to_include = [paths_to_include]
+    if type(paths_to_include) in (tuple,list):
+      result = " -I '%s'" % ':'.join(paths_to_include)
   else:
     result = ""
   return result
@@ -538,7 +538,7 @@ def gui_string(nogui):
 
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
-                                  include = [],
+                                  paths_to_include = [],
                                   max_memory = DEFAULTS['default_java_max_memory'], 
                                   skip_run = False,
                                   nogui = False, 
@@ -561,7 +561,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
         post_args += ' -run'
     
     post_args += gui_string(nogui)
-    post_args += include_string(include)
+    post_args += include_string(paths_to_include)
     
     t_run = datetime.now()
     if skip_run:
@@ -609,7 +609,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
 
 
 def run_lems_with_jneuroml_netpyne(lems_file_name,
-                                  include = [], 
+                                  paths_to_include = [], 
                                   max_memory = DEFAULTS['default_java_max_memory'], 
                                   skip_run = False,
                                   nogui = False, 
@@ -635,7 +635,7 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
         post_args += ' -run'
     
     post_args += gui_string(nogui)
-    post_args += include_string(include)
+    post_args += include_string(paths_to_include)
     
     t_run = datetime.now()
     if skip_run:
