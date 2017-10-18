@@ -67,9 +67,6 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
         print_comment_v("Only options for Levels in NeuroMLv1.8.1 are 1 or 2")
         return None
     
-    from neuron import *
-    from nrn import *
-    
     h.load_file(hoc_file)
 
     print_comment_v("Loaded NEURON file: %s"%hoc_file)

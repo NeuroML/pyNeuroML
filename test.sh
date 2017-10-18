@@ -1,4 +1,6 @@
 set -e
+
+sudo python setup.py install
   
 run_neuron_examples=false
 
