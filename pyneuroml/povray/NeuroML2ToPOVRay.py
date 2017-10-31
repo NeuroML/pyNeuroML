@@ -50,6 +50,11 @@ def process_args():
                         default=False,
                         help="If this is specified, generate a ini file for generating a sequence of frames for a movie of the 3D structure")
                         
+    parser.add_argument('-inputs',
+                        action='store_true',
+                        default=False,
+                        help="If this is specified, show the locations of (synaptic, current clamp, etc.) inputs into the cells of the network")
+                        
     parser.add_argument('-conns',
                         action='store_true',
                         default=False,
@@ -335,18 +340,28 @@ union {
     pigment { color rgb <1,0,0> }
 }\n'''%_DUMMY_CELL)
         
-    pov_file.write('''\n/*\n  Defining the spheres to use for end points of connections...\n*/\n#declare conn_start_point = 
+    pov_file.write('''\n/*\n  Defining the spheres to use for end points of connections...\n*/
+    \n#declare conn_start_point = 
 union {
     sphere {
         <0.000000, 0.000000, 0.000000>, 3.000000 
     }
     pigment { color rgb <0,1,0> }
-}\n\n#declare conn_end_point = 
+}\n
+\n#declare conn_end_point = 
 union {
     sphere {
         <0.000000, 0.000000, 0.000000>, 3.000000 
     }
     pigment { color rgb <1,0,0> }
+}\n
+\n#declare input_object = 
+union {
+    cone {
+        <0, 0, 0>, 0.1    // Center and radius of one end
+        <0, -40, 0>, 2.5    // Center and radius of other end
+    }
+    pigment { color rgb <0.2,0.2,0.8> }
 }\n''')
 
 
@@ -547,7 +562,28 @@ union {
                         net_file.write("object { conn_start_point translate <%s,%s,%s> }\n"%(pre_loc[0],pre_loc[1],pre_loc[2]))
                         net_file.write("object { conn_end_point translate <%s,%s,%s> }\n"%(post_loc[0],post_loc[1],post_loc[2]))
                     
+    if args.inputs:
+        for il in nml_doc.networks[0].input_lists:
+            for input in il.input:
+                popi = il.populations
+                cell_id = input.get_target_cell_id()
+                cell = pop_id_vs_cell[popi]
+                
+                loc = (0,0,0) 
+                if popi in positions.keys(): 
+                    if len(positions[popi])>0:
+                        loc = positions[popi][cell_id] 
 
+                d = cell_id_vs_seg_id_vs_distal[cell.id][input.get_segment_id()]
+                p = cell_id_vs_seg_id_vs_proximal[cell.id][input.get_segment_id()]
+                m = [ p[i]+input.get_fraction_along()*(d[i]-p[i]) for i in [0,1,2] ]
+                
+                input_info = "Input on cell %s:%s at %s; point %s along (%s -> %s): %s"%(popi,cell_id, loc,input.get_fraction_along(),d,p,m)
+                
+                loc = [ loc[i]+m[i] for i in [0,1,2] ]
+                
+                net_file.write("/* %s */\n"%input_info)
+                net_file.write("object { input_object translate <%s,%s,%s> }\n\n"%(loc[0],loc[1],loc[2]))
         
         
     plane = '''
