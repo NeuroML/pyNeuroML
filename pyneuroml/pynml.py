@@ -674,6 +674,9 @@ def reload_saved_data(lems_file_name,
                       reload_events = False, 
                       verbose = DEFAULTS['v'],
                       remove_dat_files_after_load = False): 
+                              
+    print_comment("Reloading data specified in LEMS file: %s, base_dir: %s" \
+                  % (lems_file_name,base_dir), verbose)
     
     # Could use pylems to parse all this...
     traces = {}
@@ -1131,7 +1134,7 @@ def generate_plot(xvalues,
     return ax
         
 '''
-    As usually saved by jLEMS, etc. First column is time (in seconds), multiple ofther columns
+    As usually saved by jLEMS, etc. First column is time (in seconds), multiple other columns
 '''
 def reload_standard_dat_file(file_name):
 
