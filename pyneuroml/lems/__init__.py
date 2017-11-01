@@ -17,13 +17,15 @@ def generate_lems_file_for_neuroml(sim_id,
                                    include_extra_files = [],
                                    gen_plots_for_all_v = True,
                                    plot_all_segments = False,
-                                   gen_plots_for_quantities = {},   #  Dict with displays vs lists of quantity paths
-                                   gen_plots_for_only_populations = [],   #  List of populations, all pops if = []
+                                   gen_plots_for_quantities = {},   # Dict with displays vs lists of quantity paths
+                                   gen_plots_for_only_populations = [],   # List of populations, all pops if = []
                                    gen_saves_for_all_v = True,
                                    save_all_segments = False,
-                                   gen_saves_for_only_populations = [],  #  List of populations, all pops if = []
-                                   gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
+                                   gen_saves_for_only_populations = [],  # List of populations, all pops if = []
+                                   gen_saves_for_quantities = {},   # Dict with file names vs lists of quantity paths
                                    gen_spike_saves_for_all_somas = False,
+                                   gen_spike_saves_for_only_populations = [],  # List of populations, all pops if = []
+                                   gen_spike_saves_for_cells = {},  # Dict with file names vs lists of quantity paths
                                    spike_time_format='ID_TIME',
                                    copy_neuroml = True,
                                    seed=None):
@@ -91,7 +93,8 @@ def generate_lems_file_for_neuroml(sim_id,
        or gen_saves_for_all_v \
        or len(gen_plots_for_only_populations)>0 \
        or len(gen_saves_for_only_populations)>0 \
-       or gen_spike_saves_for_all_somas :
+       or gen_spike_saves_for_all_somas \
+       or len(gen_spike_saves_for_only_populations)>0 :
         
         for network in nml_doc.networks:
             for population in network.populations:
@@ -163,7 +166,7 @@ def generate_lems_file_for_neuroml(sim_id,
                             ls.add_column_to_output_file(of0, 'v_%s'%safe_variable(quantity), quantity)
                             quantities_saved.append(quantity)
                             
-                if gen_spike_saves_for_all_somas:
+                if gen_spike_saves_for_all_somas or population.id in gen_spike_saves_for_only_populations:
                     print_comment('Saving spikes in %i somas for %s in population %s'%(size, component, population.id))
                     
                     eof0 = 'Spikes_file__%s'%population.id
@@ -197,7 +200,17 @@ def generate_lems_file_for_neuroml(sim_id,
         ls.create_output_file(of_id, file_name)
         for q in quantities:
             ls.add_column_to_output_file(of_id, safe_variable(q), q)
-                        
+            quantities_saved.append(q)
+            
+    for file_name in gen_spike_saves_for_cells.keys():
+        
+        cells = gen_spike_saves_for_cells[file_name]
+        of_id = safe_variable(file_name)
+        ls.create_event_output_file(of_id, file_name)
+        for i, c in enumerate(cells):
+            ls.add_selection_to_event_output_file(of_id, i, c, "spike")
+            quantities_saved.append(c)
+                                    
         
     ls.save_to_file(file_name=file_name_full)
     
@@ -207,3 +220,4 @@ def generate_lems_file_for_neuroml(sim_id,
 # Mainly for NEURON etc.
 def safe_variable(quantity):
     return quantity.replace(' ','_').replace('[','_').replace(']','_').replace('/','_').replace('.','_')
+    
