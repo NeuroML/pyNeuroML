@@ -29,6 +29,7 @@ from lems.parser.LEMS import LEMSFileParser
 import random
 import inspect
 import zipfile
+import shlex
 
 DEFAULTS = {'v':False, 
             'default_java_max_memory':'400M',
@@ -947,8 +948,22 @@ def run_jneuroml(pre_args,
     jar_path = get_path_to_jnml_jar()
     
     output = ''
-    
+
     try:
+        command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
+              (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
+        output = execute_command_in_dir_with_realtime_output(command, exec_in_dir, verbose=verbose,
+                                        prefix = ' jNeuroML >>  ')
+    except:
+        print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('*** Command: %s ***'%command, True)
+        #print_comment('Output: %s'%output, True)
+        if exit_on_fail: 
+            sys.exit(-1)
+        else:
+            return False
+    
+    """try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
           (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
         output = execute_command_in_dir(command, exec_in_dir, verbose=verbose,
@@ -967,7 +982,7 @@ def run_jneuroml(pre_args,
         if exit_on_fail: 
             sys.exit(-1)
         else:
-            return False
+            return False"""
         
     
     return True
@@ -983,6 +998,25 @@ def print_comment(text, print_it=DEFAULTS['v']):
     if print_it:
         
         print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
+
+
+def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], 
+                                                prefix="Output: ", env=None):
+
+    if os.name == 'nt':
+        directory = os.path.normpath(directory)
+        
+    print_comment("Executing: (%s) in directory: %s" % (command, directory), verbose)
+    if env is not None:
+        print_comment("Extra env variables %s" % (env), verbose)
+
+    p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
+    with p.stdout:
+        for line in iter(p.stdout.readline, b''):
+            print line,
+    p.wait() # wait for the subprocess to exit
+
+    return True
 
 
 def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], 
@@ -1225,3 +1259,4 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+
