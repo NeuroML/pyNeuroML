@@ -28,8 +28,13 @@ def generate_current_vs_frequency_curve(nml2_file,
                                         ylim_if =               None,
                                         xlim_iv =               None,
                                         ylim_iv =               None,
+                                        label_xaxis =           True,
+                                        label_yaxis =           True,
+                                        show_volts_label =      True,
                                         grid =                  True,
                                         font_size =             12,
+                                        if_iv_color =           'k',
+                                        linewidth =             1,
                                         bottom_left_spines_only = False,
                                         show_plot_already =     True, 
                                         save_voltage_traces_to = None, 
@@ -71,7 +76,7 @@ def generate_current_vs_frequency_curve(nml2_file,
             stims.append(amp)
             amp+=step_nA
         
-        stim_info = '(%snA->%snA; %s steps of %snA)'%(start_amp_nA, end_amp_nA, len(stims), step_nA)
+        stim_info = '(%snA->%snA; %s steps of %snA; %sms)'%(start_amp_nA, end_amp_nA, len(stims), step_nA, total_duration)
         
     print_comment_v("Generating an IF curve for cell %s in %s using %s %s"%
         (cell_id, nml2_file, simulator, stim_info))
@@ -202,13 +207,14 @@ def generate_current_vs_frequency_curve(nml2_file,
         traces_ax = pynml.generate_plot(times_results,
                             volts_results, 
                             "Membrane potential traces for: %s"%nml2_file, 
-                            xaxis = 'Time (ms)', 
-                            yaxis = 'Membrane potential (mV)',
+                            xaxis = 'Time (ms)' if label_xaxis else ' ', 
+                            yaxis = 'Membrane potential (mV)' if label_yaxis else '',
                             xlim = [total_duration*-0.05,total_duration*1.05],
+                            show_xticklabels = label_xaxis,
                             font_size = font_size,
                             bottom_left_spines_only = bottom_left_spines_only,
                             grid = False,
-                            labels = volts_labels,
+                            labels = volts_labels if show_volts_label else [],
                             show_plot_already=False,
                             save_figure_to = save_voltage_traces_to,
                             title_above_plot = title_above_plot,
@@ -221,17 +227,20 @@ def generate_current_vs_frequency_curve(nml2_file,
         stims_pA = [ii*1000 for ii in stims]
         
         freqs = [if_results[s] for s in stims]
-            
+        
         if_ax = pynml.generate_plot([stims_pA],
                             [freqs], 
                             "Firing frequency versus injected current for: %s"%nml2_file, 
-                            colors = ['k'], 
+                            colors = [if_iv_color], 
                             linestyles=['-'],
                             markers=['o'],
-                            xaxis = 'Input current (pA)', 
-                            yaxis = 'Firing frequency (Hz)',
+                            linewidths = [linewidth],
+                            xaxis = 'Input current (pA)' if label_xaxis else ' ', 
+                            yaxis = 'Firing frequency (Hz)' if label_yaxis else '',
                             xlim = xlim_if,
                             ylim = ylim_if,
+                            show_xticklabels = label_xaxis,
+                            show_yticklabels = label_yaxis,
                             font_size = font_size,
                             bottom_left_spines_only = bottom_left_spines_only,
                             grid = grid,
@@ -249,18 +258,35 @@ def generate_current_vs_frequency_curve(nml2_file,
         stims = sorted(iv_results.keys())
         stims_pA = [ii*1000 for ii in sorted(iv_results.keys())]
         vs = [iv_results[s] for s in stims]
+        
+        xs = []
+        ys = []
+        xs.append([])
+        ys.append([])
+        
+        for si in range(len(stims)):
+            stim = stims[si]
+            if len(custom_amps_nA)==0 and si>1 and (stims[si]-stims[si-1])>step_nA*1.01:
+                xs.append([])
+                ys.append([])
+                
+            xs[-1].append(stim*1000)
+            ys[-1].append(iv_results[stim])
             
-        iv_ax = pynml.generate_plot([stims_pA],
-                            [vs], 
+        iv_ax = pynml.generate_plot(xs,
+                            ys, 
                             "V at %sms versus I below threshold for: %s"%(end_stim,nml2_file), 
-                            colors = ['k'], 
-                            linestyles=['-'],
-                            markers=['o'],
-                            xaxis = 'Input current (pA)', 
-                            yaxis = 'Membrane potential (mV)', 
+                            colors = [if_iv_color for s in xs], 
+                            linestyles=['-' for s in xs],
+                            markers=['o' for s in xs],
+                            xaxis = 'Input current (pA)' if label_xaxis else '', 
+                            yaxis = 'Membrane potential (mV)' if label_yaxis else '', 
                             xlim = xlim_iv,
                             ylim = ylim_iv,
+                            show_xticklabels = label_xaxis,
+                            show_yticklabels = label_yaxis,
                             font_size = font_size,
+                            linewidths = [linewidth for s in xs],
                             bottom_left_spines_only = bottom_left_spines_only,
                             grid = grid,
                             show_plot_already=False,
