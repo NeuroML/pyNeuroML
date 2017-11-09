@@ -343,8 +343,7 @@ def analyse_spiketime_vs_dt(nml2_file,
                                    '.',
                                    gen_plots_for_all_v = True,
                                    gen_saves_for_all_v = True,
-                                   copy_neuroml = False,
-                                   seed=None)
+                                   copy_neuroml = False)
                                    
         if simulator == 'jNeuroML':
              results = pynml.run_lems_with_jneuroml(lems_file_name, nogui=True, load_saved_data=True, plot=False, verbose=verbose)
