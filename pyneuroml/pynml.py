@@ -10,6 +10,7 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 """
 
 from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import subprocess
@@ -978,7 +979,6 @@ def run_jneuroml(pre_args,
     
     return True
 
-
     
 def print_comment_v(text):
     print_comment(text, True)
@@ -1008,7 +1008,7 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
         with p.stdout:
             for line in iter(p.stdout.readline, b''):
-                print line,
+                print(line, end="")
         p.wait() # wait for the subprocess to exit
     except KeyboardInterrupt as e:
         if p:
