@@ -30,6 +30,7 @@ import random
 import inspect
 import zipfile
 import shlex
+import signal
 
 DEFAULTS = {'v':False, 
             'default_java_max_memory':'400M',
@@ -949,21 +950,8 @@ def run_jneuroml(pre_args,
     
     output = ''
 
-    try:
-        command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
-              (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
-        output = execute_command_in_dir_with_realtime_output(command, exec_in_dir, verbose=verbose,
-                                        prefix = ' jNeuroML >>  ')
-    except:
-        print_comment('*** Execution of jnml has failed! ***', True)
-        print_comment('*** Command: %s ***'%command, True)
-        #print_comment('Output: %s'%output, True)
-        if exit_on_fail: 
-            sys.exit(-1)
-        else:
-            return False
     
-    """try:
+    try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
           (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
         output = execute_command_in_dir(command, exec_in_dir, verbose=verbose,
@@ -974,6 +962,9 @@ def run_jneuroml(pre_args,
                 sys.exit(-1)
             else:
                 return False
+
+    #except KeyboardInterrupt as e:
+    #    raise e
             
     except:
         print_comment('*** Execution of jnml has failed! ***', True)
@@ -982,10 +973,11 @@ def run_jneuroml(pre_args,
         if exit_on_fail: 
             sys.exit(-1)
         else:
-            return False"""
+            return False
         
     
     return True
+
 
     
 def print_comment_v(text):
@@ -1003,6 +995,7 @@ def print_comment(text, print_it=DEFAULTS['v']):
 def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], 
                                                 prefix="Output: ", env=None):
 
+    # NOTE: Only tested with Linux
     if os.name == 'nt':
         directory = os.path.normpath(directory)
         
@@ -1010,11 +1003,18 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
     if env is not None:
         print_comment("Extra env variables %s" % (env), verbose)
 
-    p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
-    with p.stdout:
-        for line in iter(p.stdout.readline, b''):
-            print line,
-    p.wait() # wait for the subprocess to exit
+    p = None
+    try:
+        p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
+        with p.stdout:
+            for line in iter(p.stdout.readline, b''):
+                print line,
+        p.wait() # wait for the subprocess to exit
+    except KeyboardInterrupt as e:
+        if p:
+            p.kill()
+        #return True
+        raise e
 
     return True
 
