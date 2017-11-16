@@ -548,6 +548,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   show_plot_already = True, 
                                   exec_in_dir = ".",
                                   only_generate_scripts = False,
+                                  compile_mods = True,
                                   verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
                                   cleanup=False):
@@ -559,6 +560,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     post_args = " -neuron"
     if not only_generate_scripts:# and jnml_runs_neuron:
         post_args += ' -run'
+    if compile_mods:
+        post_args += ' -compile'
     
     post_args += gui_string(nogui)
     post_args += include_string(paths_to_include)
@@ -575,7 +578,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
             if not path+":" in os.environ['PYTHONPATH']:
                 os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
 
-        print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+        #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
         
         success = run_jneuroml("", 
                            lems_file_name, 

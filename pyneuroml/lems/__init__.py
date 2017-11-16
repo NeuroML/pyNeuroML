@@ -215,7 +215,7 @@ def generate_lems_file_for_neuroml(sim_id,
         
     ls.save_to_file(file_name=file_name_full)
     
-    return quantities_saved
+    return quantities_saved, ls
 
 
 # Mainly for NEURON etc.
