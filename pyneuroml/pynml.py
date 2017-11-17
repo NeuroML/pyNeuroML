@@ -553,7 +553,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   only_generate_scripts = False,
                                   verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
-                                  cleanup=False):
+                                  cleanup=False,
+                                  realtime_output=False):
                                   #jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
                                       
     print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
@@ -579,8 +580,18 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                 os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
 
         print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+
+        if realtime_output:
+            success = run_jneuroml_with_realtime_output("", 
+                           lems_file_name, 
+                           post_args, 
+                           max_memory = max_memory, 
+                           exec_in_dir = exec_in_dir, 
+                           verbose = verbose, 
+                           exit_on_fail = exit_on_fail)
         
-        success = run_jneuroml("", 
+        else: 
+            success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
@@ -976,6 +987,45 @@ def run_jneuroml(pre_args,
         else:
             return False
         
+    
+    return True
+
+
+# TODO: Refactorinng
+def run_jneuroml_with_realtime_output(pre_args, 
+                                      target_file, 
+                                      post_args, 
+                                      max_memory   = DEFAULTS['default_java_max_memory'], 
+                                      exec_in_dir  = ".",
+                                      verbose      = DEFAULTS['v'],
+                                      exit_on_fail = True):    
+
+    # NOTE: Only tested with Linux
+
+    if 'nogui' in post_args and not os.name == 'nt':
+        pre_jar = " -Djava.awt.headless=true"
+    else:
+        pre_jar = ""
+        
+    jar_path = get_path_to_jnml_jar()
+    
+    command = ''
+    output = ''
+
+    try:
+        command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
+              (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
+        output = execute_command_in_dir_with_realtime_output(command, exec_in_dir, verbose=verbose,
+                                        prefix = ' jNeuroML >>  ')
+    except KeyboardInterrupt as e:
+        raise e
+    except:
+        print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('*** Command: %s ***'%command, True)
+        if exit_on_fail: 
+            sys.exit(-1)
+        else:
+            return False
     
     return True
 
