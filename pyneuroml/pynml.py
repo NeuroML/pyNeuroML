@@ -551,6 +551,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   show_plot_already = True, 
                                   exec_in_dir = ".",
                                   only_generate_scripts = False,
+                                  compile_mods = True,
                                   verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
                                   cleanup=False,
@@ -563,6 +564,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
     post_args = " -neuron"
     if not only_generate_scripts:# and jnml_runs_neuron:
         post_args += ' -run'
+    if compile_mods:
+        post_args += ' -compile'
     
     post_args += gui_string(nogui)
     post_args += include_string(paths_to_include)
@@ -589,7 +592,9 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
                            exit_on_fail = exit_on_fail)
-        
+
+        #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+
         else: 
             success = run_jneuroml("", 
                            lems_file_name, 
@@ -689,8 +694,8 @@ def reload_saved_data(lems_file_name,
                       verbose = DEFAULTS['v'],
                       remove_dat_files_after_load = False): 
                               
-    print_comment("Reloading data specified in LEMS file: %s, base_dir: %s" \
-                  % (lems_file_name,base_dir), verbose)
+    print_comment("Reloading data specified in LEMS file: %s, base_dir: %s, cwd: %s" \
+                  % (lems_file_name,base_dir,os.getcwd()), True)
     
     # Could use pylems to parse all this...
     traces = {}
@@ -700,6 +705,7 @@ def reload_saved_data(lems_file_name,
         import matplotlib.pyplot as plt
 
     from lxml import etree
+    base_lems_file_path = os.path.dirname(os.path.realpath(lems_file_name))
     tree = etree.parse(lems_file_name)
     
     sim = tree.getroot().find('Simulation')
@@ -720,6 +726,9 @@ def reload_saved_data(lems_file_name,
         for i,of in enumerate(event_output_files):
             name = of.attrib['fileName']
             file_name = os.path.join(base_dir,name)
+            if not os.path.isfile(file_name): # If not relative to the LEMS file...
+                file_name = os.path.join(base_lems_file_path,name) 
+            
             #if not os.path.isfile(file_name): # If not relative to the LEMS file...
             #    file_name = os.path.join(os.getcwd(),name) 
                 # ... try relative to cwd.  
@@ -770,8 +779,13 @@ def reload_saved_data(lems_file_name,
         traces['t'] = []
         name = of.attrib['fileName']
         file_name = os.path.join(base_dir,name)
+        
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            file_name = os.path.join(base_lems_file_path,name) 
+            
         if not os.path.isfile(file_name): # If not relative to the LEMS file...
             file_name = os.path.join(os.getcwd(),name) 
+
             # ... try relative to cwd.  
         if not os.path.isfile(file_name): # If not relative to the LEMS file...
             file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
@@ -1143,6 +1157,8 @@ def generate_plot(xvalues,
                   yaxis = None, 
                   xlim = None,
                   ylim = None,
+                  show_xticklabels = True,
+                  show_yticklabels = True,
                   grid = False,
                   logx = False,
                   logy = False,
@@ -1186,6 +1202,11 @@ def generate_plot(xvalues,
         ax.spines['top'].set_visible(False)       
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
+    
+    if not show_xticklabels:
+        ax.set_xticklabels([])
+    if not show_yticklabels:
+        ax.set_yticklabels([])
 
     for i in range(len(xvalues)):
 

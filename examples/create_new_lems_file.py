@@ -69,5 +69,4 @@ if __name__ == '__main__':
                                    gen_saves_for_only_populations = [],  #  List of populations, all pops if = []
                                    gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
                                    gen_spike_saves_for_all_somas = True,
-                                   copy_neuroml = True,
-                                   seed=None)
+                                   copy_neuroml = True)
