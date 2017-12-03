@@ -262,14 +262,18 @@ def split_nml2_quantity(nml2_quantity):
 
 def get_value_in_si(nml2_quantity):
     
-    model = get_lems_model_with_units()
-    m, u = split_nml2_quantity(nml2_quantity)
-    si_value = None
-    for un in model.units:
-        if un.symbol == u:
-            si_value =  (m + un.offset) * un.scale * pow(10, un.power)
-            
-    return si_value
+    try:
+        return float(nml2_quantity)
+    except:
+
+        model = get_lems_model_with_units()
+        m, u = split_nml2_quantity(nml2_quantity)
+        si_value = None
+        for un in model.units:
+            if un.symbol == u:
+                si_value =  (m + un.offset) * un.scale * pow(10, un.power)
+
+        return si_value
     
 def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
      
@@ -1232,7 +1236,32 @@ def extract_annotations(nml2_file):
     print_comment_v("Annotations in %s: "%(nml2_file))
     pp.pprint(annotations)
 
-
+'''
+Work in progress: expand a (simple) ComponentType  and evaluate an instance of it by
+giving parameters & required variables
+'''
+def evaluate_component(comp_type, req_variables={}, parameter_values={}):
+    
+    print_comment('Evaluating %s with req:%s; params:%s'%(comp_type.name,req_variables,parameter_values))
+    exec_str = ''
+    return_vals = {}
+    from math import exp
+    for p in parameter_values:
+        exec_str+='%s = %s\n'%(p, get_value_in_si(parameter_values[p]))
+    for r in req_variables:
+        exec_str+='%s = %s\n'%(r, get_value_in_si(req_variables[r]))
+    for c in comp_type.Constant:
+        exec_str+='%s = %s\n'%(c.name, get_value_in_si(c.value))
+    for d in comp_type.Dynamics:
+        for dv in d.DerivedVariable:
+            exec_str+='%s = %s\n'%(dv.name, dv.value)
+            exec_str+='return_vals["%s"] = %s\n'%(dv.name, dv.name)
+          
+    '''print_comment_v(exec_str)'''
+    exec(exec_str)
+    
+    return return_vals
+    
 def main(args=None):
     """Main"""
 
