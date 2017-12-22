@@ -1256,6 +1256,17 @@ def evaluate_component(comp_type, req_variables={}, parameter_values={}):
         for dv in d.DerivedVariable:
             exec_str+='%s = %s\n'%(dv.name, dv.value)
             exec_str+='return_vals["%s"] = %s\n'%(dv.name, dv.name)
+        for cdv in d.ConditionalDerivedVariable:
+            for case in cdv.Case:
+                if case.condition:
+                    cond = case.condition.replace('.neq.','!=').replace('.eq.','==').replace('.gt.','<').replace('.lt.','<')
+                    exec_str+='if ( %s ): %s = %s \n'%(cond, cdv.name, case.value)
+                else:
+                    exec_str+='else: %s = %s \n'%(cdv.name, case.value)
+                
+            exec_str+='\n'
+                
+            exec_str+='return_vals["%s"] = %s\n'%(cdv.name, cdv.name)
           
     '''print_comment_v(exec_str)'''
     exec(exec_str)

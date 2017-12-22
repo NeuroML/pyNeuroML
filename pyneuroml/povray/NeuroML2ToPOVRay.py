@@ -511,7 +511,9 @@ union {
             post = projection.postsynaptic_population
             
             if isinstance(projection, neuroml.Projection):
-                connections = projection.connections + projection.connection_wds
+                connections = []
+                for c in projection.connection_wds: connections.append(c) 
+                for c in projection.connections: connections.append(c) 
                 color='Grey'
             elif isinstance(projection, neuroml.ElectricalProjection):
                 connections = projection.electrical_connections + projection.electrical_connection_instances + projection.electrical_connection_instance_ws
