@@ -698,8 +698,13 @@ def reload_saved_data(lems_file_name,
                       verbose = DEFAULTS['v'],
                       remove_dat_files_after_load = False): 
                               
-    print_comment("Reloading data specified in LEMS file: %s, base_dir: %s, cwd: %s" \
-                  % (lems_file_name,base_dir,os.getcwd()), True)
+    if not os.path.isfile(lems_file_name):
+        real_lems_file = os.path.realpath(os.path.join(base_dir,lems_file_name))
+    else:
+        real_lems_file = os.path.realpath(lems_file_name)
+        
+    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s" \
+                  % (lems_file_name,real_lems_file,base_dir,os.getcwd()), True)
     
     # Could use pylems to parse all this...
     traces = {}
@@ -710,7 +715,7 @@ def reload_saved_data(lems_file_name,
 
     from lxml import etree
     base_lems_file_path = os.path.dirname(os.path.realpath(lems_file_name))
-    tree = etree.parse(lems_file_name)
+    tree = etree.parse(real_lems_file)
     
     sim = tree.getroot().find('Simulation')
     ns_prefix = ''
