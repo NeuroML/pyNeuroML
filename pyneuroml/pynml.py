@@ -1224,7 +1224,7 @@ def generate_plot(xvalues,
         label = '' if not labels else labels[i]
         marker = None if not markers else markers[i]
         linewidth = 1 if not linewidths else linewidths[i]
-        markersize= None if not markersizes else markersizes[i]
+        markersize= 6 if not markersizes else markersizes[i]
         
         if colors:
             plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
