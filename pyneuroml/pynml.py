@@ -1162,6 +1162,7 @@ def generate_plot(xvalues,
                   linestyles = None, 
                   linewidths = None, 
                   markers = None, 
+                  markersizes = None, 
                   xaxis = None, 
                   yaxis = None, 
                   xlim = None,
@@ -1223,11 +1224,12 @@ def generate_plot(xvalues,
         label = '' if not labels else labels[i]
         marker = None if not markers else markers[i]
         linewidth = 1 if not linewidths else linewidths[i]
+        markersize= None if not markersizes else markersizes[i]
         
         if colors:
-            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
+            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
         else:
-            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
+            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
 
     if labels:
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)

@@ -34,6 +34,8 @@ def generate_lems_file_for_neuroml(sim_id,
     
     if lems_file_generate_seed:
         random.seed(lems_file_generate_seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
+    else:
+        random.seed(12345) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
     
     file_name_full = '%s/%s'%(target_dir,lems_file_name)
     
