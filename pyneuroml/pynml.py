@@ -237,7 +237,7 @@ def get_lems_model_with_units():
     
     if lems_model_with_units == None:
         jar_path = get_path_to_jnml_jar()
-        print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
+        #print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
         jar = zipfile.ZipFile(jar_path, 'r')
         dims_units = jar.read('NeuroML2CoreTypes/NeuroMLCoreDimensions.xml')
         lems_model_with_units = lems_model.Model(include_includes=False)
@@ -561,9 +561,8 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   cleanup=False,
                                   realtime_output=False):
                                   #jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
-                                      
-    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
-                  % lems_file_name, verbose)
+                          
+    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" % lems_file_name, verbose)
                   
     post_args = " -neuron"
     if not only_generate_scripts:# and jnml_runs_neuron:
@@ -1001,8 +1000,9 @@ def run_jneuroml(pre_args,
     #except KeyboardInterrupt as e:
     #    raise e
             
-    except:
+    except Exception as e:
         print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('Error:  %s'%e)
         print_comment('*** Command: %s ***'%command, True)
         print_comment('Output: %s'%output, True)
         if exit_on_fail: 
@@ -1140,8 +1140,8 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
     
     except subprocess.CalledProcessError as e:        
         
-        print_comment_v('*** Problem running command: %s'%e)
-        print_comment_v(prefix+'%s'%e.output.replace('\n','\n'+prefix))
+        print_comment_v('*** Problem running command: \n       %s'%e)
+        print_comment_v('%s%s'%(prefix,e.output.decode().replace('\n','\n'+prefix)))
         
         return None
         

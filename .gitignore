@@ -104,3 +104,4 @@ examples/results/*.dat
 /examples/quick.png
 /examples/test_data/HHCellNetwork.net.nml_channeldens.svg
 /quick.png
+/examples/report.txt
