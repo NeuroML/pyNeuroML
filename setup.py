@@ -15,6 +15,7 @@ setup(
                 'pyneuroml.tune', 
                 'pyneuroml.neuron', 
                 'pyneuroml.povray', 
+                'pyneuroml.plot', 
                 'pyneuroml.neuron.analysis'],
     entry_points={
         'console_scripts': ['pynml                 = pyneuroml.pynml:main',
@@ -22,7 +23,8 @@ setup(
                             'pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main',
                             'pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main',
                             'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main',
-                            'pynml-summary         = neuroml.utils:main']},
+                            'pynml-summary         = neuroml.utils:main',
+                            'pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main']},
     package_data={
         'pyneuroml': [
             'lib/jNeuroML-%s-jar-with-dependencies.jar'%jnml_version,

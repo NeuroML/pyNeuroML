@@ -28,6 +28,7 @@ def generate_lems_file_for_neuroml(sim_id,
                                    gen_spike_saves_for_cells = {},  # Dict with file names vs lists of quantity paths
                                    spike_time_format='ID_TIME',
                                    copy_neuroml = True,
+                                   report_file_name = None,
                                    lems_file_generate_seed=None,
                                    simulation_seed=12345):
                                        
@@ -45,6 +46,8 @@ def generate_lems_file_for_neuroml(sim_id,
     
     if nml_doc == None:
         nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=True)
+        
+    ls.set_report_file(report_file_name)
     
     quantities_saved = []
     

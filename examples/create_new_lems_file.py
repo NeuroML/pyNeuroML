@@ -31,6 +31,8 @@ if __name__ == '__main__':
     
     ls.add_selection_to_event_output_file(eof0, '0', "hhpop[0]", "spike")
     
+    ls.set_report_file('report.txt')
+    
     print("Using information to generate LEMS: ")
     print(ls.lems_info)
     print("\nLEMS: ")
@@ -69,4 +71,5 @@ if __name__ == '__main__':
                                    gen_saves_for_only_populations = [],  #  List of populations, all pops if = []
                                    gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
                                    gen_spike_saves_for_all_somas = True,
+                                   report_file_name = 'report.txt',
                                    copy_neuroml = True)
