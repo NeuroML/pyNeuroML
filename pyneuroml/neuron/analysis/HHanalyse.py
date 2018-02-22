@@ -8,7 +8,7 @@
 #
 
 import argparse
-
+import re
 import neuron
 print("\n\n") 
 
@@ -91,6 +91,31 @@ def process_args():
     return parser.parse_args()
 
 
+def remove_comments(txt):
+    clear_txt = re.sub(r'(:.*)', '', txt)
+    return clear_txt
+
+
+def get_states(txt):
+    clear_txt = remove_comments(txt)
+    state_grp = re.search(r'(?<=STATE)\s*\{(?P<st_txt>[^}]+)(?=\})', clear_txt)
+    state_txt = state_grp.group('st_txt')
+    state_list = []
+    for state in re.finditer(r'(\w+)', state_txt):
+        state_list.append(state.group(0))
+    state_list = [x for x in state_list if x not in ['FROM', '0', 'TO', '1']]
+    return state_list
+
+
+def get_suffix(txt):
+    clear_txt = remove_comments(txt)
+    nrn_str = re.search(r'NEURON\s*\{(\s*[\w+,]\s*)*\s\}?', clear_txt).group()
+    try:
+        sfx_str = re.search(r'(?<=SUFFIX)\s*(\w+)', nrn_str).group(1)
+    except AttributeError:
+        print('Not a distributed channel mechanism: SUFFIX not in NEURON')
+    return sfx_str
+
 
 def main():
 
@@ -151,25 +176,11 @@ def main():
     modFileName = chanToTest+".mod"
     if args.modFile:
         modFileName = args.modFile
-    modFile = open(modFileName, 'r')
-    inState = 0
-    states = []
-    for line in modFile:
-        if line.count('STATE') > 0 and line.count('STEADYSTATE') == 0:
-            inState = 1
-
-        if inState==1:
-            if line.count('}') > 0:
-                inState = 0
-            chopped = line.split()
-            for el in chopped:
-                if el != '{' and el != '}' and el != 'STATE' and el != 'FROM' and el != '0' and el != 'TO' and el != '1': 
-                    if el.startswith('{'): states.append(el[1:])
-                    elif el.endswith('}'): states.append(el[:-1])
-                    else: states.append(el)
-
+    with open(modFileName, 'r') as handle:
+        modFileTxt = handle.read()
+    states = get_states(modFileTxt)
     print("States found in mod file: " + str(states))
-
+    assert(chanToTest == get_suffix(modFileTxt)), 'Channel name could be wrong'
     sec.insert(str(chanToTest))
 
     for temperature in temperatures:

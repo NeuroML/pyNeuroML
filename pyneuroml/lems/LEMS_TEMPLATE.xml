@@ -5,7 +5,7 @@
     
 #end## 
     <!-- Specify which component to run -->
-    <Target component="${sim_id}"/>
+    <Target component="${sim_id}"${report}/>
 
     <!-- Include core NeuroML2 ComponentType definitions -->
     <Include file="Cells.xml"/>

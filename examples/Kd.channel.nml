@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="Kd">
+
+    <notes>NeuroML file containing a single Channel description</notes>
+
+    <ionChannel id="Kd" conductance="10pS" type="ionChannelHH" species="k">
+
+        <notes>Delayed rectifier K+ current based on Traub and Miles 1991.
+            
+Comment from original mod file: Hippocampal HH channels
+Fast Na+ and K+ currents responsible for action potentials
+Iterative equations
+
+Equations modified by Traub, for Hippocampal Pyramidal cells, in: Traub and Miles, Neuronal Networks of the Hippocampus, Cambridge, 1991
+
+- range variable vtraub adjust threshold
+- Written by Alain Destexhe, Salk Institute, Aug 1992
+- Modified Oct 96 for compatibility with Windows: trap low values of arguments</notes>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="Kd">
+                    
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Minimal Hodgkin-Huxley type models for different classes of cortical and thalamic neurons</rdf:li>
+                            <rdf:li rdf:resource="19011929"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+
+                
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>K channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/NeuronDB/channelGene2.aspx#table3"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+        <gate id="n" type="gateHHrates" instances="4">
+            <forwardRate type="Kd_n_alpha_rate"/>
+            <reverseRate type="Kd_n_beta_rate"/>
+        </gate>
+                            
+    </ionChannel>
+
+    <ComponentType name="Kd_n_alpha_rate" extends="baseVoltageDepRate">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Requirement name="vShift" dimension="voltage"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="VT" dimension="none" value="-55 + (vShift / VOLT_SCALE)"/>
+            <ConditionalDerivedVariable name="r" exposure="r" dimension="per_time">
+                <Case condition="(V - VT) - 15 .neq. 0" value="(-0.032 * ( (V - VT) - 15 ) / ( (exp (-1*( (V - VT) - 15 ) / 5)) - 1)) / TIME_SCALE"/>
+                <Case value="(0.032 * 5) / TIME_SCALE"/>
+            </ConditionalDerivedVariable>
+        </Dynamics>
+
+    </ComponentType>
+
+    <ComponentType name="Kd_n_beta_rate" extends="baseVoltageDepRate">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Requirement name="vShift" dimension="voltage"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="VT" dimension="none" value="-55 + (vShift / VOLT_SCALE)"/>
+            <DerivedVariable name="r" exposure="r" dimension="per_time" value="(0.5 * (exp (-1*( (V - VT) - 10 ) / 40))) / TIME_SCALE"/>
+        </Dynamics>
+
+    </ComponentType>
+
+</neuroml>

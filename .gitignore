@@ -103,3 +103,8 @@ examples/results/*.dat
 /examples/NML2_SingleCompHHCell.png
 /examples/quick.png
 /examples/test_data/HHCellNetwork.net.nml_channeldens.svg
+/quick.png
+/examples/report.txt
+/pyneuroml/plot/*.spikes
+/examples/*.spikes
+/pyneuroml/plot/test.py

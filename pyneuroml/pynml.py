@@ -10,6 +10,7 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 """
 
 from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import subprocess
@@ -29,6 +30,8 @@ from lems.parser.LEMS import LEMSFileParser
 import random
 import inspect
 import zipfile
+import shlex
+import signal
 
 DEFAULTS = {'v':False, 
             'default_java_max_memory':'400M',
@@ -234,7 +237,7 @@ def get_lems_model_with_units():
     
     if lems_model_with_units == None:
         jar_path = get_path_to_jnml_jar()
-        print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
+        #print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
         jar = zipfile.ZipFile(jar_path, 'r')
         dims_units = jar.read('NeuroML2CoreTypes/NeuroMLCoreDimensions.xml')
         lems_model_with_units = lems_model.Model(include_includes=False)
@@ -262,14 +265,18 @@ def split_nml2_quantity(nml2_quantity):
 
 def get_value_in_si(nml2_quantity):
     
-    model = get_lems_model_with_units()
-    m, u = split_nml2_quantity(nml2_quantity)
-    si_value = None
-    for un in model.units:
-        if un.symbol == u:
-            si_value =  (m + un.offset) * un.scale * pow(10, un.power)
-            
-    return si_value
+    try:
+        return float(nml2_quantity)
+    except:
+
+        model = get_lems_model_with_units()
+        m, u = split_nml2_quantity(nml2_quantity)
+        si_value = None
+        for un in model.units:
+            if un.symbol == u:
+                si_value =  (m + un.offset) * un.scale * pow(10, un.power)
+
+        return si_value
     
 def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
      
@@ -451,7 +458,7 @@ def write_lems_file(lems_model, lems_file_name, validate=False):
 
 
 def run_lems_with_jneuroml(lems_file_name, 
-                           include=[],
+                           paths_to_include=[],
                            max_memory=DEFAULTS['default_java_max_memory'],
                            skip_run=False, 
                            nogui=False, 
@@ -468,7 +475,7 @@ def run_lems_with_jneuroml(lems_file_name,
                   % lems_file_name, verbose)
     post_args = ""
     post_args += gui_string(nogui)
-    post_args += include_string(include)
+    post_args += include_string(paths_to_include)
     
     t_run = datetime.now()
     
@@ -524,12 +531,12 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                  verbose = verbose)
 
 
-def include_string(include):
-  if include:
-    if type(include) is str:
-      include = [include]
-    if type(include) in (tuple,list):
-      result = " -I '%s'" % ':'.join(include)
+def include_string(paths_to_include):
+  if paths_to_include:
+    if type(paths_to_include) is str:
+      paths_to_include = [paths_to_include]
+    if type(paths_to_include) in (tuple,list):
+      result = " -I '%s'" % ':'.join(paths_to_include)
   else:
     result = ""
   return result
@@ -540,7 +547,7 @@ def gui_string(nogui):
 
 
 def run_lems_with_jneuroml_neuron(lems_file_name, 
-                                  include = [],
+                                  paths_to_include = [],
                                   max_memory = DEFAULTS['default_java_max_memory'], 
                                   skip_run = False,
                                   nogui = False, 
@@ -550,20 +557,23 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                                   show_plot_already = True, 
                                   exec_in_dir = ".",
                                   only_generate_scripts = False,
+                                  compile_mods = True,
                                   verbose = DEFAULTS['v'],
                                   exit_on_fail = True,
-                                  cleanup=False):
+                                  cleanup=False,
+                                  realtime_output=False):
                                   #jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
-                                      
-    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" \
-                  % lems_file_name, verbose)
+                          
+    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" % lems_file_name, verbose)
                   
     post_args = " -neuron"
     if not only_generate_scripts:# and jnml_runs_neuron:
         post_args += ' -run'
+    if compile_mods:
+        post_args += ' -compile'
     
     post_args += gui_string(nogui)
-    post_args += include_string(include)
+    post_args += include_string(paths_to_include)
     
     t_run = datetime.now()
     if skip_run:
@@ -578,8 +588,20 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                 os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
 
         print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
-        
-        success = run_jneuroml("", 
+
+        if realtime_output:
+            success = run_jneuroml_with_realtime_output("", 
+                           lems_file_name, 
+                           post_args, 
+                           max_memory = max_memory, 
+                           exec_in_dir = exec_in_dir, 
+                           verbose = verbose, 
+                           exit_on_fail = exit_on_fail)
+
+        #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+
+        else: 
+            success = run_jneuroml("", 
                            lems_file_name, 
                            post_args, 
                            max_memory = max_memory, 
@@ -611,7 +633,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
 
 
 def run_lems_with_jneuroml_netpyne(lems_file_name,
-                                  include = [], 
+                                  paths_to_include = [], 
                                   max_memory = DEFAULTS['default_java_max_memory'], 
                                   skip_run = False,
                                   nogui = False, 
@@ -637,7 +659,7 @@ def run_lems_with_jneuroml_netpyne(lems_file_name,
         post_args += ' -run'
     
     post_args += gui_string(nogui)
-    post_args += include_string(include)
+    post_args += include_string(paths_to_include)
     
     t_run = datetime.now()
     if skip_run:
@@ -676,6 +698,14 @@ def reload_saved_data(lems_file_name,
                       reload_events = False, 
                       verbose = DEFAULTS['v'],
                       remove_dat_files_after_load = False): 
+                              
+    if not os.path.isfile(lems_file_name):
+        real_lems_file = os.path.realpath(os.path.join(base_dir,lems_file_name))
+    else:
+        real_lems_file = os.path.realpath(lems_file_name)
+        
+    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s" \
+                  % (lems_file_name,real_lems_file,base_dir,os.getcwd()), True)
     
     # Could use pylems to parse all this...
     traces = {}
@@ -685,7 +715,8 @@ def reload_saved_data(lems_file_name,
         import matplotlib.pyplot as plt
 
     from lxml import etree
-    tree = etree.parse(lems_file_name)
+    base_lems_file_path = os.path.dirname(os.path.realpath(lems_file_name))
+    tree = etree.parse(real_lems_file)
     
     sim = tree.getroot().find('Simulation')
     ns_prefix = ''
@@ -705,6 +736,9 @@ def reload_saved_data(lems_file_name,
         for i,of in enumerate(event_output_files):
             name = of.attrib['fileName']
             file_name = os.path.join(base_dir,name)
+            if not os.path.isfile(file_name): # If not relative to the LEMS file...
+                file_name = os.path.join(base_lems_file_path,name) 
+            
             #if not os.path.isfile(file_name): # If not relative to the LEMS file...
             #    file_name = os.path.join(os.getcwd(),name) 
                 # ... try relative to cwd.  
@@ -755,8 +789,13 @@ def reload_saved_data(lems_file_name,
         traces['t'] = []
         name = of.attrib['fileName']
         file_name = os.path.join(base_dir,name)
+        
+        if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            file_name = os.path.join(base_lems_file_path,name) 
+            
         if not os.path.isfile(file_name): # If not relative to the LEMS file...
             file_name = os.path.join(os.getcwd(),name) 
+
             # ... try relative to cwd.  
         if not os.path.isfile(file_name): # If not relative to the LEMS file...
             file_name = os.path.join(os.getcwd(),'NeuroML2','results',name) 
@@ -946,6 +985,7 @@ def run_jneuroml(pre_args,
     jar_path = get_path_to_jnml_jar()
     
     output = ''
+
     
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
@@ -958,9 +998,13 @@ def run_jneuroml(pre_args,
                 sys.exit(-1)
             else:
                 return False
+
+    #except KeyboardInterrupt as e:
+    #    raise e
             
-    except:
+    except Exception as e:
         print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('Error:  %s'%e)
         print_comment('*** Command: %s ***'%command, True)
         print_comment('Output: %s'%output, True)
         if exit_on_fail: 
@@ -968,6 +1012,45 @@ def run_jneuroml(pre_args,
         else:
             return False
         
+    
+    return True
+
+
+# TODO: Refactorinng
+def run_jneuroml_with_realtime_output(pre_args, 
+                                      target_file, 
+                                      post_args, 
+                                      max_memory   = DEFAULTS['default_java_max_memory'], 
+                                      exec_in_dir  = ".",
+                                      verbose      = DEFAULTS['v'],
+                                      exit_on_fail = True):    
+
+    # NOTE: Only tested with Linux
+
+    if 'nogui' in post_args and not os.name == 'nt':
+        pre_jar = " -Djava.awt.headless=true"
+    else:
+        pre_jar = ""
+        
+    jar_path = get_path_to_jnml_jar()
+    
+    command = ''
+    output = ''
+
+    try:
+        command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
+              (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
+        output = execute_command_in_dir_with_realtime_output(command, exec_in_dir, verbose=verbose,
+                                        prefix = ' jNeuroML >>  ')
+    except KeyboardInterrupt as e:
+        raise e
+    except:
+        print_comment('*** Execution of jnml has failed! ***', True)
+        print_comment('*** Command: %s ***'%command, True)
+        if exit_on_fail: 
+            sys.exit(-1)
+        else:
+            return False
     
     return True
 
@@ -982,6 +1065,33 @@ def print_comment(text, print_it=DEFAULTS['v']):
     if print_it:
         
         print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
+
+
+def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], 
+                                                prefix="Output: ", env=None):
+
+    # NOTE: Only tested with Linux
+    if os.name == 'nt':
+        directory = os.path.normpath(directory)
+        
+    print_comment("Executing: (%s) in directory: %s" % (command, directory), verbose)
+    if env is not None:
+        print_comment("Extra env variables %s" % (env), verbose)
+
+    p = None
+    try:
+        p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
+        with p.stdout:
+            for line in iter(p.stdout.readline, b''):
+                print(line, end="")
+        p.wait() # wait for the subprocess to exit
+    except KeyboardInterrupt as e:
+        if p:
+            p.kill()
+        #return True
+        raise e
+
+    return True
 
 
 def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], 
@@ -1032,9 +1142,8 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
     
     except subprocess.CalledProcessError as e:        
         
-        print_comment_v('*** Problem running command: %s'%e)
-        output = e.output.decode("utf-8").replace('\n','\n'+prefix)
-        print_comment_v(prefix+output)
+        print_comment_v('*** Problem running command: \n       %s'%e)
+        print_comment_v('%s%s'%(prefix,e.output.decode().replace('\n','\n'+prefix)))
         
         return None
         
@@ -1055,10 +1164,13 @@ def generate_plot(xvalues,
                   linestyles = None, 
                   linewidths = None, 
                   markers = None, 
+                  markersizes = None, 
                   xaxis = None, 
                   yaxis = None, 
                   xlim = None,
                   ylim = None,
+                  show_xticklabels = True,
+                  show_yticklabels = True,
                   grid = False,
                   logx = False,
                   logy = False,
@@ -1102,6 +1214,11 @@ def generate_plot(xvalues,
         ax.spines['top'].set_visible(False)       
         ax.yaxis.set_ticks_position('left')
         ax.xaxis.set_ticks_position('bottom')
+    
+    if not show_xticklabels:
+        ax.set_xticklabels([])
+    if not show_yticklabels:
+        ax.set_yticklabels([])
 
     for i in range(len(xvalues)):
 
@@ -1109,11 +1226,12 @@ def generate_plot(xvalues,
         label = '' if not labels else labels[i]
         marker = None if not markers else markers[i]
         linewidth = 1 if not linewidths else linewidths[i]
+        markersize= 6 if not markersizes else markersizes[i]
         
         if colors:
-            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
+            plt.plot(xvalues[i], yvalues[i], 'o', color=colors[i], marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
         else:
-            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
+            plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
 
     if labels:
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
@@ -1134,7 +1252,7 @@ def generate_plot(xvalues,
     return ax
         
 '''
-    As usually saved by jLEMS, etc. First column is time (in seconds), multiple ofther columns
+    As usually saved by jLEMS, etc. First column is time (in seconds), multiple other columns
 '''
 def reload_standard_dat_file(file_name):
 
@@ -1213,7 +1331,43 @@ def extract_annotations(nml2_file):
     print_comment_v("Annotations in %s: "%(nml2_file))
     pp.pprint(annotations)
 
-
+'''
+Work in progress: expand a (simple) ComponentType  and evaluate an instance of it by
+giving parameters & required variables
+'''
+def evaluate_component(comp_type, req_variables={}, parameter_values={}):
+    
+    print_comment('Evaluating %s with req:%s; params:%s'%(comp_type.name,req_variables,parameter_values))
+    exec_str = ''
+    return_vals = {}
+    from math import exp
+    for p in parameter_values:
+        exec_str+='%s = %s\n'%(p, get_value_in_si(parameter_values[p]))
+    for r in req_variables:
+        exec_str+='%s = %s\n'%(r, get_value_in_si(req_variables[r]))
+    for c in comp_type.Constant:
+        exec_str+='%s = %s\n'%(c.name, get_value_in_si(c.value))
+    for d in comp_type.Dynamics:
+        for dv in d.DerivedVariable:
+            exec_str+='%s = %s\n'%(dv.name, dv.value)
+            exec_str+='return_vals["%s"] = %s\n'%(dv.name, dv.name)
+        for cdv in d.ConditionalDerivedVariable:
+            for case in cdv.Case:
+                if case.condition:
+                    cond = case.condition.replace('.neq.','!=').replace('.eq.','==').replace('.gt.','<').replace('.lt.','<')
+                    exec_str+='if ( %s ): %s = %s \n'%(cond, cdv.name, case.value)
+                else:
+                    exec_str+='else: %s = %s \n'%(cdv.name, case.value)
+                
+            exec_str+='\n'
+                
+            exec_str+='return_vals["%s"] = %s\n'%(cdv.name, cdv.name)
+          
+    '''print_comment_v(exec_str)'''
+    exec(exec_str)
+    
+    return return_vals
+    
 def main(args=None):
     """Main"""
 
@@ -1225,3 +1379,4 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
+

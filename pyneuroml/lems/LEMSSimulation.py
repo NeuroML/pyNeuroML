@@ -35,6 +35,7 @@ class LEMSSimulation():
         self.lems_info['dt'] = dt
         self.lems_info['comment'] = comment
         self.lems_info['seed'] = lems_seed
+        self.lems_info['report'] = ''
         
         self.lems_info['include_files'] = []
         self.lems_info['displays'] = []
@@ -54,6 +55,14 @@ class LEMSSimulation():
         
     def assign_simulation_target(self, target):
         self.lems_info['target'] = target
+        
+        
+    def set_report_file(self, report_file_name):
+        '''
+        short file saved after simulation with run time, simulator version etc.
+        '''
+        if report_file_name != None:
+            self.lems_info['report'] = ' reportFile="%s"'%report_file_name
         
         
     def include_neuroml2_file(self, nml2_file_name, include_included=True, relative_to_dir='.'):
