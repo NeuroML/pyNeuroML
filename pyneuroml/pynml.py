@@ -426,13 +426,14 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
         
         
         
-def read_lems_file(lems_file_name, include_includes=False, debug=False):
+def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_includes=False, debug=False):
     
     if not os.path.isfile(lems_file_name):
         print_comment("Unable to find file: %s!"%lems_file_name, True)
         sys.exit()
         
-    model = lems_model.Model(include_includes=include_includes)
+    model = lems_model.Model(include_includes=include_includes, 
+                             fail_on_missing_includes=fail_on_missing_includes)
     model.debug = debug
     
     model.import_from_file(lems_file_name)
