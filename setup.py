@@ -47,7 +47,6 @@ setup(
         'matplotlib'],
     dependency_links=[
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
-      'git+https://github.com/rgerkin/pylems.git@master#egg=pylems-0.4.9.1'
     ],
     classifiers = [
         'Intended Audience :: Science/Research',
