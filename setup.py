@@ -41,9 +41,9 @@ setup(
     install_requires=[
         'argparse',
         'lxml',
-        'pylems==0.4.9.1',
+        'pylems>=0.4.9.1',
         'airspeed==0.5.4dev-20150515',
-        'libNeuroML>=0.2.17',
+        'libNeuroML>=0.2.36',
         'matplotlib'],
     dependency_links=[
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',

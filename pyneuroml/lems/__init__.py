@@ -30,6 +30,7 @@ def generate_lems_file_for_neuroml(sim_id,
                                    copy_neuroml = True,
                                    report_file_name = None,
                                    lems_file_generate_seed=None,
+                                   verbose=False,
                                    simulation_seed=12345):
                                        
     
@@ -45,7 +46,7 @@ def generate_lems_file_for_neuroml(sim_id,
     ls = LEMSSimulation(sim_id, duration, dt, target,lems_seed=simulation_seed)
     
     if nml_doc == None:
-        nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=True)
+        nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=verbose)
         
     ls.set_report_file(report_file_name)
     
