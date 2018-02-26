@@ -43,7 +43,7 @@ setup(
         'lxml',
         'pylems>=0.4.9.1',
         'airspeed==0.5.4dev-20150515',
-        'libNeuroML>=0.2.36',
+        'libNeuroML>=0.2.39',
         'matplotlib'],
     dependency_links=[
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML'
