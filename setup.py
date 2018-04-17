@@ -34,7 +34,7 @@ setup(
             'lems/LEMS_TEMPLATE.xml',
             'neuron/mview_neuroml1.hoc',
             'neuron/mview_neuroml2.hoc']},
-    url='https://github.com/pgleeson/pyNeuroML',
+    url='https://github.com/NeuroML/pyNeuroML',
     license='LICENSE.lesser',
     description='Python utilities for NeuroML',
     long_description=open('README.md').read(),

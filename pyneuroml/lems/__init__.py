@@ -33,17 +33,17 @@ def generate_lems_file_for_neuroml(sim_id,
                                    verbose=False,
                                    simulation_seed=12345):
                                        
-    
+    my_random = random.Random()
     if lems_file_generate_seed:
-        random.seed(lems_file_generate_seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
+        my_random.seed(lems_file_generate_seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
     else:
-        random.seed(12345) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
+        my_random.seed(12345) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
     
     file_name_full = '%s/%s'%(target_dir,lems_file_name)
     
     print_comment_v('Creating LEMS file at: %s for NeuroML 2 file: %s (copy: %s)'%(file_name_full,neuroml_file,copy_neuroml))
     
-    ls = LEMSSimulation(sim_id, duration, dt, target,lems_seed=simulation_seed)
+    ls = LEMSSimulation(sim_id, duration, dt, target,simulation_seed=simulation_seed)
     
     if nml_doc == None:
         nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=verbose)
@@ -151,10 +151,10 @@ def generate_lems_file_for_neuroml(sim_id,
                             quantity_template_seg = "%s/%i/"+component+"/%i/v"
                             for segment_id in segment_ids:
                                 quantity = quantity_template_seg%(population.id, i, segment_id)
-                                ls.add_line_to_display(disp0, "%s[%i] seg %i: v"%(population.id, i, segment_id), quantity, "1mV", get_next_hex_color())
+                                ls.add_line_to_display(disp0, "%s[%i] seg %i: v"%(population.id, i, segment_id), quantity, "1mV", get_next_hex_color(my_random))
                         else:
                             quantity = quantity_template%(population.id, i)
-                            ls.add_line_to_display(disp0, "%s[%i]: v"%(population.id, i), quantity, "1mV", get_next_hex_color())
+                            ls.add_line_to_display(disp0, "%s[%i]: v"%(population.id, i), quantity, "1mV", get_next_hex_color(my_random))
                 
                 if gen_saves_for_all_v or population.id in gen_saves_for_only_populations:
                     print_comment('Saving %i values of %s for %s in population %s'%(size, variable, component, population.id))
@@ -198,7 +198,7 @@ def generate_lems_file_for_neuroml(sim_id,
             
         ls.create_display(display, "Plots of %s"%display, min_, max_)
         for q in quantities:
-            ls.add_line_to_display(display, safe_variable(q), q, scale, get_next_hex_color())
+            ls.add_line_to_display(display, safe_variable(q), q, scale, get_next_hex_color(my_random))
             
     for file_name in gen_saves_for_quantities.keys():
         

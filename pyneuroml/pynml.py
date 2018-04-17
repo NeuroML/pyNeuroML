@@ -882,9 +882,12 @@ def reload_saved_data(lems_file_name,
         return traces
                
                         
-def get_next_hex_color():
+def get_next_hex_color(my_random=None):
     
-    return "#%06x" % random.randint(0,0xFFFFFF)
+    if my_random!=None:
+        return "#%06x" % my_random.randint(0,0xFFFFFF)
+    else:
+        return "#%06x" % random.randint(0,0xFFFFFF)
 
 def evaluate_arguments(args):
 
