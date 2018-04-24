@@ -108,3 +108,5 @@ examples/results/*.dat
 /pyneuroml/plot/*.spikes
 /examples/*.spikes
 /pyneuroml/plot/test.py
+/examples/*.gv
+/examples/*.gv.pdf

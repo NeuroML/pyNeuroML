@@ -215,6 +215,13 @@ def parse_arguments():
                   'to VHDL format')
             )
     mut_exc_opts.add_argument(
+            '-graph',
+            metavar=('level', '<NeuroML2 file>'),
+            nargs=1,
+            help=('Load a NeuroML file, and convert it to a graph using\n'
+                  'GraphViz. Detail is set by level (1, 2, etc.)')
+            )
+    mut_exc_opts.add_argument(
             '-validate',
             action='store_true',
             help=('(Via jNeuroML) Validate NeuroML2 file(s) against the\n'
@@ -949,6 +956,29 @@ def evaluate_arguments(args):
     elif args.vhdl:
         files = args.vhdl[1]
         post_args = "-vhdl %s" % args.vhdl[0]
+        
+    elif args.graph:
+        
+        level = int(args.graph[0])
+        
+        print('Converting %s to graphical form, level %i'%(args.lems_file,level))
+        
+        from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
+
+        from neuromllite.GraphVizHandler import GraphVizHandler
+
+        handler = GraphVizHandler(level, None)
+
+        currParser = NeuroMLXMLParser(handler)
+
+        currParser.parse(args.lems_file)
+
+        handler.finalise_document()
+
+        print("Done with GraphViz...")
+
+        exit()
+        
     elif args.validate:
         pre_args = "-validate"
         exit_on_fail = True
