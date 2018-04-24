@@ -216,7 +216,7 @@ def parse_arguments():
             )
     mut_exc_opts.add_argument(
             '-graph',
-            metavar=('level', '<NeuroML2 file>'),
+            metavar=('level'),
             nargs=1,
             help=('Load a NeuroML file, and convert it to a graph using\n'
                   'GraphViz. Detail is set by level (1, 2, etc.)')
