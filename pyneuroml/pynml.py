@@ -959,15 +959,20 @@ def evaluate_arguments(args):
         
     elif args.graph:
         
-        level = int(args.graph[0])
         
-        print('Converting %s to graphical form, level %i'%(args.lems_file,level))
+        from neuromllite.GraphVizHandler import GraphVizHandler, engines
+        engine = 'dot'
+        try:
+            level = int(args.graph[0])
+        except:
+            engine = engines[args.graph[0][-1:]]
+            level = int(args.graph[0][:-1])
+        
+        print('Converting %s to graphical form, level %i, engine %s'%(args.lems_file,level,engine))
         
         from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
 
-        from neuromllite.GraphVizHandler import GraphVizHandler
-
-        handler = GraphVizHandler(level, None)
+        handler = GraphVizHandler(level=level, engine=engine, nl_network=None)
 
         currParser = NeuroMLXMLParser(handler)
 
