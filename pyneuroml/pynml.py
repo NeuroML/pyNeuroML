@@ -916,7 +916,7 @@ def evaluate_arguments(args):
     elif args.neuron is not None:
         num_neuron_args = len(args.neuron)
         if num_neuron_args < 0 or num_neuron_args > 4:
-            print("ERROR: The \'-neuron\' option was given an invalid "
+            print_comment("ERROR: The \'-neuron\' option was given an invalid "
                   "number of arguments: %d given, 0-4 required"
                   % num_neuron_args)
             sys.exit(-1)
@@ -968,7 +968,7 @@ def evaluate_arguments(args):
             engine = engines[args.graph[0][-1:]]
             level = int(args.graph[0][:-1])
         
-        print('Converting %s to graphical form, level %i, engine %s'%(args.lems_file,level,engine))
+        print_comment('Converting %s to graphical form, level %i, engine %s'%(args.lems_file,level,engine))
         
         from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
 
@@ -980,7 +980,7 @@ def evaluate_arguments(args):
 
         handler.finalise_document()
 
-        print("Done with GraphViz...")
+        print_comment("Done with GraphViz...")
 
         exit()
         
@@ -1093,16 +1093,16 @@ def run_jneuroml_with_realtime_output(pre_args,
     return True
 
     
-def print_comment_v(text):
-    print_comment(text, True)
+def print_comment_v(text, end='\n'):
+    print_comment(text, True, end)
     
     
-def print_comment(text, print_it=DEFAULTS['v']):
+def print_comment(text, print_it=DEFAULTS['v'], end='\n'):
     prefix = "pyNeuroML >>> "
     if not isinstance(text, str): text = text.decode('ascii')
     if print_it:
         
-        print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
+        print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)), end=end)
 
 
 def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], 
@@ -1121,7 +1121,7 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
         with p.stdout:
             for line in iter(p.stdout.readline, b''):
-                print(line, end="")
+                print_comment(line, end="")
         p.wait() # wait for the subprocess to exit
     except KeyboardInterrupt as e:
         if p:
