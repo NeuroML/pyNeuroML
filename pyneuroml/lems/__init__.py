@@ -47,6 +47,9 @@ def generate_lems_file_for_neuroml(sim_id,
     
     if nml_doc == None:
         nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=verbose)
+        nml_doc_inc_not_included = read_neuroml2_file(neuroml_file, include_includes=False, verbose=False)
+    else:
+        nml_doc_inc_not_included = nml_doc
         
     ls.set_report_file(report_file_name)
     
@@ -60,24 +63,52 @@ def generate_lems_file_for_neuroml(sim_id,
         print_comment_v("Including existing NeuroML file (%s) as: %s"%(neuroml_file, rel_nml_file))
         ls.include_neuroml2_file(rel_nml_file, include_included=True, relative_to_dir=os.path.abspath(target_dir))
     else:
-        print_comment_v("Copying NeuroML file (%s) to: %s (%s)"%(neuroml_file, target_dir, os.path.abspath(target_dir)))
+        print_comment_v("Copying a NeuroML file (%s) to: %s (abs path: %s)"%(neuroml_file, target_dir, os.path.abspath(target_dir)))
+        
+        if not os.path.isdir(target_dir):
+            raise Exception("Target directory %s does not exist!"%target_dir)
+        
         if os.path.abspath(os.path.dirname(neuroml_file))!=os.path.abspath(target_dir):
             shutil.copy(neuroml_file, target_dir)
+        else:
+            print_comment_v("No need, same file...")
         
         neuroml_file_name = os.path.basename(neuroml_file)
         
         ls.include_neuroml2_file(neuroml_file_name, include_included=False)
         
         nml_dir = os.path.dirname(neuroml_file) if len(os.path.dirname(neuroml_file))>0 else '.'
-        
-        for include in nml_doc.includes:
-            incl_curr = '%s/%s'%(nml_dir,include.href)
-            print_comment_v(' - Including %s located at %s, copying to %s'%(include.href, incl_curr,target_dir))
+
+        for include in nml_doc_inc_not_included.includes:
             
+            if nml_dir=='.' and os.path.isfile(include.href):
+                incl_curr = include.href
+            else:
+                incl_curr = '%s/%s'%(nml_dir,include.href)
+                
+            if os.path.isfile(include.href):
+                incl_curr = include.href
+                
+                
+            print_comment_v(' - Including %s (located at %s; nml dir: %s), copying to %s'%(include.href, incl_curr, nml_dir, target_dir))
+            
+            '''
             if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
                not os.path.isfile("%s/%s"%(target_dir, incl_curr)) and \
                not os.path.isfile(incl_curr):
                 shutil.copy(incl_curr, target_dir)
+            else:
+                print_comment_v("No need to copy...")'''
+                
+            f1 = "%s/%s"%(target_dir, os.path.basename(incl_curr))
+            f2 = "%s/%s"%(target_dir, incl_curr)
+            if os.path.isfile(f1):
+                print_comment_v("No need to copy, file exists: %s..."%f1)
+            elif os.path.isfile(f2):
+                print_comment_v("No need to copy, file exists: %s..."%f2)
+            else:
+                shutil.copy(incl_curr, target_dir)
+                
                 
             ls.include_neuroml2_file(include.href, include_included=False)
             

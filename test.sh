@@ -62,7 +62,7 @@ python run_jneuroml_plot_matplotlib.py -nogui -noneuron
 python units.py
 
 #  Run test for generating LEMS file
-python create_new_lems_file.py
+python create_new_lems_file.py -test
 
 #  Run test for generating LEMS file
 python Vm_plot.py -nogui
