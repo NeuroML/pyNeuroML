@@ -1036,6 +1036,9 @@ def run_jneuroml(pre_args,
                 sys.exit(-1)
             else:
                 return False
+            
+        print_comment('Successfully ran the following command using pyNeuroML v%s: \n    %s'%(__version__,command), True)
+        print_comment('Output:\n\n%s'%output, True)
 
     #except KeyboardInterrupt as e:
     #    raise e
