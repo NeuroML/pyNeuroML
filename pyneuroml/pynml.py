@@ -320,6 +320,7 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
                  nml1_file_name, 
                  post_args,
                  verbose = verbose_validate,
+                 report_jnml_output = verbose_validate,
                  exit_on_fail = False)
 
 
@@ -335,6 +336,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
                           post_args, 
                           max_memory=max_memory,
                           verbose = verbose_validate,
+                          report_jnml_output = verbose_validate,
                           exit_on_fail = False)
     
     else:    
@@ -343,6 +345,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
                           nml2_file_name, 
                           post_args, 
                           verbose = verbose_validate,
+                          report_jnml_output = verbose_validate,
                           exit_on_fail = False)
     
 
@@ -594,7 +597,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
             if not path+":" in os.environ['PYTHONPATH']:
                 os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
 
-        print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+        #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
 
         if realtime_output:
             success = run_jneuroml_with_realtime_output("", 
@@ -1013,8 +1016,11 @@ def run_jneuroml(pre_args,
                  max_memory   = DEFAULTS['default_java_max_memory'], 
                  exec_in_dir  = ".",
                  verbose      = DEFAULTS['v'],
+                 report_jnml_output = True,
                  exit_on_fail = True):    
 
+    print_comment('Running jnml on %s with pre args: %s, post args: %s, in dir: %s, verbose: %s, report: %s, exit on fail: %s'%
+                   (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail), verbose)
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
@@ -1033,12 +1039,14 @@ def run_jneuroml(pre_args,
                           
         if not output:
             if exit_on_fail: 
+                print_comment('Error: execute_command_in_dir returned with output: %s'%output, True)
                 sys.exit(-1)
             else:
                 return False
-            
-        print_comment('Successfully ran the following command using pyNeuroML v%s: \n    %s'%(__version__,command), True)
-        print_comment('Output:\n\n%s'%output, True)
+           
+        if report_jnml_output:
+            print_comment('Successfully ran the following command using pyNeuroML v%s: \n    %s'%(__version__,command), True)
+            print_comment('Output:\n\n%s'%output, True)
 
     #except KeyboardInterrupt as e:
     #    raise e
