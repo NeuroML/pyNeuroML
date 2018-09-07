@@ -511,7 +511,7 @@ def compute_iv_curve(channel, a, results, grid=True):
                     if i>i_max: i_max = i
                     if i<i_min: i_min = i
                     
-                    i_steady[voltage] = i # will be set to last value...
+                    i_steady[voltage] = -1 * i # will be set to last value...
 
             i_peak_ = i_max if abs(i_max) > abs(i_min)\
                            else i_min
@@ -552,14 +552,15 @@ def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
                                  "from %s at %s degC, erev: %s V") 
                                  % (channel.id, channel.file, 
                                     a.temperature, a.erev))
-    plt.xlabel('Time (s)')
-    plt.ylabel('Current (A)')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Current (pA)')
     plt.grid('on' if grid else 'off')
     for v in hold_v:
         col = get_colour_hex(
                 float(hold_v.index(v))/len(hold_v))
-        plt.plot(times[v], currents[v], color=col, 
-                   linestyle='-', label="%s V" % v)
+                
+        plt.plot([t*1000 for t in times[v]], [i*1e12 for i in currents[v]], color=col, 
+                   linestyle='-', label="%s mV" % (v*1000))
     
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
