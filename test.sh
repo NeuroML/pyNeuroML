@@ -1,7 +1,7 @@
 set -e
 
-sudo python setup.py install
-  
+if [[ ${TRAVIS} == true ]]; then python setup.py install; else sudo python setup.py install; fi
+
 run_neuron_examples=false
 
 if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
