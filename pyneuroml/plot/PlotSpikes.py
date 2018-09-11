@@ -69,7 +69,8 @@ def process_args():
                         default=DEFAULTS['format'],
                         help='How the spiketimes are represented on each line of file:\n'+\
                              'id_t: id of cell, space(s)/tab(s), time of spike (default)\n'+\
-                             't_id: time of spike, space(s)/tab(s), id of cell')
+                             't_id: time of spike, space(s)/tab(s), id of cell\n'+\
+                             'sonata: SONATA format HDF5 file containing spike times')
                              
     parser.add_argument('-rates', 
                         action='store_true',
@@ -106,6 +107,22 @@ def main(args=None):
     if args is None:
         args = process_args()
     run(a=args)
+    
+    
+def read_sonata_spikes_hdf5_file(file_name):
+    
+    pynml.print_comment_v("Loading SONATA spike times from: %s"%file_name)
+    
+    import tables   # pytables for HDF5 support
+    h5file=tables.open_file(file_name,mode='r')
+    
+    pynml.print_comment_v("Opened HDF5 file: %s; sorting=%s"%(h5file.filename,h5file.root.spikes._v_attrs.sorting))
+    gids = h5file.root.spikes.gids
+    timestamps = h5file.root.spikes.timestamps
+    ids = [int(id) for id in gids]
+    times = [float(t) for t in timestamps]
+        
+    return ids, times
 
 
 def run(a=None,**kwargs): 
@@ -128,28 +145,27 @@ def run(a=None,**kwargs):
     times = OrderedDict()
     ids_in_file = OrderedDict()
     
-    for file_name in a.spiketime_files:
-        pynml.print_comment_v("Loading spike times from: %s"%file_name)
-        spikes_file = open(file_name)
-        x = []
-        y = []
-        max_id_here = 0
+    if a.format == 'sonata' or a.format == 's':
         
-        name = spikes_file.name
-        if name.endswith('.spikes'): name = name[:-7]
-        if name.endswith('.spike'): name = name[:-6]
-        times[name] = []
-        ids_in_file[name] = []
-        
-        for line in spikes_file:
-            if not line.startswith('#'):
-                if a.format == 'id_t':
-                    [id, t] = line.split()
-                elif a.format == 't_id':
-                    [t, id] = line.split()
+        for file_name in a.spiketime_files:
+            ids, ts = read_sonata_spikes_hdf5_file(file_name)
+            
+            x = []
+            y = []
+            max_id_here = 0
+
+            name = file_name.split('/')[-1]
+            if name.endswith('_spikes.h5'): name = name[:-10]
+            elif name.endswith('.h5'): name = name[:-3]
+            times[name] = []
+            ids_in_file[name] = []
+
+            for i in range(len(ids)):
+                id = ids[i]
+                t = ts[i]
                 id_shifted = offset_id+int(float(id))
                 max_id = max(max_id,id_shifted)
-                t = float(t)
+
                 if not id_shifted in ids_in_file[name]:
                     ids_in_file[name].append(id_shifted)
                 times[name].append(t)
@@ -159,31 +175,84 @@ def run(a=None,**kwargs):
                     unique_ids.append(id_shifted)
                 x.append(t)
                 y.append(id_shifted)
-                
-        #print("max_id_here in %s: %i"%(file_name,max_id_here))
-        labels.append("%s (%i cells)"%(name,max_id_here-offset_id))
-        offset_id = max_id_here+1
-        xs.append(x)
-        ys.append(y)
-        markers.append('.')
-        linestyles.append('')
+
+            print("max_id_here in %s: %i"%(file_name,max_id_here))
+            labels.append("%s (%i)"%(name,max_id_here-offset_id))
+            offset_id = max_id_here+1
+            xs.append(x)
+            ys.append(y)
+            markers.append('.')
+            linestyles.append('')
+            
+
+        xlim = [max_time/-20.0, max_time*1.05]
+        ylim = [max_id_here/-20., max_id_here*1.05]
+        markersizes = []
+        for xx in xs:
+            if len(unique_ids)>50:
+               markersizes.append(2) 
+            elif len(unique_ids)>200:
+               markersizes.append(1) 
+            else:
+               markersizes.append(4) 
+    else:
+    
+        for file_name in a.spiketime_files:
+            pynml.print_comment_v("Loading spike times from: %s"%file_name)
+            spikes_file = open(file_name)
+            x = []
+            y = []
+            max_id_here = 0
+
+            name = spikes_file.name
+            if name.endswith('.spikes'): name = name[:-7]
+            if name.endswith('.spike'): name = name[:-6]
+            times[name] = []
+            ids_in_file[name] = []
+
+            for line in spikes_file:
+                if not line.startswith('#'):
+                    if a.format == 'id_t':
+                        [id, t] = line.split()
+                    elif a.format == 't_id':
+                        [t, id] = line.split()
+                    id_shifted = offset_id+int(float(id))
+                    max_id = max(max_id,id_shifted)
+                    t = float(t)
+                    if not id_shifted in ids_in_file[name]:
+                        ids_in_file[name].append(id_shifted)
+                    times[name].append(t)
+                    max_id_here = max(max_id_here,id_shifted) 
+                    max_time = max(t,max_time)
+                    if not id_shifted in unique_ids:
+                        unique_ids.append(id_shifted)
+                    x.append(t)
+                    y.append(id_shifted)
+
+            #print("max_id_here in %s: %i"%(file_name,max_id_here))
+            labels.append("%s (%i)"%(name,max_id_here-offset_id))
+            offset_id = max_id_here+1
+            xs.append(x)
+            ys.append(y)
+            markers.append('.')
+            linestyles.append('')
 
 
-    xlim = [max_time/-20.0, max_time*1.05]
-    ylim = [max_id_here/-20., max_id_here*1.05]
-    markersizes = []
-    for xx in xs:
-        if len(unique_ids)>50:
-           markersizes.append(2) 
-        elif len(unique_ids)>200:
-           markersizes.append(1) 
-        else:
-           markersizes.append(4) 
+        xlim = [max_time/-20.0, max_time*1.05]
+        ylim = [max_id_here/-20., max_id_here*1.05]
+        markersizes = []
+        for xx in xs:
+            if len(unique_ids)>50:
+               markersizes.append(2) 
+            elif len(unique_ids)>200:
+               markersizes.append(1) 
+            else:
+               markersizes.append(4) 
             
     
     pynml.generate_plot(xs,
                         ys, 
-                        "Spike times from: %s"%spikes_file.name, 
+                        "Spike times from: %s"%a.spiketime_files, 
                         labels = labels, 
                         linestyles=linestyles,
                         markers=markers,
@@ -194,7 +263,8 @@ def run(a=None,**kwargs):
                         markersizes = markersizes,
                         grid = False,
                         show_plot_already=False,
-                        save_figure_to=a.save_spike_plot_to)
+                        save_figure_to=a.save_spike_plot_to,
+                        legend_position='right')
                         
     if a.rates:
 

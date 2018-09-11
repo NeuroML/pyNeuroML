@@ -1226,6 +1226,7 @@ def generate_plot(xvalues,
                   font_size = 12,
                   bottom_left_spines_only = False,
                   cols_in_legend_box=3,
+                  legend_position=None,
                   show_plot_already=True,
                   save_figure_to=None,
                   title_above_plot=False,
@@ -1283,7 +1284,15 @@ def generate_plot(xvalues,
             plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
 
     if labels:
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
+        if legend_position=='right':
+
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    
+        else:
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
         
     if xlim:
         plt.xlim(xlim)
