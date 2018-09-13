@@ -496,6 +496,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
+                           report_jnml_output = verbose,
                            exit_on_fail = exit_on_fail)
     
     if not success: 
@@ -606,6 +607,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
+                           report_jnml_output = verbose,
                            exit_on_fail = exit_on_fail)
 
         #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
@@ -617,6 +619,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
+                           report_jnml_output = verbose,
                            exit_on_fail = exit_on_fail)
                           
         #TODO: Work in progress!!!

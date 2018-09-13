@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 import numpy as np
 import re
+import sys
 
 
 DEFAULTS = {'format': 'id_t',
@@ -119,10 +120,25 @@ def read_sonata_spikes_hdf5_file(file_name):
     pynml.print_comment_v("Opened HDF5 file: %s; sorting=%s"%(h5file.filename,h5file.root.spikes._v_attrs.sorting))
     gids = h5file.root.spikes.gids
     timestamps = h5file.root.spikes.timestamps
-    ids = [int(id) for id in gids]
-    times = [float(t) for t in timestamps]
+    ids_times = {}
+    count=0
+    max_t = -1*sys.float_info.max
+    min_t = sys.float_info.max
+    for i in range(len(gids)):
+        id = gids[i]
+        t = timestamps[i]
+        max_t = max(max_t,t)
+        min_t = min(min_t,t)
+        if not id in ids_times:
+            ids_times[id] = []
+        ids_times[id].append(t)
+        count+=1
         
-    return ids, times
+    ids = ids_times.keys()
+    
+    pynml.print_comment_v("Loaded %s spiketimes, ids (%s -> %s) times (%s -> %s)"%(count,min(ids), max(ids),min_t,max_t))
+    
+    return ids_times
 
 
 def run(a=None,**kwargs): 
@@ -148,7 +164,7 @@ def run(a=None,**kwargs):
     if a.format == 'sonata' or a.format == 's':
         
         for file_name in a.spiketime_files:
-            ids, ts = read_sonata_spikes_hdf5_file(file_name)
+            ids_times = read_sonata_spikes_hdf5_file(file_name)
             
             x = []
             y = []
@@ -160,21 +176,22 @@ def run(a=None,**kwargs):
             times[name] = []
             ids_in_file[name] = []
 
-            for i in range(len(ids)):
-                id = ids[i]
-                t = ts[i]
-                id_shifted = offset_id+int(float(id))
-                max_id = max(max_id,id_shifted)
+            for id in ids_times:
+                
+                for t in ids_times[id]:
+            
+                    id_shifted = offset_id+int(float(id))
+                    max_id = max(max_id,id_shifted)
 
-                if not id_shifted in ids_in_file[name]:
-                    ids_in_file[name].append(id_shifted)
-                times[name].append(t)
-                max_id_here = max(max_id_here,id_shifted) 
-                max_time = max(t,max_time)
-                if not id_shifted in unique_ids:
-                    unique_ids.append(id_shifted)
-                x.append(t)
-                y.append(id_shifted)
+                    if not id_shifted in ids_in_file[name]:
+                        ids_in_file[name].append(id_shifted)
+                    times[name].append(t)
+                    max_id_here = max(max_id_here,id_shifted) 
+                    max_time = max(t,max_time)
+                    if not id_shifted in unique_ids:
+                        unique_ids.append(id_shifted)
+                    x.append(t)
+                    y.append(id_shifted)
 
             print("max_id_here in %s: %i"%(file_name,max_id_here))
             labels.append("%s (%i)"%(name,max_id_here-offset_id))
