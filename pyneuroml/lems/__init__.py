@@ -68,7 +68,7 @@ def generate_lems_file_for_neuroml(sim_id,
         if not os.path.isdir(target_dir):
             raise Exception("Target directory %s does not exist!"%target_dir)
         
-        if os.path.abspath(os.path.dirname(neuroml_file))!=os.path.abspath(target_dir):
+        if os.path.realpath(os.path.dirname(neuroml_file))!=os.path.realpath(target_dir):
             shutil.copy(neuroml_file, target_dir)
         else:
             print_comment_v("No need, same file...")
