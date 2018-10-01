@@ -607,7 +607,6 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
-                           report_jnml_output = verbose,
                            exit_on_fail = exit_on_fail)
 
         #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
@@ -1094,6 +1093,7 @@ def run_jneuroml_with_realtime_output(pre_args,
               (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
         output = execute_command_in_dir_with_realtime_output(command, exec_in_dir, verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
+            
     except KeyboardInterrupt as e:
         raise e
     except:
