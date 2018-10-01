@@ -122,9 +122,9 @@ def generate_lems_file_for_neuroml(sim_id,
                 
                 if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
                    not os.path.isfile("%s/%s"%(target_dir, incl_curr)):
+                       
                     shutil.copy(incl_curr, target_dir)
-                
-                ls.include_neuroml2_file(include.href, include_included=False)
+                    ls.include_neuroml2_file(include.href, include_included=False)
                 
                 
     if gen_plots_for_all_v \
