@@ -8,6 +8,7 @@ from collections import OrderedDict
 import numpy as np
 import re
 import sys
+import os
 
 
 DEFAULTS = {'format': 'id_t',
@@ -69,8 +70,8 @@ def process_args():
                         metavar='<format>',
                         default=DEFAULTS['format'],
                         help='How the spiketimes are represented on each line of file:\n'+\
-                             'id_t: id of cell, space(s)/tab(s), time of spike (default)\n'+\
-                             't_id: time of spike, space(s)/tab(s), id of cell\n'+\
+                             'id_t: id of cell, space(s)/tab(s), time of spike (default);\n'+\
+                             't_id: time of spike, space(s)/tab(s), id of cell;\n'+\
                              'sonata: SONATA format HDF5 file containing spike times')
                              
     parser.add_argument('-rates', 
@@ -112,7 +113,8 @@ def main(args=None):
     
 def read_sonata_spikes_hdf5_file(file_name):
     
-    pynml.print_comment_v("Loading SONATA spike times from: %s"%file_name)
+    full_path = os.path.abspath(file_name)
+    pynml.print_comment_v("Loading SONATA spike times from: %s (%s)"%(file_name,full_path))
     
     import tables   # pytables for HDF5 support
     h5file=tables.open_file(file_name,mode='r')

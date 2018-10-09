@@ -1,6 +1,6 @@
 set -e
 
-if [[ ${TRAVIS} == true ]]; then python setup.py install; else sudo python setup.py install; fi
+python setup.py install
 
 run_neuron_examples=false
 
