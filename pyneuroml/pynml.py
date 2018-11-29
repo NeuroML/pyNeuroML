@@ -222,6 +222,13 @@ def parse_arguments():
                   'GraphViz. Detail is set by level (1, 2, etc.)')
             )
     mut_exc_opts.add_argument(
+            '-matrix',
+            metavar=('level'),
+            nargs=1,
+            help=('Load a NeuroML file, and convert it to a maxtrix displaying\n'
+                  'connectivity. Detail is set by level (1, 2, etc.)')
+            )
+    mut_exc_opts.add_argument(
             '-validate',
             action='store_true',
             help=('(Via jNeuroML) Validate NeuroML2 file(s) against the\n'
@@ -986,6 +993,29 @@ def evaluate_arguments(args):
         handler.finalise_document()
 
         print_comment("Done with GraphViz...")
+
+        exit()
+        
+    elif args.matrix:
+        
+        
+        from neuromllite.MatrixHandler import MatrixHandler
+        
+        level = int(args.matrix[0])
+        
+        print_comment('Converting %s to matrix form, level %i'%(args.lems_file,level))
+        
+        from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
+
+        handler = MatrixHandler(level=level, nl_network=None)
+
+        currParser = NeuroMLXMLParser(handler)
+
+        currParser.parse(args.lems_file)
+
+        handler.finalise_document()
+
+        print_comment("Done with MatrixHandler...")
 
         exit()
         
