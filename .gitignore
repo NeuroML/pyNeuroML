@@ -111,3 +111,5 @@ examples/results/*.dat
 /pyneuroml/plot/test.py
 /examples/*.gv
 /examples/*.gv.pdf
+/examples/test_data/bask.swc
+/examples/test_data/pyr_4_sym.swc
