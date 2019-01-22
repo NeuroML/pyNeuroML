@@ -27,6 +27,7 @@ def _get_lines_for_seg_group(cell, sg, type):
         line_template = '%s %s %s %s %s %s %s %s'
 
         for segment in segs:
+            seg_ids.append(segment.id)
             print_comment_v('Seg %s is in %s'%(segment, sg))
 
             id = int(segment.id)
@@ -55,7 +56,7 @@ def _get_lines_for_seg_group(cell, sg, type):
                 x = float(proximal.x)
                 y = float(proximal.y)
                 z = float(proximal.z)
-                r = float(proximal.diameter)
+                r = float(proximal.diameter)/2.0
 
                 comment = ' # %s: %s (proximal)'%(segment, sg)
                 comment = ''
@@ -71,7 +72,7 @@ def _get_lines_for_seg_group(cell, sg, type):
             x = float(distal.x)
             y = float(distal.y)
             z = float(distal.z)
-            r = float(distal.diameter)
+            r = float(distal.diameter)/2.0
 
             comment = ' # %s: %s '%(segment, sg)
             comment = ''
@@ -107,14 +108,19 @@ def convert_to_swc(nml_file_name):
         print_comment_v("Converting cell %s as found in NeuroML doc %s to SWC..."%(cell.id,nml_file_name))
         
         lines_sg, seg_ids = _get_lines_for_seg_group(cell, 'soma_group', 1)
+        soma_seg_count = len(seg_ids)
         lines += lines_sg
         
         lines_sg, seg_ids = _get_lines_for_seg_group(cell, 'dendrite_group', 3)
+        dend_seg_count = len(seg_ids)
         lines += lines_sg
         
-        lines_sg, seg_ids = _get_lines_for_seg_group(cell, 'axon_group', 99)
+        lines_sg, seg_ids = _get_lines_for_seg_group(cell, 'axon_group', 2)
+        axon_seg_count = len(seg_ids)
         lines += lines_sg
-            
+        
+        if not len(cell.morphology.segments) == soma_seg_count+dend_seg_count+axon_seg_count:
+            raise Exception("The numbers of the segments in groups: soma_group+dendrite_group+axon_group (%i), is not the same as total number of segments (%s)! All bets are off!"%(soma_seg_count+dend_seg_count+axon_seg_count, len(cell.morphology.segments)))
             
         for i in range(len(lines)):
             l = lines[i]

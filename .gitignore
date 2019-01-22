@@ -113,3 +113,5 @@ examples/results/*.dat
 /examples/*.gv.pdf
 /examples/test_data/bask.swc
 /examples/test_data/pyr_4_sym.swc
+/examples/test_data/bask.cell.svg
+/examples/test_data/*.svg
