@@ -215,6 +215,20 @@ def parse_arguments():
                   'to VHDL format')
             )
     mut_exc_opts.add_argument(
+            '-graph',
+            metavar=('level'),
+            nargs=1,
+            help=('Load a NeuroML file, and convert it to a graph using\n'
+                  'GraphViz. Detail is set by level (1, 2, etc.)')
+            )
+    mut_exc_opts.add_argument(
+            '-matrix',
+            metavar=('level'),
+            nargs=1,
+            help=('Load a NeuroML file, and convert it to a maxtrix displaying\n'
+                  'connectivity. Detail is set by level (1, 2, etc.)')
+            )
+    mut_exc_opts.add_argument(
             '-validate',
             action='store_true',
             help=('(Via jNeuroML) Validate NeuroML2 file(s) against the\n'
@@ -313,6 +327,7 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
                  nml1_file_name, 
                  post_args,
                  verbose = verbose_validate,
+                 report_jnml_output = verbose_validate,
                  exit_on_fail = False)
 
 
@@ -328,6 +343,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
                           post_args, 
                           max_memory=max_memory,
                           verbose = verbose_validate,
+                          report_jnml_output = verbose_validate,
                           exit_on_fail = False)
     
     else:    
@@ -336,6 +352,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,max_memory=None):
                           nml2_file_name, 
                           post_args, 
                           verbose = verbose_validate,
+                          report_jnml_output = verbose_validate,
                           exit_on_fail = False)
     
 
@@ -485,6 +502,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
+                           report_jnml_output = verbose,
                            exit_on_fail = exit_on_fail)
     
     if not success: 
@@ -586,7 +604,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
             if not path+":" in os.environ['PYTHONPATH']:
                 os.environ['PYTHONPATH'] = '%s:%s'%(path,os.environ['PYTHONPATH'])
 
-        print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+        #print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
 
         if realtime_output:
             success = run_jneuroml_with_realtime_output("", 
@@ -606,6 +624,7 @@ def run_lems_with_jneuroml_neuron(lems_file_name,
                            max_memory = max_memory, 
                            exec_in_dir = exec_in_dir, 
                            verbose = verbose, 
+                           report_jnml_output = verbose,
                            exit_on_fail = exit_on_fail)
                           
         #TODO: Work in progress!!!
@@ -881,9 +900,12 @@ def reload_saved_data(lems_file_name,
         return traces
                
                         
-def get_next_hex_color():
+def get_next_hex_color(my_random=None):
     
-    return "#%06x" % random.randint(0,0xFFFFFF)
+    if my_random!=None:
+        return "#%06x" % my_random.randint(0,0xFFFFFF)
+    else:
+        return "#%06x" % random.randint(0,0xFFFFFF)
 
 def evaluate_arguments(args):
 
@@ -905,7 +927,7 @@ def evaluate_arguments(args):
     elif args.neuron is not None:
         num_neuron_args = len(args.neuron)
         if num_neuron_args < 0 or num_neuron_args > 4:
-            print("ERROR: The \'-neuron\' option was given an invalid "
+            print_comment("ERROR: The \'-neuron\' option was given an invalid "
                   "number of arguments: %d given, 0-4 required"
                   % num_neuron_args)
             sys.exit(-1)
@@ -945,6 +967,57 @@ def evaluate_arguments(args):
     elif args.vhdl:
         files = args.vhdl[1]
         post_args = "-vhdl %s" % args.vhdl[0]
+        
+    elif args.graph:
+        
+        
+        from neuromllite.GraphVizHandler import GraphVizHandler, engines
+        engine = 'dot'
+        try:
+            level = int(args.graph[0])
+        except:
+            engine = engines[args.graph[0][-1:]]
+            level = int(args.graph[0][:-1])
+        
+        print_comment('Converting %s to graphical form, level %i, engine %s'%(args.lems_file,level,engine))
+        
+        from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
+
+        handler = GraphVizHandler(level=level, engine=engine, nl_network=None)
+
+        currParser = NeuroMLXMLParser(handler)
+
+        currParser.parse(args.lems_file)
+
+        handler.finalise_document()
+
+        print_comment("Done with GraphViz...")
+
+        exit()
+        
+    elif args.matrix:
+        
+        
+        from neuromllite.MatrixHandler import MatrixHandler
+        
+        level = int(args.matrix[0])
+        
+        print_comment('Converting %s to matrix form, level %i'%(args.lems_file,level))
+        
+        from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
+
+        handler = MatrixHandler(level=level, nl_network=None)
+
+        currParser = NeuroMLXMLParser(handler)
+
+        currParser.parse(args.lems_file)
+
+        handler.finalise_document()
+
+        print_comment("Done with MatrixHandler...")
+
+        exit()
+        
     elif args.validate:
         pre_args = "-validate"
         exit_on_fail = True
@@ -974,8 +1047,11 @@ def run_jneuroml(pre_args,
                  max_memory   = DEFAULTS['default_java_max_memory'], 
                  exec_in_dir  = ".",
                  verbose      = DEFAULTS['v'],
+                 report_jnml_output = True,
                  exit_on_fail = True):    
 
+    print_comment('Running jnml on %s with pre args: %s, post args: %s, in dir: %s, verbose: %s, report: %s, exit on fail: %s'%
+                   (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail), verbose)
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
@@ -994,9 +1070,14 @@ def run_jneuroml(pre_args,
                           
         if not output:
             if exit_on_fail: 
+                print_comment('Error: execute_command_in_dir returned with output: %s'%output, True)
                 sys.exit(-1)
             else:
                 return False
+           
+        if report_jnml_output:
+            print_comment('Successfully ran the following command using pyNeuroML v%s: \n    %s'%(__version__,command), True)
+            print_comment('Output:\n\n%s'%output, True)
 
     #except KeyboardInterrupt as e:
     #    raise e
@@ -1041,6 +1122,7 @@ def run_jneuroml_with_realtime_output(pre_args,
               (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
         output = execute_command_in_dir_with_realtime_output(command, exec_in_dir, verbose=verbose,
                                         prefix = ' jNeuroML >>  ')
+            
     except KeyboardInterrupt as e:
         raise e
     except:
@@ -1054,16 +1136,16 @@ def run_jneuroml_with_realtime_output(pre_args,
     return True
 
     
-def print_comment_v(text):
-    print_comment(text, True)
+def print_comment_v(text, end='\n'):
+    print_comment(text, True, end)
     
     
-def print_comment(text, print_it=DEFAULTS['v']):
+def print_comment(text, print_it=DEFAULTS['v'], end='\n'):
     prefix = "pyNeuroML >>> "
     if not isinstance(text, str): text = text.decode('ascii')
     if print_it:
         
-        print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)))
+        print("%s%s"%(prefix, text.replace("\n", "\n"+prefix)), end=end)
 
 
 def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], 
@@ -1082,7 +1164,7 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
         with p.stdout:
             for line in iter(p.stdout.readline, b''):
-                print(line, end="")
+                print_comment(line, end="")
         p.wait() # wait for the subprocess to exit
     except KeyboardInterrupt as e:
         if p:
@@ -1176,6 +1258,7 @@ def generate_plot(xvalues,
                   font_size = 12,
                   bottom_left_spines_only = False,
                   cols_in_legend_box=3,
+                  legend_position=None,
                   show_plot_already=True,
                   save_figure_to=None,
                   title_above_plot=False,
@@ -1233,7 +1316,15 @@ def generate_plot(xvalues,
             plt.plot(xvalues[i], yvalues[i], 'o', marker=marker, markersize=markersize, linestyle=linestyle, linewidth=linewidth, label=label)
 
     if labels:
-        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
+        if legend_position=='right':
+
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    
+        else:
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=cols_in_legend_box)
         
     if xlim:
         plt.xlim(xlim)

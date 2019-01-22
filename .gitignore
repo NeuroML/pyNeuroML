@@ -94,6 +94,7 @@ examples/results/*.dat
 /examples/HHSim.v.spikes
 /examples/test_data/Simple.Pop0.spikes
 /examples/test_data/Simple.Pop1.spikes
+/examples/test_data/tmp
 /pyneuroml/neuron/mod/NaConductance.channel.nml
 /examples/NML2_SingleCompHHCell.pov
 /examples/KConductance.mod
@@ -108,3 +109,7 @@ examples/results/*.dat
 /pyneuroml/plot/*.spikes
 /examples/*.spikes
 /pyneuroml/plot/test.py
+/examples/*.gv
+/examples/*.gv.pdf
+/examples/test_data/bask.swc
+/examples/test_data/pyr_4_sym.swc

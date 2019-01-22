@@ -477,44 +477,45 @@ def compute_iv_curve(channel, a, results, grid=True):
     # BlueBrainProjectShowcase/blob/master/
     # Channelpedia/iv_analyse.py         
     end_time_ms = (a.clamp_delay + a.clamp_duration)     
-    dat_path = os.path.join(OUTPUT_DIR,
-                            '%s.i_*.lems.dat' % channel.id)
-    file_names = glob.glob(dat_path)                        
     i_peak = {}
     i_steady = {}
     hold_v = []
     currents = {}
     times = {}
 
-    for file_name in file_names:
-        name = os.path.split(file_name)[1] # Filename without path.    
-        v_match = re.match("%s.i_(.*)\.lems\.dat" \
-                           % channel.id, name)
-        voltage = v_match.group(1)
-        voltage = voltage.replace("min", "-")
-        voltage = float(voltage)/1000
-        hold_v.append(voltage)
-        times[voltage] = []
-        
-        currents[voltage] = []                
-        i_max = -1*sys.float_info.min
-        i_min = sys.float_info.min
-        i_steady[voltage] = None
-        t_steady_end = end_time_ms/1000.0
-        with open(name) as i_file:
-            for line in i_file:
-                t = float(line.split()[0])
+    for r in results:
+        # e.g. r = holderCellPop_min10.0[0]/test/i
+        if 'holderCellPop' in r:
+            voltage = r.split('_')[1].split('[')[0]
+            voltage = voltage.replace("min", "-")
+            voltage = float(voltage)/1000
+            hold_v.append(voltage)
+            times[voltage] = []
+            
+            currents[voltage] = []                
+            i_max = -1*sys.float_info.min
+            i_min = sys.float_info.min
+            i_steady[voltage] = None
+            t_start = a.clamp_delay/1000.0
+            t_steady_end = end_time_ms/1000.0
+            
+            print_comment_v('Looking at holding voltage %s V, and currents between times %s s and %s s'%(voltage,t_start,t_steady_end) )
+            
+            for index in range(len(results['t'])):
+                i = results[r][index]
+                t = results['t'][index]
                 times[voltage].append(t)
-                i = float(line.split()[1])
                 currents[voltage].append(i)
-                if i>i_max: i_max = i
-                if i<i_min: i_min = i
-                if t < t_steady_end:
-                    i_steady[voltage] = i
-                
-        i_peak_ = i_max if abs(i_max) > abs(i_min)\
-                       else i_min
-        i_peak[voltage] = -1 * i_peak_
+                if t>=t_start and t<=t_steady_end:
+                    
+                    if i>i_max: i_max = i
+                    if i<i_min: i_min = i
+                    
+                    i_steady[voltage] = -1 * i # will be set to last value...
+
+            i_peak_ = i_max if abs(i_max) > abs(i_min)\
+                           else i_min
+            i_peak[voltage] = -1 * i_peak_
 
     hold_v.sort()
     
@@ -546,19 +547,25 @@ def plot_iv_curves(channel,a,iv_data,grid=True):
 def plot_iv_curve_vm(channel,a,hold_v,times,currents,grid=True):
     # Holding potentials      
     fig = plt.figure()
+    ax = plt.subplot(111)
     fig.canvas.set_window_title(("Currents through voltage clamp for %s "
                                  "from %s at %s degC, erev: %s V") 
                                  % (channel.id, channel.file, 
                                     a.temperature, a.erev))
-    plt.xlabel('Time (s)')
-    plt.ylabel('Current (A)')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Current (pA)')
     plt.grid('on' if grid else 'off')
     for v in hold_v:
         col = get_colour_hex(
                 float(hold_v.index(v))/len(hold_v))
-        plt.plot(times[v], currents[v], color=col, 
-                   linestyle='-', label="%s V" % v)
-    plt.legend()
+                
+        plt.plot([t*1000 for t in times[v]], [i*1e12 for i in currents[v]], color=col, 
+                   linestyle='-', label="%s mV" % (v*1000))
+    
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 
 def make_iv_curve_fig(a,grid=True):

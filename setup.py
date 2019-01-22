@@ -34,7 +34,7 @@ setup(
             'lems/LEMS_TEMPLATE.xml',
             'neuron/mview_neuroml1.hoc',
             'neuron/mview_neuroml2.hoc']},
-    url='https://github.com/pgleeson/pyNeuroML',
+    url='https://github.com/NeuroML/pyNeuroML',
     license='LICENSE.lesser',
     description='Python utilities for NeuroML',
     long_description=open('README.md').read(),
@@ -43,7 +43,8 @@ setup(
         'lxml',
         'pylems>=0.4.9.1',
         'airspeed==0.5.4dev-20150515',
-        'libNeuroML>=0.2.36',
+        'libNeuroML>=0.2.45',
+        'neuromllite>=0.1.5',
         'matplotlib'],
     dependency_links=[
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',

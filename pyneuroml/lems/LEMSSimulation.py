@@ -13,13 +13,14 @@ from pyneuroml.pynml import read_lems_file
 from pyneuroml.pynml import print_comment
 from pyneuroml.pynml import print_comment_v
 from pyneuroml.pynml import get_next_hex_color
+import random
 
 class LEMSSimulation():
     
     TEMPLATE_FILE = "%s/LEMS_TEMPLATE.xml"%(os.path.dirname(__file__))
     
     lems_info = {}
-    
+    my_random = random.Random()
     
     def __init__(self, 
                  sim_id, 
@@ -27,14 +28,15 @@ class LEMSSimulation():
                  dt, 
                  target=None, \
                  comment="\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "%(pynml_ver, libnml_ver),
-                 lems_seed = 12345):
+                 lems_file_generate_seed = None,
+                 simulation_seed=12345):
                      
         
         self.lems_info['sim_id'] = sim_id
         self.lems_info['duration'] = duration
         self.lems_info['dt'] = dt
         self.lems_info['comment'] = comment
-        self.lems_info['seed'] = lems_seed
+        self.lems_info['seed'] = simulation_seed
         self.lems_info['report'] = ''
         
         self.lems_info['include_files'] = []
@@ -44,6 +46,11 @@ class LEMSSimulation():
         
         if target:
             self.lems_info['target'] = target
+            
+        if lems_file_generate_seed:
+            self.my_random.seed(lems_file_generate_seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
+        else:
+            self.my_random.seed(12345)
             
             
     def __setattr__(self, attr, value):
@@ -126,7 +133,7 @@ class LEMSSimulation():
         line['id'] = line_id
         line['quantity'] = quantity
         line['scale'] = scale
-        line['color'] = color if color else get_next_hex_color()
+        line['color'] = color if color else get_next_hex_color(self.my_random)
         line['time_scale'] = timeScale
         
         

@@ -33,20 +33,23 @@ def generate_lems_file_for_neuroml(sim_id,
                                    verbose=False,
                                    simulation_seed=12345):
                                        
-    
+    my_random = random.Random()
     if lems_file_generate_seed:
-        random.seed(lems_file_generate_seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
+        my_random.seed(lems_file_generate_seed) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
     else:
-        random.seed(12345) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
+        my_random.seed(12345) # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
     
     file_name_full = '%s/%s'%(target_dir,lems_file_name)
     
     print_comment_v('Creating LEMS file at: %s for NeuroML 2 file: %s (copy: %s)'%(file_name_full,neuroml_file,copy_neuroml))
     
-    ls = LEMSSimulation(sim_id, duration, dt, target,lems_seed=simulation_seed)
+    ls = LEMSSimulation(sim_id, duration, dt, target,simulation_seed=simulation_seed)
     
     if nml_doc == None:
         nml_doc = read_neuroml2_file(neuroml_file, include_includes=True, verbose=verbose)
+        nml_doc_inc_not_included = read_neuroml2_file(neuroml_file, include_includes=False, verbose=False)
+    else:
+        nml_doc_inc_not_included = nml_doc
         
     ls.set_report_file(report_file_name)
     
@@ -60,24 +63,52 @@ def generate_lems_file_for_neuroml(sim_id,
         print_comment_v("Including existing NeuroML file (%s) as: %s"%(neuroml_file, rel_nml_file))
         ls.include_neuroml2_file(rel_nml_file, include_included=True, relative_to_dir=os.path.abspath(target_dir))
     else:
-        print_comment_v("Copying NeuroML file (%s) to: %s (%s)"%(neuroml_file, target_dir, os.path.abspath(target_dir)))
-        if os.path.abspath(os.path.dirname(neuroml_file))!=os.path.abspath(target_dir):
+        print_comment_v("Copying a NeuroML file (%s) to: %s (abs path: %s)"%(neuroml_file, target_dir, os.path.abspath(target_dir)))
+        
+        if not os.path.isdir(target_dir):
+            raise Exception("Target directory %s does not exist!"%target_dir)
+        
+        if os.path.realpath(os.path.dirname(neuroml_file))!=os.path.realpath(target_dir):
             shutil.copy(neuroml_file, target_dir)
+        else:
+            print_comment_v("No need, same file...")
         
         neuroml_file_name = os.path.basename(neuroml_file)
         
         ls.include_neuroml2_file(neuroml_file_name, include_included=False)
         
         nml_dir = os.path.dirname(neuroml_file) if len(os.path.dirname(neuroml_file))>0 else '.'
-        
-        for include in nml_doc.includes:
-            incl_curr = '%s/%s'%(nml_dir,include.href)
-            print_comment_v(' - Including %s located at %s, copying to %s'%(include.href, incl_curr,target_dir))
+
+        for include in nml_doc_inc_not_included.includes:
             
+            if nml_dir=='.' and os.path.isfile(include.href):
+                incl_curr = include.href
+            else:
+                incl_curr = '%s/%s'%(nml_dir,include.href)
+                
+            if os.path.isfile(include.href):
+                incl_curr = include.href
+                
+                
+            print_comment_v(' - Including %s (located at %s; nml dir: %s), copying to %s'%(include.href, incl_curr, nml_dir, target_dir))
+            
+            '''
             if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
                not os.path.isfile("%s/%s"%(target_dir, incl_curr)) and \
                not os.path.isfile(incl_curr):
                 shutil.copy(incl_curr, target_dir)
+            else:
+                print_comment_v("No need to copy...")'''
+                
+            f1 = "%s/%s"%(target_dir, os.path.basename(incl_curr))
+            f2 = "%s/%s"%(target_dir, incl_curr)
+            if os.path.isfile(f1):
+                print_comment_v("No need to copy, file exists: %s..."%f1)
+            elif os.path.isfile(f2):
+                print_comment_v("No need to copy, file exists: %s..."%f2)
+            else:
+                shutil.copy(incl_curr, target_dir)
+                
                 
             ls.include_neuroml2_file(include.href, include_included=False)
             
@@ -91,9 +122,9 @@ def generate_lems_file_for_neuroml(sim_id,
                 
                 if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
                    not os.path.isfile("%s/%s"%(target_dir, incl_curr)):
+                       
                     shutil.copy(incl_curr, target_dir)
-                
-                ls.include_neuroml2_file(include.href, include_included=False)
+                    ls.include_neuroml2_file(include.href, include_included=False)
                 
                 
     if gen_plots_for_all_v \
@@ -151,10 +182,10 @@ def generate_lems_file_for_neuroml(sim_id,
                             quantity_template_seg = "%s/%i/"+component+"/%i/v"
                             for segment_id in segment_ids:
                                 quantity = quantity_template_seg%(population.id, i, segment_id)
-                                ls.add_line_to_display(disp0, "%s[%i] seg %i: v"%(population.id, i, segment_id), quantity, "1mV", get_next_hex_color())
+                                ls.add_line_to_display(disp0, "%s[%i] seg %i: v"%(population.id, i, segment_id), quantity, "1mV", get_next_hex_color(my_random))
                         else:
                             quantity = quantity_template%(population.id, i)
-                            ls.add_line_to_display(disp0, "%s[%i]: v"%(population.id, i), quantity, "1mV", get_next_hex_color())
+                            ls.add_line_to_display(disp0, "%s[%i]: v"%(population.id, i), quantity, "1mV", get_next_hex_color(my_random))
                 
                 if gen_saves_for_all_v or population.id in gen_saves_for_only_populations:
                     print_comment('Saving %i values of %s for %s in population %s'%(size, variable, component, population.id))
@@ -198,7 +229,7 @@ def generate_lems_file_for_neuroml(sim_id,
             
         ls.create_display(display, "Plots of %s"%display, min_, max_)
         for q in quantities:
-            ls.add_line_to_display(display, safe_variable(q), q, scale, get_next_hex_color())
+            ls.add_line_to_display(display, safe_variable(q), q, scale, get_next_hex_color(my_random))
             
     for file_name in gen_saves_for_quantities.keys():
         

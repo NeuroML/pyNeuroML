@@ -7,6 +7,8 @@ Example to create some new LEMS files for running NML2 models
 from pyneuroml.lems import LEMSSimulation
 from pyneuroml.lems import generate_lems_file_for_neuroml
 import os
+import sys
+import pprint; pp = pprint.PrettyPrinter(depth=6)
 
 if __name__ == '__main__':
     
@@ -34,7 +36,7 @@ if __name__ == '__main__':
     ls.set_report_file('report.txt')
     
     print("Using information to generate LEMS: ")
-    print(ls.lems_info)
+    pp.pprint(ls.lems_info)
     print("\nLEMS: ")
     print(ls.to_xml())
     
@@ -72,4 +74,27 @@ if __name__ == '__main__':
                                    gen_saves_for_quantities = {},   #  Dict with file names vs lists of quantity paths
                                    gen_spike_saves_for_all_somas = True,
                                    report_file_name = 'report.txt',
-                                   copy_neuroml = True)
+                                   copy_neuroml = True,
+                                   verbose=True)
+                                   
+                                   
+    if '-test' in sys.argv:
+        
+        neuroml_file = "test_data/HHCellNetwork.net.nml"
+        lems_file_name = 'LEMS_%s2.xml'%sim_id
+        target='HHCellNetwork'
+        target_dir = "test_data/tmp"
+        if not os.path.isdir(target_dir):
+            os.mkdir(target_dir)
+        
+        generate_lems_file_for_neuroml(sim_id, 
+                                       neuroml_file, 
+                                       target, 
+                                       duration, 
+                                       dt, 
+                                       lems_file_name,
+                                       target_dir,
+                                       copy_neuroml = True,
+                                       verbose=True)
+        
+        
