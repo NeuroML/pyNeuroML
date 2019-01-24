@@ -47,7 +47,7 @@ setup(
         'neuromllite>=0.1.5',
         'matplotlib'],
     dependency_links=[
-      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML'
+      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
     ],
     classifiers = [
         'Intended Audience :: Science/Research',
