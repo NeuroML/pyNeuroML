@@ -115,3 +115,4 @@ examples/results/*.dat
 /examples/test_data/pyr_4_sym.swc
 /examples/test_data/bask.cell.svg
 /examples/test_data/*.svg
+/testpy3.sh
