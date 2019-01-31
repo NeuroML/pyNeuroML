@@ -1,5 +1,3 @@
---allow-unverified libNeuroML
-
--e git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML
+libNeuroML>=0.2.45
 
 
