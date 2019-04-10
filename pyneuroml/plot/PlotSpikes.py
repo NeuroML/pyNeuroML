@@ -138,6 +138,8 @@ def read_sonata_spikes_hdf5_file(file_name):
         
     ids = ids_times.keys()
     
+    h5file.close()
+    
     pynml.print_comment_v("Loaded %s spiketimes, ids (%s -> %s) times (%s -> %s)"%(count,min(ids), max(ids),min_t,max_t))
     
     return ids_times

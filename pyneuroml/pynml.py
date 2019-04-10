@@ -226,7 +226,7 @@ def parse_arguments():
             '-matrix',
             metavar=('level'),
             nargs=1,
-            help=('Load a NeuroML file, and convert it to a maxtrix displaying\n'
+            help=('Load a NeuroML file, and convert it to a matrix displaying\n'
                   'connectivity. Detail is set by level (1, 2, etc.)')
             )
     mut_exc_opts.add_argument(
@@ -971,14 +971,16 @@ def evaluate_arguments(args):
         
     elif args.graph:
         
-        
         from neuromllite.GraphVizHandler import GraphVizHandler, engines
         engine = 'dot'
         try:
             level = int(args.graph[0])
         except:
             engine = engines[args.graph[0][-1:]]
-            level = int(args.graph[0][:-1])
+            level_int = args.graph[0][:-1]
+            level_int = level_int.replace('min','-')
+            level_int = level_int.replace('m','-')
+            level = int(level_int)
         
         print_comment('Converting %s to graphical form, level %i, engine %s'%(args.lems_file,level,engine))
         

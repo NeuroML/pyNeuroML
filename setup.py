@@ -24,7 +24,8 @@ setup(
                             'pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main',
                             'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main',
                             'pynml-summary         = neuroml.utils:main',
-                            'pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main']},
+                            'pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main',
+                            'pynml-sonata          = neuromllite.SonataReader:main']},
     package_data={
         'pyneuroml': [
             'lib/jNeuroML-%s-jar-with-dependencies.jar'%jnml_version,
@@ -43,8 +44,8 @@ setup(
         'lxml',
         'pylems>=0.4.9.1',
         'airspeed==0.5.4dev-20150515',
-        'libNeuroML>=0.2.45',
-        'neuromllite>=0.1.5',
+        'libNeuroML>=0.2.47',
+        'neuromllite>=0.1.7',
         'matplotlib'],
     dependency_links=[
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
