@@ -21,7 +21,7 @@ install:
     #  This requires numpy etc...
     #- pip install git+https://github.com/NeuralEnsemble/pyelectro.git
     
-    - pip install . -r requirements.txt
+    - pip install .
     
 script:
     - pynml -h
