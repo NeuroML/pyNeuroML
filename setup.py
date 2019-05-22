@@ -16,6 +16,7 @@ setup(
                 'pyneuroml.neuron', 
                 'pyneuroml.povray', 
                 'pyneuroml.plot', 
+                'pyneuroml.swc', 
                 'pyneuroml.neuron.analysis'],
     entry_points={
         'console_scripts': ['pynml                 = pyneuroml.pynml:main',
