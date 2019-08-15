@@ -40,9 +40,10 @@ setup(
     license='LICENSE.lesser',
     description='Python utilities for NeuroML',
     long_description=open('README.md').read(),
+    long_description_content_type="text/markdown",
     install_requires=[
         'argparse',
-        'lxml',
+        'lxml==4.3.4',
         'pylems>=0.4.9.1',
         'airspeed==0.5.4dev-20150515',
         'libNeuroML>=0.2.47',
