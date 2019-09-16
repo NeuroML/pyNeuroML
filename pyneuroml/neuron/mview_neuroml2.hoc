@@ -643,7 +643,9 @@ proc xmlwrite_biophysics() {
                                 cellnml2file.printf(" erev=\"%fmV\" ", erev_K)
                             } else {
                                 value = p.get_erev_for_mechanism(dmech.name)
-                                cellnml2file.printf(" erev=\"%fmV\" ", value)
+                                if (value) {
+                                    cellnml2file.printf(" erev=\"%fmV\" ", value)
+                                }
                             }
                             
                             cellnml2file.printf("/>\n\n")

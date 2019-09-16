@@ -40,7 +40,7 @@ def set_erev_for_mechanism(mech, erev):
 def get_erev_for_mechanism(mech):
     
     print(">> mechs_vs_erevs: %s"%mechs_vs_erevs)
-    return mechs_vs_erevs[mech]
+    return mechs_vs_erevs.get(mech, h("objref nil"))
     
 
 if __name__ == '__main__':
