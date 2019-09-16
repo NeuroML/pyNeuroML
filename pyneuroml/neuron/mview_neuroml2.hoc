@@ -540,19 +540,6 @@ proc xmlwrite_biophysics() {
             print "---------------------------------------------"
             print "Handling mechanism: ", dmech.name
 
-            strdef passiveAttr 
-            passiveAttr = ""
-            // If mech name is built in passive conductance in NEURON
-            if (strcmp(dmech.name,"pas") == 0) {
-                // Not used in nml2
-                //////passiveAttr = " passive_conductance=\"true\""
-            }
-            // If mech name is default passive conductance from neuroConstruct
-            if (strcmp(dmech.name,"LeakConductance") == 0) {
-                // Not used in nml2
-                /////passiveAttr = " passive_conductance=\"true\""
-            }
-            
             for j=0, dmech.location.subset.size()-1 {
                 secref = cellref.secanal.all.object(dmech.location.subset.x(j))
                 //              printsec(cellnml2file, secref)
@@ -633,8 +620,8 @@ proc xmlwrite_biophysics() {
                         
                         if (strcmp(paramNameToUse, "condDensity")==0) {
                         
-                            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s_XXX\"%s ", dmech.name, dmech.name, passiveAttr)
-                            
+                            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s\" ", dmech.name, dparm.name)
+
                             printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name, units)
                             
                             if (hoc_sf_.substr(dmech.name,"Na")>=0) {
