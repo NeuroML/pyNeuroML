@@ -53,6 +53,7 @@ proc init() {local i
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_segment_group_name")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_erev_for_mechanism")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import NO_REV")
     nrnpython("from neuron import h")
 }
 
@@ -630,7 +631,7 @@ proc xmlwrite_biophysics() {
                                 cellnml2file.printf(" erev=\"%fmV\" ", erev_K)
                             } else {
                                 value = p.get_erev_for_mechanism(dmech.name)
-                                if (value) {
+                                if (value && value != p.NO_REV) {
                                     cellnml2file.printf(" erev=\"%fmV\" ", value)
                                 }
                             }
