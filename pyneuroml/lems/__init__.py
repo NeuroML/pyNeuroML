@@ -5,6 +5,7 @@ import shutil
 import os
 from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color, print_comment_v, print_comment
 import random
+import neuroml
 
 def generate_lems_file_for_neuroml(sim_id, 
                                    neuroml_file, 
@@ -116,15 +117,16 @@ def generate_lems_file_for_neuroml(sim_id,
             
             sub_dir = os.path.dirname(incl_curr) if len(os.path.dirname(incl_curr))>0 else '.'
         
-            for include in sub_doc.includes:
-                incl_curr = '%s/%s'%(sub_dir,include.href)
-                print_comment_v(' -- Including %s located at %s'%(include.href, incl_curr))
-                
-                if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
-                   not os.path.isfile("%s/%s"%(target_dir, incl_curr)):
-                       
-                    shutil.copy(incl_curr, target_dir)
-                    ls.include_neuroml2_file(include.href, include_included=False)
+            if sub_doc.__class__ == neuroml.nml.nml.NeuroMLDocument:
+                for include in sub_doc.includes:
+                    incl_curr = '%s/%s'%(sub_dir,include.href)
+                    print_comment_v(' -- Including %s located at %s'%(include.href, incl_curr))
+
+                    if not os.path.isfile("%s/%s"%(target_dir, os.path.basename(incl_curr))) and \
+                       not os.path.isfile("%s/%s"%(target_dir, incl_curr)):
+
+                        shutil.copy(incl_curr, target_dir)
+                        ls.include_neuroml2_file(include.href, include_included=False)
                 
                 
     if gen_plots_for_all_v \
@@ -214,7 +216,7 @@ def generate_lems_file_for_neuroml(sim_id,
                         ls.add_selection_to_event_output_file(eof0, i, quantity, "spike")
                         quantities_saved.append(quantity)
                             
-    for display in gen_plots_for_quantities.keys():
+    for display in sorted(gen_plots_for_quantities.keys()):
         
         quantities = gen_plots_for_quantities[display]
         max_ = "1"
@@ -231,8 +233,7 @@ def generate_lems_file_for_neuroml(sim_id,
         for q in quantities:
             ls.add_line_to_display(display, safe_variable(q), q, scale, get_next_hex_color(my_random))
             
-    for file_name in gen_saves_for_quantities.keys():
-        
+    for file_name in sorted(gen_saves_for_quantities.keys()):
         quantities = gen_saves_for_quantities[file_name]
         of_id = safe_variable(file_name)
         ls.create_output_file(of_id, file_name)
@@ -240,7 +241,7 @@ def generate_lems_file_for_neuroml(sim_id,
             ls.add_column_to_output_file(of_id, safe_variable(q), q)
             quantities_saved.append(q)
             
-    for file_name in gen_spike_saves_for_cells.keys():
+    for file_name in sorted(gen_spike_saves_for_cells.keys()):
         
         cells = gen_spike_saves_for_cells[file_name]
         of_id = safe_variable(file_name)

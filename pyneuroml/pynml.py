@@ -1170,12 +1170,17 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
                 print_comment(line, end="")
         p.wait() # wait for the subprocess to exit
     except KeyboardInterrupt as e:
+        
+        print_comment_v('*** Command interrupted: \n       %s'%command)
         if p:
             p.kill()
         #return True
         raise e
 
-    return True
+    if not p.returncode==0:
+        print_comment_v('*** Problem running command (return code: %s): \n       %s'%(p.returncode,command))
+    
+    return p.returncode==0
 
 
 def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'], 
