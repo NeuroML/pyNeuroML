@@ -149,7 +149,7 @@ def run(a=None,**kwargs):
 
     a = build_namespace(a,**kwargs)
     
-    pynml.print_comment_v('Generating spiketime plot for %s; plotting: %s; save to: %s'%(a.spiketime_files, a.show_plots_already, a.save_spike_plot_to))
+    pynml.print_comment_v('Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s'%(a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to))
         
     xs = []
     ys = []
