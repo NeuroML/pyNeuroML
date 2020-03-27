@@ -185,8 +185,8 @@ def process_args():
     return parser.parse_args()
 
 
-def get_colour_hex(fract):
-    rgb = [ hex(int(x + (y-x)*fract)) for x, y in zip(MIN_COLOUR, MAX_COLOUR) ]
+def get_colour_hex(fract, min_colour=MIN_COLOUR, max_color=MAX_COLOUR):
+    rgb = [ hex(int(x + (y-x)*fract)) for x, y in zip(min_colour, max_color) ]
     col = "#"
     for c in rgb: col+= ( c[2:4] if len(c)==4 else "00")
     return col
