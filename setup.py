@@ -48,6 +48,7 @@ setup(
         'airspeed==0.5.4dev-20150515',
         'libNeuroML>=0.2.50',
         'neuromllite>=0.1.9',
+        'kiwisolver<=1.1.0',
         'matplotlib'],
     dependency_links=[
       'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
