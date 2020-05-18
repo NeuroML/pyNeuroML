@@ -1,6 +1,5 @@
 
-dist: trusty
-sudo: false 
+dist: xenial
 
 language: python
 
@@ -13,9 +12,9 @@ python:
   # - "2.6" Issues on Travis...
   - "2.7"
   # - "3.2" Issues on Travis...
-  - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
   
 install:
     #  This requires numpy etc...
