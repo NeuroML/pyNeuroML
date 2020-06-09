@@ -243,12 +243,20 @@ def generate_lems_file_for_neuroml(sim_id,
             
     for file_name in sorted(gen_spike_saves_for_cells.keys()):
         
-        cells = gen_spike_saves_for_cells[file_name]
+        quantities = gen_spike_saves_for_cells[file_name]
         of_id = safe_variable(file_name)
         ls.create_event_output_file(of_id, file_name)
-        for i, c in enumerate(cells):
-            ls.add_selection_to_event_output_file(of_id, i, c, "spike")
-            quantities_saved.append(c)
+        pop_here = None
+        for i, quantity in enumerate(quantities):
+            pop, index = get_pop_index(quantity)
+            if pop_here:
+                if pop_here!=pop:
+                    raise Exception('Problem with generating LEMS for saving spikes for file %s.\n'%file_name+\
+                                    'Multiple cells from different populations in one file will cause issues with index/spike id.')
+            pop_here = pop
+            # print('===== Adding to %s (%s) event %i for %s, pop: %s, i: %s'%(file_name, of_id, i, quantity, pop, index))
+            ls.add_selection_to_event_output_file(of_id, index, quantity, "spike")
+            quantities_saved.append(quantity)
                                     
         
     ls.save_to_file(file_name=file_name_full)
@@ -259,4 +267,17 @@ def generate_lems_file_for_neuroml(sim_id,
 # Mainly for NEURON etc.
 def safe_variable(quantity):
     return quantity.replace(' ','_').replace('[','_').replace(']','_').replace('/','_').replace('.','_')
+    
+def get_pop_index(quantity):
+    if '[' in quantity:
+        s = quantity.split('[')
+        pop = s[0]
+        index = int(s[1][:-1])
+        return pop, index
+    else:
+        s = quantity.split('/')
+        pop = s[0]
+        index = int(s[1])
+        return pop, index
+        
     
