@@ -24,7 +24,7 @@ setup(
                             'pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main',
                             'pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main',
                             'pynml-tune            = pyneuroml.tune.NeuroMLTuner:main',
-                            'pynml-summary         = neuroml.utils:main',
+                            'pynml-summary         = pyneuroml.pynml:summary',
                             'pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main',
                             'pynml-sonata          = neuromllite.SonataReader:main']},
     package_data={
