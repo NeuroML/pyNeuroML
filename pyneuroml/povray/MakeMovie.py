@@ -197,19 +197,19 @@ def main (argv):
         format = 'mp4'
 
         fps = 24
-        if format is 'avi':
+        if format == 'avi':
             fourcc = cv.CV_FOURCC('X','V','I','D')
             mov_file = args.name+'.avi'
             out = cv2.VideoWriter(mov_file,fourcc, fps, (width,height))
-        if format is 'divx':
+        if format == 'divx':
             fourcc = cv.CV_FOURCC('D','I','V','X')
             mov_file = args.name+'.avi'
             out = cv2.VideoWriter(mov_file,-1, fps, (width,height))
-        if format is 'mpg':
+        if format == 'mpg':
             fourcc = cv.CV_FOURCC('M','J','P','G')
             mov_file = args.name+'.mpg'
             out = cv2.VideoWriter(mov_file,fourcc, fps, (width,height))
-        if format is 'mp4':
+        if format == 'mp4':
             fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
             mov_file = args.name+'.avi'
             out = cv2.VideoWriter(mov_file,fourcc, fps, (width,height))

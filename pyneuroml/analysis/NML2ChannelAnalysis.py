@@ -633,7 +633,9 @@ def build_namespace(a=None,**kwargs):
     flag = True
     while flag:
         flag = False
-        for key,value in a.__dict__.items():
+        keys = list(a.__dict__.keys())
+        for key in keys:
+            value = a.__dict__[key]
             new_key = convert_case(key)
             if new_key != key:
                 setattr(a,new_key,value)
