@@ -459,17 +459,22 @@ def summary(nml2_doc=None, verbose=False):
         cell_info_str = ''
         for cell in nml2_doc.cells:
             cell_info_str+=cell_info(cell)+'*\n'
-            
         lines = info.split('\n')
         info = ''
+        still_to_add = False
         for line in lines:
             if 'Cell: ' in line:
+                still_to_add = True
                 pass
             elif 'Network: ' in line:
+                still_to_add = False
                 if len(cell_info_str)>0:
                     info+='%s'%cell_info_str
                 info+='%s\n'%line
             else:
+                if still_to_add and '******' in line:
+                    if len(cell_info_str)>0:
+                        info+='%s'%cell_info_str
                 info+='%s\n'%line
     print(info)
 
@@ -535,6 +540,22 @@ def cell_info(cell):
             cond_si = cond_dens_si * surface_area_si
             cond_pS = convert_to_units('%sS'%cond_si, 'pS')
             info+=(prefix+'    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n'%(seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
+            
+    if len(cell.biophysical_properties.membrane_properties.channel_densities)>0:
+        info+=(prefix+'\n')
+        
+    for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
+        group = sc.segment_groups if sc.segment_groups else 'all'
+        info+=(prefix+'  Specific capacitance on %s: %s\n'%(group, sc.value))
+        segs = cell.get_all_segments_in_group(group)
+        for seg_id in segs:
+            seg = seg_info[seg_id]
+            spec_cap_si = get_value_in_si(sc.value)
+            surface_area_si = get_value_in_si('%s um2'%cell.get_segment_surface_area(seg_id))  
+            cap_si = spec_cap_si * surface_area_si
+            cap_pF = convert_to_units('%sF'%cap_si, 'pF')
+            info+=(prefix+'    Capacitance of %s,\ttotal capacitance: %s F_per_m2 x %s m2 = %s F (%s pF)\n'%(seg, spec_cap_si, surface_area_si, cap_si, cap_pF))
+
             
     return info
             
