@@ -44,7 +44,7 @@ setup(
     install_requires=[
         'argparse',
         'pylems>=0.5.0',
-        'airspeed==0.5.4dev-20150515',
+        'airspeed>=0.5.5',
         'libNeuroML>=0.2.52',
         'neuromllite>=0.1.9',
         'kiwisolver<=1.1.0',
