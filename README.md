@@ -27,7 +27,7 @@ Clone the repository:
 
 It should be possible to install pyNeuroML using just:
 
-    sudo pip install . -r requirements.txt
+    sudo pip install .
 
 You **may** have to install lxml and the development version of [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) manually:
 
