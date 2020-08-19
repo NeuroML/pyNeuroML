@@ -30,7 +30,7 @@ setup(
             'pynml-sonata          = neuromllite.SonataReader:main']},
     package_data={
         'pyneuroml': [
-            'lib/jNeuroML-%s-jar-with-dependencies.jar'.format(
+            'lib/jNeuroML-{}-jar-with-dependencies.jar'.format(
                 jnml_version),
             'analysis/LEMS_Test_TEMPLATE.xml',
             'analysis/ChannelInfo_TEMPLATE.html',
