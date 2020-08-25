@@ -52,8 +52,8 @@ setup(
         'kiwisolver<=1.1.0',
         'matplotlib'],
     dependency_links=[
-      'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
-      'git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite'
+        'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
+        'git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite'
     ],
     classifiers=[
         'Intended Audience :: Science/Research',
