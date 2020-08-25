@@ -1,4 +1,3 @@
-
 from pyneuroml import pynml
 
 import argparse
