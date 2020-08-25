@@ -35,7 +35,6 @@ import neuroml.loaders as loaders
 import neuroml.writers as writers
 
 
-
 DEFAULTS = {'v': False,
             'default_java_max_memory': '400M',
             'nogui': False}
@@ -58,198 +57,197 @@ def parse_arguments():
             )
 
     shared_options = parser.add_argument_group(
-            title='Shared options',
-            description=('These options can be added to any of the '
-                         'mutually-exclusive options')
-            )
+        title='Shared options',
+        description=('These options can be added to any of the '
+                     'mutually-exclusive options')
+    )
 
     shared_options.add_argument(
-            '-verbose',
-            action='store_true',
-            default=DEFAULTS['v'],
-            help='Verbose output'
-            )
+        '-verbose',
+        action='store_true',
+        default=DEFAULTS['v'],
+        help='Verbose output'
+    )
     shared_options.add_argument(
-            '-java_max_memory',
-            metavar='MAX',
-            default=DEFAULTS['default_java_max_memory'],
-            help=('Java memory for jNeuroML, e.g. 400M, 2G (used in\n'
-                  '-Xmx argument to java)')
-            )
+        '-java_max_memory',
+        metavar='MAX',
+        default=DEFAULTS['default_java_max_memory'],
+        help=('Java memory for jNeuroML, e.g. 400M, 2G (used in\n'
+              '-Xmx argument to java)')
+    )
     shared_options.add_argument(
-            '-nogui',
-            action='store_true',
-            default=DEFAULTS['nogui'],
-            help=('Suppress GUI,\n'
-                  'i.e. show no plots, just save results')
-            )
+        '-nogui',
+        action='store_true',
+        default=DEFAULTS['nogui'],
+        help=('Suppress GUI,\n'
+              'i.e. show no plots, just save results')
+    )
 
     shared_options.add_argument(
-            'lems_file',
-            type=str,
-            metavar='<LEMS/NeuroML 2 file>',
-            help='LEMS/NeuroML 2 file to process'
-            )
+        'lems_file',
+        type=str,
+        metavar='<LEMS/NeuroML 2 file>',
+        help='LEMS/NeuroML 2 file to process'
+    )
 
     mut_exc_opts_grp = parser.add_argument_group(
-            title='Mutually-exclusive options',
-            description='Only one of these options can be selected'
-            )
+        title='Mutually-exclusive options',
+        description='Only one of these options can be selected'
+    )
     mut_exc_opts = mut_exc_opts_grp.add_mutually_exclusive_group(required=False)  # noqa: E501
 
     mut_exc_opts.add_argument(
-            '-sedml',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert\n'
-                  'simulation settings (duration, dt, what to save)\n'
-                  'to SED-ML format')
-            )
+        '-sedml',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert\n'
+              'simulation settings (duration, dt, what to save)\n'
+              'to SED-ML format')
+    )
     mut_exc_opts.add_argument(
-            '-neuron',
-            nargs=argparse.REMAINDER,
-            help=('(Via jNeuroML) Load a LEMS file, and convert it to\n'
-                  'NEURON format.\n'
-                  'The full format of the \'-neuron\' option is:\n'
-                  '-neuron [-nogui] [-run] [-outputdir dir] <LEMS file>\n'
-                  '    -nogui\n'
-                  '        do not generate gtaphical elements in NEURON,\n'
-                  '        just run, save data, and quit\n'
-                  '    -run\n'
-                  '        compile NMODL files and run the main NEURON\n'
-                  '        hoc file (Linux only currently)\n'
-                  '    -outputdir <dir>\n'
-                  '        generate NEURON files in directory <dir>\n'
-                  '    <LEMS file>\n'
-                  '        the LEMS file to use')
-            )
+        '-neuron',
+        nargs=argparse.REMAINDER,
+        help=('(Via jNeuroML) Load a LEMS file, and convert it to\n'
+              'NEURON format.\n'
+              'The full format of the \'-neuron\' option is:\n'
+              '-neuron [-nogui] [-run] [-outputdir dir] <LEMS file>\n'
+              '    -nogui\n'
+              '        do not generate gtaphical elements in NEURON,\n'
+              '        just run, save data, and quit\n'
+              '    -run\n'
+              '        compile NMODL files and run the main NEURON\n'
+              '        hoc file (Linux only currently)\n'
+              '    -outputdir <dir>\n'
+              '        generate NEURON files in directory <dir>\n'
+              '    <LEMS file>\n'
+              '        the LEMS file to use')
+    )
     mut_exc_opts.add_argument(
-            '-svg',
-            action='store_true',
-            help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
-                  'to SVG format view of 3D structure')
-            )
+        '-svg',
+        action='store_true',
+        help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
+              'to SVG format view of 3D structure')
+    )
     mut_exc_opts.add_argument(
-            '-png',
-            action='store_true',
-            help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
-                  'to PNG format view of 3D structure')
-            )
+        '-png',
+        action='store_true',
+        help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
+              'to PNG format view of 3D structure')
+    )
     mut_exc_opts.add_argument(
-            '-dlems',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to dLEMS format, a distilled form of LEMS in JSON')
-            )
+        '-dlems',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to dLEMS format, a distilled form of LEMS in JSON')
+    )
     mut_exc_opts.add_argument(
-            '-vertex',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to VERTEX format')
-            )
+        '-vertex',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to VERTEX format')
+    )
     mut_exc_opts.add_argument(
-            '-xpp',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to XPPAUT format')
-            )
+        '-xpp',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to XPPAUT format')
+    )
     mut_exc_opts.add_argument(
-            '-dnsim',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to DNsim format')
-            )
+        '-dnsim',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to DNsim format')
+    )
     mut_exc_opts.add_argument(
-            '-brian',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to Brian format')
-            )
+        '-brian',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to Brian format')
+    )
     mut_exc_opts.add_argument(
-            '-sbml',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to SBML format')
-            )
+        '-sbml',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to SBML format')
+    )
     mut_exc_opts.add_argument(
-            '-matlab',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to MATLAB format')
-            )
+        '-matlab',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to MATLAB format')
+    )
     mut_exc_opts.add_argument(
-            '-cvode',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to C format using CVODE package')
-            )
+        '-cvode',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to C format using CVODE package')
+    )
     mut_exc_opts.add_argument(
-            '-nineml',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to NineML format')
-            )
+        '-nineml',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to NineML format')
+    )
     mut_exc_opts.add_argument(
-            '-spineml',
-            action='store_true',
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to SpineML format')
-            )
+        '-spineml',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to SpineML format')
+    )
     mut_exc_opts.add_argument(
-            '-sbml-import',
-            metavar=('<SBML file>', 'duration', 'dt'),
-            nargs=3,
-            help=('(Via jNeuroML) Load a SBML file, and convert it\n'
-                  'toLEMS format using values for duration & dt\n'
-                  'in ms (ignoring SBML units)')
-            )
+        '-sbml-import',
+        metavar=('<SBML file>', 'duration', 'dt'),
+        nargs=3,
+        help=('(Via jNeuroML) Load a SBML file, and convert it\n'
+              'toLEMS format using values for duration & dt\n'
+              'in ms (ignoring SBML units)')
+    )
     mut_exc_opts.add_argument(
-            '-sbml-import-units',
-            metavar=('<SBML file>', 'duration', 'dt'),
-            nargs=3,
-            help=('(Via jNeuroML) Load a SBML file, and convert it\n'
-                  'to LEMS format using values for duration & dt\n'
-                  'in ms (attempt to extract SBML units; ensure units\n'
-                  'are valid in the SBML!)')
-            )
+        '-sbml-import-units',
+        metavar=('<SBML file>', 'duration', 'dt'),
+        nargs=3,
+        help=('(Via jNeuroML) Load a SBML file, and convert it\n'
+              'to LEMS format using values for duration & dt\n'
+              'in ms (attempt to extract SBML units; ensure units\n'
+              'are valid in the SBML!)')
+    )
     mut_exc_opts.add_argument(
-            '-vhdl',
-            metavar=('neuronid', '<LEMS file>'),
-            nargs=2,
-            help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
-                  'to VHDL format')
-            )
+        '-vhdl',
+        metavar=('neuronid', '<LEMS file>'),
+        nargs=2,
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to VHDL format')
+    )
     mut_exc_opts.add_argument(
-            '-graph',
-            metavar=('level'),
-            nargs=1,
-            help=('Load a NeuroML file, and convert it to a graph using\n'
-                  'GraphViz. Detail is set by level (1, 2, etc.)')
-            )
+        '-graph',
+        metavar=('level'),
+        nargs=1,
+        help=('Load a NeuroML file, and convert it to a graph using\n'
+              'GraphViz. Detail is set by level (1, 2, etc.)')
+    )
     mut_exc_opts.add_argument(
-            '-matrix',
-            metavar=('level'),
-            nargs=1,
-            help=('Load a NeuroML file, and convert it to a matrix displaying\n'  # noqa: E501
-                  'connectivity. Detail is set by level (1, 2, etc.)')
-            )
+        '-matrix',
+        metavar=('level'),
+        nargs=1,
+        help=('Load a NeuroML file, and convert it to a matrix displaying\n'  # noqa: E501
+              'connectivity. Detail is set by level (1, 2, etc.)')
+    )
     mut_exc_opts.add_argument(
-            '-validate',
-            action='store_true',
-            help=('(Via jNeuroML) Validate NeuroML2 file(s) against the\n'
-                  'latest Schema')
-            )
+        '-validate',
+        action='store_true',
+        help=('(Via jNeuroML) Validate NeuroML2 file(s) against the\n'
+              'latest Schema')
+    )
     mut_exc_opts.add_argument(
-            '-validatev1',
-            action='store_true',
-            help=('(Via jNeuroML) Validate NeuroML file(s) against the\n'
-                  'v1.8.1 Schema')
-            )
+        '-validatev1',
+        action='store_true',
+        help=('(Via jNeuroML) Validate NeuroML file(s) against the\n'
+              'v1.8.1 Schema')
+    )
 
     return parser.parse_args()
 
 
 def get_lems_model_with_units():
-
     global lems_model_with_units
 
     if lems_model_with_units is None:
@@ -265,7 +263,6 @@ def get_lems_model_with_units():
 
 
 def split_nml2_quantity(nml2_quantity):
-
     magnitude = None
     i = len(nml2_quantity)
     while magnitude is None:
@@ -281,7 +278,6 @@ def split_nml2_quantity(nml2_quantity):
 
 
 def get_value_in_si(nml2_quantity):
-
     try:
         return float(nml2_quantity)
     except:
@@ -499,37 +495,36 @@ def cell_info(cell):
     tot_length = 0
     tot_area = 0
     for seg in cell.morphology.segments:
-
-        info += (prefix+'  %s\n' % seg)
+        info += (prefix + '  %s\n' % seg)
         dist = seg.distal
         prox = seg.proximal
         parent_id = seg.parent.segments if seg.parent else 'None (root segment)'
         length = cell.get_segment_length(seg.id)
-        info += (prefix+'    Parent segment: %s\n' % (parent_id))
-        info += (prefix+'    %s -> %s; seg length: %s um\n' % (prox, dist, length))
+        info += (prefix + '    Parent segment: %s\n' % (parent_id))
+        info += (prefix + '    %s -> %s; seg length: %s um\n' % (prox, dist, length))
 
         tot_length += length
         area = cell.get_segment_surface_area(seg.id)
         volume = cell.get_segment_volume(seg.id)
         tot_area += area
-        info += (prefix+'    Surface area: %s um2, volume: %s um3\n' % (area, volume))
+        info += (prefix + '    Surface area: %s um2, volume: %s um3\n' % (area, volume))
     numseg = len(cell.morphology.segments)
     info += (prefix + '  Total length of %i segment%s: %s um; total area: %s um2\n' % (numseg, 's' if numseg > 1 else '', tot_length, tot_area))
 
-    info += (prefix+'\n')
+    info += (prefix + '\n')
 
     for sg in cell.morphology.segment_groups:
         segs = cell.get_all_segments_in_group(sg.id)
-        info += (prefix+'  %s;\tcontains %i segment%s\n' % (str(sg).replace(', ', ',\t'), len(segs), ', id: %s' % segs[0] if len(segs) == 1 else 's in total'))
+        info += (prefix + '  %s;\tcontains %i segment%s\n' % (str(sg).replace(', ', ',\t'), len(segs), ', id: %s' % segs[0] if len(segs) == 1 else 's in total'))
 
     if len(cell.morphology.segment_groups) > 0:
-        info += (prefix+'\n')
+        info += (prefix + '\n')
 
     seg_info = cell.get_segment_ids_vs_segments()
     for cd in cell.biophysical_properties.membrane_properties.channel_densities:
         # print dir(cd)
         group = cd.segment_groups if cd.segment_groups else 'all'
-        info += (prefix+'  Channel density: %s on %s;\tconductance of %s through ion chan %s with ion %s, erev: %s\n' % (cd.id, group, cd.cond_density, cd.ion_channel, cd.ion, cd.erev))
+        info += (prefix + '  Channel density: %s on %s;\tconductance of %s through ion chan %s with ion %s, erev: %s\n' % (cd.id, group, cd.cond_density, cd.ion_channel, cd.ion, cd.erev))
         segs = cell.get_all_segments_in_group(group)
         for seg_id in segs:
             seg = seg_info[seg_id]
@@ -538,7 +533,7 @@ def cell_info(cell):
             surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
             cond_si = cond_dens_si * surface_area_si
             cond_pS = convert_to_units('%sS' % cond_si, 'pS')
-            info += (prefix+'    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n' % (seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
+            info += (prefix + '    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n' % (seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
 
     if len(cell.biophysical_properties.membrane_properties.channel_densities) > 0:
         info += (prefix + '\n')
@@ -792,7 +787,7 @@ def run_lems_with_jneuroml_netpyne(
 
     print_comment(
         "Loading LEMS file: %s and running with jNeuroML_NetPyNE".format(
-                  lems_file_name), verbose)
+            lems_file_name), verbose)
 
     post_args = " -netpyne"
 
@@ -978,10 +973,10 @@ def reload_saved_data(lems_file_name,
     output_files = sim.findall(ns_prefix + 'OutputFile')
     n_output_files = len(output_files)
     if plot:
-        rows = int(max(1, math.ceil(n_output_files/float(3))))
+        rows = int(max(1, math.ceil(n_output_files / float(3))))
         columns = min(3, n_output_files)
         fig, ax = plt.subplots(rows, columns, sharex=True,
-                               figsize=(8*columns, 4*rows))
+                               figsize=(8 * columns, 4 * rows))
         if n_output_files > 1:
             ax = ax.ravel()
 
@@ -1015,7 +1010,7 @@ def reload_saved_data(lems_file_name,
 
         cols = []
         cols.append('t')
-        for col in of.findall(ns_prefix+'OutputColumn'):
+        for col in of.findall(ns_prefix + 'OutputColumn'):
             quantity = col.attrib['quantity']
             traces[quantity] = []
             cols.append(quantity)
@@ -1239,7 +1234,7 @@ def run_jneuroml(pre_args,
 
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
-          (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
+            (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
         output = execute_command_in_dir(command, exec_in_dir, verbose=verbose,
                                         prefix=' jNeuroML >>  ')
 
