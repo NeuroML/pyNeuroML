@@ -48,13 +48,13 @@ def parse_arguments():
     import argparse
 
     parser = argparse.ArgumentParser(
-            description=('pyNeuroML v{}: Python utilities for NeuroML2'.format(__version__)  # noqa: E501
-                         + "\n    libNeuroML v{}".format(neuroml.__version__)
-                         + "\n    jNeuroML v{}".format(JNEUROML_VERSION)),
-            usage=('pynml [-h|--help] [<shared options>] '
-                   '<one of the mutually-exclusive options>'),
-            formatter_class=argparse.RawTextHelpFormatter
-            )
+        description=('pyNeuroML v{}: Python utilities for NeuroML2'.format(__version__) +\
+                     "\n    libNeuroML v{}".format(neuroml.__version__) +\
+                     "\n    jNeuroML v{}".format(JNEUROML_VERSION)),
+        usage=('pynml [-h|--help] [<shared options>] '
+               '<one of the mutually-exclusive options>'),
+        formatter_class=argparse.RawTextHelpFormatter
+    )
 
     shared_options = parser.add_argument_group(
         title='Shared options',
