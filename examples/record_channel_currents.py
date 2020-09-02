@@ -6,6 +6,7 @@ Example to create a LEMS file for running a NML2 model & recording all channel c
 
 from pyneuroml.lems import generate_lems_file_for_neuroml
 from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.pynml import get_value_in_si
 import neuroml
 import neuroml.writers as writers
 import pprint; pp = pprint.PrettyPrinter(depth=6)
@@ -81,7 +82,7 @@ if __name__ == '__main__':
     gen_plots_for_quantities = {}
     gen_saves_for_quantities = {}
     
-    vs = 'Membrane potentials'
+    vs = 'MembranePotentials'
     v_dat = 'MembranePotentials.dat'
     
     all_vs = []
@@ -92,7 +93,27 @@ if __name__ == '__main__':
         
         v_quantity = '%s/0/%s/%s/v'%(pop.id, cell_comp,seg.id)
         all_vs.append(v_quantity)
+        
+    if isinstance(cell, neuroml.Cell2CaPools):
+        cds = cell.biophysical_properties2_ca_pools.membrane_properties2_ca_pools.channel_densities + \
+            cell.biophysical_properties2_ca_pools.membrane_properties2_ca_pools.channel_density_nernsts
+    elif isinstance(cell, neuroml.Cell):
+        cds = cell.biophysical_properties.membrane_properties.channel_densities + \
+            cell.biophysical_properties.membrane_properties.channel_density_nernsts
     
+    all_currents = []
+    gen_plots_for_quantities['Allcurrents'] = all_currents
+
+    for cd in cds:
+        dens_si = get_value_in_si(cd.cond_density)
+        group = cd.segment_groups if cd.segment_groups else 'all'
+        segs_here = cell.get_all_segments_in_group(group)
+        print("cd: %s, ion_channel: %s, ion: %s, density: %s (SI: %s), segs: %s"%(cd.id,cd.ion_channel,cd.ion,cd.cond_density,dens_si, segs_here))
+        for seg_id in segs_here:
+            quantity = '%s/0/%s/%s/biophys/membraneProperties/%s/iDensity'%(pop.id, cell_comp,seg_id,cd.id)
+            all_currents.append(quantity)
+            chan_curr_file='%s_%s_seg%s.dat'%(cd.id,cd.ion,seg_id)
+            gen_saves_for_quantities[chan_curr_file]=[quantity]
     
     generate_lems_file_for_neuroml(sim_id, 
                                    nml_file, 
