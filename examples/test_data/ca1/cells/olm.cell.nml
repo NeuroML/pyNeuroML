@@ -1,0 +1,138 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta5.xsd" id="NeuroML2_file_exported_from_NEURON">
+    <include href="../channels/HCNolm.channel.nml"/>
+    <include href="../channels/Kdrfast.channel.nml"/>
+    <include href="../channels/KvAolm.channel.nml"/>
+    <include href="../channels/Nav.channel.nml"/>
+    <include href="../channels/leak_chan.channel.nml"/>
+    <cell id="olmcell">
+        <notes>Cell: olmcell exported from NEURON ModelView</notes>
+        <morphology id="morphology">
+            <segment id="0" name="Seg0_soma_0">
+                <proximal x="0.000000e+00" y="0.000000e+00" z="0.000000e+00" diameter="10.0"/>
+                <distal x="0.000000e+00" y="1.000000e+01" z="0.000000e+00" diameter="10.0"/>
+            </segment>
+            <segment id="2" name="Seg1_soma_0">
+                <parent segment="0"/>
+                <distal x="0.000000e+00" y="2.000000e+01" z="0.000000e+00" diameter="10.0"/>
+            </segment>
+            <segment id="7" name="Seg0_axon_0">
+                <parent segment="0" fractionAlong="0.0"/>
+                <proximal x="0.000000e+00" y="0.000000e+00" z="0.000000e+00" diameter="1.5"/>
+                <distal x="0.000000e+00" y="-7.500000e+01" z="0.000000e+00" diameter="1.5"/>
+            </segment>
+            <segment id="8" name="Seg1_axon_0">
+                <parent segment="7"/>
+                <distal x="0.000000e+00" y="-1.500000e+02" z="0.000000e+00" diameter="1.5"/>
+            </segment>
+            <segment id="5" name="Seg0_dend_1">
+                <parent segment="2"/>
+                <proximal x="0.000000e+00" y="2.000000e+01" z="0.000000e+00" diameter="3.0"/>
+                <distal x="-1.000000e+02" y="1.200000e+02" z="0.000000e+00" diameter="3.0"/>
+            </segment>
+            <segment id="6" name="Seg1_dend_1">
+                <parent segment="5"/>
+                <distal x="-1.770000e+02" y="1.970000e+02" z="0.000000e+00" diameter="3.0"/>
+            </segment>
+            <segment id="3" name="Seg0_dend_0">
+                <parent segment="2"/>
+                <proximal x="0.000000e+00" y="2.000000e+01" z="0.000000e+00" diameter="3.0"/>
+                <distal x="1.000000e+02" y="1.200000e+02" z="0.000000e+00" diameter="3.0"/>
+            </segment>
+            <segment id="4" name="Seg1_dend_0">
+                <parent segment="3"/>
+                <distal x="1.770000e+02" y="1.970000e+02" z="0.000000e+00" diameter="3.0"/>
+            </segment>
+            <segmentGroup neuroLexId="sao864921383" id="soma_0">
+                <notes>This group contains an unbranched set of segments, and all of the segmentGroups marked with
+             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.
+             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
+                <member segment="0"/>
+                <member segment="2"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="sao864921383" id="axon_0">
+                <notes>This group contains an unbranched set of segments, and all of the segmentGroups marked with
+             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.
+             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
+                <property tag="numberInternalDivisions" value="3"/>
+                <member segment="7"/>
+                <member segment="8"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="sao864921383" id="dend_1">
+                <notes>This group contains an unbranched set of segments, and all of the segmentGroups marked with
+             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.
+             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
+                <property tag="numberInternalDivisions" value="3"/>
+                <member segment="5"/>
+                <member segment="6"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="sao864921383" id="dend_0">
+                <notes>This group contains an unbranched set of segments, and all of the segmentGroups marked with
+             neuroLexId = sao864921383 form a non-overlapping set of all of the segments.
+             These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
+                <property tag="numberInternalDivisions" value="3"/>
+                <member segment="3"/>
+                <member segment="4"/>
+            </segmentGroup>
+            <segmentGroup id="all">
+                <include segmentGroup="soma_0"/>
+                <include segmentGroup="dend_0"/>
+                <include segmentGroup="dend_1"/>
+                <include segmentGroup="axon_0"/>
+            </segmentGroup>
+            <segmentGroup id="soma_group">
+                <include segmentGroup="soma_0"/>
+            </segmentGroup>
+            <segmentGroup id="dendrite_group">
+                <include segmentGroup="dend_1"/>
+                <include segmentGroup="dend_0"/>
+            </segmentGroup>
+            <segmentGroup id="axon_group">
+                <include segmentGroup="axon_0"/>
+            </segmentGroup>
+            <segmentGroup id="dendrite_list_50_to_200">
+                <notes>segmentGroup added by A.Ecker to specify connection targets for opencortex (not added to segGroup id="all")</notes>
+                <member segment="3"/>
+                <member segment="5"/>
+            </segmentGroup>
+            <segmentGroup id="dendrite_list_200_to_1000">
+                <notes>segmentGroup added by A.Ecker to specify connection targets for opencortex (not added to segGroup id="all")</notes>
+                <member segment="4"/>
+                <member segment="6"/>
+            </segmentGroup>
+            <segmentGroup id="dendrite_list_10_to_1000">
+                <notes>segmentGroup added by A.Ecker to specify connection targets for opencortex (not added to segGroup id="all")</notes>
+                <member segment="3"/>
+                <member segment="4"/>
+                <member segment="5"/>
+                <member segment="6"/>
+            </segmentGroup>
+            <segmentGroup id="dendrite_list_100_to_1000">
+                <notes>segmentGroup added by A.Ecker to specify connection targets for opencortex (not added to segGroup id="all")</notes>
+                <member segment="3"/>
+                <member segment="4"/>
+                <member segment="5"/>
+                <member segment="6"/>
+            </segmentGroup>
+        </morphology>
+        <biophysicalProperties id="biophys">
+            <membraneProperties>
+                <channelDensity id="HCNolm_soma" ionChannel="HCNolm" condDensity="0.5mS_per_cm2" erev="-32.9mV" segmentGroup="soma_group" ion="h"/>
+                <channelDensity id="Kdrfast_soma" ionChannel="Kdrfast" condDensity="73.37mS_per_cm2" erev="-77mV" segmentGroup="soma_group" ion="k"/>
+                <channelDensity id="Kdrfast_dendrite" ionChannel="Kdrfast" condDensity="105.8mS_per_cm2" erev="-77mV" segmentGroup="dendrite_group" ion="k"/>
+                <channelDensity id="Kdrfast_axon" ionChannel="Kdrfast" condDensity="117.392mS_per_cm2" erev="-77mV" segmentGroup="axon_group" ion="k"/>
+                <channelDensity id="KvAolm_soma" ionChannel="KvAolm" condDensity="4.95mS_per_cm2" erev="-77mV" segmentGroup="soma_group" ion="k"/>
+                <channelDensity id="KvAolm_dendrite" ionChannel="KvAolm" condDensity="2.8mS_per_cm2" erev="-77mV" segmentGroup="dendrite_group" ion="k"/>
+                <channelDensity id="Nav_soma" ionChannel="Nav" condDensity="10.7mS_per_cm2" erev="50mV" segmentGroup="soma_group" ion="na"/>
+                <channelDensity id="Nav_dendrite" ionChannel="Nav" condDensity="23.4mS_per_cm2" erev="50mV" segmentGroup="dendrite_group" ion="na"/>
+                <channelDensity id="Nav_axon" ionChannel="Nav" condDensity="17.12mS_per_cm2" erev="50mV" segmentGroup="axon_group" ion="na"/>
+                <channelDensity id="leak_all" ionChannel="leak_chan" condDensity="0.01mS_per_cm2" erev="-67mV" ion="non_specific"/>
+                <spikeThresh value="0 mV"/>
+                <specificCapacitance value="1.3uF_per_cm2"/>
+                <initMembPotential value="-67.0mV"/>
+            </membraneProperties>
+            <intracellularProperties>
+                <resistivity value="0.15 kohm_cm"/>
+            </intracellularProperties>
+        </biophysicalProperties>
+    </cell>
+</neuroml>
