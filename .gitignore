@@ -116,3 +116,7 @@ examples/results/*.dat
 /examples/test_data/bask.cell.svg
 /examples/test_data/*.svg
 /testpy3.sh
+/examples/test_data/ca1/*spikes
+/examples/test_data/ca1/report*.txt
+/examples/test_data/ca1/*.mod
+/examples/test_data/ca1/*.hoc

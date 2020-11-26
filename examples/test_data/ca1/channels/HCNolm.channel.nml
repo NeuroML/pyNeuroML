@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="NeuroML_ionChannel">
+
+    <notes>NeuroML file containing a single ion channel</notes>
+
+    <ionChannel id="HCNolm" conductance="10pS" type="ionChannelHH" species="h">
+        
+        <notes>Hyperpolarization-activated, CN-gated h channel description (from Saraga 2003, Lawrence 2006 and Cutsuridis 2010)</notes>
+        
+        <gateHHtauInf id="r" instances="1">
+            <timeCourse type="Bezaire_HCNolm_tau"/>
+            <steadyState type="HHSigmoidVariable" rate="1" midpoint="-84.1mV" scale="-10.2mV"/>
+        </gateHHtauInf>
+    
+    </ionChannel>
+    
+    
+    <ComponentType name="Bezaire_HCNolm_tau"
+                   extends="baseVoltageDepTime"
+                   description="Tau parameter to describe HCNolm">
+        
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="t" dimension="time" value="( 100 + (1 / (exp(-17.9 - 0.116*V) + exp(-1.84 + 0.09*V))) ) * TIME_SCALE"  exposure="t"/>
+        </Dynamics>
+
+    </ComponentType>
+
+</neuroml>

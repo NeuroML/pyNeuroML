@@ -1,0 +1,214 @@
+<Lems>
+    
+    <!-- 
+
+        This LEMS file has been automatically generated using PyNeuroML v0.5.6 (libNeuroML v0.2.52)
+
+     -->
+    
+    <!-- Specify which component to run -->
+    <Target component="SimTestOLMChannels" reportFile="report.txt"/>
+
+    <!-- Include core NeuroML2 ComponentType definitions -->
+    <Include file="Cells.xml"/>
+    <Include file="Networks.xml"/>
+    <Include file="Simulation.xml"/>
+    
+    <Include file="TestOLMChannels.net.nml"/>
+    <Include file="cells/olm.cell.nml"/>
+    <Include file="../channels/HCNolm.channel.nml"/>
+    <Include file="../channels/Kdrfast.channel.nml"/>
+    <Include file="../channels/KvAolm.channel.nml"/>
+    <Include file="../channels/Nav.channel.nml"/>
+    <Include file="../channels/leak_chan.channel.nml"/>
+   
+    <Simulation id="SimTestOLMChannels" length="1000ms" step="0.025ms" target="TestOLMChannels" seed="12345">  <!-- Note seed: ensures same random numbers used every run -->
+        
+        <Display id="Allcurrents" title="Plots of Allcurrents" timeScale="1ms" xmin="-100.0" xmax="1100.0" ymin="-1" ymax="1">
+            <Line id="olmcellPop_0_olmcell_0_biophys_membraneProperties_HCNolm_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/HCNolm_soma/iDensity" scale="1" color="#6aa799" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_2_biophys_membraneProperties_HCNolm_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/HCNolm_soma/iDensity" scale="1" color="#029a72" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_0_biophys_membraneProperties_Kdrfast_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/Kdrfast_soma/iDensity" scale="1" color="#d340bb" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_2_biophys_membraneProperties_Kdrfast_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/Kdrfast_soma/iDensity" scale="1" color="#4c73a9" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_5_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/Kdrfast_dendrite/iDensity" scale="1" color="#5e503a" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_6_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/Kdrfast_dendrite/iDensity" scale="1" color="#3193ca" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_3_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/Kdrfast_dendrite/iDensity" scale="1" color="#90e5e9" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_4_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/Kdrfast_dendrite/iDensity" scale="1" color="#29645f" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_7_biophys_membraneProperties_Kdrfast_axon_iDensity" quantity="olmcellPop/0/olmcell/7/biophys/membraneProperties/Kdrfast_axon/iDensity" scale="1" color="#1fcff4" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_8_biophys_membraneProperties_Kdrfast_axon_iDensity" quantity="olmcellPop/0/olmcell/8/biophys/membraneProperties/Kdrfast_axon/iDensity" scale="1" color="#6ed4e9" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_0_biophys_membraneProperties_KvAolm_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/KvAolm_soma/iDensity" scale="1" color="#8fe460" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_2_biophys_membraneProperties_KvAolm_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/KvAolm_soma/iDensity" scale="1" color="#2ca1c7" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_5_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/KvAolm_dendrite/iDensity" scale="1" color="#8d9fe5" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_6_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/KvAolm_dendrite/iDensity" scale="1" color="#5adad1" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_3_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/KvAolm_dendrite/iDensity" scale="1" color="#f543bb" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_4_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/KvAolm_dendrite/iDensity" scale="1" color="#175f0c" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_0_biophys_membraneProperties_Nav_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/Nav_soma/iDensity" scale="1" color="#fa8826" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_2_biophys_membraneProperties_Nav_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/Nav_soma/iDensity" scale="1" color="#6980a8" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_5_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/Nav_dendrite/iDensity" scale="1" color="#8101e8" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_6_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/Nav_dendrite/iDensity" scale="1" color="#25ece8" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_3_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/Nav_dendrite/iDensity" scale="1" color="#b80e3b" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_4_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/Nav_dendrite/iDensity" scale="1" color="#30a1f6" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_7_biophys_membraneProperties_Nav_axon_iDensity" quantity="olmcellPop/0/olmcell/7/biophys/membraneProperties/Nav_axon/iDensity" scale="1" color="#577081" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_8_biophys_membraneProperties_Nav_axon_iDensity" quantity="olmcellPop/0/olmcell/8/biophys/membraneProperties/Nav_axon/iDensity" scale="1" color="#06057c" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_0_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#56eaa3" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_2_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#f7acee" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_3_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#fa9289" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_4_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#be9985" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_5_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#00e266" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_6_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#f0b378" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_7_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/7/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#deea95" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_8_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/8/biophys/membraneProperties/leak_all/iDensity" scale="1" color="#c55566" timeScale="1ms"/>
+        </Display>
+        
+        <Display id="MembranePotentials" title="Plots of MembranePotentials" timeScale="1ms" xmin="-100.0" xmax="1100.0" ymin="-80" ymax="40">
+            <Line id="olmcellPop_0_olmcell_0_v" quantity="olmcellPop/0/olmcell/0/v" scale="1mV" color="#2dcaab" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_2_v" quantity="olmcellPop/0/olmcell/2/v" scale="1mV" color="#1978ce" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_7_v" quantity="olmcellPop/0/olmcell/7/v" scale="1mV" color="#6a1ecc" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_8_v" quantity="olmcellPop/0/olmcell/8/v" scale="1mV" color="#e2b284" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_5_v" quantity="olmcellPop/0/olmcell/5/v" scale="1mV" color="#93fd72" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_6_v" quantity="olmcellPop/0/olmcell/6/v" scale="1mV" color="#bc90a6" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_3_v" quantity="olmcellPop/0/olmcell/3/v" scale="1mV" color="#3b8d0e" timeScale="1ms"/>
+            <Line id="olmcellPop_0_olmcell_4_v" quantity="olmcellPop/0/olmcell/4/v" scale="1mV" color="#860a7d" timeScale="1ms"/>
+        </Display>
+        
+        <OutputFile id="HCNolm_soma_h_seg0_dat" fileName="HCNolm_soma_h_seg0.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_0_biophys_membraneProperties_HCNolm_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/HCNolm_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="HCNolm_soma_h_seg2_dat" fileName="HCNolm_soma_h_seg2.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_2_biophys_membraneProperties_HCNolm_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/HCNolm_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_axon_k_seg7_dat" fileName="Kdrfast_axon_k_seg7.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_7_biophys_membraneProperties_Kdrfast_axon_iDensity" quantity="olmcellPop/0/olmcell/7/biophys/membraneProperties/Kdrfast_axon/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_axon_k_seg8_dat" fileName="Kdrfast_axon_k_seg8.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_8_biophys_membraneProperties_Kdrfast_axon_iDensity" quantity="olmcellPop/0/olmcell/8/biophys/membraneProperties/Kdrfast_axon/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_dendrite_k_seg3_dat" fileName="Kdrfast_dendrite_k_seg3.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_3_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/Kdrfast_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_dendrite_k_seg4_dat" fileName="Kdrfast_dendrite_k_seg4.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_4_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/Kdrfast_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_dendrite_k_seg5_dat" fileName="Kdrfast_dendrite_k_seg5.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_5_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/Kdrfast_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_dendrite_k_seg6_dat" fileName="Kdrfast_dendrite_k_seg6.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_6_biophys_membraneProperties_Kdrfast_dendrite_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/Kdrfast_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_soma_k_seg0_dat" fileName="Kdrfast_soma_k_seg0.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_0_biophys_membraneProperties_Kdrfast_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/Kdrfast_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Kdrfast_soma_k_seg2_dat" fileName="Kdrfast_soma_k_seg2.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_2_biophys_membraneProperties_Kdrfast_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/Kdrfast_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="KvAolm_dendrite_k_seg3_dat" fileName="KvAolm_dendrite_k_seg3.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_3_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/KvAolm_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="KvAolm_dendrite_k_seg4_dat" fileName="KvAolm_dendrite_k_seg4.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_4_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/KvAolm_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="KvAolm_dendrite_k_seg5_dat" fileName="KvAolm_dendrite_k_seg5.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_5_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/KvAolm_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="KvAolm_dendrite_k_seg6_dat" fileName="KvAolm_dendrite_k_seg6.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_6_biophys_membraneProperties_KvAolm_dendrite_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/KvAolm_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="KvAolm_soma_k_seg0_dat" fileName="KvAolm_soma_k_seg0.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_0_biophys_membraneProperties_KvAolm_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/KvAolm_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="KvAolm_soma_k_seg2_dat" fileName="KvAolm_soma_k_seg2.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_2_biophys_membraneProperties_KvAolm_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/KvAolm_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="MembranePotentials_dat" fileName="MembranePotentials.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_0_v" quantity="olmcellPop/0/olmcell/0/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_2_v" quantity="olmcellPop/0/olmcell/2/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_7_v" quantity="olmcellPop/0/olmcell/7/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_8_v" quantity="olmcellPop/0/olmcell/8/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_5_v" quantity="olmcellPop/0/olmcell/5/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_6_v" quantity="olmcellPop/0/olmcell/6/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_3_v" quantity="olmcellPop/0/olmcell/3/v"/> 
+            <OutputColumn id="olmcellPop_0_olmcell_4_v" quantity="olmcellPop/0/olmcell/4/v"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_axon_na_seg7_dat" fileName="Nav_axon_na_seg7.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_7_biophys_membraneProperties_Nav_axon_iDensity" quantity="olmcellPop/0/olmcell/7/biophys/membraneProperties/Nav_axon/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_axon_na_seg8_dat" fileName="Nav_axon_na_seg8.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_8_biophys_membraneProperties_Nav_axon_iDensity" quantity="olmcellPop/0/olmcell/8/biophys/membraneProperties/Nav_axon/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_dendrite_na_seg3_dat" fileName="Nav_dendrite_na_seg3.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_3_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/Nav_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_dendrite_na_seg4_dat" fileName="Nav_dendrite_na_seg4.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_4_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/Nav_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_dendrite_na_seg5_dat" fileName="Nav_dendrite_na_seg5.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_5_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/Nav_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_dendrite_na_seg6_dat" fileName="Nav_dendrite_na_seg6.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_6_biophys_membraneProperties_Nav_dendrite_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/Nav_dendrite/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_soma_na_seg0_dat" fileName="Nav_soma_na_seg0.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_0_biophys_membraneProperties_Nav_soma_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/Nav_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="Nav_soma_na_seg2_dat" fileName="Nav_soma_na_seg2.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_2_biophys_membraneProperties_Nav_soma_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/Nav_soma/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg0_dat" fileName="leak_all_non_specific_seg0.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_0_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/0/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg2_dat" fileName="leak_all_non_specific_seg2.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_2_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/2/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg3_dat" fileName="leak_all_non_specific_seg3.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_3_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/3/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg4_dat" fileName="leak_all_non_specific_seg4.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_4_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/4/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg5_dat" fileName="leak_all_non_specific_seg5.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_5_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/5/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg6_dat" fileName="leak_all_non_specific_seg6.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_6_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/6/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg7_dat" fileName="leak_all_non_specific_seg7.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_7_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/7/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+        <OutputFile id="leak_all_non_specific_seg8_dat" fileName="leak_all_non_specific_seg8.dat">
+            <OutputColumn id="olmcellPop_0_olmcell_8_biophys_membraneProperties_leak_all_iDensity" quantity="olmcellPop/0/olmcell/8/biophys/membraneProperties/leak_all/iDensity"/> 
+        </OutputFile>
+        
+    </Simulation>
+
+</Lems>
