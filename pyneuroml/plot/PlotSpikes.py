@@ -64,7 +64,7 @@ def process_args():
                         type=str,
                         metavar='<spiketime file>',
                         help='List of text file containing spike times',
-                        nargs=' + ')
+                        nargs='+')
 
     parser.add_argument('-format',
                         type=str,
