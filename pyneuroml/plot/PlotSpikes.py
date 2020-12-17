@@ -38,19 +38,12 @@ def build_namespace(a=None, **kwargs):
     for key, value in DEFAULTS.items():
         if not hasattr(a, key):
             setattr(a, key, value)
-    # Change all values from camelCase to under_score.
-    # This should have always worked in one pass, but for some reason
-    # it is failing (stochastically) on some keys, so it needs to keep
-    # trying until all keys are under_score.
-    flag = True
-    while flag:
-        flag = False
-        for key, value in a.__dict__.items():
-            new_key = convert_case(key)
-            if new_key != key:
-                setattr(a, new_key, value)
-                delattr(a, key)
-                flag = True
+    # Change all keys to camel case
+    for key, value in a.__dict__.copy().items():
+        new_key = convert_case(key)
+        if new_key != key:
+            setattr(a, new_key, value)
+            delattr(a, key)
     return a
 
 
