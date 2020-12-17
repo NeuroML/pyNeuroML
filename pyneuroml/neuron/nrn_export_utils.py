@@ -33,6 +33,8 @@ def get_segment_group_name(nrn_section_name):
     
 mechs_vs_erevs = {}
 
+NO_REV = float('inf')
+
 def set_erev_for_mechanism(mech, erev):
     mechs_vs_erevs[mech] = erev
     print(">> mechs_vs_erevs: %s"%mechs_vs_erevs)
@@ -40,7 +42,7 @@ def set_erev_for_mechanism(mech, erev):
 def get_erev_for_mechanism(mech):
     
     print(">> mechs_vs_erevs: %s"%mechs_vs_erevs)
-    return mechs_vs_erevs[mech]
+    return mechs_vs_erevs.get(mech, NO_REV)
     
 
 if __name__ == '__main__':

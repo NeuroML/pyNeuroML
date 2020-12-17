@@ -53,6 +53,7 @@ proc init() {local i
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_segment_group_name")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism")
     nrnpython("from pyneuroml.neuron.nrn_export_utils import get_erev_for_mechanism")
+    nrnpython("from pyneuroml.neuron.nrn_export_utils import NO_REV")
     nrnpython("from neuron import h")
 }
 
@@ -540,19 +541,6 @@ proc xmlwrite_biophysics() {
             print "---------------------------------------------"
             print "Handling mechanism: ", dmech.name
 
-            strdef passiveAttr 
-            passiveAttr = ""
-            // If mech name is built in passive conductance in NEURON
-            if (strcmp(dmech.name,"pas") == 0) {
-                // Not used in nml2
-                //////passiveAttr = " passive_conductance=\"true\""
-            }
-            // If mech name is default passive conductance from neuroConstruct
-            if (strcmp(dmech.name,"LeakConductance") == 0) {
-                // Not used in nml2
-                /////passiveAttr = " passive_conductance=\"true\""
-            }
-            
             for j=0, dmech.location.subset.size()-1 {
                 secref = cellref.secanal.all.object(dmech.location.subset.x(j))
                 //              printsec(cellnml2file, secref)
@@ -633,8 +621,8 @@ proc xmlwrite_biophysics() {
                         
                         if (strcmp(paramNameToUse, "condDensity")==0) {
                         
-                            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s_XXX\"%s ", dmech.name, dmech.name, passiveAttr)
-                            
+                            cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s\" ", dmech.name, dparm.name)
+
                             printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name, units)
                             
                             if (hoc_sf_.substr(dmech.name,"Na")>=0) {
@@ -643,7 +631,9 @@ proc xmlwrite_biophysics() {
                                 cellnml2file.printf(" erev=\"%fmV\" ", erev_K)
                             } else {
                                 value = p.get_erev_for_mechanism(dmech.name)
-                                cellnml2file.printf(" erev=\"%fmV\" ", value)
+                                if (value && value != p.NO_REV) {
+                                    cellnml2file.printf(" erev=\"%fmV\" ", value)
+                                }
                             }
                             
                             cellnml2file.printf("/>\n\n")
