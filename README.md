@@ -8,7 +8,7 @@ Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS]
 Installation
 ------------
 
-### Pip 
+### Pip
 
 pyNeuroML can be installed with pip:
 
@@ -24,11 +24,11 @@ Clone the repository:
 
     git clone https://github.com/NeuroML/pyNeuroML.git
     cd pyNeuroML
-    
+
 It should be possible to install pyNeuroML using just:
 
-    sudo pip install . -r requirements.txt
-    
+    sudo pip install .
+
 You **may** have to install lxml and the development version of [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) manually:
 
     apt-get install python-lxml
@@ -37,7 +37,7 @@ You **may** have to install lxml and the development version of [libNeuroML](htt
     cd libNeuroML
     git checkout development
     sudo python setup.py install
-    
+
 
 Current/planned features
 ------------------------
@@ -59,9 +59,9 @@ Uses similar command line interface to jNeuroML, i.e. based on jnml
 Try:
 
     pynml -h
-    
+
 to list current options.
-   
+
 
 **3) Access to export & import options of jNeuroML**
 
@@ -78,11 +78,11 @@ Lots of helper scripts for commonly used functions, e.g. [generating a firing fr
 Generation of plots of activation rates for ion channels from NeuroML2 channel file ([example](https://github.com/NeuroML/pyNeuroML/blob/master/examples/analyseNaNml2.sh)):
 
     pynml-channelanalysis NaConductance.channel.nml
-    
+
 Generation of plots of activation rates for ion channels from NEURON mod file ([example](https://github.com/NeuroML/pyNeuroML/blob/master/examples/analyseNaMod.sh)):
 
     pynml-modchananalysis NaConductance -modFile NaConductance.mod
-    
+
 See [here](http://www.opensourcebrain.org/docs#Converting_To_NeuroML2) for more.
 
 **6) Home for existing functionality distributed in various places**
@@ -92,7 +92,7 @@ Incorporate ChannelML2NeuroML2beta.xsl for updating ChannelML (coming soon...)
 **7) NEURON to NeuroML2**
 
 Scripts for converting NEURON to NeuroML2
-	
+
 - Export morphologies (plus channels, soon). See [here](https://github.com/NeuroML/pyNeuroML/blob/master/examples/export_neuroml2.py).
 
 - mod files - make best guess at initial NeuroML2 form (todo)
@@ -102,11 +102,11 @@ Scripts for converting NEURON to NeuroML2
 Files can be generated for [POV-Ray](http://www.povray.org/) which can be used to generate high resolution images and even sequences of images for creating movies. try:
 
     pynml-povray -h
-    
+
 **9) Tuning cell models in NeuroML 2**
 
-Builds on [Neurotune](https://github.com/NeuralEnsemble/neurotune) and [pyelectro](https://github.com/NeuralEnsemble/pyelectro). See [here](https://github.com/NeuroML/pyNeuroML/blob/master/examples/tuneHHCell.py) for example. 
-	
+Builds on [Neurotune](https://github.com/NeuralEnsemble/neurotune) and [pyelectro](https://github.com/NeuralEnsemble/pyelectro). See [here](https://github.com/NeuroML/pyNeuroML/blob/master/examples/tuneHHCell.py) for example.
+
 **9) Planned functionality**
 
 Built in viewer of cells in 3D? Mayavi?

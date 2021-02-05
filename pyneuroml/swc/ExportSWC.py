@@ -9,14 +9,15 @@ from pyneuroml import __version__ as pynmlv
 from pyneuroml.pynml import print_comment_v
 import sys
 
-def _get_lines_for_seg_group(cell, 
-                             sg, 
+
+def _get_lines_for_seg_group(cell,
+                             sg,
                              type):
 
     global line_count
     global line_index_vs_distals
     global line_index_vs_proximals
-    
+
     seg_ids = []
     lines = []
 
@@ -36,13 +37,15 @@ def _get_lines_for_seg_group(cell,
             parent_seg_id = None if not segment.parent else segment.parent.segments
             parent_line = -1
 
-            #print parent_line
-            #print parent_seg_id
+            # print parent_line
+            # print parent_seg_id
 
-            if parent_seg_id != None:
+            if parent_seg_id is not None:
                 fract = segment.parent.fraction_along
-                if fract < 0.0001: fract = 0
-                if abs(fract-1) < 0.0001: fract = 1
+                if fract < 0.0001:
+                    fract = 0
+                if abs(fract - 1) < 0.0001:
+                    fract = 1
                 if fract == 1:
                     parent_line = line_index_vs_distals[parent_seg_id]
                 elif segment.parent.fraction_along == 0:
@@ -67,7 +70,6 @@ def _get_lines_for_seg_group(cell,
                 parent_line = line_count
                 line_count += 1
 
-
             distal = segment.distal
 
             x = float(distal.x)
@@ -85,21 +87,21 @@ def _get_lines_for_seg_group(cell,
 
     return lines, seg_ids
 
-'''
-    Find all <cell> elements and create one SWC file for each
-'''
-def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
 
+def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
+    '''
+    Find all <cell> elements and create one SWC file for each
+    '''
     global line_count
     global line_index_vs_distals
     global line_index_vs_proximals
-    
+
     # Reset
     line_count = 1
     line_index_vs_distals = {}
     line_index_vs_proximals = {}
 
-    if target_dir==None:
+    if target_dir is None:
         base_dir = os.path.dirname(os.path.realpath(nml_file_name))
         target_dir = base_dir
     nml_doc = pynml.read_neuroml2_file(nml_file_name, include_includes=True, verbose=False, optimized=True)
@@ -108,32 +110,31 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
     comment_lines = []
 
     for cell in nml_doc.cells:
-        
+
         swc_file_name = '%s/%s.swc' % (target_dir, cell.id)
-            
         swc_file = open(swc_file_name, 'w')
 
         info = "Cell %s taken from NeuroML file %s converted to SWC" % (cell.id, nml_file_name)
         print_comment_v(info)
         comment_lines.append(info)
-        comment_lines.append('Using pyNeuroML v%s'%pynmlv)
+        comment_lines.append('Using pyNeuroML v%s' % pynmlv)
 
         group = 'soma_group'
         lines_sg, seg_ids = _get_lines_for_seg_group(cell, group, 1)
-        comment_lines.append('For group: %s, found %i NeuroML segments, resulting in %i SWC lines'%(group, len(seg_ids),len(lines_sg)))
-        
+        comment_lines.append('For group: %s, found %i NeuroML segments, resulting in %i SWC lines' % (group, len(seg_ids), len(lines_sg)))
+
         soma_seg_count = len(seg_ids)
         lines += lines_sg
 
         group = 'dendrite_group'
         lines_sg, seg_ids = _get_lines_for_seg_group(cell, group, 3)
-        comment_lines.append('For group: %s, found %i NeuroML segments, resulting in %i SWC lines'%(group, len(seg_ids),len(lines_sg)))
+        comment_lines.append('For group: %s, found %i NeuroML segments, resulting in %i SWC lines' % (group, len(seg_ids), len(lines_sg)))
         dend_seg_count = len(seg_ids)
         lines += lines_sg
 
         group = 'axon_group'
         lines_sg, seg_ids = _get_lines_for_seg_group(cell, group, 2)
-        comment_lines.append('For group: %s, found %i NeuroML segments, resulting in %i SWC lines'%(group, len(seg_ids),len(lines_sg)))
+        comment_lines.append('For group: %s, found %i NeuroML segments, resulting in %i SWC lines' % (group, len(seg_ids), len(lines_sg)))
         axon_seg_count = len(seg_ids)
         lines += lines_sg
 
@@ -143,7 +144,7 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
         if add_comments:
             for l in comment_lines:
                 swc_file.write('# %s\n' % l)
-                
+
         for i in range(len(lines)):
             l = lines[i]
             swc_line = '%s' % (l)
@@ -152,14 +153,13 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
 
         swc_file.close()
 
-        print("Written to %s" % swc_file_name)    
+        print("Written to %s" % swc_file_name)
 
 
 if __name__ == '__main__':
-
-    if len(sys.argv) == 1: 
-        files = ['../../examples/test_data/pyr_4_sym.cell.nml', 
-            '../../examples/test_data/bask.cell.nml']
+    if len(sys.argv) == 1:
+        files = ['../../examples/test_data/pyr_4_sym.cell.nml',
+                 '../../examples/test_data/bask.cell.nml']
     else:
         files = [sys.argv[1]]
 
