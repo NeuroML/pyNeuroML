@@ -17,6 +17,7 @@ import sys
 import subprocess
 import math
 from datetime import datetime
+import textwrap
 
 from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
@@ -445,9 +446,30 @@ def summary(nml2_doc=None, verbose=False):
     Based on nml2_doc.summary(show_includes=False)
     '''
 
+    usage = textwrap.dedent(
+        """
+        Usage:
+
+        pynml-summary <NeuroML file> [-v]
+
+        Compulsory arguments:
+        NeuroML file: name of file to summarise
+
+        Optional arguments:
+
+        -v:  enable verbose mode
+        """
+    )
+
     if '-v' in sys.argv:
         verbose = True
+        sys.argv.remove('-v')
         
+    if len(sys.argv) < 2:
+        print("Argument required.")
+        print(usage)
+        return
+
     if nml2_doc is None:
         nml2_file_name = sys.argv[1]
         nml2_doc = read_neuroml2_file(nml2_file_name, include_includes=verbose)
