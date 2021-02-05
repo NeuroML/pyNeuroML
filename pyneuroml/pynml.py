@@ -17,7 +17,7 @@ import sys
 import subprocess
 import math
 from datetime import datetime
-import text
+import textwrap
 
 from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
@@ -446,7 +446,7 @@ def summary(nml2_doc=None, verbose=False):
     Based on nml2_doc.summary(show_includes=False)
     '''
 
-    usage = text.dedent(
+    usage = textwrap.dedent(
         """
         Usage:
 
