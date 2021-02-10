@@ -226,6 +226,12 @@ def parse_arguments():
               'GraphViz. Detail is set by level (1, 2, etc.)')
     )
     mut_exc_opts.add_argument(
+        '-lems-graph',
+        action='store_true',
+        help=('(Via jNeuroML) Load LEMS file, and convert it to a \n'
+              'graph using GraphViz.')
+    )
+    mut_exc_opts.add_argument(
         '-matrix',
         metavar=('level'),
         nargs=1,
@@ -314,6 +320,23 @@ def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
         m, u, unit, new_value, si_value), verbose)
 
     return new_value
+
+
+def generate_lemsgraph(lems_file_name, verbose_generate=True):
+    """Generate LEMS graph using jNeuroML
+
+    :lems_file_name (string): LEMS file to parse
+    :verbose_generate (boolean): output verbosity
+    """
+    pre_args = ""
+    post_args = "-lems-graph"
+
+    return run_jneuroml(pre_args,
+                        lems_file_name,
+                        post_args,
+                        verbose=verbose_generate,
+                        report_jnml_output=verbose_generate,
+                        exit_on_fail=True)
 
 
 def validate_neuroml1(nml1_file_name, verbose_validate=True):
@@ -1192,6 +1215,10 @@ def evaluate_arguments(args):
         print_comment("Done with GraphViz...")
 
         exit()
+    elif args.lems_graph:
+        pre_args = ""
+        post_args = "-lems-graph"
+        exit_on_fail = True
     elif args.matrix:
         from neuromllite.MatrixHandler import MatrixHandler
 
