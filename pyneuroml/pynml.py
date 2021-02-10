@@ -47,6 +47,7 @@ def parse_arguments():
     """Parse command line arguments"""
 
     import argparse
+    from neuromllite.GraphVizHandler import engines
 
     parser = argparse.ArgumentParser(
         description=('pyNeuroML v{}: Python utilities for NeuroML2'.format(__version__) +\
@@ -223,7 +224,12 @@ def parse_arguments():
         metavar=('level'),
         nargs=1,
         help=('Load a NeuroML file, and convert it to a graph using\n'
-              'GraphViz. Detail is set by level (1, 2, etc.)')
+              'GraphViz.\n'
+              'Detail is set by level (min20..0..20, where min implies negative)\n'
+              'An optional single letter suffix can be used to select engine\n'
+              'Example: 1d for level 1, using the dot engine\n'
+              'Available engines:' + str(engines)
+              )
     )
     mut_exc_opts.add_argument(
         '-lems-graph',
