@@ -47,6 +47,7 @@ def parse_arguments():
     """Parse command line arguments"""
 
     import argparse
+    from neuromllite.GraphVizHandler import engines
 
     parser = argparse.ArgumentParser(
         description=('pyNeuroML v{}: Python utilities for NeuroML2'.format(__version__) +\
@@ -223,7 +224,18 @@ def parse_arguments():
         metavar=('level'),
         nargs=1,
         help=('Load a NeuroML file, and convert it to a graph using\n'
-              'GraphViz. Detail is set by level (1, 2, etc.)')
+              'GraphViz.\n'
+              'Detail is set by level (min20..0..20, where min implies negative)\n'
+              'An optional single letter suffix can be used to select engine\n'
+              'Example: 1d for level 1, using the dot engine\n'
+              'Available engines:' + str(engines)
+              )
+    )
+    mut_exc_opts.add_argument(
+        '-lems-graph',
+        action='store_true',
+        help=('(Via jNeuroML) Load LEMS file, and convert it to a \n'
+              'graph using GraphViz.')
     )
     mut_exc_opts.add_argument(
         '-matrix',
@@ -314,6 +326,47 @@ def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
         m, u, unit, new_value, si_value), verbose)
 
     return new_value
+
+
+def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=True):
+    """Generate NeuroML graph.
+
+    :nml2_file_name (string): NML file to parse
+    :level (string): level of graph to generate (default: '1')
+    :engine (string): graph engine to use (default: 'dot')
+    :verbose_generate (boolean): output verbosity
+
+    """
+    from neuromllite.GraphVizHandler import GraphVizHandler
+    from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
+    from neuromllite.GraphVizHandler import engines
+
+    print_comment('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
+
+    handler = GraphVizHandler(level=level, engine=engine, nl_network=None)
+    currParser = NeuroMLXMLParser(handler)
+    currParser.parse(nml2_file_name)
+    handler.finalise_document()
+
+    print_comment("Done with GraphViz...")
+    return 0
+
+
+def generate_lemsgraph(lems_file_name, verbose_generate=True):
+    """Generate LEMS graph using jNeuroML
+
+    :lems_file_name (string): LEMS file to parse
+    :verbose_generate (boolean): output verbosity
+    """
+    pre_args = ""
+    post_args = "-lems-graph"
+
+    return run_jneuroml(pre_args,
+                        lems_file_name,
+                        post_args,
+                        verbose=verbose_generate,
+                        report_jnml_output=verbose_generate,
+                        exit_on_fail=True)
 
 
 def validate_neuroml1(nml1_file_name, verbose_validate=True):
@@ -1166,32 +1219,40 @@ def evaluate_arguments(args):
         files = args.vhdl[1]
         post_args = "-vhdl %s" % args.vhdl[0]
     elif args.graph:
-        from neuromllite.GraphVizHandler import GraphVizHandler, engines
+        from neuromllite.GraphVizHandler import engines
         engine = 'dot'
+
+        # They can use min1 to mean -1
+        level = args.graph[0].replace('min', '-')
+
+        # If they only provide a level
         try:
-            level = int(args.graph[0])
-        except:
-            engine = engines[args.graph[0][-1:]]
-            level_int = args.graph[0][:-1]
-            level_int = level_int.replace('min', '-')
-            level_int = level_int.replace('m', '-')
-            level = int(level_int)
+            level = int(level)
+            print("Level selected: {}".format(level))
+        # If they provide level and engine specs: 1d, 2c
+        # Or some wrong value
+        except ValueError:
+            try:
+                engine = engines[level[-1:]]
+                print("Engine selected: {}".format(engine))
+            except KeyError as e:
+                print("Unknown value for engine: {}. Please use one of {}".format(e, engines))
+                sys.exit(-1)
 
-        print_comment('Converting %s to graphical form, level %i, engine %s' % (args.lems_file, level, engine))
+            # if a valid engine was provided, we try the level again
+            try:
+                level = int(level[:-1])
+                print("Level selected: {}".format(level))
+            except ValueError:
+                print("Incorrect value for level: {}.".format(level[:-1]))
+                sys.exit(-1)
 
-        from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
-
-        handler = GraphVizHandler(level=level, engine=engine, nl_network=None)
-
-        currParser = NeuroMLXMLParser(handler)
-
-        currParser.parse(args.lems_file)
-
-        handler.finalise_document()
-
-        print_comment("Done with GraphViz...")
-
-        exit()
+        generate_nmlgraph(args.lems_file, level, engine)
+        sys.exit(0)
+    elif args.lems_graph:
+        pre_args = ""
+        post_args = "-lems-graph"
+        exit_on_fail = True
     elif args.matrix:
         from neuromllite.MatrixHandler import MatrixHandler
 
