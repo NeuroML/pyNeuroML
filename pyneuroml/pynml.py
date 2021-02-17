@@ -223,8 +223,7 @@ def parse_arguments():
         '-graph',
         metavar=('level'),
         nargs=1,
-        help=('Load a NeuroML file, and convert it to a graph using\n'
-              'GraphViz.\n'
+        help=('Load a NeuroML file, and convert it to a graph using GraphViz.\n'
               'Detail is set by level (min20..0..20, where min implies negative)\n'
               'An optional single letter suffix can be used to select engine\n'
               'Example: 1d for level 1, using the dot engine\n'
@@ -1159,7 +1158,33 @@ def get_next_hex_color(my_random=None):
         return "#%06x" % random.randint(0, 0xFFFFFF)
 
 
+def confirm_file_exists(filename):
+    if not os.path.isfile(filename):
+        print_comment_v("Error! Unable to find file: %s!" % filename)
+        sys.exit()
+
+def confirm_neuroml_file(filename):
+    confirm_file_exists(filename)
+    #print('Checking file: %s'%filename)
+    #Some conditions to check if a LEMS file was entered
+    if filename.startswith('LEMS_'):
+        print_comment_v('\n  *************************************************************************************\n'+
+                      '  **  Warning, you may be trying to use a LEMS XML file (containing <Simulation> etc.) \n'+
+                      '  **  for a pyNeuroML option when a NeuroML2 file is required...\n' +
+                      '  *************************************************************************************\n')
+
+def confirm_lems_file(filename):
+    confirm_file_exists(filename)
+    #Some conditions to check if a LEMS file was entered
+    if filename.endswith('nml'):
+        print_comment_v('\n  *************************************************************************************\n'+
+                      '  **  Warning, you may be trying to use a NeuroML2 file for a pyNeuroML option  \n'+
+                      '  **  when a LEMS XML file (containing <Simulation> etc.) is required...\n' +
+                      '  *************************************************************************************\n')
+
+
 def evaluate_arguments(args):
+    #print('    ====  Args: %s'%args)
     global DEFAULTS
     DEFAULTS['v'] = args.verbose
 
@@ -1174,8 +1199,13 @@ def evaluate_arguments(args):
         post_args = "-nogui"
 
     if args.sedml:
+        confirm_lems_file(args.lems_file)
         post_args = "-sedml"
     elif args.neuron is not None:
+
+        # Note: either a lems file or nml2 file is allowed here...
+        confirm_file_exists(args.lems_file)
+
         num_neuron_args = len(args.neuron)
         if num_neuron_args < 0 or num_neuron_args > 4:
             print_comment("ERROR: The \'-neuron\' option was given an invalid "
@@ -1184,28 +1214,40 @@ def evaluate_arguments(args):
             sys.exit(-1)
         post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
     elif args.svg:
+        confirm_neuroml_file(args.lems_file)
         post_args = "-svg"
     elif args.png:
+        confirm_neuroml_file(args.lems_file)
         post_args = "-png"
     elif args.dlems:
+        confirm_lems_file(args.lems_file)
         post_args = "-dlems"
     elif args.vertex:
+        confirm_lems_file(args.lems_file)
         post_args = "-vertex"
     elif args.xpp:
+        confirm_lems_file(args.lems_file)
         post_args = "-xpp"
     elif args.dnsim:
+        confirm_lems_file(args.lems_file)
         post_args = "-dnsim"
     elif args.brian:
+        confirm_lems_file(args.lems_file)
         post_args = "-brian"
     elif args.sbml:
+        confirm_lems_file(args.lems_file)
         post_args = "-sbml"
     elif args.matlab:
+        confirm_lems_file(args.lems_file)
         post_args = "-matlab"
     elif args.cvode:
+        confirm_lems_file(args.lems_file)
         post_args = "-cvode"
     elif args.nineml:
+        confirm_lems_file(args.lems_file)
         post_args = "-nineml"
     elif args.spineml:
+        confirm_lems_file(args.lems_file)
         post_args = "-spineml"
     elif args.sbml_import:
         pre_args = "-sbml-import"
@@ -1216,9 +1258,11 @@ def evaluate_arguments(args):
         files = args.sbml_import_units[0]
         post_args = ' '.join(args.sbml_import_units[1:])
     elif args.vhdl:
+        confirm_lems_file(args.lems_file)
         files = args.vhdl[1]
         post_args = "-vhdl %s" % args.vhdl[0]
     elif args.graph:
+        confirm_neuroml_file(args.lems_file)
         from neuromllite.GraphVizHandler import engines
         engine = 'dot'
 
@@ -1250,10 +1294,12 @@ def evaluate_arguments(args):
         generate_nmlgraph(args.lems_file, level, engine)
         sys.exit(0)
     elif args.lems_graph:
+        confirm_lems_file(args.lems_file)
         pre_args = ""
         post_args = "-lems-graph"
         exit_on_fail = True
     elif args.matrix:
+        confirm_neuroml_file(args.lems_file)
         from neuromllite.MatrixHandler import MatrixHandler
 
         level = int(args.matrix[0])
@@ -1274,9 +1320,11 @@ def evaluate_arguments(args):
 
         exit()
     elif args.validate:
+        confirm_neuroml_file(args.lems_file)
         pre_args = "-validate"
         exit_on_fail = True
     elif args.validatev1:
+        confirm_neuroml_file(args.lems_file)
         pre_args = "-validatev1"
         exit_on_fail = True
 
