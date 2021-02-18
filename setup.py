@@ -49,7 +49,8 @@ setup(
         'airspeed>=0.5.5',
         'libNeuroML>=0.2.52',
         'neuromllite>=0.2.2',
-        'matplotlib'],
+        'matplotlib',
+        'graphviz'],
     dependency_links=[
         'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
         'git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite'
