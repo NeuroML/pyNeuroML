@@ -1,6 +1,0 @@
-argparse
-pylems>=0.5.0
-airspeed>=0.5.5
-libNeuroML>=0.2.52
-neuromllite>=0.2.2
-matplotlib
