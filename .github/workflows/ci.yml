@@ -1,4 +1,4 @@
-name: CI: run tests on each commit
+name: CI commit tests
 
 on:
   push:
