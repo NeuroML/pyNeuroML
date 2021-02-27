@@ -1,6 +1,8 @@
 pyNeuroML
 =========
 
+[![CI commit tests](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml) ![PyPI](https://img.shields.io/pypi/v/pyNeuroML) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML) ![GitHub](https://img.shields.io/github/license/NeuroML/pyNeuroML) ![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/pyNeuroML) ![GitHub issues](https://img.shields.io/github/issues/NeuroML/pyNeuroML) ![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social) ![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)
+
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
 
 Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS](https://github.com/LEMS/pylems) and wraps functionality from [jNeuroML](https://github.com/NeuroML/jNeuroML).
