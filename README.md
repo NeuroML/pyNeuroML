@@ -27,6 +27,16 @@ You may need to install lxml on Linux with:
 
     sudo apt-get install python-lxml
 
+### Fedora
+
+The [NeuroFedora](https://neuro.fedoraproject.org) community initiative provides pyNeuroML for use on the [Fedora Linux Distribution](https://getfedora.org).
+Fedora users can install pyNeuroML using the following commands:
+
+    sudo dnf copr enable @neurofedora/neurofedora-extra
+    sudo dnf install python3-pyneuroml
+
+Please see the [project documentation](https://docs.fedoraproject.org/en-US/neurofedora/copr/) for more information.
+
 ### Installation from source
 
 Clone the repository:
