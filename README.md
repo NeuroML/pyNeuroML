@@ -1,7 +1,14 @@
 pyNeuroML
 =========
 
-[![CI commit tests](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml) ![PyPI](https://img.shields.io/pypi/v/pyNeuroML) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML) ![GitHub](https://img.shields.io/github/license/NeuroML/pyNeuroML) ![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/pyNeuroML) ![GitHub issues](https://img.shields.io/github/issues/NeuroML/pyNeuroML) ![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social) ![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)
+[![CI commit tests](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
+[![GitHub](https://img.shields.io/github/license/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/blob/master/LICENSE.lesser)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/pulls)
+[![GitHub issues](https://img.shields.io/github/issues/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/issues)
+[![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social)](https://github.com/NeuroML)
+[![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
 
