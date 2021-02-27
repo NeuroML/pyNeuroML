@@ -31,6 +31,4 @@ jobs:
     - name: Run tests
       run: |
         pynml -h
-        ./test.sh
-
-
+        ./test-ghactions.sh
