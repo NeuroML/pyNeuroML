@@ -1,4 +1,4 @@
-name: CI commit tests
+name: Continuous builds
 
 on:
   push:
