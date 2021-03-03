@@ -1559,6 +1559,82 @@ def generate_plot(xvalues,
                   save_figure_to=None,
                   title_above_plot=False,
                   verbose=False):
+    """Utility function to generate plots using the Matplotlib library.
+
+    This function can be used to generate graphs with multiple plot lines.
+    For example, to plot two metrics you can use:
+
+    ::
+
+        generate_plot(xvalues=[[ax1, ax2, ax3], [bx1, bx2, bx3]], yvalues=[[ay1, ay2, ay3], [by1, by2, by3]], labels=["metric 1", "metric 2"])
+
+    Please note that while plotting multiple plots, you should take care to
+    ensure that the number of x values and y values for each metric correspond.
+    These lists are passed directly to Matplotlib for plotting without
+    additional sanity checks.
+
+    Please see the Matplotlib documentation for the complete list of available
+    styles and colours:
+    - https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html
+    - https://matplotlib.org/stable/gallery/index.html
+
+    :param xvalues: X values
+    :type xvalues: list of lists
+    :param yvalues: Y values
+    :type yvalues: lists of lists
+    :param title: title of plot
+    :type title: str
+    :param labels: labels for each plot (default: None)
+    :type labels: list of strings
+    :param colors: colours for each plot (default: None)
+    :type colors: list of strings
+    :param linestyles: list of line styles (default: None)
+    :type linestyles: list strings
+    :param linewidths: list of line widths (default: None)
+    :type linewidths: list of floats
+    :param markers: list of markers (default: None)
+    :type markers: list strings
+    :param markersizes: list of marker sizes (default: None)
+    :type markersizes: list of floats
+    :param xaxis: label of X axis (default: None)
+    :type xaxis: str
+    :param yaxis: label of Y axis (default: None)
+    :type yaxis: str
+    :param xlim: left and right extents of x axis (default: None)
+    :type xlim: tuple of (float, float) or individual arguments: (left=float), (right=float)
+                See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.xlim.html
+    :param ylim: top and bottom extents of y axis (default: None)
+    :type ylim: tuple of (float, float) or individual arguments: (top=float), (bottom=float)
+                See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.ylim.html
+    :param show_xticklabels: whether labels should be shown on xtics (default: True)
+    :type show_xticklabels: boolean
+    :param show_yticklabels: whether labels should be shown on ytics (default: True)
+    :type show_yticklabels: boolean
+    :param grid: enable/disable grid (default: False)
+    :type grid: boolean
+    :param logx: should the x axis be in log scale (default: False)
+    :type logx: boolean
+    :param logy: should the y ayis be in log scale (default: False)
+    :type logy: boolean
+    :param font_size: font size (default: 12)
+    :type font_size: float
+    :param bottom_left_spines_only: enable/disable spines on right and top (default: False)
+                (a spine is line noting the data area boundary)
+    :type bottom_left_spines_only: boolean
+    :param cols_in_legend_box: number of columns to use in legend box (default: 3)
+    :type cols_in_legend_box: float
+    :param legend_position: position of legend: (default: None)
+                See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
+    :type legend_position: str
+    :param show_plot_already: if plot should be shown when created (default: True)
+    :type show_plot_already: boolean
+    :param save_figure_to: location to save generated figure to (default: None)
+    :type save_figure_to: str
+    :param title_above_plot: enable/disable title above the plot (default: False)
+    :type title_above_plot: boolean
+    :param verbose: enable/disable verbose logging (default: False)
+    :type verbose: boolean
+    """
 
     print_comment_v("Generating plot: %s" % (title))
 
