@@ -11,6 +11,10 @@ pyNeuroML. Pull requests with enhancements and bug fixes are welcome.
 
 2. The source code uses spaces, and each tab is equivalent to 4 spaces.
 
+3. We use the [reStructuredText (reST)
+   format](https://stackoverflow.com/a/24385103/375067) for Python docstrings.
+   Please document your code when opening pull requests.
+
 ## Pull Request Process
 
 1. Please ensure that the automated build for your pull request passes.
