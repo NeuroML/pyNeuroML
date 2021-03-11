@@ -18,15 +18,25 @@ Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS]
 Installation
 ------------
 
+### Dependencies
+
+pyNeuroML relies on additional software to carry out its functions:
+
+- Java Runtime environment (JRE)
+- dot (from [Graphviz](http://graphviz.org/))
+- lxml
+
+On most Linux systems, these can be installed using the default package manager.
+On Ubuntu based distributions:
+
+    sudo apt-get install python-lxml graphviz openjdk-11-jdk
+
+
 ### Pip
 
-pyNeuroML can be installed with pip:
+pyNeuroML can be installed with pip (preferably in a [virtual environment](https://docs.python.org/3/tutorial/venv.html)):
 
-    sudo pip install pyneuroml
-
-You may need to install lxml on Linux with:
-
-    sudo apt-get install python-lxml
+    pip install pyneuroml
 
 ### Fedora
 
@@ -36,6 +46,7 @@ Fedora users can install pyNeuroML using the following commands:
     sudo dnf copr enable @neurofedora/neurofedora-extra
     sudo dnf install python3-pyneuroml
 
+This will also pull in all the necessary dependencies (Java, lxml, graphviz).
 Please see the [project documentation](https://docs.fedoraproject.org/en-US/neurofedora/copr/) for more information.
 
 ### Installation from source
