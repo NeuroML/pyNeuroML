@@ -598,34 +598,35 @@ def cell_info(cell):
         info += (prefix + '\n')
 
     seg_info = cell.get_segment_ids_vs_segments()
-    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
-        # print dir(cd)
-        group = cd.segment_groups if cd.segment_groups else 'all'
-        info += (prefix + '  Channel density: %s on %s;\tconductance of %s through ion chan %s with ion %s, erev: %s\n' % (cd.id, group, cd.cond_density, cd.ion_channel, cd.ion, cd.erev))
-        segs = cell.get_all_segments_in_group(group)
-        for seg_id in segs:
-            seg = seg_info[seg_id]
+    if cell.biophysical_properties:
+        for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+            # print dir(cd)
+            group = cd.segment_groups if cd.segment_groups else 'all'
+            info += (prefix + '  Channel density: %s on %s;\tconductance of %s through ion chan %s with ion %s, erev: %s\n' % (cd.id, group, cd.cond_density, cd.ion_channel, cd.ion, cd.erev))
+            segs = cell.get_all_segments_in_group(group)
+            for seg_id in segs:
+                seg = seg_info[seg_id]
 
-            cond_dens_si = get_value_in_si(cd.cond_density)
-            surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
-            cond_si = cond_dens_si * surface_area_si
-            cond_pS = convert_to_units('%sS' % cond_si, 'pS')
-            info += (prefix + '    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n' % (seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
+                cond_dens_si = get_value_in_si(cd.cond_density)
+                surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
+                cond_si = cond_dens_si * surface_area_si
+                cond_pS = convert_to_units('%sS' % cond_si, 'pS')
+                info += (prefix + '    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n' % (seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
 
-    if len(cell.biophysical_properties.membrane_properties.channel_densities) > 0:
-        info += (prefix + '\n')
+        if len(cell.biophysical_properties.membrane_properties.channel_densities) > 0:
+            info += (prefix + '\n')
 
-    for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
-        group = sc.segment_groups if sc.segment_groups else 'all'
-        info += (prefix + '  Specific capacitance on %s: %s\n' % (group, sc.value))
-        segs = cell.get_all_segments_in_group(group)
-        for seg_id in segs:
-            seg = seg_info[seg_id]
-            spec_cap_si = get_value_in_si(sc.value)
-            surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
-            cap_si = spec_cap_si * surface_area_si
-            cap_pF = convert_to_units('%sF' % cap_si, 'pF')
-            info += (prefix + '    Capacitance of %s,\ttotal capacitance: %s F_per_m2 x %s m2 = %s F (%s pF)\n' % (seg, spec_cap_si, surface_area_si, cap_si, cap_pF))
+        for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
+            group = sc.segment_groups if sc.segment_groups else 'all'
+            info += (prefix + '  Specific capacitance on %s: %s\n' % (group, sc.value))
+            segs = cell.get_all_segments_in_group(group)
+            for seg_id in segs:
+                seg = seg_info[seg_id]
+                spec_cap_si = get_value_in_si(sc.value)
+                surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
+                cap_si = spec_cap_si * surface_area_si
+                cap_pF = convert_to_units('%sF' % cap_si, 'pF')
+                info += (prefix + '    Capacitance of %s,\ttotal capacitance: %s F_per_m2 x %s m2 = %s F (%s pF)\n' % (seg, spec_cap_si, surface_area_si, cap_si, cap_pF))
 
     return info
 
@@ -978,8 +979,8 @@ def reload_saved_data(lems_file_name,
     else:
         real_lems_file = os.path.realpath(lems_file_name)
 
-    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s"
-                  % (lems_file_name, real_lems_file, base_dir, os.getcwd()), True)
+    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s"
+                  % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already), True)
 
     # Could use pylems to parse all this...
     traces = {}
