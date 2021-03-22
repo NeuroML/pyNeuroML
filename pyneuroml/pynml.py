@@ -90,10 +90,11 @@ def parse_arguments():
     )
 
     shared_options.add_argument(
-        'lems_file',
+        'input_files',
         type=str,
-        metavar='<LEMS/NeuroML 2 file>',
-        help='LEMS/NeuroML 2 file to process'
+        nargs='*',
+        metavar='<LEMS/NeuroML 2 file(s)>',
+        help='LEMS/NeuroML 2 file(s) to process'
     )
 
     mut_exc_opts_grp = parser.add_argument_group(
@@ -598,34 +599,35 @@ def cell_info(cell):
         info += (prefix + '\n')
 
     seg_info = cell.get_segment_ids_vs_segments()
-    for cd in cell.biophysical_properties.membrane_properties.channel_densities:
-        # print dir(cd)
-        group = cd.segment_groups if cd.segment_groups else 'all'
-        info += (prefix + '  Channel density: %s on %s;\tconductance of %s through ion chan %s with ion %s, erev: %s\n' % (cd.id, group, cd.cond_density, cd.ion_channel, cd.ion, cd.erev))
-        segs = cell.get_all_segments_in_group(group)
-        for seg_id in segs:
-            seg = seg_info[seg_id]
+    if cell.biophysical_properties:
+        for cd in cell.biophysical_properties.membrane_properties.channel_densities:
+            # print dir(cd)
+            group = cd.segment_groups if cd.segment_groups else 'all'
+            info += (prefix + '  Channel density: %s on %s;\tconductance of %s through ion chan %s with ion %s, erev: %s\n' % (cd.id, group, cd.cond_density, cd.ion_channel, cd.ion, cd.erev))
+            segs = cell.get_all_segments_in_group(group)
+            for seg_id in segs:
+                seg = seg_info[seg_id]
 
-            cond_dens_si = get_value_in_si(cd.cond_density)
-            surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
-            cond_si = cond_dens_si * surface_area_si
-            cond_pS = convert_to_units('%sS' % cond_si, 'pS')
-            info += (prefix + '    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n' % (seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
+                cond_dens_si = get_value_in_si(cd.cond_density)
+                surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
+                cond_si = cond_dens_si * surface_area_si
+                cond_pS = convert_to_units('%sS' % cond_si, 'pS')
+                info += (prefix + '    Channel is on %s,\ttotal conductance: %s S_per_m2 x %s m2 = %s S (%s pS)\n' % (seg, cond_dens_si, surface_area_si, cond_si, cond_pS))
 
-    if len(cell.biophysical_properties.membrane_properties.channel_densities) > 0:
-        info += (prefix + '\n')
+        if len(cell.biophysical_properties.membrane_properties.channel_densities) > 0:
+            info += (prefix + '\n')
 
-    for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
-        group = sc.segment_groups if sc.segment_groups else 'all'
-        info += (prefix + '  Specific capacitance on %s: %s\n' % (group, sc.value))
-        segs = cell.get_all_segments_in_group(group)
-        for seg_id in segs:
-            seg = seg_info[seg_id]
-            spec_cap_si = get_value_in_si(sc.value)
-            surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
-            cap_si = spec_cap_si * surface_area_si
-            cap_pF = convert_to_units('%sF' % cap_si, 'pF')
-            info += (prefix + '    Capacitance of %s,\ttotal capacitance: %s F_per_m2 x %s m2 = %s F (%s pF)\n' % (seg, spec_cap_si, surface_area_si, cap_si, cap_pF))
+        for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
+            group = sc.segment_groups if sc.segment_groups else 'all'
+            info += (prefix + '  Specific capacitance on %s: %s\n' % (group, sc.value))
+            segs = cell.get_all_segments_in_group(group)
+            for seg_id in segs:
+                seg = seg_info[seg_id]
+                spec_cap_si = get_value_in_si(sc.value)
+                surface_area_si = get_value_in_si('%s um2' % cell.get_segment_surface_area(seg_id))
+                cap_si = spec_cap_si * surface_area_si
+                cap_pF = convert_to_units('%sF' % cap_si, 'pF')
+                info += (prefix + '    Capacitance of %s,\ttotal capacitance: %s F_per_m2 x %s m2 = %s F (%s pF)\n' % (seg, spec_cap_si, surface_area_si, cap_si, cap_pF))
 
     return info
 
@@ -978,8 +980,8 @@ def reload_saved_data(lems_file_name,
     else:
         real_lems_file = os.path.realpath(lems_file_name)
 
-    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s"
-                  % (lems_file_name, real_lems_file, base_dir, os.getcwd()), True)
+    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s"
+                  % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already), True)
 
     # Could use pylems to parse all this...
     traces = {}
@@ -1166,24 +1168,50 @@ def confirm_file_exists(filename):
         print_comment_v("Error! Unable to find file: %s!" % filename)
         sys.exit()
 
+
 def confirm_neuroml_file(filename):
+    """Confirm that file exists and is a NeuroML file before proceeding with
+    processing.
+
+    :param filename: Names of files to check
+    :type filename: str
+    """
+    # print('Checking file: %s'%filename)
+    # Some conditions to check if a LEMS file was entered
+    # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
     confirm_file_exists(filename)
-    #print('Checking file: %s'%filename)
-    #Some conditions to check if a LEMS file was entered
     if filename.startswith('LEMS_'):
-        print_comment_v('\n  *************************************************************************************\n'+
-                      '  **  Warning, you may be trying to use a LEMS XML file (containing <Simulation> etc.) \n'+
-                      '  **  for a pyNeuroML option when a NeuroML2 file is required...\n' +
-                      '  *************************************************************************************\n')
+        print_comment_v(textwrap.dedent(
+            """
+            *************************************************************************************
+            **  Warning, you may be trying to use a LEMS XML file (containing <Simulation> etc.)
+            **  for a pyNeuroML option when a NeuroML2 file is required...
+            *************************************************************************************
+            """
+        ))
+
 
 def confirm_lems_file(filename):
+    """Confirm that file exists and is a LEMS file before proceeding with
+    processing.
+
+    :param filename: Names of files to check
+    :type filename: list of strings
+    """
+    # print('Checking file: %s'%filename)
+    # Some conditions to check if a LEMS file was entered
+    # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
     confirm_file_exists(filename)
-    #Some conditions to check if a LEMS file was entered
     if filename.endswith('nml'):
-        print_comment_v('\n  *************************************************************************************\n'+
-                      '  **  Warning, you may be trying to use a NeuroML2 file for a pyNeuroML option  \n'+
-                      '  **  when a LEMS XML file (containing <Simulation> etc.) is required...\n' +
-                      '  *************************************************************************************\n')
+        print_comment_v(textwrap.dedent(
+
+            """
+            *************************************************************************************
+            **  Warning, you may be trying to use a NeuroML2 file for a pyNeuroML option
+            **  when a LEMS XML file (containing <Simulation> etc.) is required...
+            *************************************************************************************
+            """
+        ))
 
 
 def evaluate_arguments(args):
@@ -1192,150 +1220,166 @@ def evaluate_arguments(args):
     DEFAULTS['v'] = args.verbose
 
     pre_args = ""
-    files = ""
     post_args = ""
     exit_on_fail = True
 
-    files = args.lems_file
+    # These do not use the shared option where files are supplied
+    # They require the file name to be specified after
+    # TODO: handle these better
+    if args.sbml_import or args.sbml_import_units or args.vhdl:
+        if args.sbml_import:
+            pre_args = "-sbml-import"
+            f = args.sbml_import[0]
+            post_args = ' '.join(args.sbml_import[1:])
+        elif args.sbml_import_units:
+            pre_args = "-smbl-import-units"
+            f = args.sbml_import_units[0]
+            post_args = ' '.join(args.sbml_import_units[1:])
+        elif args.vhdl:
+            f = args.vhdl[1]
+            confirm_lems_file(f)
+            post_args = "-vhdl %s" % args.vhdl[0]
 
-    if args.nogui:
-        post_args = "-nogui"
+        run_jneuroml(pre_args,
+                     f,
+                     post_args,
+                     max_memory=args.java_max_memory,
+                     exit_on_fail=exit_on_fail)
+        # No need to go any further
+        return True
 
-    if args.sedml:
-        confirm_lems_file(args.lems_file)
-        post_args = "-sedml"
-    elif args.neuron is not None:
+    # Process bits that process the file list provided as the shared option
+    if len(args.input_files) == 0:
+        print_comment_v("ERROR: Please specify NeuroML/LEMS files to process")
+        return
 
-        # Note: either a lems file or nml2 file is allowed here...
-        confirm_file_exists(args.lems_file)
+    for f in args.input_files:
+        if args.nogui:
+            post_args = "-nogui"
 
-        num_neuron_args = len(args.neuron)
-        if num_neuron_args < 0 or num_neuron_args > 4:
-            print_comment("ERROR: The \'-neuron\' option was given an invalid "
-                          "number of arguments: %d given, 0-4 required"
-                          % num_neuron_args)
-            sys.exit(-1)
-        post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
-    elif args.svg:
-        confirm_neuroml_file(args.lems_file)
-        post_args = "-svg"
-    elif args.png:
-        confirm_neuroml_file(args.lems_file)
-        post_args = "-png"
-    elif args.dlems:
-        confirm_lems_file(args.lems_file)
-        post_args = "-dlems"
-    elif args.vertex:
-        confirm_lems_file(args.lems_file)
-        post_args = "-vertex"
-    elif args.xpp:
-        confirm_lems_file(args.lems_file)
-        post_args = "-xpp"
-    elif args.dnsim:
-        confirm_lems_file(args.lems_file)
-        post_args = "-dnsim"
-    elif args.brian:
-        confirm_lems_file(args.lems_file)
-        post_args = "-brian"
-    elif args.sbml:
-        confirm_lems_file(args.lems_file)
-        post_args = "-sbml"
-    elif args.matlab:
-        confirm_lems_file(args.lems_file)
-        post_args = "-matlab"
-    elif args.cvode:
-        confirm_lems_file(args.lems_file)
-        post_args = "-cvode"
-    elif args.nineml:
-        confirm_lems_file(args.lems_file)
-        post_args = "-nineml"
-    elif args.spineml:
-        confirm_lems_file(args.lems_file)
-        post_args = "-spineml"
-    elif args.sbml_import:
-        pre_args = "-sbml-import"
-        files = args.sbml_import[0]
-        post_args = ' '.join(args.sbml_import[1:])
-    elif args.sbml_import_units:
-        pre_args = "-smbl-import-units"
-        files = args.sbml_import_units[0]
-        post_args = ' '.join(args.sbml_import_units[1:])
-    elif args.vhdl:
-        confirm_lems_file(args.lems_file)
-        files = args.vhdl[1]
-        post_args = "-vhdl %s" % args.vhdl[0]
-    elif args.graph:
-        confirm_neuroml_file(args.lems_file)
-        from neuromllite.GraphVizHandler import engines
-        engine = 'dot'
+        if args.sedml:
+            confirm_lems_file(f)
+            post_args = "-sedml"
+        elif args.neuron is not None:
 
-        # They can use min1 to mean -1
-        level = args.graph[0].replace('min', '-')
+            # Note: either a lems file or nml2 file is allowed here...
+            confirm_file_exists(f)
 
-        # If they only provide a level
-        try:
-            level = int(level)
-            print("Level selected: {}".format(level))
-        # If they provide level and engine specs: 1d, 2c
-        # Or some wrong value
-        except ValueError:
-            try:
-                engine = engines[level[-1:]]
-                print("Engine selected: {}".format(engine))
-            except KeyError as e:
-                print("Unknown value for engine: {}. Please use one of {}".format(e, engines))
+            num_neuron_args = len(args.neuron)
+            if num_neuron_args < 0 or num_neuron_args > 4:
+                print_comment("ERROR: The \'-neuron\' option was given an invalid "
+                              "number of arguments: %d given, 0-4 required"
+                              % num_neuron_args)
                 sys.exit(-1)
+            post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
+        elif args.svg:
+            confirm_neuroml_file(f)
+            post_args = "-svg"
+        elif args.png:
+            confirm_neuroml_file(f)
+            post_args = "-png"
+        elif args.dlems:
+            confirm_lems_file(f)
+            post_args = "-dlems"
+        elif args.vertex:
+            confirm_lems_file(f)
+            post_args = "-vertex"
+        elif args.xpp:
+            confirm_lems_file(f)
+            post_args = "-xpp"
+        elif args.dnsim:
+            confirm_lems_file(f)
+            post_args = "-dnsim"
+        elif args.brian:
+            confirm_lems_file(f)
+            post_args = "-brian"
+        elif args.sbml:
+            confirm_lems_file(f)
+            post_args = "-sbml"
+        elif args.matlab:
+            confirm_lems_file(f)
+            post_args = "-matlab"
+        elif args.cvode:
+            confirm_lems_file(f)
+            post_args = "-cvode"
+        elif args.nineml:
+            confirm_lems_file(f)
+            post_args = "-nineml"
+        elif args.spineml:
+            confirm_lems_file(f)
+            post_args = "-spineml"
+        elif args.graph:
+            confirm_neuroml_file(f)
+            from neuromllite.GraphVizHandler import engines
+            engine = 'dot'
 
-            # if a valid engine was provided, we try the level again
+            # They can use min1 to mean -1
+            level = args.graph[0].replace('min', '-')
+
+            # If they only provide a level
             try:
-                level = int(level[:-1])
+                level = int(level)
                 print("Level selected: {}".format(level))
+            # If they provide level and engine specs: 1d, 2c
+            # Or some wrong value
             except ValueError:
-                print("Incorrect value for level: {}.".format(level[:-1]))
-                sys.exit(-1)
+                try:
+                    engine = engines[level[-1:]]
+                    print("Engine selected: {}".format(engine))
+                except KeyError as e:
+                    print("Unknown value for engine: {}. Please use one of {}".format(e, engines))
+                    sys.exit(-1)
 
-        generate_nmlgraph(args.lems_file, level, engine)
-        sys.exit(0)
-    elif args.lems_graph:
-        confirm_lems_file(args.lems_file)
-        pre_args = ""
-        post_args = "-lems-graph"
-        exit_on_fail = True
-    elif args.matrix:
-        confirm_neuroml_file(args.lems_file)
-        from neuromllite.MatrixHandler import MatrixHandler
+                # if a valid engine was provided, we try the level again
+                try:
+                    level = int(level[:-1])
+                    print("Level selected: {}".format(level))
+                except ValueError:
+                    print("Incorrect value for level: {}.".format(level[:-1]))
+                    sys.exit(-1)
 
-        level = int(args.matrix[0])
+            generate_nmlgraph(f, level, engine)
+            sys.exit(0)
+        elif args.lems_graph:
+            confirm_lems_file(f)
+            pre_args = ""
+            post_args = "-lems-graph"
+            exit_on_fail = True
+        elif args.matrix:
+            confirm_neuroml_file(f)
+            from neuromllite.MatrixHandler import MatrixHandler
 
-        print_comment('Converting %s to matrix form, level %i' % (args.lems_file, level))
+            level = int(args.matrix[0])
 
-        from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
+            print_comment('Converting %s to matrix form, level %i' % (f, level))
 
-        handler = MatrixHandler(level=level, nl_network=None)
+            from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
 
-        currParser = NeuroMLXMLParser(handler)
+            handler = MatrixHandler(level=level, nl_network=None)
 
-        currParser.parse(args.lems_file)
+            currParser = NeuroMLXMLParser(handler)
 
-        handler.finalise_document()
+            currParser.parse(f)
 
-        print_comment("Done with MatrixHandler...")
+            handler.finalise_document()
 
-        exit()
-    elif args.validate:
-        confirm_neuroml_file(args.lems_file)
-        pre_args = "-validate"
-        exit_on_fail = True
-    elif args.validatev1:
-        confirm_neuroml_file(args.lems_file)
-        pre_args = "-validatev1"
-        exit_on_fail = True
+            print_comment("Done with MatrixHandler...")
 
-    run_jneuroml(pre_args,
-                 files,
-                 post_args,
-                 max_memory=args.java_max_memory,
-                 exit_on_fail=exit_on_fail)
+            exit()
+        elif args.validate:
+            confirm_neuroml_file(f)
+            pre_args = "-validate"
+            exit_on_fail = True
+        elif args.validatev1:
+            confirm_neuroml_file(f)
+            pre_args = "-validatev1"
+            exit_on_fail = True
+
+        run_jneuroml(pre_args,
+                     f,
+                     post_args,
+                     max_memory=args.java_max_memory,
+                     exit_on_fail=exit_on_fail)
 
 
 def get_path_to_jnml_jar():
@@ -1559,6 +1603,82 @@ def generate_plot(xvalues,
                   save_figure_to=None,
                   title_above_plot=False,
                   verbose=False):
+    """Utility function to generate plots using the Matplotlib library.
+
+    This function can be used to generate graphs with multiple plot lines.
+    For example, to plot two metrics you can use:
+
+    ::
+
+        generate_plot(xvalues=[[ax1, ax2, ax3], [bx1, bx2, bx3]], yvalues=[[ay1, ay2, ay3], [by1, by2, by3]], labels=["metric 1", "metric 2"])
+
+    Please note that while plotting multiple plots, you should take care to
+    ensure that the number of x values and y values for each metric correspond.
+    These lists are passed directly to Matplotlib for plotting without
+    additional sanity checks.
+
+    Please see the Matplotlib documentation for the complete list of available
+    styles and colours:
+    - https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html
+    - https://matplotlib.org/stable/gallery/index.html
+
+    :param xvalues: X values
+    :type xvalues: list of lists
+    :param yvalues: Y values
+    :type yvalues: lists of lists
+    :param title: title of plot
+    :type title: str
+    :param labels: labels for each plot (default: None)
+    :type labels: list of strings
+    :param colors: colours for each plot (default: None)
+    :type colors: list of strings
+    :param linestyles: list of line styles (default: None)
+    :type linestyles: list strings
+    :param linewidths: list of line widths (default: None)
+    :type linewidths: list of floats
+    :param markers: list of markers (default: None)
+    :type markers: list strings
+    :param markersizes: list of marker sizes (default: None)
+    :type markersizes: list of floats
+    :param xaxis: label of X axis (default: None)
+    :type xaxis: str
+    :param yaxis: label of Y axis (default: None)
+    :type yaxis: str
+    :param xlim: left and right extents of x axis (default: None)
+    :type xlim: tuple of (float, float) or individual arguments: (left=float), (right=float)
+                See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.xlim.html
+    :param ylim: top and bottom extents of y axis (default: None)
+    :type ylim: tuple of (float, float) or individual arguments: (top=float), (bottom=float)
+                See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.ylim.html
+    :param show_xticklabels: whether labels should be shown on xtics (default: True)
+    :type show_xticklabels: boolean
+    :param show_yticklabels: whether labels should be shown on ytics (default: True)
+    :type show_yticklabels: boolean
+    :param grid: enable/disable grid (default: False)
+    :type grid: boolean
+    :param logx: should the x axis be in log scale (default: False)
+    :type logx: boolean
+    :param logy: should the y ayis be in log scale (default: False)
+    :type logy: boolean
+    :param font_size: font size (default: 12)
+    :type font_size: float
+    :param bottom_left_spines_only: enable/disable spines on right and top (default: False)
+                (a spine is line noting the data area boundary)
+    :type bottom_left_spines_only: boolean
+    :param cols_in_legend_box: number of columns to use in legend box (default: 3)
+    :type cols_in_legend_box: float
+    :param legend_position: position of legend: (default: None)
+                See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
+    :type legend_position: str
+    :param show_plot_already: if plot should be shown when created (default: True)
+    :type show_plot_already: boolean
+    :param save_figure_to: location to save generated figure to (default: None)
+    :type save_figure_to: str
+    :param title_above_plot: enable/disable title above the plot (default: False)
+    :type title_above_plot: boolean
+    :param verbose: enable/disable verbose logging (default: False)
+    :type verbose: boolean
+    """
 
     print_comment_v("Generating plot: %s" % (title))
 

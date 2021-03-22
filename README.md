@@ -1,6 +1,16 @@
 pyNeuroML
 =========
 
+[![GitHub CI](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml)
+[![Travis CI](https://travis-ci.com/NeuroML/pyNeuroML.svg?branch=master)](https://travis-ci.com/NeuroML/pyNeuroML)
+[![PyPI](https://img.shields.io/pypi/v/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
+[![GitHub](https://img.shields.io/github/license/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/blob/master/LICENSE.lesser)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/pulls)
+[![GitHub issues](https://img.shields.io/github/issues/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/issues)
+[![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social)](https://github.com/NeuroML)
+[![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
+
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
 
 Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS](https://github.com/LEMS/pylems) and wraps functionality from [jNeuroML](https://github.com/NeuroML/jNeuroML).
@@ -8,15 +18,36 @@ Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS]
 Installation
 ------------
 
+### Dependencies
+
+pyNeuroML relies on additional software to carry out its functions:
+
+- Java Runtime environment (JRE)
+- dot (from [Graphviz](http://graphviz.org/))
+- lxml
+
+On most Linux systems, these can be installed using the default package manager.
+On Ubuntu based distributions:
+
+    sudo apt-get install python-lxml graphviz openjdk-11-jdk
+
+
 ### Pip
 
-pyNeuroML can be installed with pip:
+pyNeuroML can be installed with pip (preferably in a [virtual environment](https://docs.python.org/3/tutorial/venv.html)):
 
-    sudo pip install pyneuroml
+    pip install pyneuroml
 
-You may need to install lxml on Linux with:
+### Fedora
 
-    sudo apt-get install python-lxml
+The [NeuroFedora](https://neuro.fedoraproject.org) community initiative provides pyNeuroML for use on the [Fedora Linux Distribution](https://getfedora.org).
+Fedora users can install pyNeuroML using the following commands:
+
+    sudo dnf copr enable @neurofedora/neurofedora-extra
+    sudo dnf install python3-pyneuroml
+
+This will also pull in all the necessary dependencies (Java, lxml, graphviz).
+Please see the [project documentation](https://docs.fedoraproject.org/en-US/neurofedora/copr/) for more information.
 
 ### Installation from source
 
