@@ -129,6 +129,23 @@ def parse_arguments():
               '        the LEMS file to use')
     )
     mut_exc_opts.add_argument(
+        '-netpyne',
+        nargs=argparse.REMAINDER,
+        help=('(Via jNeuroML) Load a LEMS file, and convert it to\n'
+              'NetPyNE format.\n'
+              'The full format of the \'-netpyne\' option is:\n'
+              '-netpyne [-run] [-outputdir dir] [-np cores] <LEMS file>\n'
+              '    -run\n'
+              '        compile NMODL files and run the NetPyNE\n'
+              '        simulation (Linux only currently)\n'
+              '    -outputdir <dir>\n'
+              '        generate NEURON files in directory <dir>\n'
+              '    -np <cores>\n'
+              '        number of cores to run with (if using MPI)\n'
+              '    <LEMS file>\n'
+              '        the LEMS file to use')
+    )
+    mut_exc_opts.add_argument(
         '-svg',
         action='store_true',
         help=('(Via jNeuroML) Convert NeuroML2 file (network & cells)\n'
@@ -1272,6 +1289,18 @@ def evaluate_arguments(args):
                               % num_neuron_args)
                 sys.exit(-1)
             post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
+        elif args.netpyne is not None:
+
+            # Note: either a lems file or nml2 file is allowed here...
+            confirm_file_exists(f)
+
+            num_netpyne_args = len(args.netpyne)
+            if num_netpyne_args < 0 or num_netpyne_args > 4:
+                print_comment("ERROR: The \'-netpyne\' option was given an invalid "
+                              "number of arguments: %d given, 0-4 required"
+                              % num_netpyne_args)
+                sys.exit(-1)
+            post_args = "-netpyne %s" % ' '.join(args.netpyne[:-1])
         elif args.svg:
             confirm_neuroml_file(f)
             post_args = "-svg"
