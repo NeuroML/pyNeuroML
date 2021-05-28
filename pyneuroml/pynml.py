@@ -1110,7 +1110,7 @@ def reload_saved_data(lems_file_name,
                 % (file_name, ' (%s)' % simulator if simulator else '')
             )
             print_comment_v("Reloading: %s" % info)
-            fig.canvas.set_window_title(info)
+            fig.canvas.manager.set_window_title(info)
 
             legend = False
             for key in cols:
@@ -1690,7 +1690,7 @@ def generate_plot(xvalues,
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    fig.canvas.set_window_title(title)
+    fig.canvas.manager.set_window_title(title)
     if title_above_plot:
         plt.title(title)
 
