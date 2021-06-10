@@ -1288,19 +1288,25 @@ def evaluate_arguments(args):
                               "number of arguments: %d given, 0-4 required"
                               % num_neuron_args)
                 sys.exit(-1)
-            post_args = "-neuron %s" % ' '.join(args.neuron[:-1])
-        elif args.netpyne is not None:
 
+            other_args = [(a if a!='-neuron' else '') for a in args.neuron]
+            post_args = "-neuron %s" % ' '.join(other_args)
+
+        elif args.netpyne is not None:
             # Note: either a lems file or nml2 file is allowed here...
             confirm_file_exists(f)
 
             num_netpyne_args = len(args.netpyne)
+
             if num_netpyne_args < 0 or num_netpyne_args > 4:
                 print_comment("ERROR: The \'-netpyne\' option was given an invalid "
                               "number of arguments: %d given, 0-4 required"
                               % num_netpyne_args)
                 sys.exit(-1)
-            post_args = "-netpyne %s" % ' '.join(args.netpyne[:-1])
+
+            other_args = [(a if a!='-netpyne' else '') for a in args.netpyne]
+            post_args = "-netpyne %s" % ' '.join(other_args)
+
         elif args.svg:
             confirm_neuroml_file(f)
             post_args = "-svg"
