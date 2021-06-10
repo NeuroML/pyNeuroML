@@ -188,6 +188,12 @@ def parse_arguments():
               'to Brian format')
     )
     mut_exc_opts.add_argument(
+        '-brian2',
+        action='store_true',
+        help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
+              'to Brian2 format')
+    )
+    mut_exc_opts.add_argument(
         '-sbml',
         action='store_true',
         help=('(Via jNeuroML) Load a LEMS file, and convert it\n'
@@ -924,6 +930,7 @@ def run_lems_with_jneuroml_netpyne(
         return True
 
 
+# TODO: need to enable run with Brian2!
 def run_lems_with_jneuroml_brian2(
     lems_file_name,
     paths_to_include=[],
@@ -961,9 +968,10 @@ def run_lems_with_jneuroml_brian2(
             exec_in_dir=exec_in_dir,
             verbose=verbose,
             exit_on_fail=exit_on_fail)
+        '''
         print('oooooo')
         import LEMS_SimFNTest_brian2
-        print('eeee')
+        print('eeee')'''
 
     if not success:
         return False
@@ -1328,6 +1336,9 @@ def evaluate_arguments(args):
         elif args.brian:
             confirm_lems_file(f)
             post_args = "-brian"
+        elif args.brian2:
+            confirm_lems_file(f)
+            post_args = "-brian2"
         elif args.sbml:
             confirm_lems_file(f)
             post_args = "-sbml"
