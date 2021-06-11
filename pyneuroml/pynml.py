@@ -953,8 +953,8 @@ def run_lems_with_jneuroml_brian2(
 
     post_args = " -brian2"
 
-    post_args += gui_string(nogui)
-    post_args += include_string(paths_to_include)
+    #post_args += gui_string(nogui)
+    #post_args += include_string(paths_to_include)
 
     t_run = datetime.now()
     if skip_run:
@@ -968,10 +968,14 @@ def run_lems_with_jneuroml_brian2(
             exec_in_dir=exec_in_dir,
             verbose=verbose,
             exit_on_fail=exit_on_fail)
-        '''
-        print('oooooo')
-        import LEMS_SimFNTest_brian2
-        print('eeee')'''
+
+        old_sys_args = [a for a in sys.argv]
+        sys.argv[1] = '-nogui' # To supress gui for brian simulation...
+        print_comment('Importing generated Brian2 python file (changed args from %s to %s)'%(old_sys_args,sys.argv), verbose)
+        brian2_py_name = lems_file_name.replace('.xml','_brian2')
+        exec('import %s'%brian2_py_name)
+        sys.argv = old_sys_args
+        print_comment('Finished Brian2 simulation, back to %s'%sys.argv, verbose)
 
     if not success:
         return False
@@ -1446,7 +1450,7 @@ def run_jneuroml(pre_args,
                  report_jnml_output=True,
                  exit_on_fail=True):
 
-    print_comment('Running jnml on %s with pre args: %s, post args: %s, in dir: %s, verbose: %s, report: %s, exit on fail: %s' %
+    print_comment('Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s' %
                   (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail), verbose)
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
