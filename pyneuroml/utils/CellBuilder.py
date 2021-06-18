@@ -21,12 +21,16 @@ from pyneuroml.pynml import print_function
 def create_cell(cell_id: str) -> Cell:
     """Create a NeuroML Cell.
 
-    Adds the necessary sections with default IDs where applicable:
+    Initialises the cell with these properties assigning IDs where applicable:
     - Morphology: "morphology"
     - BiophysicalProperties: "biophys"
     - MembraneProperties
     - IntracellularProperties
     - SegmentGroup: "all"
+
+    Note that since this cell does not currently include a segment in its
+    morphology, it is *not* a valid NeuroML construct. Use the `add_segment`
+    function to add segments.
 
     :param cell_id: id of the cell
     :type cell_id: str
@@ -112,7 +116,7 @@ def add_segment(cell: Cell, prox: list[float], dist: list[float], name:
     return segment
 
 
-def set_init_memb_potential(cell: Cell, v: str, group: str = all):
+def set_init_memb_potential(cell: Cell, v: str, group: str = "all"):
     """Set the initial membrane potential of the cell.
 
     :param cell: cell to modify
@@ -126,7 +130,7 @@ def set_init_memb_potential(cell: Cell, v: str, group: str = all):
         [InitMembPotential(value=v, segment_groups=group)]
 
 
-def set_resistivity(cell: Cell, resistivity: str, group: str = all):
+def set_resistivity(cell: Cell, resistivity: str, group: str = "all"):
     """Set the resistivity of the cell
 
     :param cell: cell to modfify
@@ -137,7 +141,7 @@ def set_resistivity(cell: Cell, resistivity: str, group: str = all):
     :returns: TODO
 
     """
-    cell.biophysical_properties.intracellular_properties.resistivities.append(Resistivity(value=resistivity, segment_groups=group))
+    cell.biophysical_properties.intracellular_properties.resistivities = [Resistivity(value=resistivity, segment_groups=group)]
 
 
 def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all"):
@@ -154,20 +158,23 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all"):
 
 
 def add_channel_density(cell: Cell, nml_cell_doc: NeuroMLDocument, cd_id: str,
-                        cond_density: str, ion_channel: str, erev: str, ion: str =
-                        "non_specific", group: str = "all"):
-    """TODO: Docstring for add_channel_density.
+                        cond_density: str, ion_channel: str, ion_chan_def_file:
+                        str = "", erev: str = "0.0 mV", ion: str = "non_specific", group: str =
+                        "all"):
+    """Add channel density.
 
     :param cell: cell to be modified
     :type cell: Cell
     :param nml_cell_doc: cell NeuroML document to which channel density is to be added
     :type nml_cell_doc: NeuroMLDocument
-    :param cd_id: id of channel density to add
+    :param cd_id: id for channel density
     :type cd_id: str
     :param cond_density: value of conductance density with units
     :type cond_density: str
     :param ion_channel: name of ion channel
     :type ion_channel: str
+    :param ion_chan_def_file: path to NeuroML2 file defining the ion channel, if empty, it assumes the channel is defined in the same file
+    :type ion_chan_def_file: str
     :param erev: value of reversal potential with units
     :type erev: str
     :param ion: name of ion
@@ -184,4 +191,5 @@ def add_channel_density(cell: Cell, nml_cell_doc: NeuroMLDocument, cd_id: str,
 
     cell.biophysical_properties.membrane_properties.channel_densities.append(cd)
 
-    nml_cell_doc.includes.append(IncludeType(f'{cd_id}.channel.nml'))
+    if len(ion_chan_def_file) > 0:
+        nml_cell_doc.includes.append(IncludeType(ion_chan_def_file))
