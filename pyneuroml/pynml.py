@@ -695,6 +695,16 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
 
 
 def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_includes=False, debug=False):
+    """Read LEMS file using PyLEMS. See WARNING below.
+
+    WARNING: this is a general function that uses PyLEMS to read any files that
+    are valid LEMS *even if they are not valid NeuroML*. Therefore, this
+    function is not aware of the standard NeuroML LEMS definitions.
+
+    To validate NeuroML LEMS files which need to be aware of the NeuroML
+    standard LEMS definitions, please use the `validate_neuroml2_lems_file`
+    function instead.
+    """
     if not os.path.isfile(lems_file_name):
         print_comment("Unable to find file: %s!" % lems_file_name, True)
         sys.exit()
