@@ -10,7 +10,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 
 from typing import List
-from neuroml import (Cell, Morphology, MembraneProperties,
+from neuroml import (Cell, Morphology, MembraneProperties,  # noqa
                      IntracellularProperties, BiophysicalProperties, Segment,
                      SegmentGroup, Point3DWithDiam, SegmentParent, Member,
                      InitMembPotential, Resistivity, SpecificCapacitance,
@@ -19,7 +19,8 @@ from neuroml import (Cell, Morphology, MembraneProperties,
 from pyneuroml.pynml import print_function
 
 
-def create_cell(cell_id: str) -> Cell:
+def create_cell(cell_id):
+    # type: (str) -> Cell
     """Create a NeuroML Cell.
 
     Initialises the cell with these properties assigning IDs where applicable:
@@ -53,8 +54,8 @@ def create_cell(cell_id: str) -> Cell:
     return cell
 
 
-def add_segment(cell: Cell, prox: List[float], dist: List[float], name:
-                str = None, parent: SegmentParent = None, group: SegmentGroup = None) -> Segment:
+def add_segment(cell, prox, dist, name=None, parent=None, group=None):
+    # type: (Cell, List[float], List[float], str, SegmentParent, SegmentGroup) -> Segment
     """TODO: Docstring for add_segment.
 
     :param cell: cell to add segment to
@@ -117,7 +118,8 @@ def add_segment(cell: Cell, prox: List[float], dist: List[float], name:
     return segment
 
 
-def set_init_memb_potential(cell: Cell, v: str, group: str = "all"):
+def set_init_memb_potential(cell, v, group="all"):
+    # type (Cell, str, str)
     """Set the initial membrane potential of the cell.
 
     :param cell: cell to modify
@@ -131,7 +133,8 @@ def set_init_memb_potential(cell: Cell, v: str, group: str = "all"):
         [InitMembPotential(value=v, segment_groups=group)]
 
 
-def set_resistivity(cell: Cell, resistivity: str, group: str = "all"):
+def set_resistivity(cell, resistivity, group="all"):
+    # type (Cell, str, str)
     """Set the resistivity of the cell
 
     :param cell: cell to modfify
@@ -145,7 +148,8 @@ def set_resistivity(cell: Cell, resistivity: str, group: str = "all"):
     cell.biophysical_properties.intracellular_properties.resistivities = [Resistivity(value=resistivity, segment_groups=group)]
 
 
-def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all"):
+def set_specific_capacitance(cell, spec_cap, group="all"):
+    # type (Cell, str, str)
     """Set the specific capacitance for the cell.
 
     :param cell: cell to set specific capacitance for
@@ -158,10 +162,8 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all"):
     cell.biophysical_properties.membrane_properties.specific_capacitances.append(SpecificCapacitance(value=spec_cap, segment_groups=group))
 
 
-def add_channel_density(cell: Cell, nml_cell_doc: NeuroMLDocument, cd_id: str,
-                        cond_density: str, ion_channel: str, ion_chan_def_file:
-                        str = "", erev: str = "0.0 mV", ion: str = "non_specific", group: str =
-                        "all"):
+def add_channel_density(cell, nml_cell_doc, cd_id, cond_density, ion_channel, ion_chan_def_file="", erev="0.0 mV", ion="non_specific", group="all"):
+    # type (Cell, NeuroMLDocument, str, str, str, str, str, str, str)
     """Add channel density.
 
     :param cell: cell to be modified
