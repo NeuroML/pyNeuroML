@@ -9,6 +9,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 
+from typing import List
 from neuroml import (Cell, Morphology, MembraneProperties,
                      IntracellularProperties, BiophysicalProperties, Segment,
                      SegmentGroup, Point3DWithDiam, SegmentParent, Member,
@@ -52,7 +53,7 @@ def create_cell(cell_id: str) -> Cell:
     return cell
 
 
-def add_segment(cell: Cell, prox: list[float], dist: list[float], name:
+def add_segment(cell: Cell, prox: List[float], dist: List[float], name:
                 str = None, parent: SegmentParent = None, group: SegmentGroup = None) -> Segment:
     """TODO: Docstring for add_segment.
 
