@@ -76,11 +76,11 @@ def add_segment(cell, prox, dist, name=None, parent=None, group=None):
     try:
         p = Point3DWithDiam(x=prox[0], y=prox[1], z=prox[2], diameter=prox[3])
     except IndexError as e:
-        print_function(f"{e}: prox must be a list of 4 elements")
+        print_function("{}: prox must be a list of 4 elements".format(e))
     try:
         d = Point3DWithDiam(x=dist[0], y=dist[1], z=dist[2], diameter=dist[3])
     except IndexError as e:
-        print_function(f"{e}: dist must be a list of 4 elements")
+        print_function("{}: dist must be a list of 4 elements".format(e))
 
     segid = len(cell.morphology.segments)
 
