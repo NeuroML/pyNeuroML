@@ -429,6 +429,36 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,
                             exit_on_fail=False)
 
 
+def validate_neuroml2_lems_file(nml2_lems_file_name, max_memory=DEFAULTS['default_java_max_memory']):
+    # type (str, str) -> bool
+    """Validate a NeuroML 2 LEMS file using jNeuroML.
+
+    Note that this uses jNeuroML and so is aware of the standard NeuroML LEMS
+    definitions.
+
+    TODO: allow inclusion of other paths for user-defined LEMS definitions
+    (does the -norun option allow the use of -I?)
+
+    :param nml2_lems_file_name: name of file to validate
+    :type nml2_lems_file_name: str
+    :param max_memory: memory to use for the Java virtual machine
+    :type max_memory: str
+    :returns: True if valid, False if invalid
+
+    """
+    post_args = ""
+    post_args += "-norun"
+
+    return run_jneuroml(
+        "",
+        nml2_lems_file_name,
+        post_args,
+        max_memory=max_memory,
+        verbose=False,
+        report_jnml_output=True,
+        exit_on_fail=True)
+
+
 def read_neuroml2_file(nml2_file_name, include_includes=False,
                        verbose=False, already_included=[],
                        optimized=False, check_validity_pre_include=False):
