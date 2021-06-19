@@ -27,4 +27,3 @@ script:
     - ./test.sh
     - ls -alt
     - flake8 . || exit 0
-    - pytest .
