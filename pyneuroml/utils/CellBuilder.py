@@ -60,9 +60,9 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
 
     :param cell: cell to add segment to
     :type cell: Cell
-    :param prox: proximal segment information
+    :param prox: proximal point : None means it is equal to the distal point of the parent segment
     :type prox: list with 4 float entries: [x, y, z, diameter]
-    :param dist: dist segment information
+    :param dist: dist point
     :type dist: list with 4 float entries: [x, y, z, diameter]
     :param name: name of segment
     :type name: str
@@ -76,7 +76,8 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
 
     """
     try:
-        p = Point3DWithDiam(x=prox[0], y=prox[1], z=prox[2], diameter=prox[3])
+        if prox:
+            p = Point3DWithDiam(x=prox[0], y=prox[1], z=prox[2], diameter=prox[3])
     except IndexError as e:
         print_function("{}: prox must be a list of 4 elements".format(e))
     try:
