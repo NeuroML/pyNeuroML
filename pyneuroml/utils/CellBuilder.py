@@ -78,6 +78,8 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
     try:
         if prox:
             p = Point3DWithDiam(x=prox[0], y=prox[1], z=prox[2], diameter=prox[3])
+        else:
+            p = None
     except IndexError as e:
         print_function("{}: prox must be a list of 4 elements".format(e))
     try:
