@@ -198,4 +198,5 @@ def add_channel_density(cell, nml_cell_doc, cd_id, cond_density, ion_channel, io
     cell.biophysical_properties.membrane_properties.channel_densities.append(cd)
 
     if len(ion_chan_def_file) > 0:
-        nml_cell_doc.includes.append(IncludeType(ion_chan_def_file))
+        if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
+            nml_cell_doc.includes.append(IncludeType(ion_chan_def_file))
