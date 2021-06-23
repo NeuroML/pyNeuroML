@@ -56,7 +56,7 @@ def create_cell(cell_id):
 
 def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, group=None):
     # type: (Cell, List[float], List[float], str, SegmentParent, float, SegmentGroup) -> Segment
-    """TODO: Docstring for add_segment.
+    """Add a segment to the cell.
 
     :param cell: cell to add segment to
     :type cell: Cell
