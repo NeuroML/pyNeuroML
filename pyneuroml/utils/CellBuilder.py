@@ -54,8 +54,8 @@ def create_cell(cell_id):
     return cell
 
 
-def add_segment(cell, prox, dist, name=None, parent=None, group=None):
-    # type: (Cell, List[float], List[float], str, SegmentParent, SegmentGroup) -> Segment
+def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, group=None):
+    # type: (Cell, List[float], List[float], str, SegmentParent, float, SegmentGroup) -> Segment
     """TODO: Docstring for add_segment.
 
     :param cell: cell to add segment to
@@ -68,6 +68,8 @@ def add_segment(cell, prox, dist, name=None, parent=None, group=None):
     :type name: str
     :param parent: parent segment
     :type parent: SegmentParent
+    :param fraction_along: where the new segment is connected to the parent (0: distal point, 1: proximal point)
+    :type fraction_along: float
     :param group: segment group to add the segment to
     :type group: SegmentGroup
     :returns: the created segment
