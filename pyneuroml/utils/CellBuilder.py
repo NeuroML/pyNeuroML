@@ -86,7 +86,7 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
 
     segid = len(cell.morphology.segments)
 
-    sp = SegmentParent(segments=parent.id) if parent else None
+    sp = SegmentParent(segments=parent.id, fraction_along=fraction_along) if parent else None
     segment = Segment(id=segid, proximal=p, distal=d, parent=sp)
 
     if name:
