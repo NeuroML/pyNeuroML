@@ -144,8 +144,6 @@ def set_resistivity(cell, resistivity, group="all"):
     :type resistivity: str
     :param group: segment group to modify
     :type group: str
-    :returns: TODO
-
     """
     cell.biophysical_properties.intracellular_properties.resistivities = [Resistivity(value=resistivity, segment_groups=group)]
 
