@@ -147,6 +147,13 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
             cell.morphology.segment_groups.append(seg_group)
 
         seg_group.members.append(Member(segments=segment.id))
+        # Ideally, these higher level segment groups should just include other
+        # segment groups using Include, which would result in smaller NML
+        # files. However, because these default segment groups are defined
+        # first, they are printed in the NML file before the new segments and their
+        # groups. The jnml validator does not like this.
+        # TODO: clarify if the order of definition is important, or if the jnml
+        # validator needs to be updated to manage this use case.
         if seg_group_default:
             seg_group_default.members.append(Member(segments=segment.id))
 
