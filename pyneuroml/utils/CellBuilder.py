@@ -10,13 +10,13 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 
 from typing import List
-from neuroml import (Cell, Morphology, MembraneProperties,  # noqa
+from neuroml import (Cell, Morphology, MembraneProperties,  # type: ignore  # noqa
                      IntracellularProperties, BiophysicalProperties, Segment,
                      SegmentGroup, Point3DWithDiam, SegmentParent, Member,
                      InitMembPotential, Resistivity, SpecificCapacitance,
                      NeuroMLDocument, IncludeType, ChannelDensity,
                      )
-from pyneuroml.pynml import print_function
+from pyneuroml.pynml import print_function  # type: ignore
 
 
 neuro_lex_ids = {
@@ -157,7 +157,7 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
 
 
 def set_init_memb_potential(cell, v, group="all"):
-    # type (Cell, str, str)
+    # type: (Cell, str, str) -> None
     """Set the initial membrane potential of the cell.
 
     :param cell: cell to modify
@@ -172,7 +172,7 @@ def set_init_memb_potential(cell, v, group="all"):
 
 
 def set_resistivity(cell, resistivity, group="all"):
-    # type (Cell, str, str)
+    # type: (Cell, str, str) -> None
     """Set the resistivity of the cell
 
     :param cell: cell to modfify
@@ -185,7 +185,7 @@ def set_resistivity(cell, resistivity, group="all"):
 
 
 def set_specific_capacitance(cell, spec_cap, group="all"):
-    # type (Cell, str, str)
+    # type: (Cell, str, str) -> None
     """Set the specific capacitance for the cell.
 
     :param cell: cell to set specific capacitance for
@@ -199,7 +199,7 @@ def set_specific_capacitance(cell, spec_cap, group="all"):
 
 
 def add_channel_density(cell, nml_cell_doc, cd_id, cond_density, ion_channel, ion_chan_def_file="", erev="0.0 mV", ion="non_specific", group="all"):
-    # type (Cell, NeuroMLDocument, str, str, str, str, str, str, str)
+    # type: (Cell, NeuroMLDocument, str, str, str, str, str, str, str) -> None
     """Add channel density.
 
     :param cell: cell to be modified
@@ -236,7 +236,7 @@ def add_channel_density(cell, nml_cell_doc, cd_id, cond_density, ion_channel, io
 
 
 def get_seg_group_by_id(sg_id, cell):
-    # (str, Cell) -> SegmentGroup
+    # type (str, Cell) -> SegmentGroup
     """Return the SegmentGroup object for the specified segment group id.
 
     :param sg_id: id of segment group to find
@@ -258,6 +258,7 @@ def get_seg_group_by_id(sg_id, cell):
 
 
 def get_seg_group_by_id_substring(sg_id_substring, cell):
+    # type (str, Cell) -> list
     """Return segment groups that include the specified substring.
 
     :param sg_id_substring: substring to match
