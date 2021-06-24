@@ -19,6 +19,13 @@ from neuroml import (Cell, Morphology, MembraneProperties,  # noqa
 from pyneuroml.pynml import print_function
 
 
+neuro_lex_ids = {
+    'axon': "GO:0030424",
+    'dend': "GO:0030425",
+    'soma': "GO:0043025",
+}
+
+
 def create_cell(cell_id):
     # type: (str) -> Cell
     """Create a NeuroML Cell.
