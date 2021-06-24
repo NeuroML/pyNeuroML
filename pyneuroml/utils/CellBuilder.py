@@ -35,11 +35,14 @@ def create_cell(cell_id):
     - BiophysicalProperties: "biophys"
     - MembraneProperties
     - IntracellularProperties
-    - SegmentGroup: "all"
+    - SegmentGroups: "all", "soma_group", "dendrite_group", "axon_group" which
+      can be used to include all, soma, dendrite, and axon segments
+      respectively.
 
     Note that since this cell does not currently include a segment in its
     morphology, it is *not* a valid NeuroML construct. Use the `add_segment`
-    function to add segments.
+    function to add segments. `add_segment` will also populate the default
+    segment groups this creates.
 
     :param cell_id: id of the cell
     :type cell_id: str
@@ -56,7 +59,19 @@ def create_cell(cell_id):
         membrane_properties=membrane_properties)
 
     seg_group_all = SegmentGroup(id='all')
+    seg_group_soma = SegmentGroup(id='soma_group',
+                                  neuro_lex_id=neuro_lex_ids["soma"],
+                                  notes="Default soma segment group for the cell")
+    seg_group_axon = SegmentGroup(id='axon_group',
+                                  neuro_lex_id=neuro_lex_ids["axon"],
+                                  notes="Default axon segment group for the cell")
+    seg_group_dend = SegmentGroup(id='dendrite_group',
+                                  neuro_lex_id=neuro_lex_ids["dend"],
+                                  notes="Default dendrite segment group for the cell")
     cell.morphology.segment_groups.append(seg_group_all)
+    cell.morphology.segment_groups.append(seg_group_soma)
+    cell.morphology.segment_groups.append(seg_group_axon)
+    cell.morphology.segment_groups.append(seg_group_dend)
 
     return cell
 
