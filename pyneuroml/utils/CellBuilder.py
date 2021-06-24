@@ -80,11 +80,19 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
     # type: (Cell, List[float], List[float], str, SegmentParent, float, SegmentGroup) -> Segment
     """Add a segment to the cell.
 
+    Convention: use axon_, soma_, dend_ prefixes for axon, soma, and dendrite
+    segments respectivey. This will allow this function to add the correct
+    neurolex IDs to the group.
+
+    The created segment is also added to the default segment groups that were
+    created by the `create_cell` function: "all", "dendrite_group",
+    "soma_group", "axon_group" if the convention is followed.
+
     :param cell: cell to add segment to
     :type cell: Cell
-    :param prox: proximal point : None means it is equal to the distal point of the parent segment
+    :param prox: proximal segment information
     :type prox: list with 4 float entries: [x, y, z, diameter]
-    :param dist: dist point
+    :param dist: dist segment information
     :type dist: list with 4 float entries: [x, y, z, diameter]
     :param name: name of segment
     :type name: str
@@ -119,25 +127,28 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
 
     if group:
         seg_group = None
-        for sg in cell.morphology.segment_groups:
-            if sg.id == group:
-                seg_group = sg
-            if sg.id == 'all':
-                seg_group_all = sg
+        seg_group = get_seg_group_by_id(group, cell)
+        seg_group_all = get_seg_group_by_id("all", cell)
+        seg_group_default = None
+        neuro_lex_id = None
+
+        if "axon_" in group:
+            neuro_lex_id = neuro_lex_ids["axon"]  # See http://amigo.geneontology.org/amigo/term/GO:0030424
+            seg_group_default = get_seg_group_by_id("axon_group", cell)
+        if "soma_" in group:
+            neuro_lex_id = neuro_lex_ids["soma"]
+            seg_group_default = get_seg_group_by_id("soma_group", cell)
+        if "dend_" in group:
+            neuro_lex_id = neuro_lex_ids["dend"]
+            seg_group_default = get_seg_group_by_id("dendrite_group", cell)
 
         if seg_group is None:
-            neuro_lex_id = None
-            if group == "axon_group":
-                neuro_lex_id = "GO:0030424"  # See http://amigo.geneontology.org/amigo/term/GO:0030424
-            if group == "soma_group":
-                neuro_lex_id = "GO:0043025"
-            if group == "dendrite_group":
-                neuro_lex_id = "GO:0030425"
-
             seg_group = SegmentGroup(id=group, neuro_lex_id=neuro_lex_id)
             cell.morphology.segment_groups.append(seg_group)
 
         seg_group.members.append(Member(segments=segment.id))
+        if seg_group_default:
+            seg_group_default.members.append(Member(segments=segment.id))
 
     seg_group_all.members.append(Member(segments=segment.id))
 
