@@ -222,3 +222,45 @@ def add_channel_density(cell, nml_cell_doc, cd_id, cond_density, ion_channel, io
     if len(ion_chan_def_file) > 0:
         if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
             nml_cell_doc.includes.append(IncludeType(ion_chan_def_file))
+
+
+def get_seg_group_by_id(sg_id, cell):
+    # (str, Cell) -> SegmentGroup
+    """Return the SegmentGroup object for the specified segment group id.
+
+    :param sg_id: id of segment group to find
+    :type sg_id: str
+    :param cell: cell to look for segment group in
+    :type cell: Cell
+    :returns: SegmentGroup object of specified ID or None if not found
+
+    """
+    if not sg_id or not cell:
+        print_function("Please specify both a segment group id and a Cell")
+        return None
+
+    for sg in cell.morphology.segment_groups:
+        if sg.id == sg_id:
+            return sg
+
+    return None
+
+
+def get_seg_group_by_id_substring(sg_id_substring, cell):
+    """Return segment groups that include the specified substring.
+
+    :param sg_id_substring: substring to match
+    :type sg_id_substring: str
+    :param cell: cell to look for segment group in
+    :type cell: Cell
+    :returns: list of SegmentGroups whose IDs include the given substring
+
+    """
+    sg_group_list = []
+    if not sg_id_substring or not cell:
+        print_function("Please specify both a segment group id and a Cell")
+        return None
+    for sg in cell.morphology.segment_groups:
+        if sg_id_substring in sg.id:
+            sg_group_list.append(sg)
+    return sg_group_list
