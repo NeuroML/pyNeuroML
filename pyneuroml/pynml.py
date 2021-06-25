@@ -429,6 +429,36 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,
                             exit_on_fail=False)
 
 
+def validate_neuroml2_lems_file(nml2_lems_file_name, max_memory=DEFAULTS['default_java_max_memory']):
+    # type (str, str) -> bool
+    """Validate a NeuroML 2 LEMS file using jNeuroML.
+
+    Note that this uses jNeuroML and so is aware of the standard NeuroML LEMS
+    definitions.
+
+    TODO: allow inclusion of other paths for user-defined LEMS definitions
+    (does the -norun option allow the use of -I?)
+
+    :param nml2_lems_file_name: name of file to validate
+    :type nml2_lems_file_name: str
+    :param max_memory: memory to use for the Java virtual machine
+    :type max_memory: str
+    :returns: True if valid, False if invalid
+
+    """
+    post_args = ""
+    post_args += "-norun"
+
+    return run_jneuroml(
+        "",
+        nml2_lems_file_name,
+        post_args,
+        max_memory=max_memory,
+        verbose=False,
+        report_jnml_output=True,
+        exit_on_fail=True)
+
+
 def read_neuroml2_file(nml2_file_name, include_includes=False,
                        verbose=False, already_included=[],
                        optimized=False, check_validity_pre_include=False):
@@ -665,6 +695,16 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
 
 
 def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_includes=False, debug=False):
+    """Read LEMS file using PyLEMS. See WARNING below.
+
+    WARNING: this is a general function that uses PyLEMS to read any files that
+    are valid LEMS *even if they are not valid NeuroML*. Therefore, this
+    function is not aware of the standard NeuroML LEMS definitions.
+
+    To validate NeuroML LEMS files which need to be aware of the NeuroML
+    standard LEMS definitions, please use the `validate_neuroml2_lems_file`
+    function instead.
+    """
     if not os.path.isfile(lems_file_name):
         print_comment("Unable to find file: %s!" % lems_file_name, True)
         sys.exit()
