@@ -26,8 +26,8 @@ neuro_lex_ids = {
 }
 
 
-def create_cell(cell_id):
-    # type: (str) -> Cell
+def create_cell(cell_id, use_convention=True):
+    # type: (str, bool) -> Cell
     """Create a NeuroML Cell.
 
     Initialises the cell with these properties assigning IDs where applicable:
@@ -35,9 +35,12 @@ def create_cell(cell_id):
     - BiophysicalProperties: "biophys"
     - MembraneProperties
     - IntracellularProperties
-    - SegmentGroups: "all", "soma_group", "dendrite_group", "axon_group" which
-      can be used to include all, soma, dendrite, and axon segments
-      respectively.
+
+    if `use_convention` is True, it also creates some default SegmentGroups for
+    convenience:
+    - "all", "soma_group", "dendrite_group", "axon_group" which
+      are used by other helper functions to include all, soma, dendrite, and
+      axon segments respectively.
 
     Note that since this cell does not currently include a segment in its
     morphology, it is *not* a valid NeuroML construct. Use the `add_segment`
@@ -46,6 +49,8 @@ def create_cell(cell_id):
 
     :param cell_id: id of the cell
     :type cell_id: str
+    :param use_convention: whether helper segment groups should be created using the default convention
+    :type use_convention: bool
     :returns: created cell object of type neuroml.Cell
 
     """
@@ -58,35 +63,38 @@ def create_cell(cell_id):
         id="biophys", intracellular_properties=intracellular_properties,
         membrane_properties=membrane_properties)
 
-    seg_group_all = SegmentGroup(id='all')
-    seg_group_soma = SegmentGroup(id='soma_group',
-                                  neuro_lex_id=neuro_lex_ids["soma"],
-                                  notes="Default soma segment group for the cell")
-    seg_group_axon = SegmentGroup(id='axon_group',
-                                  neuro_lex_id=neuro_lex_ids["axon"],
-                                  notes="Default axon segment group for the cell")
-    seg_group_dend = SegmentGroup(id='dendrite_group',
-                                  neuro_lex_id=neuro_lex_ids["dend"],
-                                  notes="Default dendrite segment group for the cell")
-    cell.morphology.segment_groups.append(seg_group_all)
-    cell.morphology.segment_groups.append(seg_group_soma)
-    cell.morphology.segment_groups.append(seg_group_axon)
-    cell.morphology.segment_groups.append(seg_group_dend)
+    if use_convention:
+        seg_group_all = SegmentGroup(id='all')
+        seg_group_soma = SegmentGroup(id='soma_group',
+                                      neuro_lex_id=neuro_lex_ids["soma"],
+                                      notes="Default soma segment group for the cell")
+        seg_group_axon = SegmentGroup(id='axon_group',
+                                      neuro_lex_id=neuro_lex_ids["axon"],
+                                      notes="Default axon segment group for the cell")
+        seg_group_dend = SegmentGroup(id='dendrite_group',
+                                      neuro_lex_id=neuro_lex_ids["dend"],
+                                      notes="Default dendrite segment group for the cell")
+        cell.morphology.segment_groups.append(seg_group_all)
+        cell.morphology.segment_groups.append(seg_group_soma)
+        cell.morphology.segment_groups.append(seg_group_axon)
+        cell.morphology.segment_groups.append(seg_group_dend)
 
     return cell
 
 
-def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, group=None):
-    # type: (Cell, List[float], List[float], str, SegmentParent, float, SegmentGroup) -> Segment
+def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0,
+                group=None, use_convention=True):
+    # type: (Cell, List[float], List[float], str, SegmentParent, float, SegmentGroup, bool) -> Segment
     """Add a segment to the cell.
 
-    Convention: use axon_, soma_, dend_ prefixes for axon, soma, and dendrite
-    segments respectivey. This will allow this function to add the correct
-    neurolex IDs to the group.
+    Suggested convention: use axon_, soma_, dend_ prefixes for axon, soma, and
+    dendrite segments respectivey. This will allow this function to add the
+    correct neurolex IDs to the group.
 
-    The created segment is also added to the default segment groups that were
-    created by the `create_cell` function: "all", "dendrite_group",
-    "soma_group", "axon_group" if the convention is followed.
+    If `use_convention` is true, the created segment is also added to the
+    default segment groups that were created by the `create_cell` function:
+    "all", "dendrite_group", "soma_group", "axon_group". Note that while it is
+    not necessary to use the convention, it is necessary to be consistent.
 
     :param cell: cell to add segment to
     :type cell: Cell
@@ -102,6 +110,8 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
     :type fraction_along: float
     :param group: segment group to add the segment to
     :type group: SegmentGroup
+    :param use_convention: whether helper segment groups should be created using the default convention
+    :type use_convention: bool
     :returns: the created segment
 
     """
@@ -127,20 +137,22 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
 
     if group:
         seg_group = None
-        seg_group = cell.get_seg_group_by_id(group)
-        seg_group_all = cell.get_seg_group_by_id("all")
+        seg_group = cell.get_segment_group(group)
         seg_group_default = None
         neuro_lex_id = None
 
         if "axon_" in group:
             neuro_lex_id = neuro_lex_ids["axon"]  # See http://amigo.geneontology.org/amigo/term/GO:0030424
-            seg_group_default = get_seg_group_by_id("axon_group", cell)
+            if use_convention:
+                seg_group_default = cell.get_segment_group("axon_group")
         if "soma_" in group:
             neuro_lex_id = neuro_lex_ids["soma"]
-            seg_group_default = get_seg_group_by_id("soma_group", cell)
+            if use_convention:
+                seg_group_default = cell.get_segment_group("soma_group")
         if "dend_" in group:
             neuro_lex_id = neuro_lex_ids["dend"]
-            seg_group_default = cell.get_seg_group_by_id("dendrite_group")
+            if use_convention:
+                seg_group_default = cell.get_segment_group("dendrite_group")
 
         if seg_group is None:
             seg_group = SegmentGroup(id=group, neuro_lex_id=neuro_lex_id)
@@ -154,10 +166,12 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
         # groups. The jnml validator does not like this.
         # TODO: clarify if the order of definition is important, or if the jnml
         # validator needs to be updated to manage this use case.
-        if seg_group_default:
+        if use_convention and seg_group_default:
             seg_group_default.members.append(Member(segments=segment.id))
 
-    seg_group_all.members.append(Member(segments=segment.id))
+    if use_convention:
+        seg_group_all = cell.get_segment_group("all")
+        seg_group_all.members.append(Member(segments=segment.id))
 
     cell.morphology.segments.append(segment)
     return segment
