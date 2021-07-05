@@ -385,7 +385,7 @@ def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=Tr
     from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
     from neuromllite.GraphVizHandler import engines
 
-    logger.info('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
+    print_comment('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
 
     handler = GraphVizHandler(level=level, engine=engine, nl_network=None)
     currParser = NeuroMLXMLParser(handler)
@@ -481,7 +481,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
                        verbose=False, already_included=[],
                        optimized=False, check_validity_pre_include=False):
 
-    logger.info("Loading NeuroML2 file: %s" % nml2_file_name)
+    print_comment("Loading NeuroML2 file: %s" % nml2_file_name)
 
     if not os.path.isfile(nml2_file_name):
         logger.critical("Unable to find file: %s!" % nml2_file_name)
@@ -752,7 +752,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            exit_on_fail=True,
                            cleanup=False):
 
-    logger.info("Loading LEMS file: {} and running with jNeuroML".format(lems_file_name))
+    print_comment("Loading LEMS file: {} and running with jNeuroML".format(lems_file_name))
     post_args = ""
     post_args += gui_string(nogui)
     post_args += include_string(paths_to_include)
@@ -789,7 +789,7 @@ def run_lems_with_jneuroml(lems_file_name,
 
 def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
-    logger.info("Converting NeuroML2 file: {} to SVG".format(nml2_file_name))
+    print_comment("Converting NeuroML2 file: {} to SVG".format(nml2_file_name))
 
     post_args = "-svg"
 
@@ -802,7 +802,7 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
-    logger.info("Converting NeuroML2 file: %s to PNG" % nml2_file_name)
+    print_comment("Converting NeuroML2 file: %s to PNG" % nml2_file_name)
 
     post_args = "-png"
 
@@ -847,7 +847,7 @@ def run_lems_with_jneuroml_neuron(
         realtime_output=False):
     # jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
 
-    logger.info("Loading LEMS file: {} and running with jNeuroML_NEURON".format(lems_file_name))
+    print_comment("Loading LEMS file: {} and running with jNeuroML_NEURON".format(lems_file_name))
 
     post_args = " -neuron"
     if not only_generate_scripts:  # and jnml_runs_neuron:
@@ -936,7 +936,7 @@ def run_lems_with_jneuroml_netpyne(
     cleanup=False
 ):
 
-    logger.info("Loading LEMS file: {} and running with jNeuroML_NetPyNE".format(lems_file_name))
+    print_comment("Loading LEMS file: {} and running with jNeuroML_NetPyNE".format(lems_file_name))
 
     post_args = " -netpyne"
 
@@ -994,7 +994,7 @@ def run_lems_with_jneuroml_brian2(
     cleanup=False
 ):
 
-    logger.info("Loading LEMS file: {} and running with jNeuroML_Brian2".format(lems_file_name))
+    print_comment("Loading LEMS file: {} and running with jNeuroML_Brian2".format(lems_file_name))
 
     post_args = " -brian2"
 
@@ -1573,12 +1573,20 @@ def run_jneuroml_with_realtime_output(
     return True
 
 
-def print_comment(text, print_it=DEFAULTS['v'], end='\n'):
+def print_comment(text, end='\n'):
+    # type: (str, str) -> None
+    """Print a general comment to user.
+
+    This is to be used when the message must always be printed, irrespective of
+    the debugging options provided by the user.
+
+    :param text: text to print
+    :type text: str
+    :param end: end of line character
+    :type end: str
+    """
     prefix = "pyNeuroML >>> "
-    if not isinstance(text, str):
-        text = text.decode('ascii')
-    if print_it:
-        print("%s%s" % (prefix, text.replace("\n", "\n" + prefix)), end=end)
+    print("%s%s" % (prefix, text.replace("\n", "\n" + prefix)), end=end)
 
 
 def execute_command_in_dir_with_realtime_output(command, directory,
@@ -1597,7 +1605,7 @@ def execute_command_in_dir_with_realtime_output(command, directory,
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
         with p.stdout:
             for line in iter(p.stdout.readline, b''):
-                logger.debug(line, end="")
+                logger.debug(line.debug('ascii'))
         p.wait()  # wait for the subprocess to exit
     except KeyboardInterrupt as e:
         logger.error('*** Command interrupted: \n       %s' % command)
@@ -1766,7 +1774,7 @@ def generate_plot(xvalues,
     :type verbose: boolean
     """
 
-    logger.info("Generating plot: %s" % (title))
+    print_comment("Generating plot: %s" % (title))
 
     from matplotlib import pyplot as plt
     from matplotlib import rcParams
@@ -1833,9 +1841,9 @@ def generate_plot(xvalues,
         plt.ylim(ylim)
 
     if save_figure_to:
-        logger.info("Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title))
+        print_comment("Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title))
         plt.savefig(save_figure_to, bbox_inches='tight')
-        logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
+        print_comment("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
         plt.show()
@@ -1907,7 +1915,7 @@ def extract_annotations(nml2_file):
                         if attr:
                             annotations[desc].append({kind: attr})
 
-    logger.info("Annotations in %s: " % (nml2_file))
+    print_comment("Annotations in %s: " % (nml2_file))
     pp.pprint(annotations)
 
 
