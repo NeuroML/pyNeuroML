@@ -43,22 +43,7 @@ DEFAULTS = {'v': False,
 
 lems_model_with_units = None
 
-
-# Define a logger for the module
-logging.basicConfig(
-    format="pyNeuroML >>> %(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.WARN
-)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARN)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-# create formatter
-formatter = logging.Formatter('pyNeuroML >>> %(name)s - %(levelname)s - %(message)s')
-# add formatter to ch
-ch.setFormatter(formatter)
-# add ch to logger
-logger.addHandler(ch)
 
 
 def parse_arguments():
