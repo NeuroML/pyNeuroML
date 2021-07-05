@@ -24,6 +24,7 @@ import zipfile
 import shlex
 from lxml import etree
 import pprint
+import logging
 
 import lems.model.model as lems_model
 from lems.parser.LEMS import LEMSFileParser
@@ -41,6 +42,23 @@ DEFAULTS = {'v': False,
             'nogui': False}
 
 lems_model_with_units = None
+
+
+# Define a logger for the module
+logging.basicConfig(
+    format="pyNeuroML >>> %(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.WARN
+)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARN)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter('pyNeuroML >>> %(name)s - %(levelname)s - %(message)s')
+# add formatter to ch
+ch.setFormatter(formatter)
+# add ch to logger
+logger.addHandler(ch)
 
 
 def parse_arguments():
@@ -70,9 +88,9 @@ def parse_arguments():
 
     shared_options.add_argument(
         '-verbose',
-        action='store_true',
-        default=DEFAULTS['v'],
-        help='Verbose output'
+        default='WARN',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        help='Verbose output (default: WARNING)'
     )
     shared_options.add_argument(
         '-java_max_memory',
@@ -291,7 +309,7 @@ def get_lems_model_with_units():
 
     if lems_model_with_units is None:
         jar_path = get_path_to_jnml_jar()
-        # print_comment_v("Loading standard NeuroML2 dimension/unit definitions from %s"%jar_path)
+        logger.debug("Loading standard NeuroML2 dimension/unit definitions from %s" % jar_path)
         jar = zipfile.ZipFile(jar_path, 'r')
         dims_units = jar.read('NeuroML2CoreTypes/NeuroMLCoreDimensions.xml')
         lems_model_with_units = lems_model.Model(include_includes=False)
@@ -348,7 +366,7 @@ def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
                     "Cannot convert {} to {}. Dimensions of units ({}/{}) do not match!".format(
                         nml2_quantity, unit, dim, un.dimension))
 
-    print_comment("Converting {} {} to {}: {} ({} in SI units)".format(
+    logger.debug("Converting {} {} to {}: {} ({} in SI units)".format(
         m, u, unit, new_value, si_value), verbose)
 
     return new_value
@@ -367,14 +385,14 @@ def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=Tr
     from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
     from neuromllite.GraphVizHandler import engines
 
-    print_comment('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
+    logger.info('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
 
     handler = GraphVizHandler(level=level, engine=engine, nl_network=None)
     currParser = NeuroMLXMLParser(handler)
     currParser.parse(nml2_file_name)
     handler.finalise_document()
 
-    print_comment("Done with GraphViz...")
+    logger.info("Done with GraphViz...")
     return 0
 
 
@@ -463,10 +481,10 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
                        verbose=False, already_included=[],
                        optimized=False, check_validity_pre_include=False):
 
-    print_comment("Loading NeuroML2 file: %s" % nml2_file_name, verbose)
+    logger.info("Loading NeuroML2 file: %s" % nml2_file_name)
 
     if not os.path.isfile(nml2_file_name):
-        print_comment("Unable to find file: %s!" % nml2_file_name, True)
+        logger.critical("Unable to find file: %s!" % nml2_file_name)
         sys.exit()
 
     if nml2_file_name.endswith('.h5') or nml2_file_name.endswith('.hdf5'):
@@ -477,8 +495,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
     base_path = os.path.dirname(os.path.realpath(nml2_file_name))
 
     if include_includes:
-        print_comment('Including included files (included already: {})'.format(
-            already_included, verbose))
+        logger.info('Including included files (included already: {})'.format(already_included))
 
         incl_to_remove = []
         for include in nml2_doc.includes:
@@ -489,9 +506,7 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
                 if check_validity_pre_include:
                     inc = validate_neuroml2(incl_loc, verbose_validate=False)
 
-                print_comment(
-                    "Loading included NeuroML2 file: {} (base: {}, resolved: {}, checking {})".format(
-                        include.href, base_path, incl_loc, check_validity_pre_include), verbose)
+                logger.debug("Loading included NeuroML2 file: {} (base: {}, resolved: {}, checking {})".format(include.href, base_path, incl_loc, check_validity_pre_include))
                 if inc:
                     nml2_sub_doc = read_neuroml2_file(
                         incl_loc, True,
@@ -508,14 +523,11 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
                                 and not memb[0].endswith('_'):
                             for entry in memb[1]:
                                 if memb[0] != 'includes':
-                                    print_comment(
-                                        "  Adding %s from: %s to list: {}".format(
-                                            entry, incl_loc, memb[0])
-                                    )
+                                    logger.debug("  Adding {!s} from: {!s} to list: {}".format(entry, incl_loc, memb[0]))
                                     getattr(nml2_doc, memb[0]).append(entry)
                     incl_to_remove.append(include)
                 else:
-                    print_comment("Not including file as it's not valid...", verbose)
+                    logger.warn("Not including file as it's not valid...")
 
         for include in incl_to_remove:
             nml2_doc.includes.remove(include)
@@ -706,7 +718,7 @@ def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_inclu
     function instead.
     """
     if not os.path.isfile(lems_file_name):
-        print_comment("Unable to find file: %s!" % lems_file_name, True)
+        logger.critical("Unable to find file: %s!" % lems_file_name)
         sys.exit()
 
     model = lems_model.Model(include_includes=include_includes,
@@ -740,8 +752,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            exit_on_fail=True,
                            cleanup=False):
 
-    print_comment("Loading LEMS file: %s and running with jNeuroML".format(
-                  lems_file_name, verbose))
+    logger.info("Loading LEMS file: {} and running with jNeuroML".format(lems_file_name))
     post_args = ""
     post_args += gui_string(nogui)
     post_args += include_string(paths_to_include)
@@ -778,7 +789,7 @@ def run_lems_with_jneuroml(lems_file_name,
 
 def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
-    print_comment("Converting NeuroML2 file: %s to SVG" % nml2_file_name, verbose)
+    logger.info("Converting NeuroML2 file: {} to SVG".format(nml2_file_name))
 
     post_args = "-svg"
 
@@ -791,7 +802,7 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
-    print_comment("Converting NeuroML2 file: %s to PNG" % nml2_file_name, verbose)
+    logger.info("Converting NeuroML2 file: %s to PNG" % nml2_file_name)
 
     post_args = "-png"
 
@@ -836,7 +847,7 @@ def run_lems_with_jneuroml_neuron(
         realtime_output=False):
     # jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
 
-    print_comment("Loading LEMS file: %s and running with jNeuroML_NEURON" % lems_file_name, verbose)
+    logger.info("Loading LEMS file: {} and running with jNeuroML_NEURON".format(lems_file_name))
 
     post_args = " -neuron"
     if not only_generate_scripts:  # and jnml_runs_neuron:
@@ -858,7 +869,7 @@ def run_lems_with_jneuroml_neuron(
             if path + ":" not in os.environ['PYTHONPATH']:
                 os.environ['PYTHONPATH'] = '%s:%s' % (path, os.environ['PYTHONPATH'])
 
-        # print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
+        logger.debug('PYTHONPATH for NEURON: {}'.format(os.environ['PYTHONPATH']))
 
         if realtime_output:
             success = run_jneuroml_with_realtime_output(
@@ -869,9 +880,7 @@ def run_lems_with_jneuroml_neuron(
                 exec_in_dir=exec_in_dir,
                 verbose=verbose,
                 exit_on_fail=exit_on_fail)
-
-        # print_comment('PYTHONPATH for NEURON: %s'%os.environ['PYTHONPATH'], verbose)
-
+            logger.debug('PYTHONPATH for NEURON: {}'.format(os.environ['PYTHONPATH']))
         else:
             success = run_jneuroml(
                 "",
@@ -886,7 +895,7 @@ def run_lems_with_jneuroml_neuron(
         """
         TODO: Work in progress!!!
         if not jnml_runs_neuron:
-          print_comment("Running...",verbose)
+          logger.info("Running...")
           from LEMS_NML2_Ex5_DetCell_nrn import NeuronSimulation
           ns = NeuronSimulation(tstop=300, dt=0.01, seed=123456789)
           ns.run()
@@ -927,9 +936,7 @@ def run_lems_with_jneuroml_netpyne(
     cleanup=False
 ):
 
-    print_comment(
-        "Loading LEMS file: %s and running with jNeuroML_NetPyNE".format(
-            lems_file_name), verbose)
+    logger.info("Loading LEMS file: {} and running with jNeuroML_NetPyNE".format(lems_file_name))
 
     post_args = " -netpyne"
 
@@ -987,9 +994,7 @@ def run_lems_with_jneuroml_brian2(
     cleanup=False
 ):
 
-    print_comment(
-        "Loading LEMS file: %s and running with jNeuroML_Brian2".format(
-            lems_file_name), verbose)
+    logger.info("Loading LEMS file: {} and running with jNeuroML_Brian2".format(lems_file_name))
 
     post_args = " -brian2"
 
@@ -1011,11 +1016,11 @@ def run_lems_with_jneuroml_brian2(
 
         old_sys_args = [a for a in sys.argv]
         sys.argv[1] = '-nogui' # To supress gui for brian simulation...
-        print_comment('Importing generated Brian2 python file (changed args from %s to %s)'%(old_sys_args,sys.argv), verbose)
+        logger.info('Importing generated Brian2 python file (changed args from {} to {})'.format(old_sys_args, sys.argv))
         brian2_py_name = lems_file_name.replace('.xml','_brian2')
         exec('import %s'%brian2_py_name)
         sys.argv = old_sys_args
-        print_comment('Finished Brian2 simulation, back to %s'%sys.argv, verbose)
+        logger.info('Finished Brian2 simulation, back to {}'.format(sys.argv))
 
     if not success:
         return False
@@ -1049,8 +1054,7 @@ def reload_saved_data(lems_file_name,
     else:
         real_lems_file = os.path.realpath(lems_file_name)
 
-    print_comment("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s"
-                  % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already), True)
+    logger.debug("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s" % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already))
 
     # Could use pylems to parse all this...
     traces = {}
@@ -1093,8 +1097,7 @@ def reload_saved_data(lems_file_name,
                 raise OSError(('Could not find simulation output '
                                'file %s' % file_name))
             format = of.attrib['format']
-            print_comment("Loading saved events from %s (format: %s)" % (file_name, format),
-                          True)
+            logger.info("Loading saved events from %s (format: %s)" % (file_name, format))
             selections = {}
             for col in of.findall(ns_prefix + 'EventSelection'):
                 id = int(col.attrib['id'])
@@ -1111,11 +1114,11 @@ def reload_saved_data(lems_file_name,
                     elif format == 'ID_TIME':
                         id = int(values[0])
                         t = float(values[1])
-                # print_comment("Found a event in cell %s (%s) at t = %s" % (id,selections[id],t))
+                logger.debug("Found a event in cell %s (%s) at t = %s" % (id, selections[id], t))
                 events[selections[id]].append(t)
 
             if remove_dat_files_after_load:
-                print_comment_v("Removing file %s after having loading its data!" % file_name)
+                logger.warn("Removing file %s after having loading its data!" % file_name)
                 os.remove(file_name)
 
     output_files = sim.findall(ns_prefix + 'OutputFile')
@@ -1152,9 +1155,7 @@ def reload_saved_data(lems_file_name,
                             "%s but the simulation was run later at %s."
                             % (file_name, t_file_mod, t_run))
 
-        print_comment("Loading saved data from %s%s"
-                      % (file_name, ' (%s)' % simulator if simulator else ''),
-                      verbose)
+        logger.debug("Loading saved data from %s%s" % (file_name, ' (%s)' % simulator if simulator else ''))
 
         cols = []
         cols.append('t')
@@ -1170,7 +1171,7 @@ def reload_saved_data(lems_file_name,
                     traces[cols[vi]].append(float(values[vi]))
 
         if remove_dat_files_after_load:
-            print_comment_v("Removing file %s after having loading its data!" % file_name)
+            logger.warn("Removing file %s after having loading its data!" % file_name)
             os.remove(file_name)
 
         if plot:
@@ -1178,7 +1179,7 @@ def reload_saved_data(lems_file_name,
                 "Data loaded from %s%s"
                 % (file_name, ' (%s)' % simulator if simulator else '')
             )
-            print_comment_v("Reloading: %s" % info)
+            logger.warn("Reloading: %s" % info)
             fig.canvas.manager.set_window_title(info)
 
             legend = False
@@ -1194,8 +1195,7 @@ def reload_saved_data(lems_file_name,
 
                 if key != 't':
                     ax_.plot(traces['t'], traces[key], label=key)
-                    print_comment("Adding trace for: %s, from: %s"
-                                  % (key, file_name), verbose)
+                    logger.debug("Adding trace for: %s, from: %s" % (key, file_name))
                     ax_.used = True
                     legend = True
 
@@ -1234,7 +1234,7 @@ def get_next_hex_color(my_random=None):
 
 def confirm_file_exists(filename):
     if not os.path.isfile(filename):
-        print_comment_v("Error! Unable to find file: %s!" % filename)
+        logger.critical("Unable to find file: %s!" % filename)
         sys.exit()
 
 
@@ -1250,7 +1250,7 @@ def confirm_neuroml_file(filename):
     # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
     confirm_file_exists(filename)
     if filename.startswith('LEMS_'):
-        print_comment_v(textwrap.dedent(
+        logger.warn(textwrap.dedent(
             """
             *************************************************************************************
             **  Warning, you may be trying to use a LEMS XML file (containing <Simulation> etc.)
@@ -1272,8 +1272,7 @@ def confirm_lems_file(filename):
     # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
     confirm_file_exists(filename)
     if filename.endswith('nml'):
-        print_comment_v(textwrap.dedent(
-
+        logger.warn(textwrap.dedent(
             """
             *************************************************************************************
             **  Warning, you may be trying to use a NeuroML2 file for a pyNeuroML option
@@ -1284,9 +1283,14 @@ def confirm_lems_file(filename):
 
 
 def evaluate_arguments(args):
-    #print('    ====  Args: %s'%args)
+    logger.debug('    ====  Args: %s' % args)
     global DEFAULTS
-    DEFAULTS['v'] = args.verbose
+    if args.verbose:
+        logger.setLevel(logging.getLevelName(args.verbose))
+    # if the user uses INFO or DEBUG, make the commands we call also print
+    # extra inputs
+    if args.verbose in ["DEBUG", "INFO"]:
+        DEFAULTS['v'] = True
 
     pre_args = ""
     post_args = ""
@@ -1319,7 +1323,7 @@ def evaluate_arguments(args):
 
     # Process bits that process the file list provided as the shared option
     if len(args.input_files) == 0:
-        print_comment_v("ERROR: Please specify NeuroML/LEMS files to process")
+        logger.critical("Please specify NeuroML/LEMS files to process")
         return
 
     for f in args.input_files:
@@ -1336,9 +1340,9 @@ def evaluate_arguments(args):
 
             num_neuron_args = len(args.neuron)
             if num_neuron_args < 0 or num_neuron_args > 4:
-                print_comment("ERROR: The \'-neuron\' option was given an invalid "
-                              "number of arguments: %d given, 0-4 required"
-                              % num_neuron_args)
+                logger.error("The \'-neuron\' option was given an invalid "
+                             "number of arguments: %d given, 0-4 required"
+                             % num_neuron_args)
                 sys.exit(-1)
 
             other_args = [(a if a!='-neuron' else '') for a in args.neuron]
@@ -1351,7 +1355,7 @@ def evaluate_arguments(args):
             num_netpyne_args = len(args.netpyne)
 
             if num_netpyne_args < 0 or num_netpyne_args > 4:
-                print_comment("ERROR: The \'-netpyne\' option was given an invalid "
+                logger.error("The \'-netpyne\' option was given an invalid "
                               "number of arguments: %d given, 0-4 required"
                               % num_netpyne_args)
                 sys.exit(-1)
@@ -1441,7 +1445,7 @@ def evaluate_arguments(args):
 
             level = int(args.matrix[0])
 
-            print_comment('Converting %s to matrix form, level %i' % (f, level))
+            logger.info('Converting %s to matrix form, level %i' % (f, level))
 
             from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
 
@@ -1453,7 +1457,7 @@ def evaluate_arguments(args):
 
             handler.finalise_document()
 
-            print_comment("Done with MatrixHandler...")
+            logger.info("Done with MatrixHandler...")
 
             exit()
         elif args.validate:
@@ -1490,8 +1494,7 @@ def run_jneuroml(pre_args,
                  report_jnml_output=True,
                  exit_on_fail=True):
 
-    print_comment('Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s' %
-                  (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail), verbose)
+    logger.debug('Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s' % (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail))
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
@@ -1508,23 +1511,23 @@ def run_jneuroml(pre_args,
 
         if not output:
             if exit_on_fail:
-                print_comment('Error: execute_command_in_dir returned with output: %s' % output, True)
+                logger.error('execute_command_in_dir returned with output: %s' % output)
                 sys.exit(-1)
             else:
                 return False
 
         if report_jnml_output:
-            print_comment('Successfully ran the following command using pyNeuroML v%s: \n    %s' % (__version__, command), True)
-            print_comment('Output:\n\n%s' % output, True)
+            logger.debug('Successfully ran the following command using pyNeuroML v%s: \n    %s' % (__version__, command))
+            logger.debug('Output:\n\n%s' % output)
 
     #  except KeyboardInterrupt as e:
     #    raise e
 
     except Exception as e:
-        print_comment('*** Execution of jnml has failed! ***', True)
-        print_comment('Error:  %s' % e)
-        print_comment('*** Command: %s ***' % command, True)
-        print_comment('Output: %s' % output, True)
+        logger.error('*** Execution of jnml has failed! ***')
+        logger.error('Error:  %s' % e)
+        logger.error('*** Command: %s ***' % command)
+        logger.error('Output: %s' % output)
         if exit_on_fail:
             sys.exit(-1)
         else:
@@ -1561,17 +1564,13 @@ def run_jneuroml_with_realtime_output(
     except KeyboardInterrupt as e:
         raise e
     except:
-        print_comment('*** Execution of jnml has failed! ***', True)
-        print_comment('*** Command: %s ***' % command, True)
+        logger.error('*** Execution of jnml has failed! ***')
+        logger.error('*** Command: %s ***' % command)
         if exit_on_fail:
             sys.exit(-1)
         else:
             return False
     return True
-
-
-def print_comment_v(text, end='\n'):
-    print_comment(text, True, end)
 
 
 def print_comment(text, print_it=DEFAULTS['v'], end='\n'):
@@ -1589,26 +1588,26 @@ def execute_command_in_dir_with_realtime_output(command, directory,
     if os.name == 'nt':
         directory = os.path.normpath(directory)
 
-    print_comment("Executing: (%s) in directory: %s" % (command, directory), verbose)
+    logger.info("Executing: (%s) in directory: %s" % (command, directory))
     if env is not None:
-        print_comment("Extra env variables %s" % (env), verbose)
+        logger.info("Extra env variables %s" % (env))
 
     p = None
     try:
         p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, bufsize=1, cwd=directory, env=env)
         with p.stdout:
             for line in iter(p.stdout.readline, b''):
-                print_comment(line, end="")
+                logger.debug(line, end="")
         p.wait()  # wait for the subprocess to exit
     except KeyboardInterrupt as e:
-        print_comment_v('*** Command interrupted: \n       %s' % command)
+        logger.error('*** Command interrupted: \n       %s' % command)
         if p:
             p.kill()
         #  return True
         raise e
 
     if not p.returncode == 0:
-        print_comment_v('*** Problem running command (return code: %s): \n       %s' % (p.returncode, command))
+        logger.critical('*** Problem running command (return code: %s): \n       %s' % (p.returncode, command))
 
     return p.returncode == 0
 
@@ -1619,10 +1618,9 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
     if os.name == 'nt':
         directory = os.path.normpath(directory)
 
-    print_comment("Executing: (%s) in directory: %s" % (command, directory),
-                  verbose)
+    logger.info("Executing: (%s) in directory: %s" % (command, directory))
     if env is not None:
-        print_comment("Extra env variables %s" % (env), verbose)
+        logger.debug("Extra env variables %s" % (env))
 
     try:
         if os.name == 'nt':
@@ -1641,14 +1639,12 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
 
         return_string = return_string.decode("utf-8")  # For Python 3
 
-        print_comment('Command completed. Output: \n %s%s' %
-                      (prefix, return_string.replace('\n', '\n ' + prefix)),
-                      verbose)
+        logger.info('Command completed. Output: \n %s%s' % (prefix, return_string.replace('\n', '\n ' + prefix)))
         return return_string
 
     except AttributeError:
         # For python 2.6...
-        print_comment_v('Assuming Python 2.6...')
+        logger.warn('Assuming Python 2.6...')
 
         return_string = subprocess.Popen(command,
                                          cwd=directory,
@@ -1657,14 +1653,14 @@ def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
         return return_string
 
     except subprocess.CalledProcessError as e:
-        print_comment_v('*** Problem running command: \n       %s' % e)
-        print_comment_v('%s%s' % (prefix, e.output.decode().replace('\n', '\n' + prefix)))
+        logger.critical('*** Problem running command: \n       %s' % e)
+        logger.critical('%s%s' % (prefix, e.output.decode().replace('\n', '\n' + prefix)))
         return None
     except:
-        print_comment_v('*** Unknown problem running command: %s' % e)
+        logger.critical('*** Unknown problem running command: %s' % e)
         return None
 
-    print_comment("Finished execution", verbose)
+    logger.info("Finished execution")
 
 
 def generate_plot(xvalues,
@@ -1770,7 +1766,7 @@ def generate_plot(xvalues,
     :type verbose: boolean
     """
 
-    print_comment_v("Generating plot: %s" % (title))
+    logger.info("Generating plot: %s" % (title))
 
     from matplotlib import pyplot as plt
     from matplotlib import rcParams
@@ -1837,9 +1833,9 @@ def generate_plot(xvalues,
         plt.ylim(ylim)
 
     if save_figure_to:
-        print_comment("Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title), verbose)
+        logger.info("Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title))
         plt.savefig(save_figure_to, bbox_inches='tight')
-        print_comment_v("Saved image to %s of plot: %s" % (save_figure_to, title))
+        logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
         plt.show()
@@ -1868,7 +1864,7 @@ def reload_standard_dat_file(file_name):
         for i in range(len(words) - 1):
             data[i].append(float(words[i + 1]))
 
-    print_comment_v("Loaded data from %s; columns: %s" % (file_name, indeces))
+    logger.info("Loaded data from %s; columns: %s" % (file_name, indeces))
 
     dat_file.close()
     return data, indeces
@@ -1911,7 +1907,7 @@ def extract_annotations(nml2_file):
                         if attr:
                             annotations[desc].append({kind: attr})
 
-    print_comment_v("Annotations in %s: " % (nml2_file))
+    logger.info("Annotations in %s: " % (nml2_file))
     pp.pprint(annotations)
 
 
@@ -1922,7 +1918,7 @@ giving parameters & required variables
 
 
 def evaluate_component(comp_type, req_variables={}, parameter_values={}):
-    print_comment('Evaluating %s with req:%s; params:%s' % (comp_type.name, req_variables, parameter_values))
+    logger.info('Evaluating %s with req:%s; params:%s' % (comp_type.name, req_variables, parameter_values))
     exec_str = ''
     return_vals = {}
     for p in parameter_values:
@@ -1947,7 +1943,7 @@ def evaluate_component(comp_type, req_variables={}, parameter_values={}):
 
             exec_str += 'return_vals["%s"] = %s\n' % (cdv.name, cdv.name)
 
-    '''print_comment_v(exec_str)'''
+    '''logger.info(exec_str)'''
     exec(exec_str)
 
     return return_vals
