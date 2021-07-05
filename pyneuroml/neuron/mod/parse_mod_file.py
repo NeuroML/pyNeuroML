@@ -4,7 +4,7 @@ import pprint
 
 import airspeed
 
-from pyneuroml.pynml import print_comment_v
+from pyneuroml.pynml import print_comment
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -18,7 +18,7 @@ def check_brackets(line, bracket_depth):
             elif c == '}':
                 bracket_depth -= 1
         if bracket_depth0 != bracket_depth:
-            print_comment_v("       <%s> moved bracket %i -> %i" % (line, bracket_depth0, bracket_depth))
+            print_comment("       <%s> moved bracket %i -> %i" % (line, bracket_depth0, bracket_depth))
     return bracket_depth
 
 
@@ -26,14 +26,14 @@ def merge_with_template(info):
     templfile = "TEMPLATE.channel.nml"
     if not os.path.isfile(templfile):
         templfile = os.path.join(os.path.dirname(sys.argv[0]), templfile)
-    print_comment_v("Merging with template %s" % templfile)
+    print_comment("Merging with template %s" % templfile)
     with open(templfile) as f:
         templ = airspeed.Template(f.read())
     return templ.merge(info)
 
 
 def generate_neuroml2_for_mod_file(mod_file):
-    print_comment_v("Generating NeuroML2 representation for mod file: " + mod_file)
+    print_comment("Generating NeuroML2 representation for mod file: " + mod_file)
 
     blocks = {}
     info = {}
@@ -42,7 +42,7 @@ def generate_neuroml2_for_mod_file(mod_file):
     while line_num < len(lines):
         l = lines[line_num]
         if len(l) > 0:
-            print_comment_v(">>> %i > %s" % (line_num, l))
+            print_comment(">>> %i > %s" % (line_num, l))
             # @type l str
             if l.startswith('TITLE'):
                 blocks['TITLE'] = l[6:].strip()
@@ -55,7 +55,7 @@ def generate_neuroml2_for_mod_file(mod_file):
                 while bracket_depth > 0:
                     if len(li) > 0:
                         blocks[block_name].append(li)
-                        print_comment_v("        > %s > %s" % (block_name, li))
+                        print_comment("        > %s > %s" % (block_name, li))
                     line_num += 1
                     li = lines[line_num]
 
