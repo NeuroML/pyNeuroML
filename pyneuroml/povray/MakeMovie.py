@@ -1,6 +1,13 @@
 import cv2
 import cv
 import colorsys
+import argparse
+import sys
+import os.path
+import logging
+from pyneuroml.pynml import print_comment
+
+
 '''
 
             STILL IN DEVELOPMENT
@@ -11,12 +18,8 @@ import colorsys
 
 '''
 
-import argparse
-import sys
-import os.path
 
-from pyneuroml.pynml import print_comment_v
-
+logger = logging.getLogger(__name__)
 scale_font = 1
 
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL
@@ -108,7 +111,7 @@ def generate_volt_scale(img, x, y, height, width, num):
 def main(argv):
     args = process_args()
 
-    print_comment_v("Making a movie...")
+    print_comment("Making a movie...")
 
     img_files_pre = []
     img_files_post = []
@@ -133,14 +136,14 @@ def main(argv):
 
             if not os.path.isfile(file_name1):
                 if not os.path.isfile(file_name2):
-                    print_comment_v("File does not exist: %s (neither does %s)" % (file_name1, file_name2))
-                    print_comment_v("Change network prefix parameter (currently %s) and/or number of frames to load (currently %i)" % (pref, args.frames))
+                    logger.critical("File does not exist: %s (neither does %s)" % (file_name1, file_name2))
+                    logger.critical("Change network prefix parameter (currently %s) and/or number of frames to load (currently %i)" % (pref, args.frames))
                     exit(1)
                 else:
                     file_name1 = file_name2
             img_files_pre.append(file_name1)
 
-        print_comment_v("Found %i image files: [%s, ..., %s]" % (len(img_files_pre), img_files_pre[0], img_files_pre[-1]))
+        print_comment("Found %i image files: [%s, ..., %s]" % (len(img_files_pre), img_files_pre[0], img_files_pre[-1]))
 
         for i in range(len(img_files_pre)):
             img_file = img_files_pre[i]
@@ -148,7 +151,7 @@ def main(argv):
 
             height, width, layers = img.shape
 
-            print_comment_v("Read in file: %s (%sx%s)" % (img_file, width, height))
+            print_comment("Read in file: %s (%sx%s)" % (img_file, width, height))
             show = False
             if show:
                 cv2.imshow('Image: ' + img_file, img)
@@ -169,7 +172,7 @@ def main(argv):
 
             new_file = args.name + '_' + img_file
             cv2.imwrite(new_file, img)
-            print_comment_v("Written %s" % new_file)
+            print_comment("Written %s" % new_file)
 
     if gen_movie:
         for i in range(args.frames + 1):
@@ -183,7 +186,7 @@ def main(argv):
         for i in range(len(img_files_post)):
             img_file = img_files_post[i]
             img = cv2.imread(img_file)
-            print_comment_v("Read in %s" % img_file)
+            print_comment("Read in %s" % img_file)
             imgs.append(img)
 
         format = 'avi'
@@ -211,14 +214,14 @@ def main(argv):
 
         f = 0
         for img in imgs:
-            print_comment_v("Writing frame %i" % f)
+            print_comment("Writing frame %i" % f)
             f += 1
             out.write(img)
 
         out.release()
-        print_comment_v("Saved movie file %s" % mov_file)
+        print_comment("Saved movie file %s" % mov_file)
 
-    print_comment_v("Done!")
+    print_comment("Done!")
 
 
 if __name__ == '__main__':
