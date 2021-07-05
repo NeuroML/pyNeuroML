@@ -1,20 +1,23 @@
 import sys
 import time
+import logging
 
 from pyneuroml import pynml
 from pyneuroml.lems import generate_lems_file_for_neuroml
 
 
+logger = logging.getLogger(__name__)
+
 try:
     import pyelectro  #  Not used here, just for checking installation
 except ImportError:
-    print('>> Note: pyelectro from https://github.com/pgleeson/pyelectro is required!')
+    logger.warn('>> Note: pyelectro from https://github.com/pgleeson/pyelectro is required!')
     sys.exit()
 
 try:
     import neurotune  #  Not used here, just for checking installation
 except ImportError:
-    print('>> Note: neurotune from https://github.com/pgleeson/neurotune is required!')
+    logger.warn('>> Note: neurotune from https://github.com/pgleeson/neurotune is required!')
     sys.exit()
 
 
@@ -67,7 +70,7 @@ class NeuroMLSimulation(object):
                 plt.ylabel("Voltage [mV]")
 
         else:
-            pynml.print_comment("First you have to 'go()' the simulation.", True)
+            logger.warn("First you have to 'go()' the simulation.", True)
         plt.show()
 
     def go(self):
@@ -82,7 +85,7 @@ class NeuroMLSimulation(object):
                                        target_dir=self.generate_dir,
                                        nml_doc=self.nml_doc)
 
-        pynml.print_comment_v("Running a simulation of %s ms with timestep %s ms: %s" % (self.sim_time, self.dt, lems_file_name))
+        pynml.print_comment("Running a simulation of %s ms with timestep %s ms: %s" % (self.sim_time, self.dt, lems_file_name))
 
         self.already_run = True
 
@@ -104,11 +107,11 @@ class NeuroMLSimulation(object):
                                                           verbose=False,
                                                           cleanup=self.cleanup)
         else:
-            pynml.print_comment_v('Unsupported simulator: %s' % self.simulator)
+            logger.critical('Unsupported simulator: %s' % self.simulator)
             exit()
 
         secs = time.time() - start
-        pynml.print_comment_v("Ran simulation in %s in %f seconds (%f mins)\n\n" % (self.simulator, secs, secs / 60.0))
+        pynml.print_comment("Ran simulation in %s in %f seconds (%f mins)\n\n" % (self.simulator, secs, secs / 60.0))
         self.t = [t * 1000 for t in results['t']]
 
         self.volts = {}
