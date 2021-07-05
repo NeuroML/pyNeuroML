@@ -12,8 +12,6 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
 
-from pyneuroml.pynml import print_comment_v
-
 
 def generate_Vm_vs_time_plot(nml2_file,
                              cell_id,
@@ -28,8 +26,8 @@ def generate_Vm_vs_time_plot(nml2_file,
                              include_included=True):
 
     ref = "Test"
-    print_comment_v("Generating Vm(mV) vs Time(ms) plot for cell %s in %s using %s (Inj %snA / %sms dur after %sms delay)" %
-                    (cell_id, nml2_file, simulator, inj_amp_nA, inj_dur_ms, delay_ms))
+    pynml.print_comment("Generating Vm(mV) vs Time(ms) plot for cell %s in %s using %s (Inj %snA / %sms dur after %sms delay)" %
+                        (cell_id, nml2_file, simulator, inj_amp_nA, inj_dur_ms, delay_ms))
 
     sim_id = 'Vm_%s' % ref
     duration = sim_dur_ms
