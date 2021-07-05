@@ -1,11 +1,14 @@
-from pyneuroml import pynml
-from pyneuroml.lems.LEMSSimulation import LEMSSimulation
-import neuroml as nml
-
-from pyneuroml.pynml import print_comment_v, print_comment
-from pyneuroml.lems import generate_lems_file_for_neuroml
 import math
 import os
+import logging
+
+from pyneuroml import pynml
+from pyneuroml.lems.LEMSSimulation import LEMSSimulation
+from pyneuroml.lems import generate_lems_file_for_neuroml
+import neuroml as nml
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_current_vs_frequency_curve(
@@ -51,7 +54,7 @@ def generate_current_vs_frequency_curve(
     verbose=False
 ):
 
-    print_comment("Running generate_current_vs_frequency_curve() on %s (%s)" % (nml2_file, os.path.abspath(nml2_file)), verbose)
+    logger.info("Running generate_current_vs_frequency_curve() on %s (%s)" % (nml2_file, os.path.abspath(nml2_file)))
     from pyelectro.analysis import max_min
     from pyelectro.analysis import mean_spike_frequency
     import numpy as np
@@ -78,8 +81,8 @@ def generate_current_vs_frequency_curve(
 
         stim_info = '(%snA->%snA; %s steps of %snA; %sms)' % (start_amp_nA, end_amp_nA, len(stims), step_nA, total_duration)
 
-    print_comment_v("Generating an IF curve for cell %s in %s using %s %s" %
-                    (cell_id, nml2_file, simulator, stim_info))
+    pynml.print_comment("Generating an IF curve for cell %s in %s using %s %s" %
+                        (cell_id, nml2_file, simulator, stim_info))
 
     number_cells = len(stims)
     pop = nml.Population(id="population_of_%s" % cell_id,
@@ -131,7 +134,7 @@ def generate_current_vs_frequency_curve(
 
     lems_file_name = ls.save_to_file()
 
-    print_comment("Written LEMS file %s (%s)" % (lems_file_name, os.path.abspath(lems_file_name)), verbose)
+    pynml.print_comment("Written LEMS file %s (%s)" % (lems_file_name, os.path.abspath(lems_file_name)))
 
     if simulator == "jNeuroML":
         results = pynml.run_lems_with_jneuroml(lems_file_name,
@@ -158,7 +161,7 @@ def generate_current_vs_frequency_curve(
     else:
         raise Exception("Sorry, cannot yet run current vs frequency analysis using simulator %s" % simulator)
 
-    print_comment("Completed run in simulator %s (results: %s)" % (simulator, results.keys()), verbose)
+    pynml.print_comment("Completed run in simulator %s (results: %s)" % (simulator, results.keys()))
 
     # print(results.keys())
     times_results = []
@@ -186,7 +189,7 @@ def generate_current_vs_frequency_curve(
             freq = 1000 * count / float(analysis_duration)
 
         mean_freq = mean_spike_frequency(spike_times)
-        # print("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f"%(stims[i],spike_times, mean_freq, analysis_delay, analysis_duration+analysis_delay, freq))
+        logger.debug("--- %s nA, spike times: %s, mean_spike_frequency: %f, freq (%fms -> %fms): %f" % (stims[i], spike_times, mean_freq, analysis_delay, analysis_duration + analysis_delay, freq))
         if_results[stims[i]] = freq
 
         if freq == 0:
@@ -324,8 +327,7 @@ def analyse_spiketime_vs_dt(nml2_file,
     dts = list(np.sort(dts))
 
     for dt in dts:
-        if verbose:
-            print_comment_v(" == Generating simulation for dt = %s ms" % dt)
+        logger.info(" == Generating simulation for dt = %s ms" % dt)
         ref = str("Sim_dt_%s" % dt).replace('.', '_')
         lems_file_name = "LEMS_%s.xml" % ref
         generate_lems_file_for_neuroml(ref,
@@ -344,7 +346,7 @@ def analyse_spiketime_vs_dt(nml2_file,
         if simulator == 'jNeuroML_NEURON':
             results = pynml.run_lems_with_jneuroml_neuron(lems_file_name, nogui=True, load_saved_data=True, plot=False, verbose=verbose)
 
-        print("Results reloaded: %s" % results.keys())
+        pynml.print_comment("Results reloaded: %s" % results.keys())
         all_results[dt] = results
 
     xs = []
