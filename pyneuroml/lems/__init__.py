@@ -3,9 +3,13 @@ from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 
 import shutil
 import os
-from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color, print_comment_v, print_comment
+import logging
+from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color, print_comment
 import random
 import neuroml
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_lems_file_for_neuroml(sim_id,
@@ -43,7 +47,7 @@ def generate_lems_file_for_neuroml(sim_id,
 
     file_name_full = '%s/%s' % (target_dir, lems_file_name)
 
-    print_comment_v('Creating LEMS file at: %s for NeuroML 2 file: %s (copy: %s)' % (file_name_full, neuroml_file, copy_neuroml))
+    print_comment('Creating LEMS file at: %s for NeuroML 2 file: %s (copy: %s)' % (file_name_full, neuroml_file, copy_neuroml))
 
     ls = LEMSSimulation(sim_id, duration, dt, target, simulation_seed=simulation_seed)
 
@@ -62,10 +66,10 @@ def generate_lems_file_for_neuroml(sim_id,
 
     if not copy_neuroml:
         rel_nml_file = os.path.relpath(os.path.abspath(neuroml_file), os.path.abspath(target_dir))
-        print_comment_v("Including existing NeuroML file (%s) as: %s" % (neuroml_file, rel_nml_file))
+        logging.info("Including existing NeuroML file (%s) as: %s" % (neuroml_file, rel_nml_file))
         ls.include_neuroml2_file(rel_nml_file, include_included=True, relative_to_dir=os.path.abspath(target_dir))
     else:
-        print_comment_v("Copying a NeuroML file (%s) to: %s (abs path: %s)" % (neuroml_file, target_dir, os.path.abspath(target_dir)))
+        logging.info("Copying a NeuroML file (%s) to: %s (abs path: %s)" % (neuroml_file, target_dir, os.path.abspath(target_dir)))
 
         if not os.path.isdir(target_dir):
             raise Exception("Target directory %s does not exist!" % target_dir)
@@ -73,7 +77,7 @@ def generate_lems_file_for_neuroml(sim_id,
         if os.path.realpath(os.path.dirname(neuroml_file)) != os.path.realpath(target_dir):
             shutil.copy(neuroml_file, target_dir)
         else:
-            print_comment_v("No need, same file...")
+            logging.info("No need, same file...")
 
         neuroml_file_name = os.path.basename(neuroml_file)
 
@@ -91,7 +95,7 @@ def generate_lems_file_for_neuroml(sim_id,
             if os.path.isfile(include.href):
                 incl_curr = include.href
 
-            print_comment_v(' - Including %s (located at %s; nml dir: %s), copying to %s' % (include.href, incl_curr, nml_dir, target_dir))
+            print_comment(' - Including %s (located at %s; nml dir: %s), copying to %s' % (include.href, incl_curr, nml_dir, target_dir))
 
             '''
             if not os.path.isfile("%s/%s" % (target_dir, os.path.basename(incl_curr))) and \
@@ -99,14 +103,14 @@ def generate_lems_file_for_neuroml(sim_id,
                not os.path.isfile(incl_curr):
                 shutil.copy(incl_curr, target_dir)
             else:
-                print_comment_v("No need to copy...")'''
+                print_comment("No need to copy...")'''
 
             f1 = "%s/%s" % (target_dir, os.path.basename(incl_curr))
             f2 = "%s/%s" % (target_dir, incl_curr)
             if os.path.isfile(f1):
-                print_comment_v("No need to copy, file exists: %s..." % f1)
+                logging.info("No need to copy, file exists: %s..." % f1)
             elif os.path.isfile(f2):
-                print_comment_v("No need to copy, file exists: %s..." % f2)
+                logging.info("No need to copy, file exists: %s..." % f2)
             else:
                 shutil.copy(incl_curr, target_dir)
 
@@ -117,7 +121,7 @@ def generate_lems_file_for_neuroml(sim_id,
             if sub_doc.__class__ == neuroml.nml.nml.NeuroMLDocument:
                 for include in sub_doc.includes:
                     incl_curr = '%s/%s' % (sub_dir, include.href)
-                    print_comment_v(' -- Including %s located at %s' % (include.href, incl_curr))
+                    print_comment(' -- Including %s located at %s' % (include.href, incl_curr))
 
                     if not os.path.isfile("%s/%s" % (target_dir, os.path.basename(incl_curr))) and \
                        not os.path.isfile("%s/%s" % (target_dir, incl_curr)):

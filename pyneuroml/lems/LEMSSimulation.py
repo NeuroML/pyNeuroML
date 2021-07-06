@@ -165,7 +165,7 @@ class LEMSSimulation():
         lems_file = open(file_name, 'w')
         lems_file.write(self.to_xml())
         lems_file.close()
-        print_comment("Written LEMS Simulation %s to file: %s" % (self.lems_info['sim_id'], file_name), True)
+        print_comment("Written LEMS Simulation %s to file: %s" % (self.lems_info['sim_id'], file_name))
 
         return file_name
 

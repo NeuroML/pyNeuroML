@@ -10,11 +10,15 @@
 
 import random
 import argparse
+import logging
 
 import neuroml
 from pyneuroml import pynml
 
-from pyneuroml.pynml import print_comment_v, print_comment
+from pyneuroml.pynml import print_comment
+
+
+logger = logging.getLogger(__name__)
 
 _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
@@ -195,9 +199,9 @@ background {rgbt %s}
         splitOut = True
         cells_file = open(cf, "w")
         net_file = open(nf, "w")
-        print_comment_v("Saving into %s and %s and %s" % (pov_file_name, cf, nf))
+        print_comment("Saving into %s and %s and %s" % (pov_file_name, cf, nf))
 
-    print_comment_v("Converting XML file: %s to %s" % (xmlfile, pov_file_name))
+    print_comment("Converting XML file: %s to %s" % (xmlfile, pov_file_name))
 
     nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, check_validity_pre_include=True, verbose=args.v, optimized=True)
 
@@ -221,7 +225,7 @@ background {rgbt %s}
 
     declaredcells = {}
 
-    print_comment_v("There are %i cells in the file" % len(cell_elements))
+    print_comment("There are %i cells in the file" % len(cell_elements))
 
     cell_id_vs_seg_id_vs_proximal = {}
     cell_id_vs_seg_id_vs_distal = {}
@@ -230,7 +234,7 @@ background {rgbt %s}
     for cell in cell_elements:
         cellName = cell.id
         cell_id_vs_cell[cell.id] = cell
-        print_comment_v("Handling cell: %s" % cellName)
+        print_comment("Handling cell: %s" % cellName)
         cell_id_vs_seg_id_vs_proximal[cell.id] = {}
         cell_id_vs_seg_id_vs_distal[cell.id] = {}
 
@@ -296,7 +300,7 @@ background {rgbt %s}
 
             if (shape == "cone" and (proximalpoint.split('>')[0] == distalpoint.split('>')[0])):
                 comment = "Ignoring zero length segment (id = %i): %s -> %s\n" % (id, proximalpoint, distalpoint)
-                print_comment_v(comment)
+                logger.warn(comment)
                 cells_file.write("    // " + comment)
             else:
                 cells_file.write("    %s {\n" % shape)
@@ -359,7 +363,7 @@ union {
 
     pop_id_vs_cell = {}
 
-    print_comment_v("There are %i populations in the file" % len(popElements))
+    print_comment("There are %i populations in the file" % len(popElements))
 
     for pop in popElements:
         name = pop.id
@@ -370,7 +374,7 @@ union {
             pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
 
         info = "Population: %s has %i positioned cells of type: %s" % (name, len(instances), celltype)
-        print_comment_v(info)
+        print_comment(info)
 
         colour = "1"
         substitute_radius = None
@@ -442,7 +446,7 @@ union {
 
         if len(instances) == 0 and int(pop.size > 0):
             info = "Population: %s has %i unpositioned cells of type: %s" % (name, pop.size, celltype)
-            print_comment_v(info)
+            print_comment(info)
 
             colour = "1"
             '''
@@ -516,7 +520,7 @@ union {
                 connections = projection.continuous_connections + projection.continuous_connection_instances + projection.continuous_connection_instance_ws
                 color = 'Blue'
 
-            print_comment_v("Adding %i connections for %s: %s -> %s " % (len(connections), projection.id, pre, post))
+            logger.info("Adding %i connections for %s: %s -> %s " % (len(connections), projection.id, pre, post))
             # print cell_id_vs_seg_id_vs_distal
             # print cell_id_vs_seg_id_vs_proximal
             for connection in connections:
@@ -536,7 +540,7 @@ union {
                     d = cell_id_vs_seg_id_vs_distal[pre_cell.id][connection.get_pre_segment_id()]
                     p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][connection.get_pre_segment_id()]
                     m = [p[i] + connection.get_pre_fraction_along() * (d[i] - p[i]) for i in [0, 1, 2]]
-                    print_comment("Pre point is %s, %s between %s and %s" % (m, connection.get_pre_fraction_along(), p, d))
+                    logger.info("Pre point is %s, %s between %s and %s" % (m, connection.get_pre_fraction_along(), p, d))
                     pre_loc = [pre_loc[i] + m[i] for i in [0, 1, 2]]
 
                 if projection.postsynaptic_population in pop_id_vs_cell.keys():
@@ -544,13 +548,13 @@ union {
                     d = cell_id_vs_seg_id_vs_distal[post_cell.id][connection.get_post_segment_id()]
                     p = cell_id_vs_seg_id_vs_proximal[post_cell.id][connection.get_post_segment_id()]
                     m = [p[i] + connection.get_post_fraction_along() * (d[i] - p[i]) for i in [0, 1, 2]]
-                    print_comment("Post point is %s, %s between %s and %s" % (m, connection.get_post_fraction_along(), p, d))
+                    logger.info("Post point is %s, %s between %s and %s" % (m, connection.get_post_fraction_along(), p, d))
                     post_loc = [post_loc[i] + m[i] for i in [0, 1, 2]]
 
                 if post_loc != pre_loc:
                     info = "// Connection from %s:%s %s -> %s:%s %s\n" % (pre, pre_cell_id, pre_loc, post, post_cell_id, post_loc)
 
-                    print_comment(info)
+                    logger.info(info)
                     net_file.write("// %s" % info)
                     if args.conns:
                         net_file.write("cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color %s}}\n" % (pre_loc[0], pre_loc[1], pre_loc[2], post_loc[0], post_loc[1], post_loc[2], color))
@@ -668,10 +672,10 @@ Pause_when_Done=off
         ini_file.write(ini_movie % (pov_file_name, args.frames))
         ini_file.close()
 
-        print_comment_v("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n" % (args.frames, ini_file_name, ini_file_name))
+        print_comment("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n" % (args.frames, ini_file_name, ini_file_name))
     else:
-        print_comment_v("Created file for generating image of network. To run this type:\n\n    povray %s\n" % (pov_file_name))
-        print_comment_v("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n" % (pov_file_name))
+        print_comment("Created file for generating image of network. To run this type:\n\n    povray %s\n" % (pov_file_name))
+        print_comment("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n" % (pov_file_name))
 
 
 if __name__ == '__main__':

@@ -12,6 +12,8 @@ import time
 import re
 from collections import OrderedDict
 import argparse
+import logging
+import pprint
 
 
 from pyelectro import analysis
@@ -22,8 +24,8 @@ from neurotune import utils
 from pyneuroml import pynml
 from NeuroMLController import NeuroMLController
 
-import pprint
 pp = pprint.PrettyPrinter(indent=4)
+logger = logging.getLogger(__name__)
 
 
 DEFAULTS = {'simTime': 500,
@@ -226,17 +228,17 @@ def _run_optimisation(a):
     if isinstance(a.extra_report_info, str):
         a.extra_report_info = parse_dict_arg(a.extra_report_info)
 
-    pynml.print_comment_v("=====================================================================================")
-    pynml.print_comment_v("Starting run_optimisation with: ")
+    pynml.print_comment("=====================================================================================")
+    pynml.print_comment("Starting run_optimisation with: ")
     keys = sorted(a.__dict__.keys())
 
     for key in keys:
         value = a.__dict__[key]
-        pynml.print_comment_v("  %s = %s%s" % (key, ' ' * (30 - len(key)), value))
-    pynml.print_comment_v("=====================================================================================")
+        pynml.print_comment("  %s = %s%s" % (key, ' ' * (30 - len(key)), value))
+    pynml.print_comment("=====================================================================================")
 
     if a.dry_run:
-        pynml.print_comment_v("Dry run; not running optimization...")
+        pynml.print_comment("Dry run; not running optimization...")
         return
 
     ref = a.prefix
@@ -326,7 +328,7 @@ def _run_optimisation(a):
     report += "FITNESS: %f\n\n" % fitness
     report += "FITTEST: %s\n\n" % pp.pformat(dict(sim_var))
 
-    pynml.print_comment_v(report)
+    pynml.print_comment(report)
 
     reportj['fitness'] = fitness
     reportj['fittest vars'] = dict(sim_var)
@@ -380,7 +382,7 @@ def _run_optimisation(a):
             ref = tref.split(':')[0]
             if ref not in added:
                 added.append(ref)
-                # pynml.print_comment(" - Adding plot of: %s"%ref)
+                logging.debug(" - Adding plot of: %s" % ref)
                 plt.plot(best_candidate_t, best_candidate_v[ref], label="%s - %i evaluations" % (ref, a.max_evaluations))
 
         plt.legend()

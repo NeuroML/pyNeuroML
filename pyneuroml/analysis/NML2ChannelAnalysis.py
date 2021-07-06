@@ -10,13 +10,16 @@ import os.path
 import argparse
 import pprint
 import re
+import logging
 
 import airspeed
 import matplotlib.pyplot as plt
 
 from pyneuroml.pynml import run_lems_with_jneuroml, print_comment, \
-    print_comment_v, read_neuroml2_file
+    read_neuroml2_file
 
+
+logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(depth=4)
 
 OUTPUT_DIR = os.getcwd()
@@ -255,7 +258,7 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
 
     print_comment(("Generating LEMS file to investigate %s in %s, %smV->%smV, "
                    "%sdegC") % (channel, channel_file, min_target_voltage,
-                                max_target_voltage, temperature), verbose)
+                                max_target_voltage, temperature))
 
     target_voltages = []
     v = min_target_voltage
@@ -331,7 +334,7 @@ def get_includes_from_channel_file(channel_file):
 def process_channel_file(channel_file, a):
     # Get name of channel mechanism to test
     if a.v:
-        print_comment_v("Going to test channel from file: " + channel_file)
+        logger.info("Going to test channel from file: " + channel_file)
 
     if not os.path.isfile(channel_file):
         raise IOError("File could not be found: %s!\n" % channel_file)
@@ -341,7 +344,7 @@ def process_channel_file(channel_file, a):
     channels_info = []
     for channel in channels:
         if len(get_channel_gates(channel)) == 0:
-            print_comment_v("Skipping %s in %s as it has no channels (probably passive conductance)" % (channel.id, channel_file))
+            logger.warning("Skipping %s in %s as it has no channels (probably passive conductance)" % (channel.id, channel_file))
         else:
             new_lems_file = make_lems_file(channel, a)
             if not a.norun:
@@ -397,7 +400,7 @@ def make_lems_file(channel, a):
     lf.write(lems_content)
     lf.close()
     if a.v:
-        print_comment_v("Written generated LEMS file to %s\n" % new_lems_file)
+        logger.info("Written generated LEMS file to %s\n" % new_lems_file)
     return new_lems_file
 
 
@@ -519,7 +522,7 @@ def compute_iv_curve(channel, a, results, grid=True):
             t_start = a.clamp_delay / 1000.0
             t_steady_end = end_time_ms / 1000.0
 
-            print_comment_v('Looking at holding voltage %s V, and currents between times %s s and %s s' % (voltage, t_start, t_steady_end))
+            logger.info('Looking at holding voltage %s V, and currents between times %s s and %s s' % (voltage, t_start, t_steady_end))
 
             for index in range(len(results['t'])):
                 i = results[r][index]
@@ -621,7 +624,7 @@ def make_html_file(info):
     lf = open(new_html_file, 'w')
     lf.write(merged)
     lf.close()
-    print_comment_v('Written HTML info to: %s' % new_html_file)
+    print_comment('Written HTML info to: %s' % new_html_file)
 
 
 def make_md_file(info):
@@ -631,7 +634,7 @@ def make_md_file(info):
     lf = open(new_md_file, 'w')
     lf.write(merged)
     lf.close()
-    print_comment_v('Written Markdown info to: %s' % new_md_file)
+    print_comment('Written Markdown info to: %s' % new_md_file)
 
 
 def build_namespace(a=None, **kwargs):
@@ -704,7 +707,7 @@ def run(a=None, **kwargs):
                 other_chan_files.append(channel_file)
 
     channel_files = na_chan_files + k_chan_files + ca_chan_files + other_chan_files
-    print_comment_v("\nAnalysing channels from files: %s\n" % channel_files)
+    print_comment("\nAnalysing channels from files: %s\n" % channel_files)
 
     for channel_file in channel_files:
         channels_info = process_channel_file(channel_file, a)
