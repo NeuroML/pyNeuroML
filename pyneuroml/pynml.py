@@ -1814,6 +1814,11 @@ def evaluate_arguments(args):
 
 
 def get_path_to_jnml_jar():
+    # type () -> str
+    """Get the path to the jNeuroML jar included with PyNeuroML.
+
+    :returns: path of jar file
+    """
     script_dir = os.path.dirname(os.path.realpath(__file__))
     jar_path = os.path.join(
         script_dir, "lib",
