@@ -1545,6 +1545,16 @@ def reload_saved_data(lems_file_name,
 
 
 def get_next_hex_color(my_random=None):
+    # type: (typing.Union[None, random.Random]) -> str
+    """Get a new randomly generated HEX colour code.
+
+    You may pass a random.Random instance that you may be used. Otherwise the
+    default Python random generator will be used.
+
+    :param my_random: a random.Random object
+    :type my_random: random.Random
+    :returns: HEX colour code
+    """
     if my_random is not None:
         return "#%06x" % my_random.randint(0, 0xFFFFFF)
     else:
