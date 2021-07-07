@@ -10,4 +10,4 @@ pylems
 graphviz
 argparse
 neuromllite
-neurotune
+git+https://github.com/NeuralEnsemble/neurotune.git#egg=neurotune
