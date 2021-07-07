@@ -1966,10 +1966,24 @@ def print_comment(text, end='\n'):
     print("%s%s" % (prefix, text.replace("\n", "\n" + prefix)), end=end)
 
 
-def execute_command_in_dir_with_realtime_output(command, directory,
-                                                verbose=DEFAULTS['v'],
-                                                prefix="Output: ", env=None):
+def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], prefix="Output: ", env=None):
+    # type (str, str, bool, str, str) -> bool
     # NOTE: Only tested with Linux
+    """Run a command in a given directory with real time output.
+
+    NOTE: this has only been tested on Linux.
+
+    :param command: command to run
+    :type command: str
+    :param directory: directory to run command in
+    :type directory: str
+    :param verbose: toggle verbose output
+    :type verbose: bool
+    :param prefix: string to prefix output with
+    :type prefix: str
+    :param env: environment variables to be used
+    :type env: str
+    """
     if os.name == 'nt':
         directory = os.path.normpath(directory)
 
