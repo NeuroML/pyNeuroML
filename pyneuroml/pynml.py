@@ -1562,6 +1562,12 @@ def get_next_hex_color(my_random=None):
 
 
 def confirm_file_exists(filename):
+    # type: (str) -> None
+    """Check if a file exists, exit if it does not.
+
+    :param filename: the filename to check
+    :type filename: str
+    """
     if not os.path.isfile(filename):
         logger.critical("Unable to find file: %s!" % filename)
         sys.exit()
