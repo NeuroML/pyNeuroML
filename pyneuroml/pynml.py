@@ -717,15 +717,21 @@ def cell_info(cell):
     """Provide information on a NeuroML Cell instance:
 
     - morphological information:
+
       - Segment information:
+
         - parent segments
         - segment location, extents, diameter
         - segment length
         - segment surface area
         - segment volume
+
       - Segment group information:
+
         - included segments
+
     - biophysical properties:
+
       - channel densities
       - specific capacitances
 
