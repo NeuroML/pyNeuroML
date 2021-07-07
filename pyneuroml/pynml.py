@@ -45,7 +45,7 @@ import neuroml.writers as writers
 
 DEFAULTS = {'v': False,
             'default_java_max_memory': '400M',
-            'nogui': False}
+            'nogui': False}  # type: typing.Dict[str, typing.Any]
 
 lems_model_with_units = None
 
