@@ -628,9 +628,15 @@ def quick_summary(nml2_doc):
 
 
 def summary(nml2_doc=None, verbose=False):
-    '''
-    Based on nml2_doc.summary(show_includes=False)
-    '''
+    # type: (typing.Union[None, NeuroMLDocument], bool) -> None
+    """Wrapper around nml_doc.summary() to generate the pynml-summary command
+    line tool.
+
+    :param nml2_doc: NeuroMLDocument object or name of NeuroML v2 file to get summary for.
+    :type nml2_doc: NeuroMLDocument
+    :param verbose: toggle verbosity
+    :type verbose: bool
+    """
 
     usage = textwrap.dedent(
         """
