@@ -391,6 +391,7 @@ def convert_to_units(nml2_quantity, unit):
 
 
 def generate_nmlgraph(nml2_file_name, level=1, engine='dot'):
+    # type: (str, int, str) -> None
     """Generate NeuroML graph.
 
     :nml2_file_name (string): NML file to parse
@@ -409,7 +410,6 @@ def generate_nmlgraph(nml2_file_name, level=1, engine='dot'):
     handler.finalise_document()
 
     logger.info("Done with GraphViz...")
-    return 0
 
 
 def generate_lemsgraph(lems_file_name, verbose_generate=True):
