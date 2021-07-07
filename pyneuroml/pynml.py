@@ -434,6 +434,20 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
 
 
 def validate_neuroml1(nml1_file_name, verbose_validate=True):
+    # type: (str, bool) -> bool
+    # TODO: mark as deprecated
+    """Validate a NeuroML v1 file.
+
+    NOTE: NeuroML v1 is deprecated. Please use NeuroML v2.
+    This functionality will be dropped in the future.
+
+    :param nml1_file_name: name of NeuroMLv1 file to validate
+    :type nml1_file_name: str
+    :param verbose_validate: whether jnml should print verbose information while validating
+    :type verbose_validate: bool (default: True)
+    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    """
+    print_comment("NOTE: NeuroMLv1 is deprecated. Please use NeuroMLv2.")
     pre_args = "-validatev1"
     post_args = ""
 
