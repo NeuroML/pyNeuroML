@@ -1006,6 +1006,13 @@ def include_string(paths_to_include):
 
 
 def gui_string(nogui):
+    # type: (bool) -> str
+    """Return the gui string for jnml
+
+    :param nogui: toggle whether GUI should be used or not
+    :type nogui: bool
+    :returns: gui  string or empty string
+    """
     return " -nogui" if nogui else ""
 
 
