@@ -965,6 +965,16 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
+    # type: (str, bool, bool) -> None
+    """Generate the PNG representation of a NeuroML model using jnml
+
+    :param nml2_file_name: name of NeuroML2 file to generate PNG for
+    :type nml2_file_name: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    """
     print_comment("Converting NeuroML2 file: %s to PNG" % nml2_file_name)
 
     post_args = "-png"
