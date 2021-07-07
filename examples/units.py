@@ -3,7 +3,7 @@ from pyneuroml import pynml
 
 def test_conversion(nml2_quantity, unit, expected, should_fail=False):
     try:
-        val = pynml.convert_to_units(nml2_quantity, unit, True)
+        val = pynml.convert_to_units(nml2_quantity, unit)
         print('  Converted %s -> %s %s (expecting: %s)' % (nml2_quantity, val, unit, expected))
         assert abs(val / expected - 1) < 1e-12
     except Exception as e:
