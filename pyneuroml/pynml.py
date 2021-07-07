@@ -461,6 +461,17 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
 
 def validate_neuroml2(nml2_file_name, verbose_validate=True,
                       max_memory=None):
+    # type: (str, bool, str) -> bool
+    """Validate a NeuroML2 file using jnml.
+
+    :params nml2_file_name: name of NeuroML 2 file to validate
+    :type nml2_file_name: str
+    :param verbose_validate: whether jnml should print verbose information while validating
+    :type verbose_validate: bool (default: True)
+    :param max_memory: maximum memory the JVM should use while running jnml
+    :type max_memory: str
+    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    """
     pre_args = "-validate"
     post_args = ""
 
