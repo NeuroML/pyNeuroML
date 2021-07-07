@@ -2013,7 +2013,20 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
 
 def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
                            prefix="Output: ", env=None):
-    """Execute a command in specific working directory"""
+    # type (str, str, bool, str, typing.Union[None, str]) -> typing.Union[None, str]
+    """Execute a command in specific working directory
+
+    :param command: command to run
+    :type command: str
+    :param directory: directory to run command in
+    :type directory: str
+    :param verbose: toggle verbose output
+    :type verbose: bool
+    :param prefix: string to prefix output with
+    :type prefix: str
+    :param env: environment variables to be used
+    :type env: str
+    """
     if os.name == 'nt':
         directory = os.path.normpath(directory)
 
