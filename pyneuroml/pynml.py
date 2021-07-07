@@ -358,6 +358,15 @@ def get_value_in_si(nml2_quantity):
 
 
 def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
+    # type: (str, str, bool) -> float
+    """Convert a NeuroML2 quantity to provided unit.
+
+    :param nml2_quantity: NeuroML2 quantity to convert
+    :type nml2_quantity: str
+    :param unit: unit to convert to
+    :type unit: str
+    :returns: converted value (float)
+    """
     model = get_lems_model_with_units()
     m, u = split_nml2_quantity(nml2_quantity)
     si_value = None
