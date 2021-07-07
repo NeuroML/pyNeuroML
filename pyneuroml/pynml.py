@@ -1597,6 +1597,7 @@ def confirm_neuroml_file(filename):
 
 
 def confirm_lems_file(filename):
+    # type (str) -> None
     """Confirm that file exists and is a LEMS file before proceeding with
     processing.
 
