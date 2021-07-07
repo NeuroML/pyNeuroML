@@ -1967,7 +1967,7 @@ def print_comment(text, end='\n'):
 
 
 def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], prefix="Output: ", env=None):
-    # type (str, str, bool, str, str) -> bool
+    # type (str, str, bool, str, typing.Union[str, None]) -> bool
     # NOTE: Only tested with Linux
     """Run a command in a given directory with real time output.
 
