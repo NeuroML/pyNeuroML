@@ -26,6 +26,11 @@ from lxml import etree
 import pprint
 import logging
 
+try:
+    import typing
+except ImportError:
+    pass
+
 import lems.model.model as lems_model
 from lems.parser.LEMS import LEMSFileParser
 
