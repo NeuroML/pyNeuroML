@@ -880,7 +880,7 @@ def run_lems_with_jneuroml(lems_file_name,
                            verbose=DEFAULTS['v'],
                            exit_on_fail=True,
                            cleanup=False):
-    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> bool
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
     """Parse/Run a LEMS file with jnml.
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -949,13 +949,13 @@ def run_lems_with_jneuroml(lems_file_name,
 
 def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
-    # type: (str, bool, bool) -> None
+    # type: (str, str, bool) -> None
     """Generate the SVG representation of a NeuroML model using jnml
 
     :param nml2_file_name: name of NeuroML2 file to generate SVG for
     :type nml2_file_name: str
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param verbose: toggle whether jnml should print verbose information
     :type verbose: bool
     """
@@ -972,13 +972,13 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
-    # type: (str, bool, bool) -> None
+    # type: (str, str, bool) -> None
     """Generate the PNG representation of a NeuroML model using jnml
 
     :param nml2_file_name: name of NeuroML2 file to generate PNG for
     :type nml2_file_name: str
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param verbose: toggle whether jnml should print verbose information
     :type verbose: bool
     """
@@ -1041,7 +1041,7 @@ def run_lems_with_jneuroml_neuron(
     cleanup=False,
         realtime_output=False):
     # jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
-    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool, bool, bool, bool) -> bool
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
     """Run LEMS file with the NEURON simulator
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -1168,7 +1168,7 @@ def run_lems_with_jneuroml_netpyne(
     exit_on_fail=True,
     cleanup=False
 ):
-    # type: (str, typing.List[str], str, bool, bool, int, bool, bool, bool, bool, str, bool, bool, bool, bool) -> bool
+    # type: (str, typing.List[str], str, bool, bool, int, bool, bool, bool, bool, str, bool, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
     """Run LEMS file with the NEURON simulator
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -1911,7 +1911,7 @@ def run_jneuroml_with_realtime_output(
     verbose=DEFAULTS['v'],
     exit_on_fail=True
 ):
-    # type: (typing.List[str], str, typing.List[str], str, str, bool, bool) -> bool
+    # type: (str, str, str, str, str, bool, bool) -> bool
     # XXX: Only tested with Linux
     """Run jnml with provided arguments with realtime output.
 
@@ -1937,12 +1937,11 @@ def run_jneuroml_with_realtime_output(
     jar_path = get_path_to_jnml_jar()
 
     command = ''
-    output = ''
 
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
             (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
-        output = execute_command_in_dir_with_realtime_output(
+        execute_command_in_dir_with_realtime_output(
             command, exec_in_dir, verbose=verbose, prefix=' jNeuroML >>  ')
 
     except KeyboardInterrupt as e:
