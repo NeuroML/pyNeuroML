@@ -38,7 +38,7 @@ from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
 
 import neuroml
-from neuroml import NeuroMLDocument
+from neuroml import NeuroMLDocument, Cell
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 
@@ -693,6 +693,13 @@ def summary(nml2_doc=None, verbose=False):
 
 
 def cells_info(nml_file_name):
+    # type: (str) -> str
+    """Provide information about the cells in a NeuroML file.
+
+    :param nml_file_name: name of NeuroML v2 file
+    :type nml_file_name: str
+    :returns: information on cells (str)
+    """
     from neuroml.loaders import read_neuroml2_file
     nml_doc = read_neuroml2_file(nml_file_name, include_includes=True, verbose=False, optimized=True)
 
@@ -705,6 +712,26 @@ def cells_info(nml_file_name):
 
 
 def cell_info(cell):
+    # type (Cell) -> str
+    """Provide information on a NeuroML Cell instance:
+
+    - morphological information:
+      - Segment information:
+        - parent segments
+        - segment location, extents, diameter
+        - segment length
+        - segment surface area
+        - segment volume
+      - Segment group information:
+        - included segments
+    - biophysical properties:
+      - channel densities
+      - specific capacitances
+
+    :param cell: cell object to investigate
+    :type cell: Cell
+    :returns: string of cell information
+    """
     info = ''
     prefix = '*  '
     info += prefix + 'Cell: %s\n' % cell.id
