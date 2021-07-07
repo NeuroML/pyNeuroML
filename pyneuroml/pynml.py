@@ -598,10 +598,15 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
 
 
 def quick_summary(nml2_doc):
-    '''
-    Or better just use nml2_doc.summary(show_includes=False)
-    '''
+    # type: (NeuroMLDocument) -> str
+    """Get a quick summary of the NeuroML2 document
 
+    NOTE: You should prefer nml2_doc.summary(show_includes=False)
+
+    :param nml2_doc: NeuroMLDocument to fetch summary for
+    :type nml2_doc: NeuroMLDocument
+    :returns: summary string
+    """
     info = 'Contents of NeuroML 2 document: {}\n'.format(nml2_doc.id)
     membs = inspect.getmembers(nml2_doc)
 
