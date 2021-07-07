@@ -347,7 +347,7 @@ def get_value_in_si(nml2_quantity):
     """
     try:
         return float(nml2_quantity)
-    except:
+    except ValueError:
         model = get_lems_model_with_units()
         m, u = split_nml2_quantity(nml2_quantity)
         si_value = None
