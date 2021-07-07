@@ -290,6 +290,12 @@ def parse_arguments():
 
 
 def get_lems_model_with_units():
+    # type: () -> lems_model.Model
+    """
+    Get a LEMS model with NeuroML core dimensions and units.
+
+    :returns: a `lems.model.model.Model` that includes NeuroML dimensions and units.
+    """
     global lems_model_with_units
 
     if lems_model_with_units is None:
