@@ -818,6 +818,7 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
 
 
 def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_includes=False, debug=False):
+    # type: (str, bool, bool, bool) -> lems_model.Model
     """Read LEMS file using PyLEMS. See WARNING below.
 
     WARNING: this is a general function that uses PyLEMS to read any files that
