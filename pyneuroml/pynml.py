@@ -1255,13 +1255,45 @@ def run_lems_with_jneuroml_brian2(
     exit_on_fail=True,
     cleanup=False
 ):
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> bool
+    """Run LEMS file with the NEURON simulator
+
+    Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
+
+    :param lems_file_name: name of LEMS file to run
+    :type lems_file_name: str
+    :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
+    :type paths_to_include: list(str)
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
+    :type skip_run: bool
+    :param nogui: toggle whether jnml GUI should be shown
+    :type nogui: bool
+    :param load_saved_data: toggle whether any saved data should be loaded
+    :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
+    :param plot: toggle whether specified plots should be plotted
+    :type plot: bool
+    :param show_plot_already: toggle whether prepared plots should be shown
+    :type show_plot_already: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    :param cleanup: toggle whether the directory should be cleaned of generated files after run completion
+    :type cleanup: bool
+    """
 
     print_comment("Loading LEMS file: {} and running with jNeuroML_Brian2".format(lems_file_name))
 
     post_args = " -brian2"
 
-    #post_args += gui_string(nogui)
-    #post_args += include_string(paths_to_include)
+    # post_args += gui_string(nogui)
+    # post_args += include_string(paths_to_include)
 
     t_run = datetime.now()
     if skip_run:
@@ -1277,10 +1309,10 @@ def run_lems_with_jneuroml_brian2(
             exit_on_fail=exit_on_fail)
 
         old_sys_args = [a for a in sys.argv]
-        sys.argv[1] = '-nogui' # To supress gui for brian simulation...
+        sys.argv[1] = '-nogui'  # To supress gui for brian simulation...
         logger.info('Importing generated Brian2 python file (changed args from {} to {})'.format(old_sys_args, sys.argv))
-        brian2_py_name = lems_file_name.replace('.xml','_brian2')
-        exec('import %s'%brian2_py_name)
+        brian2_py_name = lems_file_name.replace('.xml', '_brian2')
+        exec('import %s' % brian2_py_name)
         sys.argv = old_sys_args
         logger.info('Finished Brian2 simulation, back to {}'.format(sys.argv))
 
