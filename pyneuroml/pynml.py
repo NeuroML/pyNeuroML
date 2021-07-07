@@ -799,7 +799,18 @@ def cell_info(cell):
 
 def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
                         verbose_validate=False):
+    # type: (NeuroMLDocument, str, bool, bool) -> None
+    """Write a NeuroMLDocument object to a file using libNeuroML.
 
+    :param nml2_doc: NeuroMLDocument object to write to file
+    :type nml2_doc: NeuroMLDocument
+    :param nml2_file_name: name of file to write to
+    :type nml2_file_name: str
+    :param validate: toggle whether the written file should be validated
+    :type validate: bool
+    :param verbose_validate: toggle whether the validation should be verbose
+    :type verbose_validate: bool
+    """
     writers.NeuroMLWriter.write(nml2_doc, nml2_file_name)
 
     if validate:
