@@ -2272,24 +2272,22 @@ def reload_standard_dat_file(file_name):
     :type file_name: str
     :returns: tuple of (data, column names)
     """
-    dat_file = open(file_name)
-    data = {}  # type: typing.Dict
-    indeces = []  # type: typing.List
-    for line in dat_file:
-        words = line.split()
+    with open(file_name) as dat_file:
+        data = {}  # type: typing.Dict
+        indeces = []  # type: typing.List
+        for line in dat_file:
+            words = line.split()
 
-        if 't' not in data.keys():
-            data['t'] = []
+            if 't' not in data.keys():
+                data['t'] = []
+                for i in range(len(words) - 1):
+                    data[i] = []
+                    indeces.append(i)
+            data['t'].append(float(words[0]))
             for i in range(len(words) - 1):
-                data[i] = []
-                indeces.append(i)
-        data['t'].append(float(words[0]))
-        for i in range(len(words) - 1):
-            data[i].append(float(words[i + 1]))
+                data[i].append(float(words[i + 1]))
 
-    logger.info("Loaded data from %s; columns: %s" % (file_name, indeces))
-
-    dat_file.close()
+        logger.info("Loaded data from %s; columns: %s" % (file_name, indeces))
     return data, indeces
 
 
