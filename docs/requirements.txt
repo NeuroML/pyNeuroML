@@ -6,3 +6,8 @@ libneuroml
 pyelectro
 matplotlib
 scipy
+pylems
+graphviz
+argparse
+neuromllite
+neurotune
