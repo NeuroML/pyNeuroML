@@ -38,6 +38,7 @@ from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
 
 import neuroml
+from neuroml import NeuroMLDocument
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 
@@ -525,7 +526,21 @@ def validate_neuroml2_lems_file(nml2_lems_file_name, max_memory=DEFAULTS['defaul
 def read_neuroml2_file(nml2_file_name, include_includes=False,
                        verbose=False, already_included=[],
                        optimized=False, check_validity_pre_include=False):
+    # type: (str, bool, bool, typing.List, bool, bool) -> NeuroMLDocument
+    """Read a NeuroML2 file into a `nml.NeuroMLDocument`
 
+    :param nml2_file_name: file of NeuroML 2 file to read
+    :type nml2_file_name: str
+    :param include_includes: toggle whether files included in NML file should also be included/read
+    :type include_includes: bool
+    :param already_included: list of files already included
+    :type already_included: list
+    :param optimized: toggle whether the HDF5 loader should optimise the document
+    :type optimized: bool
+    :param check_validity_pre_include: check each file for validity before including
+    :type check_validity_pre_include: bool
+    :returns: nml.NeuroMLDocument object containing the read NeuroML file(s)
+    """
     print_comment("Loading NeuroML2 file: %s" % nml2_file_name)
 
     if not os.path.isfile(nml2_file_name):
