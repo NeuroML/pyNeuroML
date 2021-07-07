@@ -1342,7 +1342,32 @@ def reload_saved_data(lems_file_name,
                       reload_events=False,
                       verbose=DEFAULTS['v'],
                       remove_dat_files_after_load=False):
+    # type: (str, str, datetime, bool, bool, typing.Union[None, str], bool, bool, bool) -> typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]
+    """Reload data saved from previous LEMS simulation run.
 
+    :param lems_file_name: name of LEMS file that was used to generate the data
+    :type lems_file_name: str
+    :param base_dir: directory to run in
+    :type base_dir: str
+    :param t_run: time of run
+    :type t_run: datetime
+    :param plot: toggle plotting
+    :type plot: bool
+    :param show_plot_already: toggle if plots should be shown
+    :type show_plot_already: bool
+    :param simulator: simulator that was used to generate data
+    :type simulator: str
+    :param reload_event: toggle whether events should be loaded
+    :type reload_event: bool
+    :param verbose: toggle verbose output
+    :type verbose: bool
+    :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
+    :type remove_dat_files_after_load: bool
+
+
+    TODO: remove unused vebose argument (needs checking to see if is being
+    used in other places)
+    """
     if not os.path.isfile(lems_file_name):
         real_lems_file = os.path.realpath(os.path.join(base_dir, lems_file_name))
     else:
@@ -1351,8 +1376,8 @@ def reload_saved_data(lems_file_name,
     logger.debug("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s" % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already))
 
     # Could use pylems to parse all this...
-    traces = {}
-    events = {}
+    traces = {}  # type: typing.Dict
+    events = {}  # type: typing.Dict
 
     if plot:
         import matplotlib.pyplot as plt
