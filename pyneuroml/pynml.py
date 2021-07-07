@@ -1904,7 +1904,25 @@ def run_jneuroml_with_realtime_output(
     verbose=DEFAULTS['v'],
     exit_on_fail=True
 ):
-    # NOTE: Only tested with Linux
+    # type: (typing.List[str], str, typing.List[str], str, str, bool, bool) -> bool
+    # XXX: Only tested with Linux
+    """Run jnml with provided arguments with realtime output.
+
+    NOTE: this has only been tested on Linux.
+
+    :param pre_args: pre-file name arguments
+    :type pre_args: list of strings
+    :param target_file: LEMS or NeuroML file to run jnml on
+    :type target_file: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    """
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
