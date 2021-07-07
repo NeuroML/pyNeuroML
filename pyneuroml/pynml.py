@@ -533,6 +533,8 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
     :type nml2_file_name: str
     :param include_includes: toggle whether files included in NML file should also be included/read
     :type include_includes: bool
+    :param verbose: toggle verbosity
+    :type verbose: bool
     :param already_included: list of files already included
     :type already_included: list
     :param optimized: toggle whether the HDF5 loader should optimise the document
