@@ -401,7 +401,6 @@ def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=Tr
     """
     from neuromllite.GraphVizHandler import GraphVizHandler
     from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
-    from neuromllite.GraphVizHandler import engines
 
     print_comment('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
 
