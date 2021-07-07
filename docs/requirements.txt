@@ -1,6 +1,8 @@
 sphinxcontrib-bibtex
 lxml
 airspeed
-#cv2
+opencv-python
 libneuroml
 pyelectro
+matplotlib
+scipy
