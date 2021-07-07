@@ -883,7 +883,7 @@ def run_lems_with_jneuroml(lems_file_name,
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: book
+    :type max_memory: bool
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -942,6 +942,16 @@ def run_lems_with_jneuroml(lems_file_name,
 
 def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
+    # type: (str, bool, bool) -> None
+    """Generate the SVG representation of a NeuroML model using jnml
+
+    :param nml2_file_name: name of NeuroML2 file to generate SVG for
+    :type nml2_file_name: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    """
     print_comment("Converting NeuroML2 file: {} to SVG".format(nml2_file_name))
 
     post_args = "-svg"
