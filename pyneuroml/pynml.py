@@ -31,6 +31,7 @@ try:
 except ImportError:
     pass
 
+import matplotlib
 import lems.model.model as lems_model
 from lems.parser.LEMS import LEMSFileParser
 
@@ -2101,6 +2102,7 @@ def generate_plot(xvalues,
                   save_figure_to=None,
                   title_above_plot=False,
                   verbose=False):
+    # type: (typing.List[float], typing.List[float], str, typing.List[str], typing.List[str], typing.List[str], typing.List[str], typing.List[str], typing.List[str], str, str, str, str, bool, bool, bool, bool, bool, int, bool, int, typing.Union[None, str], bool, typing.Union[None, str], bool, bool) -> matplotlib.Axes
     """Utility function to generate plots using the Matplotlib library.
 
     This function can be used to generate graphs with multiple plot lines.
@@ -2176,6 +2178,7 @@ def generate_plot(xvalues,
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
+    :returns: matplotlib Axes object
     """
 
     print_comment("Generating plot: %s" % (title))
