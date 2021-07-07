@@ -1,1 +1,6 @@
 sphinxcontrib-bibtex
+lxml
+airspeed
+cv2
+libneuroml
+pyelectro
