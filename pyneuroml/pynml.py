@@ -413,10 +413,14 @@ def generate_nmlgraph(nml2_file_name, level=1, engine='dot'):
 
 
 def generate_lemsgraph(lems_file_name, verbose_generate=True):
+    # type: (str, bool) -> bool
     """Generate LEMS graph using jNeuroML
 
-    :lems_file_name (string): LEMS file to parse
-    :verbose_generate (boolean): output verbosity
+    :param lems_file_name: LEMS file to parse
+    :type lems_file_name: str
+    :param verbose_generate: whether or not jnml should be run with verbosity output
+    :type verbose_generate: bool
+    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
     """
     pre_args = ""
     post_args = "-lems-graph"
