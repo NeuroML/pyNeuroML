@@ -2307,10 +2307,16 @@ def _get_attr_in_element(el, name, rdf=False):
 
 
 def extract_annotations(nml2_file):
+    # type: (str) -> None
+    """Extract and print annotations from a NeuroML 2 file.
+
+    :param nml2_file: name of NeuroML2 file to parse
+    :type nml2_file: str
+    """
     pp = pprint.PrettyPrinter()
     test_file = open(nml2_file)
     root = etree.parse(test_file).getroot()
-    annotations = {}
+    annotations = {}  # type: typing.Dict
 
     for a in _find_elements(root, 'annotation'):
         for r in _find_elements(a, 'Description', rdf=True):
