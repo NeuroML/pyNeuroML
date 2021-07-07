@@ -2264,9 +2264,17 @@ def generate_plot(xvalues,
 
 
 def reload_standard_dat_file(file_name):
+    # type: (str) -> typing.Tuple[typing.Dict, typing.List]
+    """Reload a datafile as usually saved by jLEMS, etc.
+    First column is time (in seconds), multiple other columns.
+
+    :param file_name: name of data file to load
+    :type file_name: str
+    :returns: tuple of (data, column names)
+    """
     dat_file = open(file_name)
-    data = {}
-    indeces = []
+    data = {}  # type: typing.Dict
+    indeces = []  # type: typing.List
     for line in dat_file:
         words = line.split()
 
