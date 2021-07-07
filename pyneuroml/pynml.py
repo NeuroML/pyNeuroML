@@ -357,8 +357,8 @@ def get_value_in_si(nml2_quantity):
         return si_value
 
 
-def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
-    # type: (str, str, bool) -> float
+def convert_to_units(nml2_quantity, unit):
+    # type: (str, str) -> float
     """Convert a NeuroML2 quantity to provided unit.
 
     :param nml2_quantity: NeuroML2 quantity to convert
@@ -382,11 +382,10 @@ def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
             new_value = si_value / (un.scale * pow(10, un.power)) - un.offset
             if not un.dimension == dim:
                 raise Exception(
-                    "Cannot convert {} to {}. Dimensions of units ({}/{}) do not match!".format(
-                        nml2_quantity, unit, dim, un.dimension))
+                    "Cannot convert {} to {}. Dimensions of units ({}/{}) do not match!".format(nml2_quantity, unit, dim, un.dimension))
 
-    logger.debug("Converting {} {} to {}: {} ({} in SI units)".format(
-        m, u, unit, new_value, si_value), verbose)
+    logger.info("Converting {} {} to {}: {} ({} in SI units)".format(
+        m, u, unit, new_value, si_value))
 
     return new_value
 
