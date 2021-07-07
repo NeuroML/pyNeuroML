@@ -1835,7 +1835,24 @@ def run_jneuroml(pre_args,
                  verbose=DEFAULTS['v'],
                  report_jnml_output=True,
                  exit_on_fail=True):
+    # type (typing.List[str], str, typing.List[str], str, str, bool, bool, bool) -> bool
+    """Run jnml with provided arguments.
 
+    :param pre_args: pre-file name arguments
+    :type pre_args: list of strings
+    :param target_file: LEMS or NeuroML file to run jnml on
+    :type target_file: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param report_jnml_output: toggle whether jnml output should be printed
+    :type report_jnml_output: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    """
     logger.debug('Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s' % (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail))
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
