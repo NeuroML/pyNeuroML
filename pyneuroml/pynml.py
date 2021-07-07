@@ -1574,6 +1574,7 @@ def confirm_file_exists(filename):
 
 
 def confirm_neuroml_file(filename):
+    # type: (str) -> None
     """Confirm that file exists and is a NeuroML file before proceeding with
     processing.
 
