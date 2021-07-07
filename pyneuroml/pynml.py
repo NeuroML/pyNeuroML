@@ -338,6 +338,13 @@ def split_nml2_quantity(nml2_quantity):
 
 
 def get_value_in_si(nml2_quantity):
+    # type (str) -> float
+    """Get value of a NeuroML2 quantity in SI units
+
+    :param nml2_quantity: NeuroML2 quantity to convert
+    :type nml2_quantity: str
+    :returns: value in SI units (float)
+    """
     try:
         return float(nml2_quantity)
     except:
