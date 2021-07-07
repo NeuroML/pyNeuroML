@@ -340,7 +340,7 @@ def split_nml2_quantity(nml2_quantity):
 
 
 def get_value_in_si(nml2_quantity):
-    # type (str) -> float
+    # type: (str) -> float
     """Get value of a NeuroML2 quantity in SI units
 
     :param nml2_quantity: NeuroML2 quantity to convert
@@ -495,7 +495,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,
 
 
 def validate_neuroml2_lems_file(nml2_lems_file_name, max_memory=DEFAULTS['default_java_max_memory']):
-    # type (str, str) -> bool
+    # type: (str, str) -> bool
     """Validate a NeuroML 2 LEMS file using jNeuroML.
 
     Note that this uses jNeuroML and so is aware of the standard NeuroML LEMS
@@ -713,7 +713,7 @@ def cells_info(nml_file_name):
 
 
 def cell_info(cell):
-    # type (Cell) -> str
+    # type: (Cell) -> str
     """Provide information on a NeuroML Cell instance:
 
     - morphological information:
@@ -994,7 +994,7 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 
 def include_string(paths_to_include):
-    # type (typing.Union[str, typing.Tuple[str], typing.List[str]]) -> str
+    # type: (typing.Union[str, typing.Tuple[str], typing.List[str]]) -> str
     """Convert a path or list of paths into an include string to be used by
     jnml.
 
@@ -1604,7 +1604,7 @@ def confirm_neuroml_file(filename):
 
 
 def confirm_lems_file(filename):
-    # type (str) -> None
+    # type: (str) -> None
     """Confirm that file exists and is a LEMS file before proceeding with
     processing.
 
@@ -1821,7 +1821,7 @@ def evaluate_arguments(args):
 
 
 def get_path_to_jnml_jar():
-    # type () -> str
+    # type: () -> str
     """Get the path to the jNeuroML jar included with PyNeuroML.
 
     :returns: path of jar file
@@ -1842,7 +1842,7 @@ def run_jneuroml(pre_args,
                  verbose=DEFAULTS['v'],
                  report_jnml_output=True,
                  exit_on_fail=True):
-    # type (typing.List[str], str, typing.List[str], str, str, bool, bool, bool) -> bool
+    # type: (str, str, str, str, str, bool, bool, bool) -> bool
     """Run jnml with provided arguments.
 
     :param pre_args: pre-file name arguments
@@ -1974,7 +1974,7 @@ def print_comment(text, end='\n'):
 
 
 def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], prefix="Output: ", env=None):
-    # type (str, str, bool, str, typing.Union[str, None]) -> bool
+    # type: (str, str, bool, str, typing.Union[str, None]) -> bool
     # NOTE: Only tested with Linux
     """Run a command in a given directory with real time output.
 
@@ -2020,7 +2020,7 @@ def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFA
 
 def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
                            prefix="Output: ", env=None):
-    # type (str, str, bool, str, typing.Union[None, str]) -> typing.Union[None, str]
+    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Union[None, str]
     """Execute a command in specific working directory
 
     :param command: command to run
