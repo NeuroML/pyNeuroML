@@ -1255,7 +1255,7 @@ def run_lems_with_jneuroml_brian2(
     exit_on_fail=True,
     cleanup=False
 ):
-    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> bool
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
     """Run LEMS file with the NEURON simulator
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
