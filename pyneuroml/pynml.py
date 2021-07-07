@@ -843,6 +843,16 @@ def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_inclu
 
 
 def write_lems_file(lems_model, lems_file_name, validate=False):
+    # type: (lems_model.Model, str, bool) -> None
+    """Write a lems_model.Model to file using pyLEMS.
+
+    :param lems_model: LEMS model to write to file
+    :type lems_model: lems_model.Model
+    :param lems_file_name: name of file to write to
+    :type lems_file_name: str
+    :param validate: toggle whether written file should be validated
+    :type validate: bool
+    """
     lems_model.export_to_file(lems_file_name)
 
     if validate:
