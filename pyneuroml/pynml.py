@@ -987,6 +987,14 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 
 def include_string(paths_to_include):
+    # type (typing.Union[str, typing.Tuple[str], typing.List[str]]) -> str
+    """Convert a path or list of paths into an include string to be used by
+    jnml.
+
+    :param paths_to_include: path or list or tuple of paths to be included
+    :type paths_to_include: str or list(str) or tuple(str)
+    :returns: include string to be used with jnml.
+    """
     if paths_to_include:
         if type(paths_to_include) is str:
             paths_to_include = [paths_to_include]
