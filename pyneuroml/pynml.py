@@ -390,13 +390,12 @@ def convert_to_units(nml2_quantity, unit):
     return new_value
 
 
-def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=True):
+def generate_nmlgraph(nml2_file_name, level=1, engine='dot'):
     """Generate NeuroML graph.
 
     :nml2_file_name (string): NML file to parse
     :level (string): level of graph to generate (default: '1')
     :engine (string): graph engine to use (default: 'dot')
-    :verbose_generate (boolean): output verbosity
 
     """
     from neuromllite.GraphVizHandler import GraphVizHandler
