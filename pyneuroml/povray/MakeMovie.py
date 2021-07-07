@@ -1,5 +1,4 @@
 import cv2
-import cv
 import colorsys
 import argparse
 import sys
@@ -196,7 +195,7 @@ def main(argv):
 
         fps = 24
         if format == 'avi':
-            fourcc = cv.CV_FOURCC('X', 'V', 'I', 'D')
+            fourcc = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
             mov_file = args.name + '.avi'
             out = cv2.VideoWriter(mov_file, fourcc, fps, (width, height))
         if format == 'divx':
