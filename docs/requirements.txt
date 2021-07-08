@@ -1,1 +1,13 @@
 sphinxcontrib-bibtex
+lxml
+airspeed
+opencv-python
+libneuroml
+pyelectro
+matplotlib
+scipy
+pylems
+graphviz
+argparse
+neuromllite
+git+https://github.com/NeuralEnsemble/neurotune.git#egg=neurotune

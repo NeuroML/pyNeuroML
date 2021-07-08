@@ -26,6 +26,12 @@ from lxml import etree
 import pprint
 import logging
 
+try:
+    import typing
+except ImportError:
+    pass
+
+import matplotlib
 import lems.model.model as lems_model
 from lems.parser.LEMS import LEMSFileParser
 
@@ -33,13 +39,14 @@ from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
 
 import neuroml
+from neuroml import NeuroMLDocument, Cell
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 
 
 DEFAULTS = {'v': False,
             'default_java_max_memory': '400M',
-            'nogui': False}
+            'nogui': False}  # type: typing.Dict[str, typing.Any]
 
 lems_model_with_units = None
 
@@ -290,6 +297,12 @@ def parse_arguments():
 
 
 def get_lems_model_with_units():
+    # type: () -> lems_model.Model
+    """
+    Get a LEMS model with NeuroML core dimensions and units.
+
+    :returns: a `lems.model.model.Model` that includes NeuroML dimensions and units.
+    """
     global lems_model_with_units
 
     if lems_model_with_units is None:
@@ -305,6 +318,13 @@ def get_lems_model_with_units():
 
 
 def split_nml2_quantity(nml2_quantity):
+    # type: (str) -> typing.Tuple[float, str]
+    """Split a NeuroML 2 quantity into its magnitude and units
+
+    :param nml2_quantity: NeuroML2 quantity to split
+    :type nml2_quantity:
+    :returns: a tuple (magnitude, unit)
+    """
     magnitude = None
     i = len(nml2_quantity)
     while magnitude is None:
@@ -320,9 +340,16 @@ def split_nml2_quantity(nml2_quantity):
 
 
 def get_value_in_si(nml2_quantity):
+    # type: (str) -> float
+    """Get value of a NeuroML2 quantity in SI units
+
+    :param nml2_quantity: NeuroML2 quantity to convert
+    :type nml2_quantity: str
+    :returns: value in SI units (float)
+    """
     try:
         return float(nml2_quantity)
-    except:
+    except ValueError:
         model = get_lems_model_with_units()
         m, u = split_nml2_quantity(nml2_quantity)
         si_value = None
@@ -332,7 +359,16 @@ def get_value_in_si(nml2_quantity):
         return si_value
 
 
-def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
+def convert_to_units(nml2_quantity, unit):
+    # type: (str, str) -> float
+    """Convert a NeuroML2 quantity to provided unit.
+
+    :param nml2_quantity: NeuroML2 quantity to convert
+    :type nml2_quantity: str
+    :param unit: unit to convert to
+    :type unit: str
+    :returns: converted value (float)
+    """
     model = get_lems_model_with_units()
     m, u = split_nml2_quantity(nml2_quantity)
     si_value = None
@@ -348,27 +384,25 @@ def convert_to_units(nml2_quantity, unit, verbose=DEFAULTS['v']):
             new_value = si_value / (un.scale * pow(10, un.power)) - un.offset
             if not un.dimension == dim:
                 raise Exception(
-                    "Cannot convert {} to {}. Dimensions of units ({}/{}) do not match!".format(
-                        nml2_quantity, unit, dim, un.dimension))
+                    "Cannot convert {} to {}. Dimensions of units ({}/{}) do not match!".format(nml2_quantity, unit, dim, un.dimension))
 
-    logger.debug("Converting {} {} to {}: {} ({} in SI units)".format(
-        m, u, unit, new_value, si_value), verbose)
+    logger.info("Converting {} {} to {}: {} ({} in SI units)".format(
+        m, u, unit, new_value, si_value))
 
     return new_value
 
 
-def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=True):
+def generate_nmlgraph(nml2_file_name, level=1, engine='dot'):
+    # type: (str, int, str) -> None
     """Generate NeuroML graph.
 
     :nml2_file_name (string): NML file to parse
     :level (string): level of graph to generate (default: '1')
     :engine (string): graph engine to use (default: 'dot')
-    :verbose_generate (boolean): output verbosity
 
     """
     from neuromllite.GraphVizHandler import GraphVizHandler
     from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
-    from neuromllite.GraphVizHandler import engines
 
     print_comment('Converting %s to graphical form, level %i, engine %s' % (nml2_file_name, level, engine))
 
@@ -378,14 +412,17 @@ def generate_nmlgraph(nml2_file_name, level=1, engine='dot', verbose_generate=Tr
     handler.finalise_document()
 
     logger.info("Done with GraphViz...")
-    return 0
 
 
 def generate_lemsgraph(lems_file_name, verbose_generate=True):
+    # type: (str, bool) -> bool
     """Generate LEMS graph using jNeuroML
 
-    :lems_file_name (string): LEMS file to parse
-    :verbose_generate (boolean): output verbosity
+    :param lems_file_name: LEMS file to parse
+    :type lems_file_name: str
+    :param verbose_generate: whether or not jnml should be run with verbosity output
+    :type verbose_generate: bool
+    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
     """
     pre_args = ""
     post_args = "-lems-graph"
@@ -399,6 +436,20 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
 
 
 def validate_neuroml1(nml1_file_name, verbose_validate=True):
+    # type: (str, bool) -> bool
+    # TODO: mark as deprecated
+    """Validate a NeuroML v1 file.
+
+    NOTE: NeuroML v1 is deprecated. Please use NeuroML v2.
+    This functionality will be dropped in the future.
+
+    :param nml1_file_name: name of NeuroMLv1 file to validate
+    :type nml1_file_name: str
+    :param verbose_validate: whether jnml should print verbose information while validating
+    :type verbose_validate: bool (default: True)
+    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    """
+    print_comment("NOTE: NeuroMLv1 is deprecated. Please use NeuroMLv2.")
     pre_args = "-validatev1"
     post_args = ""
 
@@ -412,6 +463,17 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
 
 def validate_neuroml2(nml2_file_name, verbose_validate=True,
                       max_memory=None):
+    # type: (str, bool, str) -> bool
+    """Validate a NeuroML2 file using jnml.
+
+    :params nml2_file_name: name of NeuroML 2 file to validate
+    :type nml2_file_name: str
+    :param verbose_validate: whether jnml should print verbose information while validating
+    :type verbose_validate: bool (default: True)
+    :param max_memory: maximum memory the JVM should use while running jnml
+    :type max_memory: str
+    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    """
     pre_args = "-validate"
     post_args = ""
 
@@ -433,7 +495,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True,
 
 
 def validate_neuroml2_lems_file(nml2_lems_file_name, max_memory=DEFAULTS['default_java_max_memory']):
-    # type (str, str) -> bool
+    # type: (str, str) -> bool
     """Validate a NeuroML 2 LEMS file using jNeuroML.
 
     Note that this uses jNeuroML and so is aware of the standard NeuroML LEMS
@@ -465,7 +527,23 @@ def validate_neuroml2_lems_file(nml2_lems_file_name, max_memory=DEFAULTS['defaul
 def read_neuroml2_file(nml2_file_name, include_includes=False,
                        verbose=False, already_included=[],
                        optimized=False, check_validity_pre_include=False):
+    # type: (str, bool, bool, typing.List, bool, bool) -> NeuroMLDocument
+    """Read a NeuroML2 file into a `nml.NeuroMLDocument`
 
+    :param nml2_file_name: file of NeuroML 2 file to read
+    :type nml2_file_name: str
+    :param include_includes: toggle whether files included in NML file should also be included/read
+    :type include_includes: bool
+    :param verbose: toggle verbosity
+    :type verbose: bool
+    :param already_included: list of files already included
+    :type already_included: list
+    :param optimized: toggle whether the HDF5 loader should optimise the document
+    :type optimized: bool
+    :param check_validity_pre_include: check each file for validity before including
+    :type check_validity_pre_include: bool
+    :returns: nml.NeuroMLDocument object containing the read NeuroML file(s)
+    """
     print_comment("Loading NeuroML2 file: %s" % nml2_file_name)
 
     if not os.path.isfile(nml2_file_name):
@@ -521,10 +599,15 @@ def read_neuroml2_file(nml2_file_name, include_includes=False,
 
 
 def quick_summary(nml2_doc):
-    '''
-    Or better just use nml2_doc.summary(show_includes=False)
-    '''
+    # type: (NeuroMLDocument) -> str
+    """Get a quick summary of the NeuroML2 document
 
+    NOTE: You should prefer nml2_doc.summary(show_includes=False)
+
+    :param nml2_doc: NeuroMLDocument to fetch summary for
+    :type nml2_doc: NeuroMLDocument
+    :returns: summary string
+    """
     info = 'Contents of NeuroML 2 document: {}\n'.format(nml2_doc.id)
     membs = inspect.getmembers(nml2_doc)
 
@@ -546,9 +629,15 @@ def quick_summary(nml2_doc):
 
 
 def summary(nml2_doc=None, verbose=False):
-    '''
-    Based on nml2_doc.summary(show_includes=False)
-    '''
+    # type: (typing.Union[None, NeuroMLDocument], bool) -> None
+    """Wrapper around nml_doc.summary() to generate the pynml-summary command
+    line tool.
+
+    :param nml2_doc: NeuroMLDocument object or name of NeuroML v2 file to get summary for.
+    :type nml2_doc: NeuroMLDocument
+    :param verbose: toggle verbosity
+    :type verbose: bool
+    """
 
     usage = textwrap.dedent(
         """
@@ -605,6 +694,13 @@ def summary(nml2_doc=None, verbose=False):
 
 
 def cells_info(nml_file_name):
+    # type: (str) -> str
+    """Provide information about the cells in a NeuroML file.
+
+    :param nml_file_name: name of NeuroML v2 file
+    :type nml_file_name: str
+    :returns: information on cells (str)
+    """
     from neuroml.loaders import read_neuroml2_file
     nml_doc = read_neuroml2_file(nml_file_name, include_includes=True, verbose=False, optimized=True)
 
@@ -617,6 +713,32 @@ def cells_info(nml_file_name):
 
 
 def cell_info(cell):
+    # type: (Cell) -> str
+    """Provide information on a NeuroML Cell instance:
+
+    - morphological information:
+
+      - Segment information:
+
+        - parent segments
+        - segment location, extents, diameter
+        - segment length
+        - segment surface area
+        - segment volume
+
+      - Segment group information:
+
+        - included segments
+
+    - biophysical properties:
+
+      - channel densities
+      - specific capacitances
+
+    :param cell: cell object to investigate
+    :type cell: Cell
+    :returns: string of cell information
+    """
     info = ''
     prefix = '*  '
     info += prefix + 'Cell: %s\n' % cell.id
@@ -684,7 +806,18 @@ def cell_info(cell):
 
 def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
                         verbose_validate=False):
+    # type: (NeuroMLDocument, str, bool, bool) -> None
+    """Write a NeuroMLDocument object to a file using libNeuroML.
 
+    :param nml2_doc: NeuroMLDocument object to write to file
+    :type nml2_doc: NeuroMLDocument
+    :param nml2_file_name: name of file to write to
+    :type nml2_file_name: str
+    :param validate: toggle whether the written file should be validated
+    :type validate: bool
+    :param verbose_validate: toggle whether the validation should be verbose
+    :type verbose_validate: bool
+    """
     writers.NeuroMLWriter.write(nml2_doc, nml2_file_name)
 
     if validate:
@@ -692,6 +825,7 @@ def write_neuroml2_file(nml2_doc, nml2_file_name, validate=True,
 
 
 def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_includes=False, debug=False):
+    # type: (str, bool, bool, bool) -> lems_model.Model
     """Read LEMS file using PyLEMS. See WARNING below.
 
     WARNING: this is a general function that uses PyLEMS to read any files that
@@ -716,6 +850,16 @@ def read_lems_file(lems_file_name, include_includes=False, fail_on_missing_inclu
 
 
 def write_lems_file(lems_model, lems_file_name, validate=False):
+    # type: (lems_model.Model, str, bool) -> None
+    """Write a lems_model.Model to file using pyLEMS.
+
+    :param lems_model: LEMS model to write to file
+    :type lems_model: lems_model.Model
+    :param lems_file_name: name of file to write to
+    :type lems_file_name: str
+    :param validate: toggle whether written file should be validated
+    :type validate: bool
+    """
     lems_model.export_to_file(lems_file_name)
 
     if validate:
@@ -736,7 +880,38 @@ def run_lems_with_jneuroml(lems_file_name,
                            verbose=DEFAULTS['v'],
                            exit_on_fail=True,
                            cleanup=False):
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
+    """Parse/Run a LEMS file with jnml.
 
+    Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
+
+    :param lems_file_name: name of LEMS file to run
+    :type lems_file_name: str
+    :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
+    :type paths_to_include: list(str)
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
+    :type skip_run: bool
+    :param nogui: toggle whether jnml GUI should be shown
+    :type nogui: bool
+    :param load_saved_data: toggle whether any saved data should be loaded
+    :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
+    :param plot: toggle whether specified plots should be plotted
+    :type plot: bool
+    :param show_plot_already: toggle whether prepared plots should be shown
+    :type show_plot_already: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    :param cleanup: toggle whether the directory should be cleaned of generated files after run completion
+    :type cleanup: bool
+    """
     print_comment("Loading LEMS file: {} and running with jNeuroML".format(lems_file_name))
     post_args = ""
     post_args += gui_string(nogui)
@@ -774,6 +949,16 @@ def run_lems_with_jneuroml(lems_file_name,
 
 def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
+    # type: (str, str, bool) -> None
+    """Generate the SVG representation of a NeuroML model using jnml
+
+    :param nml2_file_name: name of NeuroML2 file to generate SVG for
+    :type nml2_file_name: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    """
     print_comment("Converting NeuroML2 file: {} to SVG".format(nml2_file_name))
 
     post_args = "-svg"
@@ -787,6 +972,16 @@ def nml2_to_svg(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
                 verbose=True):
+    # type: (str, str, bool) -> None
+    """Generate the PNG representation of a NeuroML model using jnml
+
+    :param nml2_file_name: name of NeuroML2 file to generate PNG for
+    :type nml2_file_name: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    """
     print_comment("Converting NeuroML2 file: %s to PNG" % nml2_file_name)
 
     post_args = "-png"
@@ -799,6 +994,14 @@ def nml2_to_png(nml2_file_name, max_memory=DEFAULTS['default_java_max_memory'],
 
 
 def include_string(paths_to_include):
+    # type: (typing.Union[str, typing.Tuple[str], typing.List[str]]) -> str
+    """Convert a path or list of paths into an include string to be used by
+    jnml.
+
+    :param paths_to_include: path or list or tuple of paths to be included
+    :type paths_to_include: str or list(str) or tuple(str)
+    :returns: include string to be used with jnml.
+    """
     if paths_to_include:
         if type(paths_to_include) is str:
             paths_to_include = [paths_to_include]
@@ -810,6 +1013,13 @@ def include_string(paths_to_include):
 
 
 def gui_string(nogui):
+    # type: (bool) -> str
+    """Return the gui string for jnml
+
+    :param nogui: toggle whether GUI should be used or not
+    :type nogui: bool
+    :returns: gui  string or empty string
+    """
     return " -nogui" if nogui else ""
 
 
@@ -831,6 +1041,44 @@ def run_lems_with_jneuroml_neuron(
     cleanup=False,
         realtime_output=False):
     # jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
+    """Run LEMS file with the NEURON simulator
+
+    Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
+
+    :param lems_file_name: name of LEMS file to run
+    :type lems_file_name: str
+    :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
+    :type paths_to_include: list(str)
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
+    :type skip_run: bool
+    :param nogui: toggle whether jnml GUI should be shown
+    :type nogui: bool
+    :param load_saved_data: toggle whether any saved data should be loaded
+    :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
+    :param plot: toggle whether specified plots should be plotted
+    :type plot: bool
+    :param show_plot_already: toggle whether prepared plots should be shown
+    :type show_plot_already: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param only_generate_scripts: toggle whether only the runner script should be generated
+    :type only_generate_scripts: bool
+    :param compile_mods: toggle whether generated mod files should be compiled
+    :type compile_mods: bool
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    :param cleanup: toggle whether the directory should be cleaned of generated files after run completion
+    :type cleanup: bool
+    :param realtime_output: toggle whether realtime output should be shown
+    :type realtime_output: bool
+    """
 
     print_comment("Loading LEMS file: {} and running with jNeuroML_NEURON".format(lems_file_name))
 
@@ -920,6 +1168,42 @@ def run_lems_with_jneuroml_netpyne(
     exit_on_fail=True,
     cleanup=False
 ):
+    # type: (str, typing.List[str], str, bool, bool, int, bool, bool, bool, bool, str, bool, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
+    """Run LEMS file with the NEURON simulator
+
+    Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
+
+    :param lems_file_name: name of LEMS file to run
+    :type lems_file_name: str
+    :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
+    :type paths_to_include: list(str)
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
+    :type skip_run: bool
+    :param nogui: toggle whether jnml GUI should be shown
+    :type nogui: bool
+    :param num_processors: number of processors to use for running NetPyNE
+    :type num_processors: int
+    :param load_saved_data: toggle whether any saved data should be loaded
+    :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
+    :param plot: toggle whether specified plots should be plotted
+    :type plot: bool
+    :param show_plot_already: toggle whether prepared plots should be shown
+    :type show_plot_already: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param only_generate_scripts: toggle whether only the runner script should be generated
+    :type only_generate_scripts: bool
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    :param cleanup: toggle whether the directory should be cleaned of generated files after run completion
+    :type cleanup: bool
+    """
 
     print_comment("Loading LEMS file: {} and running with jNeuroML_NetPyNE".format(lems_file_name))
 
@@ -978,13 +1262,45 @@ def run_lems_with_jneuroml_brian2(
     exit_on_fail=True,
     cleanup=False
 ):
+    # type: (str, typing.List[str], str, bool, bool, bool, bool, bool, bool, str, bool, bool, bool) -> typing.Union[bool, typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]]
+    """Run LEMS file with the NEURON simulator
+
+    Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
+
+    :param lems_file_name: name of LEMS file to run
+    :type lems_file_name: str
+    :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
+    :type paths_to_include: list(str)
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
+    :type skip_run: bool
+    :param nogui: toggle whether jnml GUI should be shown
+    :type nogui: bool
+    :param load_saved_data: toggle whether any saved data should be loaded
+    :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
+    :param plot: toggle whether specified plots should be plotted
+    :type plot: bool
+    :param show_plot_already: toggle whether prepared plots should be shown
+    :type show_plot_already: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    :param cleanup: toggle whether the directory should be cleaned of generated files after run completion
+    :type cleanup: bool
+    """
 
     print_comment("Loading LEMS file: {} and running with jNeuroML_Brian2".format(lems_file_name))
 
     post_args = " -brian2"
 
-    #post_args += gui_string(nogui)
-    #post_args += include_string(paths_to_include)
+    # post_args += gui_string(nogui)
+    # post_args += include_string(paths_to_include)
 
     t_run = datetime.now()
     if skip_run:
@@ -1000,10 +1316,10 @@ def run_lems_with_jneuroml_brian2(
             exit_on_fail=exit_on_fail)
 
         old_sys_args = [a for a in sys.argv]
-        sys.argv[1] = '-nogui' # To supress gui for brian simulation...
+        sys.argv[1] = '-nogui'  # To supress gui for brian simulation...
         logger.info('Importing generated Brian2 python file (changed args from {} to {})'.format(old_sys_args, sys.argv))
-        brian2_py_name = lems_file_name.replace('.xml','_brian2')
-        exec('import %s'%brian2_py_name)
+        brian2_py_name = lems_file_name.replace('.xml', '_brian2')
+        exec('import %s' % brian2_py_name)
         sys.argv = old_sys_args
         logger.info('Finished Brian2 simulation, back to {}'.format(sys.argv))
 
@@ -1033,7 +1349,32 @@ def reload_saved_data(lems_file_name,
                       reload_events=False,
                       verbose=DEFAULTS['v'],
                       remove_dat_files_after_load=False):
+    # type: (str, str, datetime, bool, bool, typing.Union[None, str], bool, bool, bool) -> typing.Union[typing.Dict, typing.Tuple[typing.Dict, typing.Dict]]
+    """Reload data saved from previous LEMS simulation run.
 
+    :param lems_file_name: name of LEMS file that was used to generate the data
+    :type lems_file_name: str
+    :param base_dir: directory to run in
+    :type base_dir: str
+    :param t_run: time of run
+    :type t_run: datetime
+    :param plot: toggle plotting
+    :type plot: bool
+    :param show_plot_already: toggle if plots should be shown
+    :type show_plot_already: bool
+    :param simulator: simulator that was used to generate data
+    :type simulator: str
+    :param reload_event: toggle whether events should be loaded
+    :type reload_event: bool
+    :param verbose: toggle verbose output
+    :type verbose: bool
+    :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
+    :type remove_dat_files_after_load: bool
+
+
+    TODO: remove unused vebose argument (needs checking to see if is being
+    used in other places)
+    """
     if not os.path.isfile(lems_file_name):
         real_lems_file = os.path.realpath(os.path.join(base_dir, lems_file_name))
     else:
@@ -1042,8 +1383,8 @@ def reload_saved_data(lems_file_name,
     logger.debug("Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s" % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already))
 
     # Could use pylems to parse all this...
-    traces = {}
-    events = {}
+    traces = {}  # type: typing.Dict
+    events = {}  # type: typing.Dict
 
     if plot:
         import matplotlib.pyplot as plt
@@ -1211,6 +1552,16 @@ def reload_saved_data(lems_file_name,
 
 
 def get_next_hex_color(my_random=None):
+    # type: (typing.Union[None, random.Random]) -> str
+    """Get a new randomly generated HEX colour code.
+
+    You may pass a random.Random instance that you may be used. Otherwise the
+    default Python random generator will be used.
+
+    :param my_random: a random.Random object
+    :type my_random: random.Random
+    :returns: HEX colour code
+    """
     if my_random is not None:
         return "#%06x" % my_random.randint(0, 0xFFFFFF)
     else:
@@ -1218,12 +1569,19 @@ def get_next_hex_color(my_random=None):
 
 
 def confirm_file_exists(filename):
+    # type: (str) -> None
+    """Check if a file exists, exit if it does not.
+
+    :param filename: the filename to check
+    :type filename: str
+    """
     if not os.path.isfile(filename):
         logger.critical("Unable to find file: %s!" % filename)
         sys.exit()
 
 
 def confirm_neuroml_file(filename):
+    # type: (str) -> None
     """Confirm that file exists and is a NeuroML file before proceeding with
     processing.
 
@@ -1246,6 +1604,7 @@ def confirm_neuroml_file(filename):
 
 
 def confirm_lems_file(filename):
+    # type: (str) -> None
     """Confirm that file exists and is a LEMS file before proceeding with
     processing.
 
@@ -1462,6 +1821,11 @@ def evaluate_arguments(args):
 
 
 def get_path_to_jnml_jar():
+    # type: () -> str
+    """Get the path to the jNeuroML jar included with PyNeuroML.
+
+    :returns: path of jar file
+    """
     script_dir = os.path.dirname(os.path.realpath(__file__))
     jar_path = os.path.join(
         script_dir, "lib",
@@ -1478,7 +1842,24 @@ def run_jneuroml(pre_args,
                  verbose=DEFAULTS['v'],
                  report_jnml_output=True,
                  exit_on_fail=True):
+    # type: (str, str, str, str, str, bool, bool, bool) -> bool
+    """Run jnml with provided arguments.
 
+    :param pre_args: pre-file name arguments
+    :type pre_args: list of strings
+    :param target_file: LEMS or NeuroML file to run jnml on
+    :type target_file: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param report_jnml_output: toggle whether jnml output should be printed
+    :type report_jnml_output: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    """
     logger.debug('Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s' % (target_file, pre_args, post_args, exec_in_dir, verbose, report_jnml_output, exit_on_fail))
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
@@ -1530,7 +1911,25 @@ def run_jneuroml_with_realtime_output(
     verbose=DEFAULTS['v'],
     exit_on_fail=True
 ):
-    # NOTE: Only tested with Linux
+    # type: (str, str, str, str, str, bool, bool) -> bool
+    # XXX: Only tested with Linux
+    """Run jnml with provided arguments with realtime output.
+
+    NOTE: this has only been tested on Linux.
+
+    :param pre_args: pre-file name arguments
+    :type pre_args: list of strings
+    :param target_file: LEMS or NeuroML file to run jnml on
+    :type target_file: str
+    :param max_memory: maximum memory allowed for use by the JVM
+    :type max_memory: bool
+    :param exec_in_dir: working directory to execute LEMS simulation in
+    :type exec_in_dir: str
+    :param verbose: toggle whether jnml should print verbose information
+    :type verbose: bool
+    :param exit_on_fail: toggle whether command should exit if jnml fails
+    :type exit_on_fail: bool
+    """
     if 'nogui' in post_args and not os.name == 'nt':
         pre_jar = " -Djava.awt.headless=true"
     else:
@@ -1538,12 +1937,11 @@ def run_jneuroml_with_realtime_output(
     jar_path = get_path_to_jnml_jar()
 
     command = ''
-    output = ''
 
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % \
             (max_memory, pre_jar, jar_path, pre_args, target_file, post_args)
-        output = execute_command_in_dir_with_realtime_output(
+        execute_command_in_dir_with_realtime_output(
             command, exec_in_dir, verbose=verbose, prefix=' jNeuroML >>  ')
 
     except KeyboardInterrupt as e:
@@ -1574,10 +1972,24 @@ def print_comment(text, end='\n'):
     print("%s%s" % (prefix, text.replace("\n", "\n" + prefix)), end=end)
 
 
-def execute_command_in_dir_with_realtime_output(command, directory,
-                                                verbose=DEFAULTS['v'],
-                                                prefix="Output: ", env=None):
+def execute_command_in_dir_with_realtime_output(command, directory, verbose=DEFAULTS['v'], prefix="Output: ", env=None):
+    # type: (str, str, bool, str, typing.Union[str, None]) -> bool
     # NOTE: Only tested with Linux
+    """Run a command in a given directory with real time output.
+
+    NOTE: this has only been tested on Linux.
+
+    :param command: command to run
+    :type command: str
+    :param directory: directory to run command in
+    :type directory: str
+    :param verbose: toggle verbose output
+    :type verbose: bool
+    :param prefix: string to prefix output with
+    :type prefix: str
+    :param env: environment variables to be used
+    :type env: str
+    """
     if os.name == 'nt':
         directory = os.path.normpath(directory)
 
@@ -1607,7 +2019,20 @@ def execute_command_in_dir_with_realtime_output(command, directory,
 
 def execute_command_in_dir(command, directory, verbose=DEFAULTS['v'],
                            prefix="Output: ", env=None):
-    """Execute a command in specific working directory"""
+    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Union[None, str]
+    """Execute a command in specific working directory
+
+    :param command: command to run
+    :type command: str
+    :param directory: directory to run command in
+    :type directory: str
+    :param verbose: toggle verbose output
+    :type verbose: bool
+    :param prefix: string to prefix output with
+    :type prefix: str
+    :param env: environment variables to be used
+    :type env: str
+    """
     if os.name == 'nt':
         directory = os.path.normpath(directory)
 
@@ -1682,6 +2107,7 @@ def generate_plot(xvalues,
                   save_figure_to=None,
                   title_above_plot=False,
                   verbose=False):
+    # type: (typing.List[float], typing.List[float], str, typing.List[str], typing.List[str], typing.List[str], typing.List[str], typing.List[str], typing.List[str], str, str, str, str, bool, bool, bool, bool, bool, int, bool, int, typing.Union[None, str], bool, typing.Union[None, str], bool, bool) -> matplotlib.Axes
     """Utility function to generate plots using the Matplotlib library.
 
     This function can be used to generate graphs with multiple plot lines.
@@ -1757,6 +2183,7 @@ def generate_plot(xvalues,
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
+    :returns: matplotlib Axes object
     """
 
     print_comment("Generating plot: %s" % (title))
@@ -1842,24 +2269,30 @@ def generate_plot(xvalues,
 
 
 def reload_standard_dat_file(file_name):
-    dat_file = open(file_name)
-    data = {}
-    indeces = []
-    for line in dat_file:
-        words = line.split()
+    # type: (str) -> typing.Tuple[typing.Dict, typing.List]
+    """Reload a datafile as usually saved by jLEMS, etc.
+    First column is time (in seconds), multiple other columns.
 
-        if 't' not in data.keys():
-            data['t'] = []
+    :param file_name: name of data file to load
+    :type file_name: str
+    :returns: tuple of (data, column names)
+    """
+    with open(file_name) as dat_file:
+        data = {}  # type: typing.Dict
+        indeces = []  # type: typing.List
+        for line in dat_file:
+            words = line.split()
+
+            if 't' not in data.keys():
+                data['t'] = []
+                for i in range(len(words) - 1):
+                    data[i] = []
+                    indeces.append(i)
+            data['t'].append(float(words[0]))
             for i in range(len(words) - 1):
-                data[i] = []
-                indeces.append(i)
-        data['t'].append(float(words[0]))
-        for i in range(len(words) - 1):
-            data[i].append(float(words[i + 1]))
+                data[i].append(float(words[i + 1]))
 
-    logger.info("Loaded data from %s; columns: %s" % (file_name, indeces))
-
-    dat_file.close()
+        logger.info("Loaded data from %s; columns: %s" % (file_name, indeces))
     return data, indeces
 
 
@@ -1879,10 +2312,16 @@ def _get_attr_in_element(el, name, rdf=False):
 
 
 def extract_annotations(nml2_file):
+    # type: (str) -> None
+    """Extract and print annotations from a NeuroML 2 file.
+
+    :param nml2_file: name of NeuroML2 file to parse
+    :type nml2_file: str
+    """
     pp = pprint.PrettyPrinter()
     test_file = open(nml2_file)
     root = etree.parse(test_file).getroot()
-    annotations = {}
+    annotations = {}  # type: typing.Dict
 
     for a in _find_elements(root, 'annotation'):
         for r in _find_elements(a, 'Description', rdf=True):
