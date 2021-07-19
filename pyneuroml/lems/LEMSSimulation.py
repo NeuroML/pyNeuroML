@@ -5,14 +5,16 @@ Helper class for generating LEMS xml files for simulations
 
 import airspeed
 import os.path
+import logging
 
 from pyneuroml import __version__ as pynml_ver
 from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
-from pyneuroml.pynml import print_comment
 from pyneuroml.pynml import get_next_hex_color
 import random
+
+logger = logging.getLogger(__name__)
 
 
 class LEMSSimulation():
@@ -70,7 +72,7 @@ class LEMSSimulation():
     def include_neuroml2_file(self, nml2_file_name, include_included=True, relative_to_dir='.'):
         full_path = os.path.abspath(relative_to_dir + '/' + nml2_file_name)
         base_path = os.path.dirname(full_path)
-        # print_comment_v("Including in generated LEMS file: %s (%s)"%(nml2_file_name, full_path))
+        # logger.info_v("Including in generated LEMS file: %s (%s)"%(nml2_file_name, full_path))
         if nml2_file_name not in self.lems_info['include_files']:
             self.lems_info['include_files'].append(nml2_file_name)
 
@@ -165,7 +167,7 @@ class LEMSSimulation():
         lems_file = open(file_name, 'w')
         lems_file.write(self.to_xml())
         lems_file.close()
-        print_comment("Written LEMS Simulation %s to file: %s" % (self.lems_info['sim_id'], file_name))
+        logger.info("Written LEMS Simulation %s to file: %s" % (self.lems_info['sim_id'], file_name))
 
         return file_name
 

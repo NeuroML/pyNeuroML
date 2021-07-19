@@ -7,10 +7,14 @@ and plot the voltage of the cell is created. The simulation is then executed.
 '''
 
 import sys
+import logging
 
 from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import neuroml as nml
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_Vm_vs_time_plot(nml2_file,
@@ -26,8 +30,8 @@ def generate_Vm_vs_time_plot(nml2_file,
                              include_included=True):
 
     ref = "Test"
-    pynml.print_comment("Generating Vm(mV) vs Time(ms) plot for cell %s in %s using %s (Inj %snA / %sms dur after %sms delay)" %
-                        (cell_id, nml2_file, simulator, inj_amp_nA, inj_dur_ms, delay_ms))
+    logger.info("Generating Vm(mV) vs Time(ms) plot for cell %s in %s using %s (Inj %snA / %sms dur after %sms delay)" %
+                (cell_id, nml2_file, simulator, inj_amp_nA, inj_dur_ms, delay_ms))
 
     sim_id = 'Vm_%s' % ref
     duration = sim_dur_ms

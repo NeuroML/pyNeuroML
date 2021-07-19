@@ -15,9 +15,6 @@ import logging
 import neuroml
 from pyneuroml import pynml
 
-from pyneuroml.pynml import print_comment
-
-
 logger = logging.getLogger(__name__)
 
 _WHITE = "<1,1,1,0.55>"
@@ -199,9 +196,9 @@ background {rgbt %s}
         splitOut = True
         cells_file = open(cf, "w")
         net_file = open(nf, "w")
-        print_comment("Saving into %s and %s and %s" % (pov_file_name, cf, nf))
+        logger.info("Saving into %s and %s and %s" % (pov_file_name, cf, nf))
 
-    print_comment("Converting XML file: %s to %s" % (xmlfile, pov_file_name))
+    logger.info("Converting XML file: %s to %s" % (xmlfile, pov_file_name))
 
     nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, check_validity_pre_include=True, verbose=args.v, optimized=True)
 
@@ -225,7 +222,7 @@ background {rgbt %s}
 
     declaredcells = {}
 
-    print_comment("There are %i cells in the file" % len(cell_elements))
+    logger.info("There are %i cells in the file" % len(cell_elements))
 
     cell_id_vs_seg_id_vs_proximal = {}
     cell_id_vs_seg_id_vs_distal = {}
@@ -234,7 +231,7 @@ background {rgbt %s}
     for cell in cell_elements:
         cellName = cell.id
         cell_id_vs_cell[cell.id] = cell
-        print_comment("Handling cell: %s" % cellName)
+        logger.info("Handling cell: %s" % cellName)
         cell_id_vs_seg_id_vs_proximal[cell.id] = {}
         cell_id_vs_seg_id_vs_distal[cell.id] = {}
 
@@ -363,7 +360,7 @@ union {
 
     pop_id_vs_cell = {}
 
-    print_comment("There are %i populations in the file" % len(popElements))
+    logger.info("There are %i populations in the file" % len(popElements))
 
     for pop in popElements:
         name = pop.id
@@ -374,7 +371,7 @@ union {
             pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
 
         info = "Population: %s has %i positioned cells of type: %s" % (name, len(instances), celltype)
-        print_comment(info)
+        logger.info(info)
 
         colour = "1"
         substitute_radius = None
@@ -446,7 +443,7 @@ union {
 
         if len(instances) == 0 and int(pop.size > 0):
             info = "Population: %s has %i unpositioned cells of type: %s" % (name, pop.size, celltype)
-            print_comment(info)
+            logger.info(info)
 
             colour = "1"
             '''
@@ -672,10 +669,10 @@ Pause_when_Done=off
         ini_file.write(ini_movie % (pov_file_name, args.frames))
         ini_file.close()
 
-        print_comment("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n" % (args.frames, ini_file_name, ini_file_name))
+        logger.info("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n" % (args.frames, ini_file_name, ini_file_name))
     else:
-        print_comment("Created file for generating image of network. To run this type:\n\n    povray %s\n" % (pov_file_name))
-        print_comment("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n" % (pov_file_name))
+        logger.info("Created file for generating image of network. To run this type:\n\n    povray %s\n" % (pov_file_name))
+        logger.info("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n" % (pov_file_name))
 
 
 if __name__ == '__main__':

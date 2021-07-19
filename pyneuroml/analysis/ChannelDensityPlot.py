@@ -6,12 +6,16 @@
 
 import os
 import math
+import logging
 
 import pprint
 
-from pyneuroml.pynml import get_value_in_si, print_comment, read_neuroml2_file
+from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.analysis.NML2ChannelAnalysis import get_ion_color
 from neuroml import Cell, Cell2CaPools
+
+
+logger = logging.getLogger(__name__)
 
 
 pp = pprint.PrettyPrinter(depth=6)
@@ -105,7 +109,7 @@ def generate_channel_density_plots(nml2_file, text_densities=False, passives_ere
     for cell in cell_elements:
         info = {}
         all_info[cell.id] = info
-        print_comment("Extracting channel density info from %s" % cell.id)
+        logger.info("Extracting channel density info from %s" % cell.id)
         sb = ''
         ions = {}
         maxes = {}
@@ -131,7 +135,7 @@ def generate_channel_density_plots(nml2_file, text_densities=False, passives_ere
 
         for cd in cds:
             dens_si = get_value_in_si(cd.cond_density)
-            print_comment("cd: %s, ion_channel: %s, ion: %s, density: %s (SI: %s)" % (cd.id, cd.ion_channel, cd.ion, cd.cond_density, dens_si))
+            logger.info("cd: %s, ion_channel: %s, ion: %s, density: %s (SI: %s)" % (cd.id, cd.ion_channel, cd.ion, cd.cond_density, dens_si))
 
             ions[cd.ion_channel] = cd.ion
             erev_V = get_value_in_si(cd.erev) if hasattr(cd, 'erev') else None
@@ -217,7 +221,7 @@ def generate_channel_density_plots(nml2_file, text_densities=False, passives_ere
         sf = open(svg_file, 'w')
         sf.write(sb)
         sf.close()
-        print_comment("Written to %s" % os.path.abspath(svg_file))
+        logger.info("Written to %s" % os.path.abspath(svg_file))
 
         pp.pprint(all_info)
 

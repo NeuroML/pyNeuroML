@@ -1,5 +1,3 @@
-from pyneuroml.pynml import print_comment, generate_plot
-
 import argparse
 
 import matplotlib.pyplot as plt
@@ -8,6 +6,10 @@ import numpy as np
 import re
 import sys
 import os
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULTS = {'format': 'id_t',
@@ -107,13 +109,13 @@ def main(args=None):
 
 def read_sonata_spikes_hdf5_file(file_name):
     full_path = os.path.abspath(file_name)
-    print_comment("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
+    logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
 
     import tables   # pytables for HDF5 support
     h5file = tables.open_file(file_name, mode='r')
 
     sorting = h5file.root.spikes._v_attrs.sorting if hasattr(h5file.root.spikes._v_attrs, 'sorting') else '???'
-    print_comment("Opened HDF5 file: %s; sorting=%s" % (h5file.filename, sorting))
+    logger.info("Opened HDF5 file: %s; sorting=%s" % (h5file.filename, sorting))
 
     ids_times_pops = {}
     if hasattr(h5file.root.spikes, 'gids'):
@@ -135,7 +137,7 @@ def read_sonata_spikes_hdf5_file(file_name):
             count += 1
 
         ids = ids_times.keys()
-        print_comment("Loaded %s spiketimes, ids (%s -> %s) times (%s -> %s)" % (count, min(ids), max(ids), min_t, max_t))
+        logger.info("Loaded %s spiketimes, ids (%s -> %s) times (%s -> %s)" % (count, min(ids), max(ids), min_t, max_t))
 
         ids_times_pops[POP_NAME_SPIKEFILE_WITH_GIDS] = ids_times
     else:
@@ -157,7 +159,7 @@ def read_sonata_spikes_hdf5_file(file_name):
                 count += 1
 
             ids = ids_times.keys()
-            print_comment("Loaded %s spiketimes for %s, ids (%s -> %s) times (%s -> %s)" % (count, group._v_name, min(ids), max(ids), min_t, max_t))
+            logger.info("Loaded %s spiketimes for %s, ids (%s -> %s) times (%s -> %s)" % (count, group._v_name, min(ids), max(ids), min_t, max_t))
             ids_times_pops[group._v_name] = ids_times
 
     h5file.close()
@@ -167,7 +169,7 @@ def read_sonata_spikes_hdf5_file(file_name):
 
 def run(a=None, **kwargs):
     a = build_namespace(a, **kwargs)
-    print_comment('Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s' % (a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to))
+    logger.info('Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s' % (a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to))
 
     xs = []
     ys = []
@@ -238,7 +240,7 @@ def run(a=None, **kwargs):
     else:
 
         for file_name in a.spiketime_files:
-            print_comment("Loading spike times from: %s" % file_name)
+            logger.info("Loading spike times from: %s" % file_name)
             spikes_file = open(file_name)
             x = []
             y = []

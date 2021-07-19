@@ -85,7 +85,7 @@ class NeuroMLSimulation(object):
                                        target_dir=self.generate_dir,
                                        nml_doc=self.nml_doc)
 
-        pynml.print_comment("Running a simulation of %s ms with timestep %s ms: %s" % (self.sim_time, self.dt, lems_file_name))
+        logger.info("Running a simulation of %s ms with timestep %s ms: %s" % (self.sim_time, self.dt, lems_file_name))
 
         self.already_run = True
 
@@ -111,7 +111,7 @@ class NeuroMLSimulation(object):
             exit()
 
         secs = time.time() - start
-        pynml.print_comment("Ran simulation in %s in %f seconds (%f mins)\n\n" % (self.simulator, secs, secs / 60.0))
+        logger.info("Ran simulation in %s in %f seconds (%f mins)\n\n" % (self.simulator, secs, secs / 60.0))
         self.t = [t * 1000 for t in results['t']]
 
         self.volts = {}

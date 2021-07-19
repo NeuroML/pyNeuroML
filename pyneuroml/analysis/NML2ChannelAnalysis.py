@@ -15,8 +15,7 @@ import logging
 import airspeed
 import matplotlib.pyplot as plt
 
-from pyneuroml.pynml import run_lems_with_jneuroml, print_comment, \
-    read_neuroml2_file
+from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
 
 
 logger = logging.getLogger(__name__)
@@ -256,9 +255,9 @@ def generate_lems_channel_analyser(channel_file, channel, min_target_voltage,
                                    gates, temperature, ca_conc, iv_curve, scale_dt=1,
                                    dat_suffix='', verbose=True):
 
-    print_comment(("Generating LEMS file to investigate %s in %s, %smV->%smV, "
-                   "%sdegC") % (channel, channel_file, min_target_voltage,
-                                max_target_voltage, temperature))
+    logger.info(("Generating LEMS file to investigate %s in %s, %smV->%smV, "
+                 "%sdegC") % (channel, channel_file, min_target_voltage,
+                              max_target_voltage, temperature))
 
     target_voltages = []
     v = min_target_voltage
@@ -624,7 +623,7 @@ def make_html_file(info):
     lf = open(new_html_file, 'w')
     lf.write(merged)
     lf.close()
-    print_comment('Written HTML info to: %s' % new_html_file)
+    logger.info('Written HTML info to: %s' % new_html_file)
 
 
 def make_md_file(info):
@@ -634,7 +633,7 @@ def make_md_file(info):
     lf = open(new_md_file, 'w')
     lf.write(merged)
     lf.close()
-    print_comment('Written Markdown info to: %s' % new_md_file)
+    logger.info('Written Markdown info to: %s' % new_md_file)
 
 
 def build_namespace(a=None, **kwargs):
@@ -707,7 +706,7 @@ def run(a=None, **kwargs):
                 other_chan_files.append(channel_file)
 
     channel_files = na_chan_files + k_chan_files + ca_chan_files + other_chan_files
-    print_comment("\nAnalysing channels from files: %s\n" % channel_files)
+    logger.info("\nAnalysing channels from files: %s\n" % channel_files)
 
     for channel_file in channel_files:
         channels_info = process_channel_file(channel_file, a)

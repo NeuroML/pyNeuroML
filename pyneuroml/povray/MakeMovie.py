@@ -4,7 +4,6 @@ import argparse
 import sys
 import os.path
 import logging
-from pyneuroml.pynml import print_comment
 
 
 '''
@@ -110,7 +109,7 @@ def generate_volt_scale(img, x, y, height, width, num):
 def main(argv):
     args = process_args()
 
-    print_comment("Making a movie...")
+    logger.info("Making a movie...")
 
     img_files_pre = []
     img_files_post = []
@@ -142,7 +141,7 @@ def main(argv):
                     file_name1 = file_name2
             img_files_pre.append(file_name1)
 
-        print_comment("Found %i image files: [%s, ..., %s]" % (len(img_files_pre), img_files_pre[0], img_files_pre[-1]))
+        logger.info("Found %i image files: [%s, ..., %s]" % (len(img_files_pre), img_files_pre[0], img_files_pre[-1]))
 
         for i in range(len(img_files_pre)):
             img_file = img_files_pre[i]
@@ -150,7 +149,7 @@ def main(argv):
 
             height, width, layers = img.shape
 
-            print_comment("Read in file: %s (%sx%s)" % (img_file, width, height))
+            logger.info("Read in file: %s (%sx%s)" % (img_file, width, height))
             show = False
             if show:
                 cv2.imshow('Image: ' + img_file, img)
@@ -171,7 +170,7 @@ def main(argv):
 
             new_file = args.name + '_' + img_file
             cv2.imwrite(new_file, img)
-            print_comment("Written %s" % new_file)
+            logger.info("Written %s" % new_file)
 
     if gen_movie:
         for i in range(args.frames + 1):
@@ -185,7 +184,7 @@ def main(argv):
         for i in range(len(img_files_post)):
             img_file = img_files_post[i]
             img = cv2.imread(img_file)
-            print_comment("Read in %s" % img_file)
+            logger.info("Read in %s" % img_file)
             imgs.append(img)
 
         format = 'avi'
@@ -213,14 +212,14 @@ def main(argv):
 
         f = 0
         for img in imgs:
-            print_comment("Writing frame %i" % f)
+            logger.info("Writing frame %i" % f)
             f += 1
             out.write(img)
 
         out.release()
-        print_comment("Saved movie file %s" % mov_file)
+        logger.info("Saved movie file %s" % mov_file)
 
-    print_comment("Done!")
+    logger.info("Done!")
 
 
 if __name__ == '__main__':
