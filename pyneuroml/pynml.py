@@ -80,7 +80,7 @@ def parse_arguments():
 
     shared_options.add_argument(
         '-verbose',
-        default='WARN',
+        default='INFO',
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         help='Verbose output (default: WARNING)'
     )
