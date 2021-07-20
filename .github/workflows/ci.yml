@@ -25,11 +25,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         pip install .
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --exit-zero --show-source --max-line-length=127 --statistics
     - name: Run tests
       run: |
         pytest .
         pynml -h
         ./test-ghactions.sh
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --exit-zero --show-source --max-line-length=127 --statistics
