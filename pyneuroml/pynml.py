@@ -25,6 +25,7 @@ import shlex
 from lxml import etree
 import pprint
 import logging
+import tempfile
 
 try:
     import typing
@@ -315,6 +316,60 @@ def get_lems_model_with_units():
         parser.parse(dims_units)
 
     return lems_model_with_units
+
+
+def extract_lems_definition_files(path=None):
+    # type: (typing.Union[str, None, tempfile.TemporaryDirectory[typing.Any]]) -> typing.Union[tempfile.TemporaryDirectory[typing.Any], str]
+    """Extract the NeuroML2 LEMS definition files to a directory and return its path.
+
+    This function can be used by other LEMS related functions that need to
+    include the NeuroML2 LEMS definitions.
+
+    If a path is provided, the folder is created relative to the current
+    working directory.
+
+    If no path is provided, for repeated usage for example, the files are
+    extracted to a temporary directory using Python's
+    `tempfile.TemporaryDirectory
+    <https://docs.python.org/3/library/tempfile.html>`__ module.
+
+    Note: in both cases, it is the user's responsibility to remove the created
+    directory when it is no longer required. For the default
+    TemporaryDirectory, one can use the `cleanup()` function to do so. If a
+    path is provided by the user, the created directory can be removed using
+    the `os.removedirs()` Python function.
+
+    :param path: path of directory relative to current working directory to
+    extract to, or None
+    :type path: str or None
+    :returns: directory path or TemporaryDirectory object
+    """
+    jar_path = get_path_to_jnml_jar()
+    logger.debug("Loading standard NeuroML2 dimension/unit definitions from %s" % jar_path)
+    jar = zipfile.ZipFile(jar_path, 'r')
+    namelist = [x for x in jar.namelist() if ".xml" in x and "NeuroML2CoreTypes" in x]
+    logger.debug("NeuroML LEMS definition files in jar are: {}".format(namelist))
+
+    # If a string is provided, ensure that it is relative to cwd
+    if path and isinstance(path, str) and len(path) > 0:
+        path = "./" + path
+        try:
+            os.makedirs(path)
+        except FileExistsError:
+            logger.warn("{} already exists. Any NeuroML LEMS files in it will be overwritten".format(path))
+        except OSError as err:
+            logger.critical(err)
+            sys.exit(-1)
+        logger.debug("Created directory: " + path)
+        jar.extractall(path, namelist)
+        logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
+    else:
+        path = tempfile.TemporaryDirectory()
+        logger.debug("Created directory: " + path.name)
+        jar.extractall(path.name, namelist)
+        logger.info("NeuroML LEMS definition files extracted to: {}".format(path.name))
+
+    return path
 
 
 def split_nml2_quantity(nml2_quantity):
