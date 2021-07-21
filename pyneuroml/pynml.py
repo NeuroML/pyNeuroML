@@ -338,8 +338,7 @@ def extract_lems_definition_files(path=None):
     directory when it is no longer required, for example using.  the
     `shutil.rmtree()` Python function.
 
-    :param path: path of directory relative to current working directory to
-    extract to, or None
+    :param path: path of directory relative to current working directory to extract to, or None
     :type path: str or None
     :returns: directory path
     """
@@ -359,15 +358,13 @@ def extract_lems_definition_files(path=None):
         except OSError as err:
             logger.critical(err)
             sys.exit(-1)
-        logger.debug("Created directory: " + path)
-        jar.extractall(path, namelist)
-        logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
-        return path
     else:
         path = tempfile.mkdtemp()
-        logger.debug("Created directory: " + path)
-        jar.extractall(path, namelist)
-        logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
+
+    logger.debug("Created directory: " + path)
+    jar.extractall(path, namelist)
+    path = path + "/NeuroML2CoreTypes/"
+    logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
     return path
 
 
