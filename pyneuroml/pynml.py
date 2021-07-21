@@ -13,6 +13,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
+import shutil
 import sys
 import subprocess
 import math
@@ -319,7 +320,7 @@ def get_lems_model_with_units():
 
 
 def extract_lems_definition_files(path=None):
-    # type: (typing.Union[str, None, tempfile.TemporaryDirectory[typing.Any]]) -> typing.Union[tempfile.TemporaryDirectory[typing.Any], str]
+    # type: (typing.Union[str, None, tempfile.TemporaryDirectory[typing.Any]]) -> str
     """Extract the NeuroML2 LEMS definition files to a directory and return its path.
 
     This function can be used by other LEMS related functions that need to
@@ -330,19 +331,17 @@ def extract_lems_definition_files(path=None):
 
     If no path is provided, for repeated usage for example, the files are
     extracted to a temporary directory using Python's
-    `tempfile.TemporaryDirectory
-    <https://docs.python.org/3/library/tempfile.html>`__ module.
+    `tempfile.mkdtemp
+    <https://docs.python.org/3/library/tempfile.html>`__ function.
 
     Note: in both cases, it is the user's responsibility to remove the created
-    directory when it is no longer required. For the default
-    TemporaryDirectory, one can use the `cleanup()` function to do so. If a
-    path is provided by the user, the created directory can be removed using
-    the `os.removedirs()` Python function.
+    directory when it is no longer required, for example using.  the
+    `shutil.rmtree()` Python function.
 
     :param path: path of directory relative to current working directory to
     extract to, or None
     :type path: str or None
-    :returns: directory path or TemporaryDirectory object
+    :returns: directory path
     """
     jar_path = get_path_to_jnml_jar()
     logger.debug("Loading standard NeuroML2 dimension/unit definitions from %s" % jar_path)
@@ -363,13 +362,14 @@ def extract_lems_definition_files(path=None):
         logger.debug("Created directory: " + path)
         jar.extractall(path, namelist)
         logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
+        return path
     else:
-        path = tempfile.TemporaryDirectory()
-        logger.debug("Created directory: " + path.name)
-        jar.extractall(path.name, namelist)
-        logger.info("NeuroML LEMS definition files extracted to: {}".format(path.name))
-
+        path = tempfile.mkdtemp()
+        logger.debug("Created directory: " + path)
+        jar.extractall(path, namelist)
+        logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
     return path
+
 
 
 def split_nml2_quantity(nml2_quantity):

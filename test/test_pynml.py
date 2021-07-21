@@ -10,6 +10,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 import unittest
 import os
+import shutil
 
 from pyneuroml.pynml import extract_lems_definition_files
 
@@ -32,9 +33,9 @@ class TestJarUtils(unittest.TestCase):
                     "Synapses.xml"]
 
         extraction_dir = extract_lems_definition_files()
-        newfilelist = os.listdir(extraction_dir.name + "/NeuroML2CoreTypes/")
+        newfilelist = os.listdir(extraction_dir + "/NeuroML2CoreTypes/")
         assert(sorted(filelist) == sorted(newfilelist))
-        extraction_dir.cleanup()
+        shutil.rmtree(extraction_dir)
 
 
 if __name__ == "__main__":
