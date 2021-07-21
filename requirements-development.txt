@@ -1,0 +1,3 @@
+git+https://github.com/LEMS/pylems.git@development#egg=pylems
+git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML
+git+https://github.com/NeuroML/NeuroMLlite.git@development#egg=neuromllite
