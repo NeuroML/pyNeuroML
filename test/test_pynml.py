@@ -11,9 +11,14 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 import unittest
 import os
 import shutil
+import logging
 
 from pyneuroml.pynml import (extract_lems_definition_files, list_exposures,
                              list_recording_paths)
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class TestJarUtils(unittest.TestCase):
