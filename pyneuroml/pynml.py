@@ -54,6 +54,7 @@ DEFAULTS = {'v': False,
 lems_model_with_units = None
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def parse_arguments():
@@ -428,14 +429,18 @@ def get_standalone_lems_model(nml_doc_fn):
     """
     new_lems_model = lems_model.Model(include_includes=True,
                                       fail_on_missing_includes=True)
-    new_lems_model.debug = True
+    if logger.level < logging.INFO:
+        new_lems_model.debug = True
+    else:
+        new_lems_model.debug = False
     neuroml2_defs_dir = extract_lems_definition_files()
     filelist = os.listdir(neuroml2_defs_dir)
+    # Remove the temporary directory
     for nml_lems_f in filelist:
         new_lems_model.include_file(neuroml2_defs_dir + nml_lems_f,
                                     [neuroml2_defs_dir])
     new_lems_model.include_file(nml_doc_fn, [""])
-    shutil.rmtree(neuroml2_defs_dir)
+    shutil.rmtree(neuroml2_defs_dir[:-1 * len("NeuroML2CoreTypes/")])
     return new_lems_model
 
 
