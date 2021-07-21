@@ -35,8 +35,8 @@ class TestJarUtils(unittest.TestCase):
 
         extraction_dir = extract_lems_definition_files()
         newfilelist = os.listdir(extraction_dir)
+        shutil.rmtree(extraction_dir[:-1 * len("NeuroML2CoreTypes/")])
         assert(sorted(filelist) == sorted(newfilelist))
-        shutil.rmtree(extraction_dir)
 
 
 class TestHelperUtils(unittest.TestCase):
