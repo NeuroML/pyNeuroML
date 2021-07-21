@@ -35,6 +35,7 @@ except ImportError:
 
 import matplotlib
 import lems.model.model as lems_model
+from lems.model.fundamental import Include
 from lems.parser.LEMS import LEMSFileParser
 
 from pyneuroml import __version__
@@ -368,6 +369,75 @@ def extract_lems_definition_files(path=None):
     return path
 
 
+def list_exposures(nml_doc_fn, substring=None):
+    # type: (str, str) -> typing.Union[typing.Dict[lems_model.component.Component, typing.List[lems_model.component.Exposure]], None]
+    """List exposures in a NeuroML model document file.
+
+    This wraps around `lems.model.list_exposures` to list the exposures in a
+    NeuroML2 model. The only difference between the two is that the
+    `lems.model.list_exposures` function is not aware of the NeuroML2 component
+    types (since it's for any LEMS models in general), but this one is.
+
+    :param nml_doc_fn: NeuroML2 file to list exposures for
+    :type nml_doc: str
+    :param substring: substring to match for in component names
+    :type substring: str
+    :returns: dictionary of components and their exposures.
+
+    The returned dictionary is of the form:
+
+    ..
+        {
+            "component": ["exp1", "exp2"]
+        }
+
+    """
+    return get_standalone_lems_model(nml_doc_fn).list_exposures(substring)
+
+
+def list_recording_paths(nml_doc_fn, substring):
+    # type: (str, str) -> typing.List[str]
+    """List the recording path strings for exposures.
+
+    This wraps around `lems.model.list_recording_paths` to list the recording
+    paths in the given NeuroML2 model. The only difference between the two is
+    that the `lems.model.list_recording_paths` function is not aware of the
+    NeuroML2 component types (since it's for any LEMS models in general), but
+    this one is.
+
+    :param nml_doc_fn: NeuroML2 file to list recording paths for
+    :type nml_doc: str
+    :param substring: substring to match component ids against
+    :type substring: str
+    :returns: list of recording paths
+
+    """
+    return get_standalone_lems_model(nml_doc_fn).list_recording_paths(substring)
+
+
+def get_standalone_lems_model(nml_doc_fn):
+    # type: (str) -> lems_model.Model
+    """Get the complete, expanded LEMS model.
+
+    This function takes a NeuroML2 file, includes all the NeuroML2 LEMS
+    definitions in it and generates the complete, standalone LEMS model.
+
+    :param nml_doc_fn: name of NeuroML file to expand
+    :type nml_doc_fn: str
+    :returns: complete LEMS model
+    """
+    new_lems_model = lems_model.Model(include_includes=True,
+                                      fail_on_missing_includes=True)
+    new_lems_model.debug = True
+    neuroml2_defs_dir = extract_lems_definition_files()
+    filelist = os.listdir(neuroml2_defs_dir)
+    for nml_lems_f in filelist:
+        new_lems_model.include_file(neuroml2_defs_dir + nml_lems_f,
+                                    [neuroml2_defs_dir])
+    new_lems_model.include_file(nml_doc_fn, [""])
+    shutil.rmtree(neuroml2_defs_dir)
+    return new_lems_model
+
 
 def split_nml2_quantity(nml2_quantity):
     # type: (str) -> typing.Tuple[float, str]
@@ -392,7 +462,7 @@ def split_nml2_quantity(nml2_quantity):
 
 
 def get_value_in_si(nml2_quantity):
-    # type: (str) -> float
+    # type: (str) -> typing.Union[float, None]
     """Get value of a NeuroML2 quantity in SI units
 
     :param nml2_quantity: NeuroML2 quantity to convert

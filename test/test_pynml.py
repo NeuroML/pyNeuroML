@@ -12,7 +12,8 @@ import unittest
 import os
 import shutil
 
-from pyneuroml.pynml import extract_lems_definition_files
+from pyneuroml.pynml import (extract_lems_definition_files, list_exposures,
+                             list_recording_paths)
 
 
 class TestJarUtils(unittest.TestCase):
@@ -33,9 +34,32 @@ class TestJarUtils(unittest.TestCase):
                     "Synapses.xml"]
 
         extraction_dir = extract_lems_definition_files()
-        newfilelist = os.listdir(extraction_dir + "/NeuroML2CoreTypes/")
+        newfilelist = os.listdir(extraction_dir)
         assert(sorted(filelist) == sorted(newfilelist))
         shutil.rmtree(extraction_dir)
+
+
+class TestHelperUtils(unittest.TestCase):
+
+    """Test helper utilities."""
+
+    def test_exposure_listing(self):
+        """Test listing of exposures in NeuroML documents."""
+        exps = list_exposures("test/izhikevich_test_file.nml", "iz")
+        ctypes = {}
+        for key, val in exps.items():
+            ctypes[key.type] = val
+
+        assert ("izhikevich2007Cell" in ctypes.keys())
+        expnames = []
+        for exp in ctypes["izhikevich2007Cell"]:
+            expnames.append(exp.name)
+        assert ("u" in expnames)
+
+    def test_recording_path_listing(self):
+        """Test listing of recording paths in NeuroML documents."""
+        paths = list_recording_paths("test/izhikevich_test_file.nml", "iz")
+        assert ("izh2007RS0/u" in paths)
 
 
 if __name__ == "__main__":
