@@ -55,16 +55,21 @@ class TestHelperUtils(unittest.TestCase):
         for key, val in exps.items():
             ctypes[key.type] = val
 
-        assert ("izhikevich2007Cell" in ctypes.keys())
+        self.assertTrue("izhikevich2007Cell" in ctypes.keys())
         expnames = []
         for exp in ctypes["izhikevich2007Cell"]:
             expnames.append(exp.name)
-        assert ("u" in expnames)
+        # https://docs.neuroml.org/Userdocs/Schemas/Cells.html#schema-izhikevich2007cell
+        self.assertTrue("u" in expnames)
+        self.assertTrue("v" in expnames)
+        self.assertTrue("iMemb" in expnames)
+        self.assertTrue("iSyn" in expnames)
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
         paths = list_recording_paths("test/izhikevich_test_file.nml", "iz")
-        assert ("izh2007RS0/u" in paths)
+        self.assertTrue("izh2007RS0/u" in paths)
+        self.assertTrue("izh2007RS0/v" in paths)
 
 
 if __name__ == "__main__":
