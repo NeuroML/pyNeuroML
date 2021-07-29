@@ -228,17 +228,17 @@ def _run_optimisation(a):
     if isinstance(a.extra_report_info, str):
         a.extra_report_info = parse_dict_arg(a.extra_report_info)
 
-    pynml.print_comment("=====================================================================================")
-    pynml.print_comment("Starting run_optimisation with: ")
+    logger.info("=====================================================================================")
+    logger.info("Starting run_optimisation with: ")
     keys = sorted(a.__dict__.keys())
 
     for key in keys:
         value = a.__dict__[key]
-        pynml.print_comment("  %s = %s%s" % (key, ' ' * (30 - len(key)), value))
-    pynml.print_comment("=====================================================================================")
+        logger.info("  %s = %s%s" % (key, ' ' * (30 - len(key)), value))
+    logger.info("=====================================================================================")
 
     if a.dry_run:
-        pynml.print_comment("Dry run; not running optimization...")
+        logger.info("Dry run; not running optimization...")
         return
 
     ref = a.prefix
@@ -328,7 +328,7 @@ def _run_optimisation(a):
     report += "FITNESS: %f\n\n" % fitness
     report += "FITTEST: %s\n\n" % pp.pformat(dict(sim_var))
 
-    pynml.print_comment(report)
+    logger.info(report)
 
     reportj['fitness'] = fitness
     reportj['fittest vars'] = dict(sim_var)

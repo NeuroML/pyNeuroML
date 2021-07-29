@@ -4,7 +4,7 @@ from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import shutil
 import os
 import logging
-from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color, print_comment
+from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color
 import random
 import neuroml
 
@@ -47,7 +47,7 @@ def generate_lems_file_for_neuroml(sim_id,
 
     file_name_full = '%s/%s' % (target_dir, lems_file_name)
 
-    print_comment('Creating LEMS file at: %s for NeuroML 2 file: %s (copy: %s)' % (file_name_full, neuroml_file, copy_neuroml))
+    logger.info('Creating LEMS file at: %s for NeuroML 2 file: %s (copy: %s)' % (file_name_full, neuroml_file, copy_neuroml))
 
     ls = LEMSSimulation(sim_id, duration, dt, target, simulation_seed=simulation_seed)
 
@@ -95,7 +95,7 @@ def generate_lems_file_for_neuroml(sim_id,
             if os.path.isfile(include.href):
                 incl_curr = include.href
 
-            print_comment(' - Including %s (located at %s; nml dir: %s), copying to %s' % (include.href, incl_curr, nml_dir, target_dir))
+            logger.info(' - Including %s (located at %s; nml dir: %s), copying to %s' % (include.href, incl_curr, nml_dir, target_dir))
 
             '''
             if not os.path.isfile("%s/%s" % (target_dir, os.path.basename(incl_curr))) and \
@@ -103,7 +103,7 @@ def generate_lems_file_for_neuroml(sim_id,
                not os.path.isfile(incl_curr):
                 shutil.copy(incl_curr, target_dir)
             else:
-                print_comment("No need to copy...")'''
+                logger.info("No need to copy...")'''
 
             f1 = "%s/%s" % (target_dir, os.path.basename(incl_curr))
             f2 = "%s/%s" % (target_dir, incl_curr)
@@ -121,7 +121,7 @@ def generate_lems_file_for_neuroml(sim_id,
             if sub_doc.__class__ == neuroml.nml.nml.NeuroMLDocument:
                 for include in sub_doc.includes:
                     incl_curr = '%s/%s' % (sub_dir, include.href)
-                    print_comment(' -- Including %s located at %s' % (include.href, incl_curr))
+                    logger.info(' -- Including %s located at %s' % (include.href, incl_curr))
 
                     if not os.path.isfile("%s/%s" % (target_dir, os.path.basename(incl_curr))) and \
                        not os.path.isfile("%s/%s" % (target_dir, incl_curr)):
@@ -173,7 +173,7 @@ def generate_lems_file_for_neuroml(sim_id,
                     size = len(population.instances)
 
                 if gen_plots_for_all_v or population.id in gen_plots_for_only_populations:
-                    print_comment('Generating %i plots for %s in population %s' % (size, component, population.id))
+                    logger.info('Generating %i plots for %s in population %s' % (size, component, population.id))
 
                     disp0 = 'DispPop__%s' % population.id
                     ls.create_display(disp0, "Membrane potentials of cells in %s" % population.id, "-90", "50")
@@ -189,7 +189,7 @@ def generate_lems_file_for_neuroml(sim_id,
                             ls.add_line_to_display(disp0, "%s[%i]: v" % (population.id, i), quantity, "1mV", get_next_hex_color(my_random))
 
                 if gen_saves_for_all_v or population.id in gen_saves_for_only_populations:
-                    print_comment('Saving %i values of %s for %s in population %s' % (size, variable, component, population.id))
+                    logger.info('Saving %i values of %s for %s in population %s' % (size, variable, component, population.id))
 
                     of0 = 'Volts_file__%s' % population.id
                     ls.create_output_file(of0, "%s.%s.%s.dat" % (sim_id, population.id, variable))
@@ -206,7 +206,7 @@ def generate_lems_file_for_neuroml(sim_id,
                             quantities_saved.append(quantity)
 
                 if gen_spike_saves_for_all_somas or population.id in gen_spike_saves_for_only_populations:
-                    print_comment('Saving spikes in %i somas for %s in population %s' % (size, component, population.id))
+                    logger.info('Saving spikes in %i somas for %s in population %s' % (size, component, population.id))
 
                     eof0 = 'Spikes_file__%s' % population.id
                     ls.create_event_output_file(eof0, "%s.%s.spikes" % (sim_id, population.id), format=spike_time_format)

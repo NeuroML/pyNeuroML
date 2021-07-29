@@ -14,10 +14,11 @@ import sys
 import os
 import os.path
 import argparse
+import logging
 
-from pyneuroml.pynml import print_comment
 from pyneuroml import pynml
 
+logger = logging.getLogger(__name__)
 povArgs = "-D Antialias=On Antialias_Threshold=0.3 Antialias_Depth=4"
 
 
@@ -122,9 +123,9 @@ def main(argv):
         index += 1
         t = times[index]
 
-    print_comment("There are %i time points total, max: %f ms, dt: %f ms" % (len(times), times[-1], dt))
-    print_comment("times_used: %s; frame_indices %s" % (times_used, frame_indices))
-    print_comment("All refs: %s" % results.keys())
+    logger.info("There are %i time points total, max: %f ms, dt: %f ms" % (len(times), times[-1], dt))
+    logger.info("times_used: %s; frame_indices %s" % (times_used, frame_indices))
+    logger.info("All refs: %s" % results.keys())
 
     volt_colors = {}
 
@@ -145,8 +146,8 @@ def main(argv):
 
                 volt_colors[ref2] = volt_color
 
-    print_comment("All refs: %s" % volt_colors.keys())
-    print_comment("All volt_colors: %s" % volt_colors)
+    logger.info("All refs: %s" % volt_colors.keys())
+    logger.info("All volt_colors: %s" % volt_colors)
 
     t = args.startTime
     index = 0
@@ -163,7 +164,7 @@ def main(argv):
 
     for fi in frame_indices:
         t = times[fi]
-        print_comment("\n----  Exporting for time: %f, index %i frame index %i  ----\n" % (t, index, fi))
+        logger.info("\n----  Exporting for time: %f, index %i frame index %i  ----\n" % (t, index, fi))
 
         if not args.singlecell:
             in_file_name = args.prefix + "_net.inc"
@@ -171,27 +172,27 @@ def main(argv):
             out_file_name = args.prefix + "_net.inc" + str(index)
             out_file = open(out_file_name, 'w')
 
-            print_comment("in_file_name %s; out_file_name: %s" % (in_file_name, out_file_name))
+            logger.info("in_file_name %s; out_file_name: %s" % (in_file_name, out_file_name))
 
             for line in in_file:
                 if line.strip().startswith("//"):
                     ref = line.strip()[2:]
                     if ref in volt_colors.keys():
                         vs = volt_colors[ref]
-                        # print_comment_v(('-- %s: %s '%(ref,len(vs)))
+                        # logger.info_v(('-- %s: %s '%(ref,len(vs)))
                         out_file.write("    %s // %s t= %s\n" % (vs[index], ref, t))
                     elif ref + ".0" in volt_colors.keys():
                         vs = volt_colors[ref + ".0"]
                         out_file.write("     " + vs[index] + " //" + ref + " t= " + str(t) + "\n")
                     else:
                         out_file.write("//       No ref there: " + ref + "\n")
-                        print_comment("Missing ref: " + ref)
+                        logger.info("Missing ref: " + ref)
                 else:
                     out_file.write(line)
 
             in_file.close()
             out_file.close()
-            print_comment("Written file: %s for time: %f" % (out_file_name, t))
+            logger.info("Written file: %s for time: %f" % (out_file_name, t))
 
             in_file = open(args.prefix + ".pov")
             out_file_name = "%s_T%i.pov" % (args.prefix, index)
@@ -204,7 +205,7 @@ def main(argv):
             post = '%s_net.inc%i' % (args.prefix, index)
             post = post.split('/')[-1]
 
-            print_comment("Swapping %s for %s" % (pre, post))
+            logger.info("Swapping %s for %s" % (pre, post))
 
             for line in in_file:
                 if line.find(pre) >= 0:
@@ -212,7 +213,7 @@ def main(argv):
                 else:
                     out_file.write(line.replace("clock", str(clock)))
 
-            print_comment("Written file: %s for time: %f" % (out_file_name, t))
+            logger.info("Written file: %s for time: %f" % (out_file_name, t))
             in_file.close()
             out_file.close()
 
@@ -243,7 +244,7 @@ def main(argv):
 
             in_file.close()
             out_file.close()
-            print_comment("Written file: %s for time: %f" % (out_file_name, t))
+            logger.info("Written file: %s for time: %f" % (out_file_name, t))
 
             in_file = open(args.prefix + ".pov")
             out_file_name = "%s_T%s%i.pov" % (args.prefix, ind, index)
@@ -258,7 +259,7 @@ def main(argv):
                     clock = args.rotations * (t - args.startTime) / (args.endTime - args.startTime)
                     out_file.write(line.replace("clock", str(clock)))
 
-            print_comment("Written file: %s for time: %f" % (out_file_name, t))
+            logger.info("Written file: %s for time: %f" % (out_file_name, t))
             in_file.close()
             out_file.close()
 
@@ -269,8 +270,8 @@ def main(argv):
 
         index = index + 1
 
-    print_comment("Done!: ")
-    print_comment("\nTo generate images type:\n\n   bash %s_pov.sh\n\n" % args.prefix)
+    logger.info("Done!: ")
+    logger.info("\nTo generate images type:\n\n   bash %s_pov.sh\n\n" % args.prefix)
 
 
 def get_color_for_volts(v, args):

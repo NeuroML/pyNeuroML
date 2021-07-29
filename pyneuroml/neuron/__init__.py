@@ -6,15 +6,17 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 
 '''
 
+import os
+import logging
+
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
-
-from pyneuroml.pynml import print_comment
-import os
 
 from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
 from neuron import *
 from nrn import *
+
+logger = logging.getLogger(__name__)
 
 
 def export_to_neuroml2(hoc_or_python_file,
@@ -26,18 +28,18 @@ def export_to_neuroml2(hoc_or_python_file,
 
     if hoc_or_python_file is not None:
         if hoc_or_python_file.endswith(".py"):
-            print_comment("***************\nImporting Python scripts not yet implemented...\n***************")
+            logger.info("***************\nImporting Python scripts not yet implemented...\n***************")
         else:
             if not os.path.isfile(hoc_or_python_file):
-                print_comment("***************\nProblem importing file %s (%s)..\n***************" % (hoc_or_python_file, os.path.abspath(hoc_or_python_file)))
+                logger.info("***************\nProblem importing file %s (%s)..\n***************" % (hoc_or_python_file, os.path.abspath(hoc_or_python_file)))
             h.load_file(1, hoc_or_python_file)  # Using 1 to force loading of the file, in case file with same name was loaded before...
     else:
-        print_comment("hoc_or_python_file variable is None; exporting what's currently in memory...")
+        logger.info("hoc_or_python_file variable is None; exporting what's currently in memory...")
 
     for ion in known_rev_potentials.keys():
         set_erev_for_mechanism(ion, known_rev_potentials[ion])
 
-    print_comment("Loaded NEURON file: %s" % hoc_or_python_file)
+    logger.info("Loaded NEURON file: %s" % hoc_or_python_file)
 
     h.load_file("mview.hoc")
 
@@ -61,12 +63,12 @@ def export_to_neuroml2(hoc_or_python_file,
 
 def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
     if not (level == 1 or level == 2):
-        print_comment("Only options for Levels in NeuroMLv1.8.1 are 1 or 2")
+        logger.info("Only options for Levels in NeuroMLv1.8.1 are 1 or 2")
         return None
 
     h.load_file(hoc_file)
 
-    print_comment("Loaded NEURON file: %s" % hoc_file)
+    logger.info("Loaded NEURON file: %s" % hoc_file)
 
     h.load_file("mview.hoc")
 

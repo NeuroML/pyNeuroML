@@ -4,9 +4,12 @@
 '''
 
 import os
+import sys
+import logging
 from pyneuroml import pynml
 from pyneuroml import __version__ as pynmlv
-import sys
+
+logger = logging.getLogger(__name__)
 
 
 def _get_lines_for_seg_group(cell,
@@ -29,7 +32,7 @@ def _get_lines_for_seg_group(cell,
 
         for segment in segs:
             seg_ids.append(segment.id)
-            pynml.print_comment('Seg %s is one of %i in %s of %s' % (segment, len(segs), sg, cell.id))
+            logger.info('Seg %s is one of %i in %s of %s' % (segment, len(segs), sg, cell.id))
 
             id = int(segment.id)
 
@@ -114,7 +117,7 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
         swc_file = open(swc_file_name, 'w')
 
         info = "Cell %s taken from NeuroML file %s converted to SWC" % (cell.id, nml_file_name)
-        pynml.print_comment(info)
+        logger.info(info)
         comment_lines.append(info)
         comment_lines.append('Using pyNeuroML v%s' % pynmlv)
 
