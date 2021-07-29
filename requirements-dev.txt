@@ -1,0 +1,7 @@
+argparse
+airspeed>=0.5.5
+matplotlib
+graphviz
+git+https://github.com/NeuralEnsemble/libNeuroML.git@master#egg=libNeuroML
+git+https://github.com/NeuroML/NeuroMLlite.git@master#egg=NeuroMLlite
+git+https://github.com/LEMS/pylems.git@master#egg=pylems
