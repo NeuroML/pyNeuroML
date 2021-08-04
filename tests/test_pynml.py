@@ -50,7 +50,7 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_exposure_listing(self):
         """Test listing of exposures in NeuroML documents."""
-        exps = list_exposures("test/izhikevich_test_file.nml", "iz")
+        exps = list_exposures("tests/izhikevich_test_file.nml", "iz")
         ctypes = {}
         for key, val in exps.items():
             ctypes[key.type] = val
@@ -67,7 +67,7 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
-        paths = list_recording_paths("test/izhikevich_test_file.nml", "iz")
+        paths = list_recording_paths("tests/izhikevich_test_file.nml", "iz")
         self.assertTrue("izh2007RS0/u" in paths)
         self.assertTrue("izh2007RS0/v" in paths)
 
