@@ -396,7 +396,7 @@ def list_exposures(nml_doc_fn, substring=None):
     return get_standalone_lems_model(nml_doc_fn).list_exposures(substring)
 
 
-def list_recording_paths(nml_doc_fn, substring):
+def list_recording_paths_for_exposures(nml_doc_fn, substring):
     # type: (str, str) -> typing.List[str]
     """List the recording path strings for exposures.
 
@@ -413,7 +413,7 @@ def list_recording_paths(nml_doc_fn, substring):
     :returns: list of recording paths
 
     """
-    return get_standalone_lems_model(nml_doc_fn).list_recording_paths(substring)
+    return get_standalone_lems_model(nml_doc_fn).list_recording_paths_for_exposures(substring)
 
 
 def get_standalone_lems_model(nml_doc_fn):
