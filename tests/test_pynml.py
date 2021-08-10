@@ -14,7 +14,7 @@ import shutil
 import logging
 
 from pyneuroml.pynml import (extract_lems_definition_files, list_exposures,
-                             list_recording_paths)
+                             list_recording_paths_for_exposures)
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
-        paths = list_recording_paths("tests/izhikevich_test_file.nml", "iz")
+        paths = list_recording_paths_for_exposures("tests/izhikevich_test_file.nml", "iz")
         self.assertTrue("izh2007RS0/u" in paths)
         self.assertTrue("izh2007RS0/v" in paths)
 
