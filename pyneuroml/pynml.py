@@ -36,7 +36,6 @@ except ImportError:
 
 import matplotlib
 import lems.model.model as lems_model
-from lems.model.fundamental import Include
 from lems.parser.LEMS import LEMSFileParser
 
 from pyneuroml import __version__
@@ -2305,6 +2304,7 @@ def run_jneuroml_with_realtime_output(
     jar_path = get_path_to_jnml_jar()
 
     command = ""
+    command_success = False
 
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % (
@@ -2315,7 +2315,7 @@ def run_jneuroml_with_realtime_output(
             target_file,
             post_args,
         )
-        execute_command_in_dir_with_realtime_output(
+        command_success = execute_command_in_dir_with_realtime_output(
             command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
 
@@ -2328,7 +2328,8 @@ def run_jneuroml_with_realtime_output(
             sys.exit(-1)
         else:
             return False
-    return True
+
+    return command_success
 
 
 def execute_command_in_dir_with_realtime_output(
@@ -2363,19 +2364,20 @@ def execute_command_in_dir_with_realtime_output(
         p = subprocess.Popen(
             shlex.split(command),
             stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             bufsize=1,
             cwd=directory,
             env=env,
+            universal_newlines=True,
         )
         with p.stdout:
-            for line in iter(p.stdout.readline, b""):
-                logger.debug(line.debug("ascii"))
+            for line in iter(p.stdout.readline, ""):
+                logger.debug(line.strip())
         p.wait()  # wait for the subprocess to exit
     except KeyboardInterrupt as e:
         logger.error("*** Command interrupted: \n       %s" % command)
         if p:
             p.kill()
-        #  return True
         raise e
 
     if not p.returncode == 0:
