@@ -370,7 +370,7 @@ def extract_lems_definition_files(path=None):
     return path
 
 
-def list_exposures(nml_doc_fn, substring=None):
+def list_exposures(nml_doc_fn, substring=""):
     # type: (str, str) -> typing.Union[typing.Dict[lems_model.component.Component, typing.List[lems_model.component.Exposure]], None]
     """List exposures in a NeuroML model document file.
 
@@ -396,8 +396,8 @@ def list_exposures(nml_doc_fn, substring=None):
     return get_standalone_lems_model(nml_doc_fn).list_exposures(substring)
 
 
-def list_recording_paths_for_exposures(nml_doc_fn, substring):
-    # type: (str, str) -> typing.List[str]
+def list_recording_paths_for_exposures(nml_doc_fn, substring="", target=""):
+    # type: (str, str, str) -> typing.List[str]
     """List the recording path strings for exposures.
 
     This wraps around `lems.model.list_recording_paths` to list the recording
@@ -413,7 +413,7 @@ def list_recording_paths_for_exposures(nml_doc_fn, substring):
     :returns: list of recording paths
 
     """
-    return get_standalone_lems_model(nml_doc_fn).list_recording_paths_for_exposures(substring)
+    return get_standalone_lems_model(nml_doc_fn).list_recording_paths_for_exposures(substring, target)
 
 
 def get_standalone_lems_model(nml_doc_fn):
