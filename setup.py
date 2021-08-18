@@ -45,7 +45,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         'argparse',
-        'pylems>=0.5.0',
+        'pylems>=0.5.7',
         'airspeed>=0.5.5',
         'libNeuroML>=0.2.52',
         'neuromllite>=0.2.2',
