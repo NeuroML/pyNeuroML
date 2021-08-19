@@ -43,13 +43,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
+        pip install pytest
         pip install .
 
+    - name: Run tests
+      run: |
+        pytest .
+        pynml -h
+        ./test-ghactions.sh
     - name: Lint with flake8
       run: |
         pip install flake8
         flake8 . --count --exit-zero --show-source --max-line-length=127 --statistics
-    - name: Run tests
-      run: |
-        pynml -h
-        ./test-ghactions.sh
