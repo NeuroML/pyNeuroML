@@ -50,7 +50,9 @@ setup(
         'libNeuroML>=0.2.52',
         'neuromllite>=0.2.2',
         'matplotlib',
-        'graphviz'],
+        'graphviz',
+        'typing; python_version<"3.5"'
+    ],
     dependency_links=[
         'git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML',
         'git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite'
