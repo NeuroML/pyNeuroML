@@ -46,7 +46,7 @@ for aline in open("../../pyneuroml/__init__.py"):
     # space here is important since __version__ is used in generation of
     # version_info also
     if "__version__ =" in aline:
-        version = aline.split("'")[1]
+        version = aline.split("\"")[1]
 # The full version, including alpha/beta/rc tags.
 release = version
 
