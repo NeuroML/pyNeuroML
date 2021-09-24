@@ -13,8 +13,11 @@ import os
 import shutil
 import logging
 
-from pyneuroml.pynml import (extract_lems_definition_files, list_exposures,
-                             list_recording_paths_for_exposures)
+from pyneuroml.pynml import (
+    extract_lems_definition_files,
+    list_exposures,
+    list_recording_paths_for_exposures,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -27,21 +30,23 @@ class TestJarUtils(unittest.TestCase):
 
     def test_lems_def_files_extraction(self):
         """Test extraction of NeuroML2 LEMS files from jar."""
-        filelist = ["Cells.xml",
-                    "Channels.xml",
-                    "Inputs.xml",
-                    "Networks.xml",
-                    "NeuroML2CoreTypes.xml",
-                    "NeuroMLCoreCompTypes.xml",
-                    "NeuroMLCoreDimensions.xml",
-                    "PyNN.xml",
-                    "Simulation.xml",
-                    "Synapses.xml"]
+        filelist = [
+            "Cells.xml",
+            "Channels.xml",
+            "Inputs.xml",
+            "Networks.xml",
+            "NeuroML2CoreTypes.xml",
+            "NeuroMLCoreCompTypes.xml",
+            "NeuroMLCoreDimensions.xml",
+            "PyNN.xml",
+            "Simulation.xml",
+            "Synapses.xml",
+        ]
 
         extraction_dir = extract_lems_definition_files()
         newfilelist = os.listdir(extraction_dir)
-        shutil.rmtree(extraction_dir[:-1 * len("NeuroML2CoreTypes/")])
-        assert(sorted(filelist) == sorted(newfilelist))
+        shutil.rmtree(extraction_dir[: -1 * len("NeuroML2CoreTypes/")])
+        assert sorted(filelist) == sorted(newfilelist)
 
 
 class TestHelperUtils(unittest.TestCase):
@@ -74,8 +79,9 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
-        paths = list_recording_paths_for_exposures("tests/izhikevich_test_file.nml",
-                                                   "", "IzhNet")
+        paths = list_recording_paths_for_exposures(
+            "tests/izhikevich_test_file.nml", "", "IzhNet"
+        )
         print("\n".join(paths))
         # self.assertTrue("izh2007RS0/u" in paths)
         # self.assertTrue("izh2007RS0/v" in paths)
@@ -83,8 +89,9 @@ class TestHelperUtils(unittest.TestCase):
     def test_recording_path_listing_2(self):
         """Test listing of recording paths in NeuroML documents."""
         os.chdir("tests/")
-        paths = list_recording_paths_for_exposures("HH_example_net.nml",
-                                                   "hh_cell", "single_hh_cell_network")
+        paths = list_recording_paths_for_exposures(
+            "HH_example_net.nml", "hh_cell", "single_hh_cell_network"
+        )
         print("\n".join(paths))
         os.chdir("../")
 
