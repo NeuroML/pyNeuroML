@@ -603,6 +603,7 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
         verbose=verbose_generate,
         report_jnml_output=verbose_generate,
         exit_on_fail=True,
+        return_string=False
     )
 
 
@@ -634,8 +635,9 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
     )
 
 
-def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
-    # type: (str, bool, str) -> bool
+def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None,
+                      return_string=False):
+    # type: (str, bool, str, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML2 file using jnml.
 
     :params nml2_file_name: name of NeuroML 2 file to validate
@@ -644,7 +646,9 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
     :type verbose_validate: bool (default: True)
     :param max_memory: maximum memory the JVM should use while running jnml
     :type max_memory: str
-    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    :param return_string: toggle to enable or disable returning the output of the jnml validation
+    :type return_string: bool
+    :returns: Either a bool, or a tuple (bool, str): True if jnml ran without errors, false if jnml fails; along with the message returned by jnml
     """
     pre_args = "-validate"
     post_args = ""
@@ -658,6 +662,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
             verbose=verbose_validate,
             report_jnml_output=verbose_validate,
             exit_on_fail=False,
+            return_string=return_string
         )
     else:
         return run_jneuroml(
@@ -667,6 +672,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
             verbose=verbose_validate,
             report_jnml_output=verbose_validate,
             exit_on_fail=False,
+            return_string=return_string
         )
 
 
@@ -2134,9 +2140,10 @@ def run_jneuroml(
     exec_in_dir=".",
     verbose=DEFAULTS["v"],
     report_jnml_output=True,
-    exit_on_fail=True,
+    exit_on_fail=False,
+    return_string=False
 ):
-    # type: (str, str, str, str, str, bool, bool, bool) -> bool
+    # type: (str, str, str, str, str, bool, bool, bool, bool) -> typing.Union[typing.Tuple[bool, str], bool]
     """Run jnml with provided arguments.
 
     :param pre_args: pre-file name arguments
@@ -2153,6 +2160,11 @@ def run_jneuroml(
     :type report_jnml_output: bool
     :param exit_on_fail: toggle whether command should exit if jnml fails
     :type exit_on_fail: bool
+    :param return_string: toggle whether the output string should be returned
+    :type return_string: bool
+
+    :returns: either a bool, or a Tuple (bool, str) depending on the value of return_string: True of jnml ran successfully, False if not; along with the output of the command
+
     """
     logger.debug(
         "Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s"
@@ -2192,7 +2204,10 @@ def run_jneuroml(
                 logger.error("execute_command_in_dir returned with output: %s" % output)
                 sys.exit(-1)
             else:
-                return False
+                if return_string:
+                    return (False, output)
+                else:
+                    return False
 
         if report_jnml_output:
             logger.debug(
@@ -2212,8 +2227,14 @@ def run_jneuroml(
         if exit_on_fail:
             sys.exit(-1)
         else:
-            return False
-    return True
+            if return_string:
+                return (False, output)
+            else:
+                return False
+    if return_string:
+        return (True, output)
+    else:
+        return True
 
 
 # TODO: Refactorinng
@@ -2337,7 +2358,7 @@ def execute_command_in_dir_with_realtime_output(
 def execute_command_in_dir(
     command, directory, verbose=DEFAULTS["v"], prefix="Output: ", env=None
 ):
-    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Union[None, str]
+    # type: (str, str, bool, str, typing.Union[None, str]) -> str
     """Execute a command in specific working directory
 
     :param command: command to run
@@ -2346,11 +2367,12 @@ def execute_command_in_dir(
     :type directory: str
     :param verbose: toggle verbose output
     :type verbose: bool
-    :param prefix: string to prefix output with
+    :param prefix: string to prefix console output with
     :type prefix: str
     :param env: environment variables to be used
     :type env: str
     """
+    return_string = ""  # type: typing.Union[bytes, str]
     if os.name == "nt":
         directory = os.path.normpath(directory)
 
@@ -2388,19 +2410,17 @@ def execute_command_in_dir(
         return_string = subprocess.Popen(
             command, cwd=directory, shell=True, stdout=subprocess.PIPE
         ).communicate()[0]
-        return return_string
+        return return_string.decode("utf-8")
 
     except subprocess.CalledProcessError as e:
         logger.critical("*** Problem running command: \n       %s" % e)
         logger.critical(
             "%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix))
         )
-        return None
-    except:
+        return e.output.decode()
+    except Exception as e:
         logger.critical("*** Unknown problem running command: %s" % e)
-        return None
-
-    logger.info("Finished execution")
+        return str(e)
 
 
 def generate_plot(
