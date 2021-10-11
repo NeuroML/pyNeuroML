@@ -11,38 +11,47 @@ logger = logging.getLogger(__name__)
 try:
     import pyelectro  #  Not used here, just for checking installation
 except ImportError:
-    logger.warn('>> Note: pyelectro from https://github.com/pgleeson/pyelectro is required!')
+    logger.warn(
+        ">> Note: pyelectro from https://github.com/pgleeson/pyelectro is required!"
+    )
     sys.exit()
 
 try:
     import neurotune  #  Not used here, just for checking installation
 except ImportError:
-    logger.warn('>> Note: neurotune from https://github.com/pgleeson/neurotune is required!')
+    logger.warn(
+        ">> Note: neurotune from https://github.com/pgleeson/neurotune is required!"
+    )
     sys.exit()
 
 
 class NeuroMLSimulation(object):
-    '''
+    """
 
-        A class for running a single instance of a NeuroML model by generating a
-        LEMS file and using pyNeuroML to run in a chosen simulator
+    A class for running a single instance of a NeuroML model by generating a
+    LEMS file and using pyNeuroML to run in a chosen simulator
 
-    '''
-    def __init__(self,
-                 reference,
-                 neuroml_file,
-                 target,
-                 sim_time=1000,
-                 dt=0.05,
-                 simulator='jNeuroML',
-                 generate_dir='./',
-                 cleanup=True,
-                 nml_doc=None):
+    """
+
+    def __init__(
+        self,
+        reference,
+        neuroml_file,
+        target,
+        sim_time=1000,
+        dt=0.05,
+        simulator="jNeuroML",
+        generate_dir="./",
+        cleanup=True,
+        nml_doc=None,
+    ):
 
         self.sim_time = sim_time
         self.dt = dt
         self.simulator = simulator
-        self.generate_dir = generate_dir if generate_dir.endswith('/') else generate_dir + '/'
+        self.generate_dir = (
+            generate_dir if generate_dir.endswith("/") else generate_dir + "/"
+        )
 
         self.reference = reference
         self.target = target
@@ -74,75 +83,91 @@ class NeuroMLSimulation(object):
         plt.show()
 
     def go(self):
-        lems_file_name = 'LEMS_%s.xml' % (self.reference)
+        lems_file_name = "LEMS_%s.xml" % (self.reference)
 
-        generate_lems_file_for_neuroml(self.reference,
-                                       self.neuroml_file,
-                                       self.target,
-                                       self.sim_time,
-                                       self.dt,
-                                       lems_file_name=lems_file_name,
-                                       target_dir=self.generate_dir,
-                                       nml_doc=self.nml_doc)
+        generate_lems_file_for_neuroml(
+            self.reference,
+            self.neuroml_file,
+            self.target,
+            self.sim_time,
+            self.dt,
+            lems_file_name=lems_file_name,
+            target_dir=self.generate_dir,
+            nml_doc=self.nml_doc,
+        )
 
-        logger.info("Running a simulation of %s ms with timestep %s ms: %s" % (self.sim_time, self.dt, lems_file_name))
+        logger.info(
+            "Running a simulation of %s ms with timestep %s ms: %s"
+            % (self.sim_time, self.dt, lems_file_name)
+        )
 
         self.already_run = True
 
         start = time.time()
-        if self.simulator == 'jNeuroML':
-            results = pynml.run_lems_with_jneuroml(lems_file_name,
-                                                   nogui=True,
-                                                   load_saved_data=True,
-                                                   plot=False,
-                                                   exec_in_dir=self.generate_dir,
-                                                   verbose=False,
-                                                   cleanup=self.cleanup)
-        elif self.simulator == 'jNeuroML_NEURON':
-            results = pynml.run_lems_with_jneuroml_neuron(lems_file_name,
-                                                          nogui=True,
-                                                          load_saved_data=True,
-                                                          plot=False,
-                                                          exec_in_dir=self.generate_dir,
-                                                          verbose=False,
-                                                          cleanup=self.cleanup)
+        if self.simulator == "jNeuroML":
+            results = pynml.run_lems_with_jneuroml(
+                lems_file_name,
+                nogui=True,
+                load_saved_data=True,
+                plot=False,
+                exec_in_dir=self.generate_dir,
+                verbose=False,
+                cleanup=self.cleanup,
+            )
+        elif self.simulator == "jNeuroML_NEURON":
+            results = pynml.run_lems_with_jneuroml_neuron(
+                lems_file_name,
+                nogui=True,
+                load_saved_data=True,
+                plot=False,
+                exec_in_dir=self.generate_dir,
+                verbose=False,
+                cleanup=self.cleanup,
+            )
         else:
-            logger.critical('Unsupported simulator: %s' % self.simulator)
+            logger.critical("Unsupported simulator: %s" % self.simulator)
             exit()
 
         secs = time.time() - start
-        logger.info("Ran simulation in %s in %f seconds (%f mins)\n\n" % (self.simulator, secs, secs / 60.0))
-        self.t = [t * 1000 for t in results['t']]
+        logger.info(
+            "Ran simulation in %s in %f seconds (%f mins)\n\n"
+            % (self.simulator, secs, secs / 60.0)
+        )
+        self.t = [t * 1000 for t in results["t"]]
 
         self.volts = {}
 
         for key in results.keys():
-            if key != 't':
+            if key != "t":
                 self.volts[key] = [v * 1000 for v in results[key]]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sim_time = 700
     dt = 0.05
 
-    if len(sys.argv) == 2 and sys.argv[1] == '-net':
+    if len(sys.argv) == 2 and sys.argv[1] == "-net":
 
-        sim = NeuroMLSimulation('TestNet',
-                                '../../examples/test_data/simplenet.nml',
-                                'simplenet',
-                                sim_time,
-                                dt,
-                                'jNeuroML',
-                                'temp/')
+        sim = NeuroMLSimulation(
+            "TestNet",
+            "../../examples/test_data/simplenet.nml",
+            "simplenet",
+            sim_time,
+            dt,
+            "jNeuroML",
+            "temp/",
+        )
         sim.go()
         sim.show()
     else:
-        sim = NeuroMLSimulation('TestHH',
-                                '../../examples/test_data/HHCellNetwork.net.nml',
-                                'HHCellNetwork',
-                                sim_time,
-                                dt,
-                                'jNeuroML',
-                                'temp')
+        sim = NeuroMLSimulation(
+            "TestHH",
+            "../../examples/test_data/HHCellNetwork.net.nml",
+            "HHCellNetwork",
+            sim_time,
+            dt,
+            "jNeuroML",
+            "temp",
+        )
         sim.go()
         sim.show()

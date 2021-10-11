@@ -1,10 +1,10 @@
-'''
+"""
 
 A package of utilities for exporting NEURON models to NeuroML 2 & for analysing/comparing NEURON models to NeuroML versions
 
 Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowcase
 
-'''
+"""
 
 import os
 import logging
@@ -19,22 +19,33 @@ from nrn import *
 logger = logging.getLogger(__name__)
 
 
-def export_to_neuroml2(hoc_or_python_file,
-                       nml2_file_name,
-                       includeBiophysicalProperties=True,
-                       separateCellFiles=False,
-                       known_rev_potentials={},
-                       validate=True):
+def export_to_neuroml2(
+    hoc_or_python_file,
+    nml2_file_name,
+    includeBiophysicalProperties=True,
+    separateCellFiles=False,
+    known_rev_potentials={},
+    validate=True,
+):
 
     if hoc_or_python_file is not None:
         if hoc_or_python_file.endswith(".py"):
-            logger.info("***************\nImporting Python scripts not yet implemented...\n***************")
+            logger.info(
+                "***************\nImporting Python scripts not yet implemented...\n***************"
+            )
         else:
             if not os.path.isfile(hoc_or_python_file):
-                logger.info("***************\nProblem importing file %s (%s)..\n***************" % (hoc_or_python_file, os.path.abspath(hoc_or_python_file)))
-            h.load_file(1, hoc_or_python_file)  # Using 1 to force loading of the file, in case file with same name was loaded before...
+                logger.info(
+                    "***************\nProblem importing file %s (%s)..\n***************"
+                    % (hoc_or_python_file, os.path.abspath(hoc_or_python_file))
+                )
+            h.load_file(
+                1, hoc_or_python_file
+            )  # Using 1 to force loading of the file, in case file with same name was loaded before...
     else:
-        logger.info("hoc_or_python_file variable is None; exporting what's currently in memory...")
+        logger.info(
+            "hoc_or_python_file variable is None; exporting what's currently in memory..."
+        )
 
     for ion in known_rev_potentials.keys():
         set_erev_for_mechanism(ion, known_rev_potentials[ion])
@@ -43,13 +54,13 @@ def export_to_neuroml2(hoc_or_python_file,
 
     h.load_file("mview.hoc")
 
-    h('objref mv')
-    h('mv = new ModelView(0)')
+    h("objref mv")
+    h("mv = new ModelView(0)")
 
     h.load_file("%s/mview_neuroml2.hoc" % (os.path.dirname(__file__)))
 
-    h('objref mvnml')
-    h('mvnml = new ModelViewNeuroML2(mv)')
+    h("objref mvnml")
+    h("mvnml = new ModelViewNeuroML2(mv)")
 
     nml2_level = 2 if includeBiophysicalProperties else 1
 
@@ -58,7 +69,7 @@ def export_to_neuroml2(hoc_or_python_file,
     if validate:
         validate_neuroml2(nml2_file_name)
 
-    h('mv.destroy()')
+    h("mv.destroy()")
 
 
 def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
@@ -72,13 +83,13 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
 
     h.load_file("mview.hoc")
 
-    h('objref mv')
-    h('mv = new ModelView()')
+    h("objref mv")
+    h("mv = new ModelView()")
 
     h.load_file("%s/mview_neuroml1.hoc" % (os.path.dirname(__file__)))
 
-    h('objref mvnml1')
-    h('mvnml1 = new ModelViewNeuroML1(mv)')
+    h("objref mvnml1")
+    h("mvnml1 = new ModelViewNeuroML1(mv)")
 
     h.mvnml1.exportNeuroML(nml1_file_name, level)
 
