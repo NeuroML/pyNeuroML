@@ -603,7 +603,7 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
         verbose=verbose_generate,
         report_jnml_output=verbose_generate,
         exit_on_fail=True,
-        return_string=False
+        return_string=False,
     )
 
 
@@ -635,8 +635,9 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
     )
 
 
-def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None,
-                      return_string=False):
+def validate_neuroml2(
+    nml2_file_name, verbose_validate=True, max_memory=None, return_string=False
+):
     # type: (str, bool, str, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML2 file using jnml.
 
@@ -662,7 +663,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None,
             verbose=verbose_validate,
             report_jnml_output=verbose_validate,
             exit_on_fail=False,
-            return_string=return_string
+            return_string=return_string,
         )
     else:
         return run_jneuroml(
@@ -672,7 +673,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None,
             verbose=verbose_validate,
             report_jnml_output=verbose_validate,
             exit_on_fail=False,
-            return_string=return_string
+            return_string=return_string,
         )
 
 
@@ -2141,7 +2142,7 @@ def run_jneuroml(
     verbose=DEFAULTS["v"],
     report_jnml_output=True,
     exit_on_fail=False,
-    return_string=False
+    return_string=False,
 ):
     # type: (str, str, str, str, str, bool, bool, bool, bool) -> typing.Union[typing.Tuple[bool, str], bool]
     """Run jnml with provided arguments.
