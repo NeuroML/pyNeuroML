@@ -68,7 +68,7 @@ def parse_arguments():
         from neuromllite.GraphVizHandler import engines
 
         engine_info = "\nAvailable engines: %s\n" % str(engines)
-    except:
+    except Exception:
         engine_info = ""
 
     parser = argparse.ArgumentParser(
