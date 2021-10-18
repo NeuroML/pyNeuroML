@@ -18,7 +18,8 @@ from pyneuroml.pynml import (
     list_exposures,
     list_recording_paths_for_exposures,
     execute_command_in_dir,
-    run_jneuroml
+    run_jneuroml,
+    validate_neuroml2
 )
 
 
@@ -130,6 +131,26 @@ class TestHelperUtils(unittest.TestCase):
         retstat = None
         retstat = run_jneuroml("-randomflag", "", "")
         self.assertFalse(retstat)
+
+    def test_validate_neuroml2(self):
+        """Test validate_neuroml2"""
+        os.chdir("tests/")
+        retval = None
+        retval = validate_neuroml2("HH_example_k_channel.nml")
+        self.assertTrue(retval)
+
+        retval = None
+        retstring = None
+        retval, retstring = validate_neuroml2("HH_example_k_channel.nml", return_string=True)
+        self.assertTrue(retval)
+        self.assertIn("Valid against schema and all tests", retstring)
+        os.chdir("../")
+
+        retval = None
+        retstring = None
+        retval, retstring = validate_neuroml2("setup.py", return_string=True)
+        self.assertFalse(retval)
+        self.assertIn("1 failed", retstring)
 
 
 if __name__ == "__main__":
