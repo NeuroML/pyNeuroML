@@ -2186,6 +2186,7 @@ def run_jneuroml(
 
     jar_path = get_path_to_jnml_jar()
     output = ""
+    retcode = -1
 
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % (
@@ -2196,14 +2197,14 @@ def run_jneuroml(
             target_file,
             post_args,
         )
-        output = execute_command_in_dir(
+        retcode, output = execute_command_in_dir(
             command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
 
-        if not output:
+        if retcode != 0:
             if exit_on_fail:
                 logger.error("execute_command_in_dir returned with output: %s" % output)
-                sys.exit(-1)
+                sys.exit(retcode)
             else:
                 if return_string:
                     return (False, output)
