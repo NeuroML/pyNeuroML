@@ -2144,7 +2144,7 @@ def run_jneuroml(
     exit_on_fail=False,
     return_string=False,
 ):
-    # type: (str, str, str, str, str, bool, bool, bool, bool) -> typing.Union[typing.Tuple[bool, str], bool]
+    # type: (str, str, str, str, str, bool, bool, bool, bool) -> typing.Union[typing.Tuple[int, str], bool]
     """Run jnml with provided arguments.
 
     :param pre_args: pre-file name arguments
@@ -2179,7 +2179,7 @@ def run_jneuroml(
             exit_on_fail,
         )
     )
-    if "nogui" in post_args and not os.name == "nt":
+    if post_args and "nogui" in post_args and not os.name == "nt":
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
@@ -2268,7 +2268,7 @@ def run_jneuroml_with_realtime_output(
     :param exit_on_fail: toggle whether command should exit if jnml fails
     :type exit_on_fail: bool
     """
-    if "nogui" in post_args and not os.name == "nt":
+    if post_args and "nogui" in post_args and not os.name == "nt":
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
