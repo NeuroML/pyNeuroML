@@ -2359,7 +2359,7 @@ def execute_command_in_dir_with_realtime_output(
 def execute_command_in_dir(
     command, directory, verbose=DEFAULTS["v"], prefix="Output: ", env=None
 ):
-    # type: (str, str, bool, str, typing.Union[None, str]) -> str
+    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Tuple(int, str)
     """Execute a command in specific working directory
 
     :param command: command to run
@@ -2402,7 +2402,7 @@ def execute_command_in_dir(
             "Command completed. Output: \n %s%s"
             % (prefix, return_string.replace("\n", "\n " + prefix))
         )
-        return return_string
+        return (0, return_string)
 
     except AttributeError:
         # For python 2.6...
@@ -2418,10 +2418,10 @@ def execute_command_in_dir(
         logger.critical(
             "%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix))
         )
-        return e.output.decode()
+        return (e.returncode, e.output.decode())
     except Exception as e:
         logger.critical("*** Unknown problem running command: %s" % e)
-        return str(e)
+        return (-1, str(e))
 
 
 def generate_plot(
