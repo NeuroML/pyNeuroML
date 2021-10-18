@@ -17,6 +17,8 @@ from pyneuroml.pynml import (
     extract_lems_definition_files,
     list_exposures,
     list_recording_paths_for_exposures,
+    execute_command_in_dir,
+    run_jneuroml
 )
 
 
@@ -94,6 +96,40 @@ class TestHelperUtils(unittest.TestCase):
         )
         print("\n".join(paths))
         os.chdir("../")
+
+    def test_execute_command_in_dir(self):
+        """Test execute_command_in_dir function."""
+        command = "ls"
+        exec_in_dir = "."
+        verbose = True
+        output = None
+        retcode = None
+
+        retcode, output = execute_command_in_dir(
+            command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+        )
+
+        self.assertEqual(retcode, 0)
+        self.assertIsNotNone(output)
+
+        command_bad = "ls non_existent_file"
+        output = None
+        retcode = None
+        retcode, output = execute_command_in_dir(
+            command_bad, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+        )
+        self.assertNotEqual(retcode, 0)
+        self.assertIsNotNone(output)
+
+    def test_run_jneuroml(self):
+        """Test run_jneuroml"""
+        retstat = None
+        retstat = run_jneuroml("-v", None, None)
+        self.assertTrue(retstat)
+
+        retstat = None
+        retstat = run_jneuroml("-randomflag", "", "")
+        self.assertFalse(retstat)
 
 
 if __name__ == "__main__":
