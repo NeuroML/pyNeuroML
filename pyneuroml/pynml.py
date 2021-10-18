@@ -12,6 +12,7 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
+import warnings
 import os
 import shutil
 import sys
@@ -607,9 +608,9 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
     )
 
 
-def validate_neuroml1(nml1_file_name, verbose_validate=True):
-    # type: (str, bool) -> bool
-    # TODO: mark as deprecated
+def validate_neuroml1(nml1_file_name, verbose_validate=True,
+                      return_string=False):
+    # type: (str, bool, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML v1 file.
 
     NOTE: NeuroML v1 is deprecated. Please use NeuroML v2.
@@ -619,11 +620,15 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
     :type nml1_file_name: str
     :param verbose_validate: whether jnml should print verbose information while validating
     :type verbose_validate: bool (default: True)
-    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    :param return_string: toggle to enable or disable returning the output of the jnml validation
+    :type return_string: bool
+    :returns: Either a bool, or a tuple (bool, str): True if jnml ran without errors, false if jnml fails; along with the message returned by jnml
     """
     logger.info("NOTE: NeuroMLv1 is deprecated. Please use NeuroMLv2.")
     pre_args = "-validatev1"
     post_args = ""
+
+    warnings.warn("Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.", FutureWarning, stacklevel=2)
 
     return run_jneuroml(
         pre_args,
@@ -632,6 +637,7 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
         verbose=verbose_validate,
         report_jnml_output=verbose_validate,
         exit_on_fail=False,
+        return_string=return_string,
     )
 
 
