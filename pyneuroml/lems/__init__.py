@@ -148,26 +148,29 @@ def generate_lems_file_for_neuroml(
                 shutil.copy(incl_curr, target_dir)
 
             ls.include_neuroml2_file(include.href, include_included=False)
-            sub_doc = read_neuroml2_file(incl_curr)
-            sub_dir = (
-                os.path.dirname(incl_curr)
-                if len(os.path.dirname(incl_curr)) > 0
-                else "."
-            )
+            try:
+                sub_doc = read_neuroml2_file(incl_curr)
+                sub_dir = (
+                    os.path.dirname(incl_curr)
+                    if len(os.path.dirname(incl_curr)) > 0
+                    else "."
+                )
 
-            if sub_doc.__class__ == neuroml.nml.nml.NeuroMLDocument:
-                for include in sub_doc.includes:
-                    incl_curr = "%s/%s" % (sub_dir, include.href)
-                    logger.info(
-                        " -- Including %s located at %s" % (include.href, incl_curr)
-                    )
+                if sub_doc.__class__ == neuroml.nml.nml.NeuroMLDocument:
+                    for include in sub_doc.includes:
+                        incl_curr = "%s/%s" % (sub_dir, include.href)
+                        logger.info(
+                            " -- Including %s located at %s" % (include.href, incl_curr)
+                        )
 
-                    if not os.path.isfile(
-                        "%s/%s" % (target_dir, os.path.basename(incl_curr))
-                    ) and not os.path.isfile("%s/%s" % (target_dir, incl_curr)):
+                        if not os.path.isfile(
+                            "%s/%s" % (target_dir, os.path.basename(incl_curr))
+                        ) and not os.path.isfile("%s/%s" % (target_dir, incl_curr)):
 
-                        shutil.copy(incl_curr, target_dir)
-                        ls.include_neuroml2_file(include.href, include_included=False)
+                            shutil.copy(incl_curr, target_dir)
+                            ls.include_neuroml2_file(include.href, include_included=False)
+            except TypeError:
+                logging.info("File: %s is not a NeuroML file, but it may be LEMS, ignoring..." % incl_curr)
 
     if (
         gen_plots_for_all_v
