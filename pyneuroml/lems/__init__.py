@@ -168,9 +168,14 @@ def generate_lems_file_for_neuroml(
                         ) and not os.path.isfile("%s/%s" % (target_dir, incl_curr)):
 
                             shutil.copy(incl_curr, target_dir)
-                            ls.include_neuroml2_file(include.href, include_included=False)
+                            ls.include_neuroml2_file(
+                                include.href, include_included=False
+                            )
             except TypeError:
-                logging.info("File: %s is not a NeuroML file, but it may be LEMS, ignoring..." % incl_curr)
+                logging.info(
+                    "File: %s is not a NeuroML file, but it may be LEMS, ignoring..."
+                    % incl_curr
+                )
 
     if (
         gen_plots_for_all_v
