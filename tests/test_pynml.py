@@ -17,6 +17,9 @@ from pyneuroml.pynml import (
     extract_lems_definition_files,
     list_exposures,
     list_recording_paths_for_exposures,
+    execute_command_in_dir,
+    run_jneuroml,
+    validate_neuroml2
 )
 
 
@@ -94,6 +97,62 @@ class TestHelperUtils(unittest.TestCase):
         )
         print("\n".join(paths))
         os.chdir("../")
+
+    def test_execute_command_in_dir(self):
+        """Test execute_command_in_dir function."""
+        command = "ls"
+        exec_in_dir = "."
+        verbose = True
+        output = None
+        retcode = None
+
+        retcode, output = execute_command_in_dir(
+            command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+        )
+
+        self.assertEqual(retcode, 0)
+        self.assertIsNotNone(output)
+
+        command_bad = "ls non_existent_file"
+        output = None
+        retcode = None
+        retcode, output = execute_command_in_dir(
+            command_bad, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+        )
+        self.assertNotEqual(retcode, 0)
+        self.assertIsNotNone(output)
+
+    def test_run_jneuroml(self):
+        """Test run_jneuroml"""
+        retstat = None
+        retstat = run_jneuroml("-v", None, None)
+        self.assertTrue(retstat)
+
+        retstat = None
+        retstat = run_jneuroml("-randomflag", "", "")
+        self.assertFalse(retstat)
+
+    def test_validate_neuroml2(self):
+        """Test validate_neuroml2"""
+        os.chdir("tests/")
+        retval = None
+        retval = validate_neuroml2("HH_example_k_channel.nml")
+        self.assertTrue(retval)
+
+        retval = None
+        retstring = None
+        retval, retstring = validate_neuroml2("HH_example_k_channel.nml", return_string=True)
+        self.assertTrue(retval)
+        self.assertIn("Valid against schema and all tests", retstring)
+        os.chdir("../")
+
+        retval = None
+        retstring = None
+        retval, retstring = validate_neuroml2("setup.py", return_string=True)
+        self.assertFalse(retval)
+        self.assertIn("1 failed", retstring)
+
+    # TODO: add similar validation for NeuroMLv1
 
 
 if __name__ == "__main__":

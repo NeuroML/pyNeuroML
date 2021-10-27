@@ -12,6 +12,7 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
+import warnings
 import os
 import shutil
 import sys
@@ -68,7 +69,7 @@ def parse_arguments():
         from neuromllite.GraphVizHandler import engines
 
         engine_info = "\nAvailable engines: %s\n" % str(engines)
-    except:
+    except Exception:
         engine_info = ""
 
     parser = argparse.ArgumentParser(
@@ -603,12 +604,13 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
         verbose=verbose_generate,
         report_jnml_output=verbose_generate,
         exit_on_fail=True,
+        return_string=False,
     )
 
 
-def validate_neuroml1(nml1_file_name, verbose_validate=True):
-    # type: (str, bool) -> bool
-    # TODO: mark as deprecated
+def validate_neuroml1(nml1_file_name, verbose_validate=True,
+                      return_string=False):
+    # type: (str, bool, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML v1 file.
 
     NOTE: NeuroML v1 is deprecated. Please use NeuroML v2.
@@ -618,11 +620,15 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
     :type nml1_file_name: str
     :param verbose_validate: whether jnml should print verbose information while validating
     :type verbose_validate: bool (default: True)
-    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    :param return_string: toggle to enable or disable returning the output of the jnml validation
+    :type return_string: bool
+    :returns: Either a bool, or a tuple (bool, str): True if jnml ran without errors, false if jnml fails; along with the message returned by jnml
     """
     logger.info("NOTE: NeuroMLv1 is deprecated. Please use NeuroMLv2.")
     pre_args = "-validatev1"
     post_args = ""
+
+    warnings.warn("Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.", FutureWarning, stacklevel=2)
 
     return run_jneuroml(
         pre_args,
@@ -631,11 +637,14 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True):
         verbose=verbose_validate,
         report_jnml_output=verbose_validate,
         exit_on_fail=False,
+        return_string=return_string,
     )
 
 
-def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
-    # type: (str, bool, str) -> bool
+def validate_neuroml2(
+    nml2_file_name, verbose_validate=True, max_memory=None, return_string=False
+):
+    # type: (str, bool, str, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML2 file using jnml.
 
     :params nml2_file_name: name of NeuroML 2 file to validate
@@ -644,7 +653,9 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
     :type verbose_validate: bool (default: True)
     :param max_memory: maximum memory the JVM should use while running jnml
     :type max_memory: str
-    :returns bool: True of jnml ran without errors, exits without a return if jnml fails
+    :param return_string: toggle to enable or disable returning the output of the jnml validation
+    :type return_string: bool
+    :returns: Either a bool, or a tuple (bool, str): True if jnml ran without errors, false if jnml fails; along with the message returned by jnml
     """
     pre_args = "-validate"
     post_args = ""
@@ -658,6 +669,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
             verbose=verbose_validate,
             report_jnml_output=verbose_validate,
             exit_on_fail=False,
+            return_string=return_string,
         )
     else:
         return run_jneuroml(
@@ -667,6 +679,7 @@ def validate_neuroml2(nml2_file_name, verbose_validate=True, max_memory=None):
             verbose=verbose_validate,
             report_jnml_output=verbose_validate,
             exit_on_fail=False,
+            return_string=return_string,
         )
 
 
@@ -2134,9 +2147,10 @@ def run_jneuroml(
     exec_in_dir=".",
     verbose=DEFAULTS["v"],
     report_jnml_output=True,
-    exit_on_fail=True,
+    exit_on_fail=False,
+    return_string=False,
 ):
-    # type: (str, str, str, str, str, bool, bool, bool) -> bool
+    # type: (str, str, str, str, str, bool, bool, bool, bool) -> typing.Union[typing.Tuple[int, str], bool]
     """Run jnml with provided arguments.
 
     :param pre_args: pre-file name arguments
@@ -2153,6 +2167,11 @@ def run_jneuroml(
     :type report_jnml_output: bool
     :param exit_on_fail: toggle whether command should exit if jnml fails
     :type exit_on_fail: bool
+    :param return_string: toggle whether the output string should be returned
+    :type return_string: bool
+
+    :returns: either a bool, or a Tuple (bool, str) depending on the value of return_string: True of jnml ran successfully, False if not; along with the output of the command
+
     """
     logger.debug(
         "Running jnml on %s with pre args: [%s], post args: [%s], in dir: %s, verbose: %s, report: %s, exit on fail: %s"
@@ -2166,13 +2185,14 @@ def run_jneuroml(
             exit_on_fail,
         )
     )
-    if "nogui" in post_args and not os.name == "nt":
+    if post_args and "nogui" in post_args and not os.name == "nt":
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
 
     jar_path = get_path_to_jnml_jar()
     output = ""
+    retcode = -1
 
     try:
         command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % (
@@ -2183,16 +2203,19 @@ def run_jneuroml(
             target_file,
             post_args,
         )
-        output = execute_command_in_dir(
+        retcode, output = execute_command_in_dir(
             command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
 
-        if not output:
+        if retcode != 0:
             if exit_on_fail:
                 logger.error("execute_command_in_dir returned with output: %s" % output)
-                sys.exit(-1)
+                sys.exit(retcode)
             else:
-                return False
+                if return_string:
+                    return (False, output)
+                else:
+                    return False
 
         if report_jnml_output:
             logger.debug(
@@ -2212,8 +2235,14 @@ def run_jneuroml(
         if exit_on_fail:
             sys.exit(-1)
         else:
-            return False
-    return True
+            if return_string:
+                return (False, output)
+            else:
+                return False
+    if return_string:
+        return (True, output)
+    else:
+        return True
 
 
 # TODO: Refactorinng
@@ -2245,7 +2274,7 @@ def run_jneuroml_with_realtime_output(
     :param exit_on_fail: toggle whether command should exit if jnml fails
     :type exit_on_fail: bool
     """
-    if "nogui" in post_args and not os.name == "nt":
+    if post_args and "nogui" in post_args and not os.name == "nt":
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
@@ -2337,7 +2366,7 @@ def execute_command_in_dir_with_realtime_output(
 def execute_command_in_dir(
     command, directory, verbose=DEFAULTS["v"], prefix="Output: ", env=None
 ):
-    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Union[None, str]
+    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Tuple(int, str)
     """Execute a command in specific working directory
 
     :param command: command to run
@@ -2346,11 +2375,12 @@ def execute_command_in_dir(
     :type directory: str
     :param verbose: toggle verbose output
     :type verbose: bool
-    :param prefix: string to prefix output with
+    :param prefix: string to prefix console output with
     :type prefix: str
     :param env: environment variables to be used
     :type env: str
     """
+    return_string = ""  # type: typing.Union[bytes, str]
     if os.name == "nt":
         directory = os.path.normpath(directory)
 
@@ -2379,7 +2409,7 @@ def execute_command_in_dir(
             "Command completed. Output: \n %s%s"
             % (prefix, return_string.replace("\n", "\n " + prefix))
         )
-        return return_string
+        return (0, return_string)
 
     except AttributeError:
         # For python 2.6...
@@ -2388,19 +2418,17 @@ def execute_command_in_dir(
         return_string = subprocess.Popen(
             command, cwd=directory, shell=True, stdout=subprocess.PIPE
         ).communicate()[0]
-        return return_string
+        return return_string.decode("utf-8")
 
     except subprocess.CalledProcessError as e:
         logger.critical("*** Problem running command: \n       %s" % e)
         logger.critical(
             "%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix))
         )
-        return None
-    except:
+        return (e.returncode, e.output.decode())
+    except Exception as e:
         logger.critical("*** Unknown problem running command: %s" % e)
-        return None
-
-    logger.info("Finished execution")
+        return (-1, str(e))
 
 
 def generate_plot(
