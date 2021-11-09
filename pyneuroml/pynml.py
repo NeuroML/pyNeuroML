@@ -59,6 +59,8 @@ lems_model_with_units = None
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(__version__, neuroml.__version__, JNEUROML_VERSION)
+
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -73,16 +75,18 @@ def parse_arguments():
         engine_info = ""
 
     parser = argparse.ArgumentParser(
-        description=(
-            "pyNeuroML v{}: Python utilities for NeuroML2".format(__version__)
-            + "\n    libNeuroML v{}".format(neuroml.__version__)
-            + "\n    jNeuroML v{}".format(JNEUROML_VERSION)
-        ),
+        description="Python utilities for NeuroML2",
         usage=(
             "pynml [-h|--help] [<shared options>] "
             "<one of the mutually-exclusive options>"
         ),
         formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    parser.add_argument(
+        "-version",
+        help="Print version and exit",
+        action="store_true"
     )
 
     shared_options = parser.add_argument_group(
@@ -1924,6 +1928,11 @@ def confirm_lems_file(filename):
 def evaluate_arguments(args):
     logger.debug("    ====  Args: %s" % args)
     global DEFAULTS
+
+    if args.version:
+        print(version_string)
+        return True
+
     if args.verbose:
         logger.setLevel(logging.getLevelName(args.verbose))
     # if the user uses INFO or DEBUG, make the commands we call also print
