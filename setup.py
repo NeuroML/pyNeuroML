@@ -44,6 +44,7 @@ setup(
             "neuron/mview_neuroml2.hoc",
         ]
     },
+    data_files=[("man/man1", ['man/man1/pynml.1'])],
     url="https://github.com/NeuroML/pyNeuroML",
     license="LICENSE.lesser",
     description="Python utilities for NeuroML",
