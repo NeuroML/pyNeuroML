@@ -47,6 +47,7 @@ pynml LEMS_NML2_Ex9_FN.xml -matlab
 pynml LEMS_NML2_Ex9_FN.xml -nineml
 pynml LEMS_NML2_Ex9_FN.xml -spineml
 pynml LEMS_NML2_Ex9_FN.xml -sbml
+pynml LEMS_NML2_Ex9_FN.xml -moose
 
 
 

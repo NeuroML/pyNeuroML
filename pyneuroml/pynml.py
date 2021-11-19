@@ -231,6 +231,12 @@ def parse_arguments():
         action="store_true",
         help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to Brian2 format"),
     )
+    # TODO: add run_lems_with_jneuroml_moose API function
+    mut_exc_opts.add_argument(
+        "-moose",
+        action="store_true",
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to Moose format"),
+    )
     mut_exc_opts.add_argument(
         "-sbml",
         action="store_true",
@@ -2039,6 +2045,9 @@ def evaluate_arguments(args):
         elif args.brian2:
             confirm_lems_file(f)
             post_args = "-brian2"
+        elif args.moose:
+            confirm_lems_file(f)
+            post_args = "-moose"
         elif args.sbml:
             confirm_lems_file(f)
             post_args = "-sbml"
