@@ -59,7 +59,9 @@ lems_model_with_units = None
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(__version__, neuroml.__version__, JNEUROML_VERSION)
+version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(
+    __version__, neuroml.__version__, JNEUROML_VERSION
+)
 
 
 def parse_arguments():
@@ -83,11 +85,7 @@ def parse_arguments():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    parser.add_argument(
-        "-version",
-        help="Print version and exit",
-        action="store_true"
-    )
+    parser.add_argument("-version", help="Print version and exit", action="store_true")
 
     shared_options = parser.add_argument_group(
         title="Shared options",
@@ -612,8 +610,7 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
     )
 
 
-def validate_neuroml1(nml1_file_name, verbose_validate=True,
-                      return_string=False):
+def validate_neuroml1(nml1_file_name, verbose_validate=True, return_string=False):
     # type: (str, bool, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML v1 file.
 
@@ -632,7 +629,11 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True,
     pre_args = "-validatev1"
     post_args = ""
 
-    warnings.warn("Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.", FutureWarning, stacklevel=2)
+    warnings.warn(
+        "Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.",
+        FutureWarning,
+        stacklevel=2,
+    )
 
     return run_jneuroml(
         pre_args,
