@@ -62,9 +62,13 @@ setup(
         "lxml",
     ],
     extras_require={
-        'neuron': ['NEURON'],
-        'brian': ['Brian2'],
-        'netpyne': ['netpyne']
+        "neuron": ["NEURON"],
+        "brian": ["Brian2"],
+        "netpyne": ["netpyne"],
+        "povray": ["opencv-python"],
+        "hdf5": ["tables"],
+        "analysis": ["pyelectro"],
+        "tune": ["neurotune"],
     },
     dependency_links=[
         "git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML",
