@@ -660,7 +660,8 @@ def build_namespace(a=None, **kwargs):
             setattr(a, key, value)
 
     # Change all values to under_score from camelCase.
-    for key, value in a.__dict__.items():
+    # Cannot change dictionary while iterating over it, so iterate over a copy
+    for key, value in a.__dict__.copy().items():
         new_key = convert_case(key)
         if new_key != key:
             setattr(a, new_key, value)
