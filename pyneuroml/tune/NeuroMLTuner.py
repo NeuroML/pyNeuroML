@@ -22,7 +22,7 @@ from neurotune import optimizers
 from neurotune import evaluators
 from neurotune import utils
 from pyneuroml import pynml
-from NeuroMLController import NeuroMLController
+from pyneuroml.tune.NeuroMLController import NeuroMLController
 
 pp = pprint.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
