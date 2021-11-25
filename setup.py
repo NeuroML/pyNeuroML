@@ -59,6 +59,11 @@ setup(
         "graphviz",
         'typing; python_version<"3.5"',
     ],
+    extras_require={
+        'neuron': ['NEURON'],
+        'brian': ['Brian2'],
+        'netpyne': ['netpyne']
+    },
     dependency_links=[
         "git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML",
         "git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite",
