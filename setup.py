@@ -70,10 +70,6 @@ setup(
         "analysis": ["pyelectro"],
         "tune": ["neurotune"],
     },
-    dependency_links=[
-        "git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML",
-        "git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite",
-    ],
     classifiers=[
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
