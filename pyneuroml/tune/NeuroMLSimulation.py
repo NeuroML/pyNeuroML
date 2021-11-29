@@ -8,22 +8,6 @@ from pyneuroml.lems import generate_lems_file_for_neuroml
 
 logger = logging.getLogger(__name__)
 
-try:
-    import pyelectro  #  Not used here, just for checking installation
-except ImportError:
-    logger.warn(
-        ">> Note: pyelectro from https://github.com/pgleeson/pyelectro is required!"
-    )
-    sys.exit()
-
-try:
-    import neurotune  #  Not used here, just for checking installation
-except ImportError:
-    logger.warn(
-        ">> Note: neurotune from https://github.com/pgleeson/neurotune is required!"
-    )
-    sys.exit()
-
 
 class NeuroMLSimulation(object):
     """
