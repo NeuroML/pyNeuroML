@@ -44,7 +44,7 @@ setup(
             "neuron/mview_neuroml2.hoc",
         ]
     },
-    data_files=[("man/man1", ['man/man1/pynml.1'])],
+    data_files=[("man/man1", ["man/man1/pynml.1"])],
     url="https://github.com/NeuroML/pyNeuroML",
     license="LICENSE.lesser",
     description="Python utilities for NeuroML",
@@ -54,15 +54,22 @@ setup(
         "argparse",
         "pylems>=0.5.7",
         "airspeed>=0.5.5",
-        "neuromllite>=0.3.8", # sets dependency for libNeuroML
+        "neuromllite>=0.3.8",  # sets dependency for libNeuroML
+        "libneuroml",
         "matplotlib",
         "graphviz",
         'typing; python_version<"3.5"',
+        "lxml",
     ],
-    dependency_links=[
-        "git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML",
-        "git+https://github.com/NeuroML/NeuroMLlite.git#egg=neuromllite",
-    ],
+    extras_require={
+        "neuron": ["NEURON"],
+        "brian": ["Brian2"],
+        "netpyne": ["netpyne"],
+        "povray": ["opencv-python"],
+        "hdf5": ["tables"],
+        "analysis": ["pyelectro"],
+        "tune": ["neurotune"],
+    },
     classifiers=[
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
