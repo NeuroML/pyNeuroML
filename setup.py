@@ -44,7 +44,7 @@ setup(
             "neuron/mview_neuroml2.hoc",
         ]
     },
-    data_files=[("man/man1", ['man/man1/pynml.1'])],
+    data_files=[("man/man1", ["man/man1/pynml.1", "man/man1/pynml-tune.1"])],
     url="https://github.com/NeuroML/pyNeuroML",
     license="LICENSE.lesser",
     description="Python utilities for NeuroML",
@@ -54,7 +54,7 @@ setup(
         "argparse",
         "pylems>=0.5.7",
         "airspeed>=0.5.5",
-        "neuromllite>=0.3.8", # sets dependency for libNeuroML
+        "neuromllite>=0.3.8",  # sets dependency for libNeuroML
         "matplotlib",
         "graphviz",
         'typing; python_version<"3.5"',
