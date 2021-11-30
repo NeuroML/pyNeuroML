@@ -24,7 +24,7 @@ import argparse
 import logging
 import pprint
 
-from Typing import List, Any, Dict
+from typing import List, Any, Dict
 
 
 from pyelectro import analysis
@@ -531,7 +531,7 @@ def _run_optimisation(a):
         # print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
 
         fig = plt.figure()
-        fig.canvas.set_window_title(
+        plt.get_current_fig_manager().set_window_title(
             "Simulation of fittest individual from run: %s" % ref
         )
 
