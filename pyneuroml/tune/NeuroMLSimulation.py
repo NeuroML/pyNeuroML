@@ -11,10 +11,8 @@ logger = logging.getLogger(__name__)
 
 class NeuroMLSimulation(object):
     """
-
     A class for running a single instance of a NeuroML model by generating a
     LEMS file and using pyNeuroML to run in a chosen simulator
-
     """
 
     def __init__(
@@ -29,7 +27,6 @@ class NeuroMLSimulation(object):
         cleanup=True,
         nml_doc=None,
     ):
-
         self.sim_time = sim_time
         self.dt = dt
         self.simulator = simulator
@@ -47,7 +44,8 @@ class NeuroMLSimulation(object):
 
     def show(self):
         """
-        Plot the result of the simulation once it's been intialized
+        Plot the result of the simulation once it's been intialized using
+        matplotlib.
         """
 
         from matplotlib import pyplot as plt
@@ -67,6 +65,8 @@ class NeuroMLSimulation(object):
         plt.show()
 
     def go(self):
+        """Run the simulation."""
+
         lems_file_name = "LEMS_%s.xml" % (self.reference)
 
         generate_lems_file_for_neuroml(
