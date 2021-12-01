@@ -1795,7 +1795,7 @@ def reload_saved_data(
                 " (%s)" % simulator if simulator else "",
             )
             logger.warn("Reloading: %s" % info)
-            fig.canvas.manager.set_window_title(info)
+            plt.get_current_fig_manager().set_window_title(info)
 
             legend = False
             for key in cols:
@@ -2558,7 +2558,7 @@ def generate_plot(
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    fig.canvas.manager.set_window_title(title)
+    plt.get_current_fig_manager().set_window_title(title)
     if title_above_plot:
         plt.title(title)
 
