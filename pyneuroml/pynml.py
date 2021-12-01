@@ -859,25 +859,30 @@ def summary(nml2_doc=None, verbose=False):
         """
         Usage:
 
-        pynml-summary <NeuroML file> [-v]
+        pynml-summary <NeuroML file> [-vh]
 
-        Compulsory arguments:
-        NeuroML file: name of file to summarise
+        Required arguments:
+            NeuroML file: name of file to summarise
 
         Optional arguments:
 
-        -v:  enable verbose mode
+            -v/--verbose:  enable verbose mode
+            -h/--help:  print this help text and exit
         """
     )
-
-    if "-v" in sys.argv:
-        verbose = True
-        sys.argv.remove("-v")
 
     if len(sys.argv) < 2:
         print("Argument required.")
         print(usage)
         return
+
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(usage)
+        return
+
+    if "-v" in sys.argv or "--verbose" in sys.argv:
+        verbose = True
+        sys.argv.remove("-v")
 
     if nml2_doc is None:
         nml2_file_name = sys.argv[1]
