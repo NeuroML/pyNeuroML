@@ -2376,7 +2376,7 @@ def execute_command_in_dir_with_realtime_output(
 def execute_command_in_dir(
     command, directory, verbose=DEFAULTS["v"], prefix="Output: ", env=None
 ):
-    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Tuple(int, str)
+    # type: (str, str, bool, str, typing.Any) -> typing.Tuple[int, str]
     """Execute a command in specific working directory
 
     :param command: command to run
