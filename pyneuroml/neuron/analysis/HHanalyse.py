@@ -230,13 +230,13 @@ def main():
 
         if verbose:
             figV = pylab.figure()
-            figV.canvas.set_window_title(
+            pylab.get_current_fig_manager().set_window_title(
                 "Membrane potentials for %s at %s degC" % (chanToTest, h.celsius)
             )
             plV = figV.add_subplot(111, autoscale_on=True)
 
             figR = pylab.figure()
-            figR.canvas.set_window_title(
+            pylab.get_current_fig_manager().set_window_title(
                 "Rate variables for %s at %s degC" % (chanToTest, h.celsius)
             )
             plR = figR.add_subplot(111, autoscale_on=True)
@@ -453,14 +453,14 @@ def main():
 
         figRates = pylab.figure()
         plRates = figRates.add_subplot(111, autoscale_on=True)
-        figRates.canvas.set_window_title(
+        pylab.get_current_fig_manager().set_window_title(
             "Steady state(s) of activation variables in %s at %s degC"
             % (chanToTest, h.celsius)
         )
         pylab.grid("on")
 
         figTau = pylab.figure()
-        figTau.canvas.set_window_title(
+        pylab.get_current_fig_manager().set_window_title(
             "Time course(s) of activation variables in %s at %s degC"
             % (chanToTest, h.celsius)
         )

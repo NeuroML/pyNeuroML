@@ -59,7 +59,9 @@ lems_model_with_units = None
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(__version__, neuroml.__version__, JNEUROML_VERSION)
+version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(
+    __version__, neuroml.__version__, JNEUROML_VERSION
+)
 
 
 def parse_arguments():
@@ -83,11 +85,7 @@ def parse_arguments():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    parser.add_argument(
-        "-version",
-        help="Print version and exit",
-        action="store_true"
-    )
+    parser.add_argument("-version", help="Print version and exit", action="store_true")
 
     shared_options = parser.add_argument_group(
         title="Shared options",
@@ -618,8 +616,7 @@ def generate_lemsgraph(lems_file_name, verbose_generate=True):
     )
 
 
-def validate_neuroml1(nml1_file_name, verbose_validate=True,
-                      return_string=False):
+def validate_neuroml1(nml1_file_name, verbose_validate=True, return_string=False):
     # type: (str, bool, bool) -> typing.Union[bool, typing.Tuple[bool, str]]
     """Validate a NeuroML v1 file.
 
@@ -638,7 +635,11 @@ def validate_neuroml1(nml1_file_name, verbose_validate=True,
     pre_args = "-validatev1"
     post_args = ""
 
-    warnings.warn("Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.", FutureWarning, stacklevel=2)
+    warnings.warn(
+        "Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.",
+        FutureWarning,
+        stacklevel=2,
+    )
 
     return run_jneuroml(
         pre_args,
@@ -864,25 +865,30 @@ def summary(nml2_doc=None, verbose=False):
         """
         Usage:
 
-        pynml-summary <NeuroML file> [-v]
+        pynml-summary <NeuroML file> [-vh]
 
-        Compulsory arguments:
-        NeuroML file: name of file to summarise
+        Required arguments:
+            NeuroML file: name of file to summarise
 
         Optional arguments:
 
-        -v:  enable verbose mode
+            -v/--verbose:  enable verbose mode
+            -h/--help:  print this help text and exit
         """
     )
-
-    if "-v" in sys.argv:
-        verbose = True
-        sys.argv.remove("-v")
 
     if len(sys.argv) < 2:
         print("Argument required.")
         print(usage)
         return
+
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(usage)
+        return
+
+    if "-v" in sys.argv or "--verbose" in sys.argv:
+        verbose = True
+        sys.argv.remove("-v")
 
     if nml2_doc is None:
         nml2_file_name = sys.argv[1]
@@ -1800,7 +1806,7 @@ def reload_saved_data(
                 " (%s)" % simulator if simulator else "",
             )
             logger.warn("Reloading: %s" % info)
-            fig.canvas.manager.set_window_title(info)
+            plt.get_current_fig_manager().set_window_title(info)
 
             legend = False
             for key in cols:
@@ -2384,7 +2390,7 @@ def execute_command_in_dir_with_realtime_output(
 def execute_command_in_dir(
     command, directory, verbose=DEFAULTS["v"], prefix="Output: ", env=None
 ):
-    # type: (str, str, bool, str, typing.Union[None, str]) -> typing.Tuple(int, str)
+    # type: (str, str, bool, str, typing.Any) -> typing.Tuple[int, str]
     """Execute a command in specific working directory
 
     :param command: command to run
@@ -2566,7 +2572,7 @@ def generate_plot(
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    fig.canvas.manager.set_window_title(title)
+    plt.get_current_fig_manager().set_window_title(title)
     if title_above_plot:
         plt.title(title)
 

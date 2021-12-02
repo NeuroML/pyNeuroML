@@ -1,9 +1,18 @@
 """
+A Neurotune based model optimizer for NeuroML models.
 
-    Still under developemnt!!
+This module provides the `run_optimisation` function that pyNeuroML users can
+use to optimise their NeuroML models. It uses the evolutionary computation
+framework provided by Neurotune, which is based on the Inspyred optimisation
+library's Evolutionary Computation class `inpsyred.ec.EvolutionaryComputation`:
 
-    Subject to change without notice!!
+- https://neurotune.readthedocs.io/en/latest/index.html
+- https://github.com/aarongarrett/inspyred/
 
+It currently supports the jNeuroML and Neuron (via jNeuroML) simulators.
+
+This module also provides the `pynml-tune` command line utility.
+Please see the output of `pynml-tune -h` for more information on `pynml-tune`.
 """
 
 import os
@@ -15,14 +24,15 @@ import argparse
 import logging
 import pprint
 
+from typing import List, Any, Dict
+
 
 from pyelectro import analysis
 from matplotlib import pyplot as plt
 from neurotune import optimizers
 from neurotune import evaluators
 from neurotune import utils
-from pyneuroml import pynml
-from NeuroMLController import NeuroMLController
+from pyneuroml.tune.NeuroMLController import NeuroMLController
 
 pp = pprint.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -53,11 +63,11 @@ DEFAULTS = {
 
 def process_args():
     """
-    Parse command-line arguments.
+    Parse command-line arguments for pynml-tune.
     """
     parser = argparse.ArgumentParser(
         description=(
-            "A script which can be run to tune a NeuroML 2 model against a number of target properties. Work in progress!"
+            "A script to tune a NeuroML 2 model against a number of target properties. This corresponds to the pyneuroml.tune.NeuroMLTuner.run_optimisation function in the Python API"
         )
     )
 
@@ -204,7 +214,7 @@ def process_args():
         type=str,
         metavar="<simulator>",
         default=DEFAULTS["simulator"],
-        help="Simulator to run",
+        help="Simulator to run (options: 'jNeuroML', 'jNeuroML_NEURON')",
     )
 
     parser.add_argument(
@@ -261,11 +271,75 @@ def process_args():
 
 
 def run_optimisation(**kwargs):
+    """Run an optimisation.
+
+    Main function to be used to run an optimisation.
+
+    """
     a = build_namespace(**kwargs)
     return _run_optimisation(a)
 
 
 def _run_optimisation(a):
+    """Run optimisation.
+
+    Internal function that actually runs the optimisation after
+    `run_optimisation` has constructed the necessary namespace.
+
+    The list of parameters here matches the output of `pynml-tune -h`:
+
+    :param prefix: prefix for tuning test files
+    :type prefix: str
+    :param neuroml_file: path to main NeuroML file containing the model
+    :type neuroml_file: str
+    :param target: id of target NeuroML component in model (usually `Network`)
+    :type target: str
+    :param parameters: list of parameters to adjust
+    :type parameters: list(str)
+    :param max_constraints: maximum values allowed for parameters
+    :type max_constraints: list(float)
+    :param min_constraints: minimum values allowed for parameters
+    :type min_constraints: list(float)
+    :param target_data: name/value pairs for properties extracted from data to judge fitness against
+    :type target_data: dict
+    :param weights: weights to assign to each target name/value pair
+    :type weights: dict
+    :param known_target_values: known values of target parameters
+    :type known_target_values: dict
+    :param sim_time: simulation duration
+    :type sim_time: float
+    :param dt: simulation timestep
+    :type dt: float
+    :param population_size: size of population for optimisation
+    :type population_size: int
+    :param max_evaluations: number of maximum evaluations
+    :type max_evaluations: int
+    :param num_selected: number selected in each evolution
+    :type num_selected: int
+    :param num_offspring: number of off sprint in each evolution
+    :type num_offspring: int
+    :param mutation_rate: the mutation rate for each evolution
+    :type mutation_rate: float
+    :param num_elites: number of elites
+    :type num_elites: int
+    :param seed: seed value
+    :type seed: int
+    :param simulator: simulator to use, currently supported values "jNeuroML", "jNeuroML_NEURON"
+    :type simulator: str
+    :param nogui: toggle jNeuroML GUI
+    :type nogui: bool
+    :param show_plot_already: whether plots should be shown as generated
+    :type show_plot_already: bool
+    :param dry_run: only print setup information, do not run the optimisation
+    :type dry_run: bool
+    :param extra_report_info: any extra tag/value pairs to be included in the report
+    :type extra_report_info: dict
+    :param num_parallel_evaluations: number of parallel evaluations
+    :type num_parallel_evaluations: int
+    :param cleanup: remove temporary files after completion
+    :type cleanup: bool
+
+    """
     if isinstance(a.parameters, str):
         a.parameters = parse_list_arg(a.parameters)
     if isinstance(a.min_constraints, str):
@@ -457,7 +531,7 @@ def _run_optimisation(a):
         # print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
 
         fig = plt.figure()
-        fig.canvas.set_window_title(
+        plt.get_current_fig_manager().set_window_title(
             "Simulation of fittest individual from run: %s" % ref
         )
 
@@ -611,30 +685,40 @@ def main(args=None):
 
 
 def parse_dict_arg(dict_arg):
-    """
-    Input:    string of form ["ADAL-AIBL":2.5,"I1L-I1R":0.5]
-    returns:  {}
+    # type: (List[str]) -> Dict[str, Any]
+    """Parse string arguments to dictionaries
+
+    :param dict_arg: string containing list key/value pairs
+    :type dict_arg: str
+    :returns: dictionary composed of key/value pairs from the provided string
     """
     if not dict_arg:
         return None
-    ret = {}
+    ret = {}  # type: Dict[str, Any]
     entries = str(dict_arg[1:-1]).split(",")
     for e in entries:
         if len(e) > 0:
             key = e[: e.rfind(":")]
-            value = e[e.rfind(":") + 1 :]
+            value = e[e.rfind(":") + 1:]
             try:
                 ret[key] = float(value)
-            except:
+            except TypeError:
                 ret[key] = value
     # print("Command line argument %s parsed as: %s"%(dict_arg,ret))
     return ret
 
 
 def parse_list_arg(str_list_arg):
+    # type: (List[str]) -> List[Any]
+    """Parse string arguments to a list
+
+    :param str_list_arg: string containing list
+    :type str_list_arg: str
+    :returns: list composed of values from the provided string
+    """
     if not str_list_arg:
         return None
-    ret = []
+    ret = []  # type: List[Any]
     entries = str(str_list_arg[1:-1]).split(",")
     for e in entries:
         try:
@@ -646,6 +730,7 @@ def parse_list_arg(str_list_arg):
 
 
 def build_namespace(a=None, **kwargs):
+    """Build an argparse namespace."""
     if a is None:
         a = argparse.Namespace()
 
@@ -660,7 +745,8 @@ def build_namespace(a=None, **kwargs):
             setattr(a, key, value)
 
     # Change all values to under_score from camelCase.
-    for key, value in a.__dict__.items():
+    # Cannot change dictionary while iterating over it, so iterate over a copy
+    for key, value in a.__dict__.copy().items():
         new_key = convert_case(key)
         if new_key != key:
             setattr(a, new_key, value)
@@ -669,7 +755,8 @@ def build_namespace(a=None, **kwargs):
 
 
 def convert_case(name):
-    """Converts from camelCase to under_score"""
+    # type: (str) -> str
+    """Converts from camelCase to snake_case"""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 

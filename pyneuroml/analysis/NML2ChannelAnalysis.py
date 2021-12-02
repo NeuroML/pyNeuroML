@@ -514,7 +514,7 @@ def plot_channel(channel, a, results, iv_data=None, grid=True):
 
 def plot_kinetics(channel, a, results, grid=True):
     fig = plt.figure()
-    fig.canvas.set_window_title(
+    plt.get_current_fig_manager().set_window_title(
         ("Time Course(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
@@ -557,7 +557,7 @@ def plot_kinetics(channel, a, results, grid=True):
 
 def plot_steady_state(channel, a, results, grid=True):
     fig = plt.figure()
-    fig.canvas.set_window_title(
+    plt.get_current_fig_manager().set_window_title(
         ("Steady state(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
@@ -680,7 +680,7 @@ def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
     # Holding potentials
     fig = plt.figure()
     ax = plt.subplot(111)
-    fig.canvas.set_window_title(
+    plt.get_current_fig_manager().set_window_title(
         ("Currents through voltage clamp for %s " "from %s at %s degC, erev: %s V")
         % (channel.id, channel.file, a.temperature, a.erev)
     )
@@ -706,7 +706,7 @@ def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
 
 def make_iv_curve_fig(a, grid=True):
     fig = plt.figure()
-    fig.canvas.set_window_title(
+    plt.get_current_fig_manager().set_window_title(
         "Currents vs. holding potentials at erev = %s V" % a.erev
     )
     plt.xlabel("Membrane potential (mV)")

@@ -1,11 +1,3 @@
-"""
-
-    Still under development!!
-
-    Subject to change without notice!!
-
-"""
-
 import os.path
 import os
 import sys
@@ -23,6 +15,12 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 class NeuroMLController:
+    """A Neurotune controller specific to NeuroML.
+
+    Please see https://neurotune.readthedocs.io/en/latest/architecture.html for
+    more information on controllers in Neurotune.
+    """
+
     def __init__(
         self,
         ref,
@@ -35,6 +33,27 @@ class NeuroMLController:
         num_parallel_evaluations=1,
         cleanup=True,
     ):
+        """Initialise the NeuroMLController.
+
+        :param ref:
+        :type ref:
+        :param neuroml_file: NeuroML model file containing model being optimised
+        :type neuroml_file: str
+        :param target: id of NeuroML target element
+        :type target: str
+        :param sim_time: simulation time
+        :type sim_time: float
+        :param dt: integration time step
+        :type dt: float
+        :param simulator: simulator to use
+        :type simulator: str
+        :param generate_dir: directory where optimisation simulation files will be generated
+        :type generate_dir: str
+        :param num_parallel_evaluations: number of parallel evaluations
+        :type num_parallel_evaluations: int
+        :param cleanup: toggle whether data files should be removed after data is loaded
+        :type cleanup: bool
+        """
 
         self.ref = ref
         self.neuroml_file = neuroml_file
@@ -73,12 +92,17 @@ class NeuroMLController:
         self.count = 0
 
     def run(self, candidates, parameters):
-        """
-        Run simulation for each candidate
+        """Run simulation for each candidate.
 
         This run method will loop through each candidate and run the simulation
         corresponding to its parameter values. It will populate an array called
         traces with the resulting voltage traces for the simulation and return it.
+
+        :param candidates: candidate simulations
+        :type candidates: list
+        :param parameters: parameters for simulations
+        :type parameters: list
+        :returns: list of [time, voltage] values
         """
 
         traces = []
@@ -205,6 +229,31 @@ def run_individual(
     The candidate data has been flattened into the sim_var dict. The
     sim_var dict contains parameter:value key value pairs, which are
     applied to the model before it is simulated.
+
+    :param sim_var:
+    :type sim_var:
+    :param reference:
+    :type reference:
+    :param neuroml_file: path to main NeuroML model file
+    :type neuroml_file: str
+    :param still_included:
+    :type still_included:
+    :param generate_dir: directory to generate simulation NeuroML file in
+    :type generate_dir: str
+    :param target: id of target NeuroML component
+    :type target: str
+    :param sim_time: length of simulation
+    :type sim_time: float
+    :param dt: simulation time step
+    :type dt: float
+    :param simulator: simulator to use ("jNeuroML", "jNeuroML_NEURON")
+    :type simulator: str
+    :param cleanup: toggle if temporary files should be removed after simulation
+    :type cleanup: bool
+    :param show:
+    :type show: bool
+
+    :returns: list of simulation times and voltages at each time: [time, volts]
 
     """
 
