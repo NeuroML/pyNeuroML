@@ -13,6 +13,7 @@ pyneuroml.tune.NeuroMLTuner module
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members:  main, parse_dict_arg, parse_list_arg, build_namespace, convert_case, process_args
 
 pyneuroml.tune.NeuroMLController module
 ---------------------------------------

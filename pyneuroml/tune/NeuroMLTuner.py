@@ -273,7 +273,58 @@ def process_args():
 def run_optimisation(**kwargs):
     """Run an optimisation.
 
-    Main function to be used to run an optimisation.
+    The list of parameters here matches the output of `pynml-tune -h`:
+
+    :param prefix: prefix for tuning test files
+    :type prefix: str
+    :param neuroml_file: path to main NeuroML file containing the model
+    :type neuroml_file: str
+    :param target: id of target NeuroML component in model (usually `Network`)
+    :type target: str
+    :param parameters: list of parameters to adjust
+    :type parameters: list(str)
+    :param max_constraints: maximum values allowed for parameters
+    :type max_constraints: list(float)
+    :param min_constraints: minimum values allowed for parameters
+    :type min_constraints: list(float)
+    :param target_data: name/value pairs for properties extracted from data to judge fitness against
+    :type target_data: dict
+    :param weights: weights to assign to each target name/value pair
+    :type weights: dict
+    :param known_target_values: known values of target parameters
+    :type known_target_values: dict
+    :param sim_time: simulation duration
+    :type sim_time: float
+    :param dt: simulation timestep
+    :type dt: float
+    :param population_size: size of population for optimisation
+    :type population_size: int
+    :param max_evaluations: number of maximum evaluations
+    :type max_evaluations: int
+    :param num_selected: number selected in each evolution
+    :type num_selected: int
+    :param num_offspring: number of off sprint in each evolution
+    :type num_offspring: int
+    :param mutation_rate: the mutation rate for each evolution
+    :type mutation_rate: float
+    :param num_elites: number of elites
+    :type num_elites: int
+    :param seed: seed value
+    :type seed: int
+    :param simulator: simulator to use, currently supported values "jNeuroML", "jNeuroML_NEURON"
+    :type simulator: str
+    :param nogui: toggle jNeuroML GUI
+    :type nogui: bool
+    :param show_plot_already: whether plots should be shown as generated
+    :type show_plot_already: bool
+    :param dry_run: only print setup information, do not run the optimisation
+    :type dry_run: bool
+    :param extra_report_info: any extra tag/value pairs to be included in the report
+    :type extra_report_info: dict
+    :param num_parallel_evaluations: number of parallel evaluations
+    :type num_parallel_evaluations: int
+    :param cleanup: remove temporary files after completion
+    :type cleanup: bool
 
     """
     a = build_namespace(**kwargs)
