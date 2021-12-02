@@ -39,6 +39,7 @@ pynml LEMS_NML2_Ex5_DetCell.xml -sedml
 pynml LEMS_NML2_Ex9_FN.xml -dlems
 pynml LEMS_NML2_Ex9_FN.xml -brian
 pynml LEMS_NML2_Ex5_DetCell.xml -neuron
+pynml LEMS_NML2_Ex5_DetCell.xml -moose
 pynml LEMS_NML2_Ex9_FN.xml -vertex
 pynml LEMS_NML2_Ex9_FN.xml -xpp
 pynml LEMS_NML2_Ex9_FN.xml -dnsim
