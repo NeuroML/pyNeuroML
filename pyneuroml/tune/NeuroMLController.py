@@ -217,6 +217,7 @@ class NeuroMLController:
         )
 
 
+# XXX: Why are we not just using the method above?
 def run_individual(
     sim_var,
     reference,
