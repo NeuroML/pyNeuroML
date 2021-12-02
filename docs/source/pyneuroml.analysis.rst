@@ -1,8 +1,18 @@
 pyneuroml.analysis package
 ==========================
 
-Submodules
-----------
+.. automodule:: pyneuroml.analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyneuroml.analysis.NML2ChannelAnalysis module
+---------------------------------------------
+
+.. automodule:: pyneuroml.analysis.NML2ChannelAnalysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 pyneuroml.analysis.ChannelDensityPlot module
 --------------------------------------------
@@ -20,18 +30,3 @@ pyneuroml.analysis.ChannelHelper module
    :undoc-members:
    :show-inheritance:
 
-pyneuroml.analysis.NML2ChannelAnalysis module
----------------------------------------------
-
-.. automodule:: pyneuroml.analysis.NML2ChannelAnalysis
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pyneuroml.analysis
-   :members:
-   :undoc-members:
-   :show-inheritance:

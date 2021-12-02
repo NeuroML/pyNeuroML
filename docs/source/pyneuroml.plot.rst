@@ -1,8 +1,10 @@
 pyneuroml.plot package
 ======================
 
-Submodules
-----------
+.. automodule:: pyneuroml.plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 pyneuroml.plot.PlotSpikes module
 --------------------------------
@@ -16,14 +18,6 @@ pyneuroml.plot.generate\_test\_data module
 ------------------------------------------
 
 .. automodule:: pyneuroml.plot.generate_test_data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pyneuroml.plot
    :members:
    :undoc-members:
    :show-inheritance:
