@@ -1,3 +1,10 @@
+"""
+A Neurotune controller specific to NeuroML.
+
+Please see https://neurotune.readthedocs.io/en/latest/architecture.html for
+more information on controllers in Neurotune.
+"""
+
 import os.path
 import os
 import sys
@@ -193,6 +200,7 @@ class NeuroMLController:
         return traces
 
     def run_individual(self, sim_var, show=False, cleanup=None):
+        """Run an individual simulation."""
         return run_individual(
             sim_var,
             self.ref,
