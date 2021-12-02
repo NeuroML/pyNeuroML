@@ -1,8 +1,10 @@
 pyneuroml.povray package
 ========================
 
-Submodules
-----------
+.. automodule:: pyneuroml.povray
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 pyneuroml.povray.MakeMovie module
 ---------------------------------
@@ -28,10 +30,3 @@ pyneuroml.povray.OverlaySimulation module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: pyneuroml.povray
-   :members:
-   :undoc-members:
-   :show-inheritance:

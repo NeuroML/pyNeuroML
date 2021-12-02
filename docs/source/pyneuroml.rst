@@ -1,6 +1,11 @@
 pyneuroml package
 =================
 
+.. automodule:: pyneuroml
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -16,9 +21,6 @@ Subpackages
 
 .. pyneuroml.neuron
 
-Submodules
-----------
-
 pyneuroml.pynml module
 ----------------------
 
@@ -27,10 +29,3 @@ pyneuroml.pynml module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: pyneuroml
-   :members:
-   :undoc-members:
-   :show-inheritance:
