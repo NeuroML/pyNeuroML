@@ -67,8 +67,7 @@ setup(
         "argparse",
         "pylems>=0.5.7",
         "airspeed>=0.5.5",
-        "neuromllite>=0.3.8",  # sets dependency for libNeuroML
-        "libneuroml",
+        "neuromllite>=0.4.1",  # sets dependency for libNeuroML
         "matplotlib",
         "graphviz",
         'typing; python_version<"3.5"',
