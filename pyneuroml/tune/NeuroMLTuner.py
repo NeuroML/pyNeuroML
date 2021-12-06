@@ -24,7 +24,7 @@ import argparse
 import logging
 import pprint
 
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Union
 
 
 from pyelectro import analysis
@@ -62,6 +62,7 @@ DEFAULTS = {
 
 
 def process_args():
+    # type: () -> argparse.Namespace
     """
     Parse command-line arguments for pynml-tune.
     """
@@ -271,6 +272,7 @@ def process_args():
 
 
 def run_optimisation(**kwargs):
+    # type: (str) -> Dict
     """Run an optimisation.
 
     The list of parameters here matches the output of `pynml-tune -h`:
@@ -326,12 +328,15 @@ def run_optimisation(**kwargs):
     :param cleanup: remove temporary files after completion
     :type cleanup: bool
 
+    :returns: a report of the optimisation in a dictionary.
+
     """
     a = build_namespace(**kwargs)
     return _run_optimisation(a)
 
 
 def _run_optimisation(a):
+    # type: (Any) -> Dict
     """Run optimisation.
 
     Internal function that actually runs the optimisation after
@@ -389,6 +394,8 @@ def _run_optimisation(a):
     :type num_parallel_evaluations: int
     :param cleanup: remove temporary files after completion
     :type cleanup: bool
+
+    :returns: a report of the optimisation in a dictionary.
 
     """
     if isinstance(a.parameters, str):
@@ -736,7 +743,7 @@ def main(args=None):
 
 
 def parse_dict_arg(dict_arg):
-    # type: (List[str]) -> Dict[str, Any]
+    # type: (List[str]) -> Union[Dict[str, Any], None]
     """Parse string arguments to dictionaries
 
     :param dict_arg: string containing list key/value pairs
@@ -781,6 +788,7 @@ def parse_list_arg(str_list_arg):
 
 
 def build_namespace(a=None, **kwargs):
+    # type: (argparse.Namespace, str) -> argparse.Namespace
     """Build an argparse namespace."""
     if a is None:
         a = argparse.Namespace()
