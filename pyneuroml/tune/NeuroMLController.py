@@ -15,6 +15,7 @@ import pprint
 
 from collections import OrderedDict
 import pyneuroml.pynml
+from pyneuroml import print_v
 
 
 logger = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ class NeuroMLController:
 
                 candidate = candidates[candidate_i]
                 sim_var = dict(zip(parameters, candidate))
-                logger.info(
+                print_v(
                     "\n\n  - RUN %i (%i/%i); variables: %s\n"
                     % (self.count, candidate_i + 1, len(candidates), sim_var)
                 )
@@ -142,7 +143,7 @@ class NeuroMLController:
             for candidate_i in range(len(candidates)):
                 candidate = candidates[candidate_i]
                 sim_var = dict(zip(parameters, candidate))
-                logger.info(
+                print_v(
                     "\n\n  - PARALLEL RUN %i (%i/%i of curr candidates); variables: %s\n"
                     % (self.count, candidate_i + 1, len(candidates), sim_var)
                 )
@@ -193,7 +194,7 @@ class NeuroMLController:
 
         end_time = time.time()
         tot = end_time - start_time
-        logger.info(
+        print_v(
             "Ran %i candidates in %s seconds (~%ss per job)"
             % (len(candidates), tot, tot / len(candidates))
         )
@@ -282,7 +283,7 @@ def run_individual(
             units = words[2]
             value = sim_var[var_name]
 
-            logger.info(
+            print_v(
                 "  Changing value of %s (%s) in %s (%s) to: %s %s"
                 % (variable, id2, type, id1, value, units)
             )
@@ -295,11 +296,10 @@ def run_individual(
                     if variable == "vShift":
                         channel.v_shift = "%s %s" % (value, units)
                 else:
-                    logger.info(
+                    raise KeyError(
                         "Could not find channel with id %s from expression: %s"
                         % (id1, individual_var_name)
                     )
-                    exit()
             elif type == "cell":
                 cell = None
                 for c in nml_doc.cells:
@@ -388,11 +388,10 @@ def run_individual(
                             resistivity = rs
                     resistivity.value = "%s %s" % (value, units)
                 else:
-                    logger.info(
+                    raise KeyError(
                         "Unknown variable (%s) in variable expression: %s"
                         % (variable, individual_var_name)
                     )
-                    exit()
             elif type == "izhikevich2007Cell":
                 izhcell = None
                 for c in nml_doc.izhikevich2007_cells:
@@ -401,14 +400,14 @@ def run_individual(
 
                 izhcell.__setattr__(variable, "%s %s" % (value, units))
             else:
-                logger.info(
+                raise TypeError(
                     "Unknown type (%s) in variable expression: %s"
                     % (type, individual_var_name)
                 )
 
     new_neuroml_file = "%s/%s" % (generate_dir, os.path.basename(neuroml_file))
     if new_neuroml_file == neuroml_file:
-        logger.info(
+        raise RuntimeError(
             "Cannot use a directory for generating into (%s) which is the same location of the NeuroML file (%s)!"
             % (neuroml_file, generate_dir)
         )
