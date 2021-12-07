@@ -133,6 +133,14 @@ if [ "$run_neuron_examples" == true ]; then
 
 fi
 
+# Requires NEURON
+echo
+echo "################################################"
+echo "##   Test some tuning examples"
+
+    pushd tune
+        python tunePyr.py -tune -nogui
+    popd
 
 echo
 echo "################################################"
