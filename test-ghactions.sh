@@ -8,6 +8,13 @@ if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
     run_neuron_examples=true
 fi
 
+# export NEURON_HOME
+if command -v nrniv
+then
+    NEURON_HOME=$(dirname $(command -v nrniv))
+    export NEURON_HOME
+fi
+
 ### Test script for pyNeuroML
 
 cd examples
