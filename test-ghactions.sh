@@ -11,7 +11,8 @@ fi
 # export NEURON_HOME
 if command -v nrniv
 then
-    NEURON_HOME=$(dirname $(command -v nrniv))
+    # double dirname because we also do not want the final `bin`
+    NEURON_HOME=$(dirname $(dirname $(command -v nrniv)))
     export NEURON_HOME
 fi
 
