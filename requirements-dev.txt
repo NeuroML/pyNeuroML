@@ -3,6 +3,7 @@ airspeed>=0.5.5
 matplotlib
 graphviz
 NEURON
+ppft
 
 # change these to development if working on the development branch
 git+https://github.com/NeuralEnsemble/libNeuroML.git@master#egg=libNeuroML
