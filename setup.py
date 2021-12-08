@@ -80,7 +80,7 @@ setup(
         "povray": ["opencv-python"],
         "hdf5": ["tables"],
         "analysis": ["pyelectro"],
-        "tune": ["neurotune"],
+        "tune": ["neurotune", "ppft"],
     },
     classifiers=[
         "Intended Audience :: Science/Research",
