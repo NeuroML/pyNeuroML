@@ -151,11 +151,18 @@ class NeuroMLController:
                 cand_dir = self.generate_dir + "/CANDIDATE_%s" % candidate_i
                 if not os.path.exists(cand_dir):
                     os.mkdir(cand_dir)
+                # We do not pass the nml_doc here because it now uses
+                # lxml.etree, which unfortunately cannot be pickled.
+                # Instead we pass "None", and let the run_simulation method
+                # read in the neuroml file to create the nml_doc.
+                # It is perhaps less efficient because the nml_doc needs to be
+                # created each time, but this is the only way it will work at
+                # the moment.
                 vars = (
                     sim_var,
                     self.ref,
                     self.neuroml_file,
-                    self.nml_doc,
+                    None,
                     self.still_included,
                     cand_dir,
                     self.target,
