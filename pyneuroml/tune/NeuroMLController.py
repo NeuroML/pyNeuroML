@@ -176,10 +176,12 @@ class NeuroMLController:
                     vars,
                     (),
                     (
+                        "pyneuroml",
                         "pyneuroml.pynml",
                         "pyneuroml.tune.NeuroMLSimulation",
                         "shutil",
                         "neuroml",
+                        "logging"
                     ),
                 )
                 jobs.append(job)
@@ -273,6 +275,11 @@ def run_individual(
     :returns: list of simulation times and voltages at each time: [time, volts]
 
     """
+    # Needs to be redefined here for the jobserver
+    logger = logging.getLogger(__name__)
+
+    if not nml_doc:
+        nml_doc = pyneuroml.pynml.read_neuroml2_file(neuroml_file)
 
     for var_name in sim_var.keys():
 
@@ -290,7 +297,9 @@ def run_individual(
             units = words[2]
             value = sim_var[var_name]
 
-            print_v(
+            # needs to be fully qualified because only pyneuroml is in the
+            # module table for pp jobs
+            pyneuroml.print_v(
                 "  Changing value of %s (%s) in %s (%s) to: %s %s"
                 % (variable, id2, type, id1, value, units)
             )
