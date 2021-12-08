@@ -61,7 +61,7 @@ class NeuroMLSimulation(object):
                 plt.ylabel("Voltage [mV]")
 
         else:
-            logger.warn("First you have to 'go()' the simulation.", True)
+            logger.warning("First you have to 'go()' the simulation.", True)
         plt.show()
 
     def go(self):
