@@ -8,6 +8,14 @@ if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
     run_neuron_examples=true
 fi
 
+# export NEURON_HOME
+if command -v nrniv
+then
+    # double dirname because we also do not want the final `bin`
+    NEURON_HOME=$(dirname $(dirname $(command -v nrniv)))
+    export NEURON_HOME
+fi
+
 ### Test script for pyNeuroML
 
 cd examples
@@ -133,6 +141,14 @@ if [ "$run_neuron_examples" == true ]; then
 
 fi
 
+# Requires NEURON
+echo
+echo "################################################"
+echo "##   Test some tuning examples"
+
+    pushd tune
+        python tunePyr.py -tune -nogui
+    popd
 
 echo
 echo "################################################"

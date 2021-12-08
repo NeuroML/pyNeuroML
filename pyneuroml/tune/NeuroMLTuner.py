@@ -24,7 +24,10 @@ import argparse
 import logging
 import pprint
 
-from typing import List, Any, Dict, Union
+try:
+    from typing import List, Any, Dict, Union, Optional
+except ImportError:
+    pass
 
 
 from pyelectro import analysis
@@ -33,6 +36,7 @@ from neurotune import optimizers
 from neurotune import evaluators
 from neurotune import utils
 from pyneuroml.tune.NeuroMLController import NeuroMLController
+from pyneuroml import print_v
 
 pp = pprint.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -336,7 +340,7 @@ def run_optimisation(**kwargs):
 
 
 def _run_optimisation(a):
-    # type: (Any) -> Dict
+    # type: (Any) -> Optional[Dict]
     """Run optimisation.
 
     Internal function that actually runs the optimisation after
@@ -413,22 +417,22 @@ def _run_optimisation(a):
     if isinstance(a.extra_report_info, str):
         a.extra_report_info = parse_dict_arg(a.extra_report_info)
 
-    logger.info(
+    print_v(
         "====================================================================================="
     )
-    logger.info("Starting run_optimisation with: ")
+    print_v("Starting run_optimisation with: ")
     keys = sorted(a.__dict__.keys())
 
     for key in keys:
         value = a.__dict__[key]
-        logger.info("  %s = %s%s" % (key, " " * (30 - len(key)), value))
-    logger.info(
+        print_v("  %s = %s%s" % (key, " " * (30 - len(key)), value))
+    print_v(
         "====================================================================================="
     )
 
     if a.dry_run:
-        logger.info("Dry run; not running optimization...")
-        return
+        print_v("Dry run; not running optimization...")
+        return None
 
     ref = a.prefix
 
@@ -492,7 +496,7 @@ def _run_optimisation(a):
 
     secs = time.time() - start
 
-    reportj = {}
+    reportj = {}  # type: Dict[str, Union[str, float, Dict]]
     info = (
         "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"
         % (
@@ -535,7 +539,7 @@ def _run_optimisation(a):
     report += "FITNESS: %f\n\n" % fitness
     report += "FITTEST: %s\n\n" % pp.pformat(dict(sim_var))
 
-    logger.info(report)
+    print_v(report)
 
     reportj["fitness"] = fitness
     reportj["fittest vars"] = dict(sim_var)
