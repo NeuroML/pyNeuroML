@@ -24,7 +24,10 @@ import argparse
 import logging
 import pprint
 
-from typing import List, Any, Dict
+try:
+    from typing import List, Any, Dict, Union, Optional
+except ImportError:
+    pass
 
 
 from pyelectro import analysis
@@ -33,6 +36,7 @@ from neurotune import optimizers
 from neurotune import evaluators
 from neurotune import utils
 from pyneuroml.tune.NeuroMLController import NeuroMLController
+from pyneuroml import print_v
 
 pp = pprint.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -62,6 +66,7 @@ DEFAULTS = {
 
 
 def process_args():
+    # type: () -> argparse.Namespace
     """
     Parse command-line arguments for pynml-tune.
     """
@@ -271,6 +276,7 @@ def process_args():
 
 
 def run_optimisation(**kwargs):
+    # type: (str) -> Dict
     """Run an optimisation.
 
     The list of parameters here matches the output of `pynml-tune -h`:
@@ -326,12 +332,15 @@ def run_optimisation(**kwargs):
     :param cleanup: remove temporary files after completion
     :type cleanup: bool
 
+    :returns: a report of the optimisation in a dictionary.
+
     """
     a = build_namespace(**kwargs)
     return _run_optimisation(a)
 
 
 def _run_optimisation(a):
+    # type: (Any) -> Optional[Dict]
     """Run optimisation.
 
     Internal function that actually runs the optimisation after
@@ -390,6 +399,8 @@ def _run_optimisation(a):
     :param cleanup: remove temporary files after completion
     :type cleanup: bool
 
+    :returns: a report of the optimisation in a dictionary.
+
     """
     if isinstance(a.parameters, str):
         a.parameters = parse_list_arg(a.parameters)
@@ -406,22 +417,22 @@ def _run_optimisation(a):
     if isinstance(a.extra_report_info, str):
         a.extra_report_info = parse_dict_arg(a.extra_report_info)
 
-    logger.info(
+    print_v(
         "====================================================================================="
     )
-    logger.info("Starting run_optimisation with: ")
+    print_v("Starting run_optimisation with: ")
     keys = sorted(a.__dict__.keys())
 
     for key in keys:
         value = a.__dict__[key]
-        logger.info("  %s = %s%s" % (key, " " * (30 - len(key)), value))
-    logger.info(
+        print_v("  %s = %s%s" % (key, " " * (30 - len(key)), value))
+    print_v(
         "====================================================================================="
     )
 
     if a.dry_run:
-        logger.info("Dry run; not running optimization...")
-        return
+        print_v("Dry run; not running optimization...")
+        return None
 
     ref = a.prefix
 
@@ -485,7 +496,7 @@ def _run_optimisation(a):
 
     secs = time.time() - start
 
-    reportj = {}
+    reportj = {}  # type: Dict[str, Union[str, float, Dict]]
     info = (
         "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"
         % (
@@ -528,7 +539,7 @@ def _run_optimisation(a):
     report += "FITNESS: %f\n\n" % fitness
     report += "FITTEST: %s\n\n" % pp.pformat(dict(sim_var))
 
-    logger.info(report)
+    print_v(report)
 
     reportj["fitness"] = fitness
     reportj["fittest vars"] = dict(sim_var)
@@ -736,7 +747,7 @@ def main(args=None):
 
 
 def parse_dict_arg(dict_arg):
-    # type: (List[str]) -> Dict[str, Any]
+    # type: (List[str]) -> Union[Dict[str, Any], None]
     """Parse string arguments to dictionaries
 
     :param dict_arg: string containing list key/value pairs
@@ -781,6 +792,7 @@ def parse_list_arg(str_list_arg):
 
 
 def build_namespace(a=None, **kwargs):
+    # type: (argparse.Namespace, str) -> argparse.Namespace
     """Build an argparse namespace."""
     if a is None:
         a = argparse.Namespace()

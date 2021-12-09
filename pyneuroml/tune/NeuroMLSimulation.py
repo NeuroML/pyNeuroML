@@ -2,7 +2,7 @@ import sys
 import time
 import logging
 
-from pyneuroml import pynml
+from pyneuroml import pynml, print_v
 from pyneuroml.lems import generate_lems_file_for_neuroml
 
 
@@ -109,11 +109,10 @@ class NeuroMLSimulation(object):
                 cleanup=self.cleanup,
             )
         else:
-            logger.critical("Unsupported simulator: %s" % self.simulator)
-            exit()
+            raise RuntimeError("Unsupported simulator: %s" % self.simulator)
 
         secs = time.time() - start
-        logger.info(
+        print_v(
             "Ran simulation in %s in %f seconds (%f mins)\n\n"
             % (self.simulator, secs, secs / 60.0)
         )
