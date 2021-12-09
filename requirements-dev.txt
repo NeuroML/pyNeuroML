@@ -7,7 +7,6 @@ NEURON
 
 # change these to development if working on the development branch
 git+https://github.com/NeuralEnsemble/libNeuroML.git@master#egg=libNeuroML
-git+https://github.com/NeuroML/NeuroMLlite.git@master#egg=NeuroMLlite
 git+https://github.com/LEMS/pylems.git@master#egg=pylems
 
 
