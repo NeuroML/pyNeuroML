@@ -664,6 +664,9 @@ def _run_optimisation(a):
         plt.xlabel("Time (ms)")
         plt.ylabel("Membrane potential(mV)")
 
+        if a.save_to_file_output:
+            plt.savefig(a.save_to_file_output, dpi=300, bbox_inches='tight')
+
         utils.plot_generation_evolution(
             sim_var.keys(),
             individuals_file_name="%s/ga_individuals.csv" % run_dir,
@@ -672,12 +675,12 @@ def _run_optimisation(a):
             save_to_file=a.save_to_file,
             save_to_file_scatter=a.save_to_file_scatter,
             save_to_file_hist=a.save_to_file_hist,
-            save_to_file_output=a.save_to_file_output,
             title_prefix=ref,
         )
 
         if a.show_plot_already:
             plt.show()
+
 
     return reportj
 
