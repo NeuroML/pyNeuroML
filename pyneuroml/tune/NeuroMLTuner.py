@@ -59,6 +59,10 @@ DEFAULTS = {
     "knownTargetValues": "{}",
     "nogui": False,
     "showPlotAlready": True,
+    "saveToFile": False,
+    "saveToFileScatter": False,
+    "saveToFileHist": False,
+    "saveToFileOutput": False,
     "verbose": False,
     "dryRun": False,
     "extraReportInfo": None,
@@ -244,6 +248,34 @@ def process_args():
     )
 
     parser.add_argument(
+        "-saveToFile",
+        action="store_true",
+        default=DEFAULTS["saveToFile"],
+        help="Name of file to save generated fitness plot to, default: skip.",
+    )
+
+    parser.add_argument(
+        "-saveToFileScatter",
+        action="store_true",
+        default=DEFAULTS["saveToFileScatter"],
+        help="Name of file to save generated scatter plot to, default: skip.",
+    )
+
+    parser.add_argument(
+        "-saveToFileHist",
+        action="store_true",
+        default=DEFAULTS["saveToFileHist"],
+        help="Name of file to save generated histogram plot to, default: skip.",
+    )
+
+    parser.add_argument(
+        "-saveToFileOutput",
+        action="store_true",
+        default=DEFAULTS["saveToFileOutput"],
+        help="Name of file to save generated output plot to, default: skip.",
+    )
+
+    parser.add_argument(
         "-verbose",
         action="store_true",
         default=DEFAULTS["verbose"],
@@ -323,6 +355,14 @@ def run_optimisation(**kwargs):
     :type nogui: bool
     :param show_plot_already: whether plots should be shown as generated
     :type show_plot_already: bool
+    :param save_to_file: file name to store fitness plot to, False not to save
+    :type save_to_file: str or bool
+    :param save_to_file_scatter: file name to store scatter plot to, False to not save
+    :type save_to_file_scatter: str or bool
+    :param save_to_file_hist: file name to store histogram plot to , False to not save
+    :type save_to_file_hist: str or bool
+    :param save_to_file_output: file name to store output plot to, False to not save
+    :type save_to_file_output: str or bool
     :param dry_run: only print setup information, do not run the optimisation
     :type dry_run: bool
     :param extra_report_info: any extra tag/value pairs to be included in the report
@@ -390,6 +430,14 @@ def _run_optimisation(a):
     :type nogui: bool
     :param show_plot_already: whether plots should be shown as generated
     :type show_plot_already: bool
+    :param save_to_file: file name to store fitness plots to, False to not save
+    :type save_to_file: str or bool
+    :param save_to_file_scatter: file name to store scatter plot to, False to not save
+    :type save_to_file_scatter: str or bool
+    :param save_to_file_hist: file name to store histogram plots to, False to not save
+    :type save_to_file_hist: str or bool
+    :param save_to_file_output: file name to store output plot to, False to not save
+    :type save_to_file_output: str or bool
     :param dry_run: only print setup information, do not run the optimisation
     :type dry_run: bool
     :param extra_report_info: any extra tag/value pairs to be included in the report
@@ -621,6 +669,10 @@ def _run_optimisation(a):
             individuals_file_name="%s/ga_individuals.csv" % run_dir,
             target_values=a.known_target_values,
             show_plot_already=a.show_plot_already,
+            save_to_file=a.save_to_file,
+            save_to_file_scatter=a.save_to_file_scatter,
+            save_to_file_hist=a.save_to_file_hist,
+            save_to_file_output=a.save_to_file_output,
             title_prefix=ref,
         )
 
@@ -747,7 +799,7 @@ def main(args=None):
 
 
 def parse_dict_arg(dict_arg):
-    # type: (List[str]) -> Union[Dict[str, Any], None]
+    # type: (List[str]) -> Optional[Dict[str, Any]]
     """Parse string arguments to dictionaries
 
     :param dict_arg: string containing list key/value pairs
@@ -771,7 +823,7 @@ def parse_dict_arg(dict_arg):
 
 
 def parse_list_arg(str_list_arg):
-    # type: (List[str]) -> List[Any]
+    # type: (List[str]) -> Optional[List[Any]]
     """Parse string arguments to a list
 
     :param str_list_arg: string containing list
