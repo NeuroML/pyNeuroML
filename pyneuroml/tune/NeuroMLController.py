@@ -13,9 +13,16 @@ import shutil
 import logging
 import pprint
 
+import io
+if sys.version_info.major == 2:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
 from collections import OrderedDict
 import pyneuroml.pynml
 from pyneuroml import print_v
+import neuroml
 
 
 logger = logging.getLogger(__name__)
@@ -152,17 +159,18 @@ class NeuroMLController:
                 if not os.path.exists(cand_dir):
                     os.mkdir(cand_dir)
                 # We do not pass the nml_doc here because it now uses
-                # lxml.etree, which unfortunately cannot be pickled.
-                # Instead we pass "None", and let the run_simulation method
-                # read in the neuroml file to create the nml_doc.
-                # It is perhaps less efficient because the nml_doc needs to be
-                # created each time, but this is the only way it will work at
-                # the moment.
+                # lxml.etree, which unfortunately cannot be pickled.  Instead
+                # we pass it as a StringIO object, and let the run_simulation
+                # method read this in to create the nml_doc.  It is perhaps
+                # less efficient because the nml_doc needs to be created each
+                # time, but this is the only way it will work at the moment.
+                nml_doc_text = StringIO()
+                neuroml.writers.NeuroMLWriter.write(self.nml_doc, nml_doc_text, close=False)
                 vars = (
                     sim_var,
                     self.ref,
                     self.neuroml_file,
-                    None,
+                    nml_doc_text,
                     self.still_included,
                     cand_dir,
                     self.target,
@@ -181,7 +189,8 @@ class NeuroMLController:
                         "pyneuroml.tune.NeuroMLSimulation",
                         "shutil",
                         "neuroml",
-                        "logging"
+                        "logging",
+                        "io"
                     ),
                 )
                 jobs.append(job)
@@ -255,6 +264,8 @@ def run_individual(
     :type reference:
     :param neuroml_file: path to main NeuroML model file
     :type neuroml_file: str
+    :param nml_doc: NeuroMLDocument or its StringIO export
+    :type nml_doc: NeuroMLDocument or StringIO
     :param still_included:
     :type still_included:
     :param generate_dir: directory to generate simulation NeuroML file in
@@ -278,8 +289,8 @@ def run_individual(
     # Needs to be redefined here for the jobserver
     logger = logging.getLogger(__name__)
 
-    if not nml_doc:
-        nml_doc = pyneuroml.pynml.read_neuroml2_file(neuroml_file)
+    if isinstance(nml_doc, io.StringIO):
+        nml_doc = neuroml.loaders.read_neuroml2_string(nml_doc.getvalue())
 
     for var_name in sim_var.keys():
 
