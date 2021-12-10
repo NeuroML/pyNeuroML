@@ -2,7 +2,6 @@ pyNeuroML
 =========
 
 [![GitHub CI](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml)
-[![Travis CI](https://travis-ci.com/NeuroML/pyNeuroML.svg?branch=master)](https://travis-ci.com/NeuroML/pyNeuroML)
 [![PyPI](https://img.shields.io/pypi/v/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
 [![GitHub](https://img.shields.io/github/license/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/blob/master/LICENSE.lesser)
