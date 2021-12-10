@@ -18,6 +18,7 @@ from pyneuroml.pynml import (
     list_exposures,
     list_recording_paths_for_exposures,
     execute_command_in_dir,
+    execute_command_in_dir_with_realtime_output,
     run_jneuroml,
     validate_neuroml2
 )
@@ -121,6 +122,26 @@ class TestHelperUtils(unittest.TestCase):
         )
         self.assertNotEqual(retcode, 0)
         self.assertIsNotNone(output)
+
+    def test_execute_command_in_dir_with_realtime_output(self):
+        """Test execute_command_in_dir_with_realtime_output function."""
+        command = "ls"
+        exec_in_dir = "."
+        verbose = True
+        success = False
+
+        success = execute_command_in_dir_with_realtime_output(
+            command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+        )
+        self.assertTrue(success)
+
+        command_bad = "ls non_existent_file"
+        success = True
+
+        success = execute_command_in_dir_with_realtime_output(
+            command_bad, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+        )
+        self.assertFalse(success)
 
     def test_run_jneuroml(self):
         """Test run_jneuroml"""
