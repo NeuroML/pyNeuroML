@@ -170,7 +170,7 @@ class NeuroMLController:
                     sim_var,
                     self.ref,
                     self.neuroml_file,
-                    nml_doc_text,
+                    nml_doc_text.getvalue(),
                     self.still_included,
                     cand_dir,
                     self.target,
@@ -190,10 +190,10 @@ class NeuroMLController:
                         "shutil",
                         "neuroml",
                         "logging",
-                        "io"
                     ),
                 )
                 jobs.append(job)
+                nml_doc_text.close()
 
             for job_i in range(len(jobs)):
                 job = jobs[job_i]
@@ -236,7 +236,7 @@ class NeuroMLController:
         )
 
 
-# XXX: Why are we not just using the method above?
+# This needs to be a separate function for the ppft job server
 def run_individual(
     sim_var,
     reference,
@@ -264,8 +264,8 @@ def run_individual(
     :type reference:
     :param neuroml_file: path to main NeuroML model file
     :type neuroml_file: str
-    :param nml_doc: NeuroMLDocument or its StringIO export
-    :type nml_doc: NeuroMLDocument or StringIO
+    :param nml_doc: NeuroMLDocument or its str export
+    :type nml_doc: NeuroMLDocument or str
     :param still_included:
     :type still_included:
     :param generate_dir: directory to generate simulation NeuroML file in
@@ -289,8 +289,8 @@ def run_individual(
     # Needs to be redefined here for the jobserver
     logger = logging.getLogger(__name__)
 
-    if isinstance(nml_doc, io.StringIO):
-        nml_doc = neuroml.loaders.read_neuroml2_string(nml_doc.getvalue())
+    if isinstance(nml_doc, str):
+        nml_doc = neuroml.loaders.read_neuroml2_string(nml_doc)
 
     for var_name in sim_var.keys():
 
