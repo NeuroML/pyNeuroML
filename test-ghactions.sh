@@ -139,18 +139,19 @@ if [ "$run_neuron_examples" == true ]; then
         nrnivmodl
         pynml-modchananalysis -stepV 20  NaConductance  -dt 0.01 -nogui
 
+
+    # Requires NEURON
+    echo
+    echo "################################################"
+    echo "##   Test some tuning examples"
+
+        pushd tune
+            python tunePyr.py -tune -nogui
+        popd
+
+    echo
+    echo "################################################"
+    echo "##   Finished all tests! "
+    echo "################################################"
+
 fi
-
-# Requires NEURON
-echo
-echo "################################################"
-echo "##   Test some tuning examples"
-
-    pushd tune
-        python tunePyr.py -tune -nogui
-    popd
-
-echo
-echo "################################################"
-echo "##   Finished all tests! "
-echo "################################################"

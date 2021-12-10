@@ -53,7 +53,11 @@ jobs:
       run: |
         pytest .
         pynml -h
-        ./test-ghactions.sh
+
+        # For now, only test neuron related examples on py3
+        if [[  ${{ matrix.python-version }} == "3."* ]]; then argnrn=-neuron ; fi
+        ./test-ghactions.sh $argnrn
+
     - name: Lint with flake8
       run: |
         pip install flake8
