@@ -392,7 +392,7 @@ def extract_lems_definition_files(path=None):
         try:
             os.makedirs(path)
         except FileExistsError:
-            logger.warn(
+            logger.warning(
                 "{} already exists. Any NeuroML LEMS files in it will be overwritten".format(
                     path
                 )
@@ -813,7 +813,7 @@ def read_neuroml2_file(
                                     getattr(nml2_doc, memb[0]).append(entry)
                     incl_to_remove.append(include)
                 else:
-                    logger.warn("Not including file as it's not valid...")
+                    logger.warning("Not including file as it's not valid...")
 
         for include in incl_to_remove:
             nml2_doc.includes.remove(include)
@@ -1737,7 +1737,7 @@ def reload_saved_data(
                 events[selections[id]].append(t)
 
             if remove_dat_files_after_load:
-                logger.warn(
+                logger.warning(
                     "Removing file %s after having loading its data!" % file_name
                 )
                 os.remove(file_name)
@@ -1797,7 +1797,7 @@ def reload_saved_data(
                     traces[cols[vi]].append(float(values[vi]))
 
         if remove_dat_files_after_load:
-            logger.warn("Removing file %s after having loading its data!" % file_name)
+            logger.warning("Removing file %s after having loading its data!" % file_name)
             os.remove(file_name)
 
         if plot:
@@ -1805,7 +1805,7 @@ def reload_saved_data(
                 file_name,
                 " (%s)" % simulator if simulator else "",
             )
-            logger.warn("Reloading: %s" % info)
+            logger.warning("Reloading: %s" % info)
             plt.get_current_fig_manager().set_window_title(info)
 
             legend = False
@@ -1900,7 +1900,7 @@ def confirm_neuroml_file(filename):
     # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
     confirm_file_exists(filename)
     if filename.startswith("LEMS_"):
-        logger.warn(
+        logger.warning(
             textwrap.dedent(
                 """
             *************************************************************************************
@@ -1925,7 +1925,7 @@ def confirm_lems_file(filename):
     # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
     confirm_file_exists(filename)
     if filename.endswith("nml"):
-        logger.warn(
+        logger.warning(
             textwrap.dedent(
                 """
             *************************************************************************************
@@ -2437,7 +2437,7 @@ def execute_command_in_dir(
 
     except AttributeError:
         # For python 2.6...
-        logger.warn("Assuming Python 2.6...")
+        logger.warning("Assuming Python 2.6...")
 
         return_string = subprocess.Popen(
             command, cwd=directory, shell=True, stdout=subprocess.PIPE

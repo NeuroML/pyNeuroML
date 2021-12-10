@@ -361,7 +361,7 @@ background {rgbt %s}
                     proximalpoint,
                     distalpoint,
                 )
-                logger.warn(comment)
+                logger.warning(comment)
                 cells_file.write("    // " + comment)
             else:
                 cells_file.write("    %s {\n" % shape)
