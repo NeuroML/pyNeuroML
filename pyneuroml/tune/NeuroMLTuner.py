@@ -721,6 +721,91 @@ def run_2stage_optimization(
     num_parallel_evaluations=1,
     cleanup=True,
 ):
+    """Run a two stage optimisation.
+
+    This wraps around the `run_optimisation` function to allow a two stage
+    optimisation so parameters can be tuned in two sets. For example, it may be
+    useful to first tune the passive membrane properties of a cell, and then
+    move on to the active entities.
+
+    In order to mark parameters as being optimised in the first stage, please
+    set their maximum and minimum constraints for the second tuning stage as
+    'x' (instead of providing values). The tuner will then use fitted values
+    from the first tuning for these parameters in the second stage.
+
+    :param prefix: prefix for tuning test files
+    :type prefix: str
+    :param neuroml_file: path to main NeuroML file containing the model
+    :type neuroml_file: str
+    :param target: id of target NeuroML component in model (usually `Network`)
+    :type target: str
+    :param parameters: list of parameters to adjust
+    :type parameters: list(str)
+    :param max_constraints_1: maximum values allowed for parameters for stage 1 tuning
+    :type max_constraints_1: list(float)
+    :param min_constraints_1: minimum values allowed for parameters for stage 1 tuning
+    :type min_constraints_1: list(float)
+    :param max_constraints_2: maximum values allowed for parameters for stage 2 tuning
+    :type max_constraints_2: list(float, 'x')
+    :param min_constraints_2: minimum values allowed for parameters for stage 2 tuning
+    :type min_constraints_2: list(float, 'x')
+    to judge fitness against for stage 1 tuning
+    :param delta_constraints: value in [0, 1) that allows re-scaling of the maximum/minimum constraints of values fitted in stage 1 being used for stage 2
+    :type delta_constraints: float
+    :param weights_1: weights to assign to each target name/value pair for stage 1 tuning
+    :type weights_1: dict
+    :param weights_2: weights to assign to each target name/value pair for stage 2 tuning
+    :type weights_2: dict
+    :param target_data_1: name/value pairs for properties extracted from data for stage 1 tuning
+    :type target_data_1: dict
+    :param target_data_2: name/value pairs for properties extracted from data for stage 2 tuning
+    :type target_data_2: dict
+    :param sim_time: simulation duration
+    :type sim_time: float
+    :param dt: simulation timestep
+    :type dt: float
+    :param population_size_1: size of population for stage 1 tuning
+    :type population_size_1: int
+    :param population_size_2: size of population for stage 2 tuning
+    :type population_size_2: int
+    :param max_evaluations_1: number of maximum evaluations for stage 1 tuning
+    :type max_evaluations_1: int
+    :param max_evaluations_2: number of maximum evaluations for stage 2 tuning
+    :type max_evaluations_2: int
+    :param num_selected_1: number selected in each evolution for stage 1 tuning
+    :type num_selected_1: int
+    :param num_selected_2: number selected in each evolution for stage 2 tuning
+    :type num_selected_2: int
+    :param num_offspring_1: number of off sprint in each evolution for stage 1 tuning
+    :type num_offspring_1: int
+    :param num_offspring_2: number of off sprint in each evolution for stage 2 tuning
+    :type num_offspring_2: int
+    :param mutation_rate: the mutation rate for each evolution
+    :type mutation_rate: float
+    :param num_elites: number of elites
+    :type num_elites: int
+    :param simulator: simulator to use, currently supported values "jNeuroML", "jNeuroML_NEURON"
+    :type simulator: str
+    :param nogui: toggle jNeuroML GUI
+    :type nogui: bool
+    :param show_plot_already: whether plots should be shown as generated
+    :type show_plot_already: bool
+    :param seed: seed value
+    :type seed: int
+    :param known_target_values: known values of target parameters
+    :type known_target_values: dict
+    :param dry_run: only print setup information, do not run the optimisation
+    :type dry_run: bool
+    :param extra_report_info: any extra tag/value pairs to be included in the report
+    :type extra_report_info: dict
+    :param num_parallel_evaluations: number of parallel evaluations
+    :type num_parallel_evaluations: int
+    :param cleanup: remove temporary files after completion
+    :type cleanup: bool
+
+    :returns: a report of the optimisation in a dictionary.
+
+    """
 
     mut_rat_1 = mutation_rate[0] if isinstance(mutation_rate, list) else mutation_rate
 
