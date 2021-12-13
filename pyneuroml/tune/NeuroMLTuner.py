@@ -714,6 +714,14 @@ def run_2stage_optimization(
     simulator,
     nogui,
     show_plot_already,
+    save_to_file_1=False,
+    save_to_file_scatter_1=False,
+    save_to_file_hist_1=False,
+    save_to_file_output_1=False,
+    save_to_file_2=False,
+    save_to_file_scatter_2=False,
+    save_to_file_hist_2=False,
+    save_to_file_output_2=False,
     seed,
     known_target_values,
     dry_run=False,
@@ -794,6 +802,22 @@ def run_2stage_optimization(
     :type seed: int
     :param known_target_values: known values of target parameters
     :type known_target_values: dict
+    :param save_to_file_1: file name to store stage 1 fitness plot to, False not to save
+    :type save_to_file_1: str or bool
+    :param save_to_file_scatter_1: file name to store stage 1 scatter plot to, False to not save
+    :type save_to_file_scatter_1: str or bool
+    :param save_to_file_hist_1: file name to store stage 1 histogram plot to , False to not save
+    :type save_to_file_hist_1: str or bool
+    :param save_to_file_output_1: file name to store stage 1 output plot to, False to not save
+    :type save_to_file_output_1: str or bool
+    :param save_to_file_2: file name to store stage 2 fitness plot to, False not to save
+    :type save_to_file_2: str or bool
+    :param save_to_file_scatter_2: file name to store stage 2 scatter plot to, False to not save
+    :type save_to_file_scatter_2: str or bool
+    :param save_to_file_hist_2: file name to store stage 2 histogram plot to , False to not save
+    :type save_to_file_hist_2: str or bool
+    :param save_to_file_output_2: file name to store stage 2 output plot to, False to not save
+    :type save_to_file_output_2: str or bool
     :param dry_run: only print setup information, do not run the optimisation
     :type dry_run: bool
     :param extra_report_info: any extra tag/value pairs to be included in the report
@@ -829,6 +853,10 @@ def run_2stage_optimization(
         simulator=simulator,
         nogui=nogui,
         show_plot_already=False,
+        save_to_file_1,
+        save_to_file_scatter_1,
+        save_to_file_hist_1,
+        save_to_file_output_1,
         seed=seed,
         known_target_values=known_target_values,
         dry_run=dry_run,
@@ -870,6 +898,10 @@ def run_2stage_optimization(
         simulator=simulator,
         nogui=nogui,
         show_plot_already=show_plot_already,
+        save_to_file_2,
+        save_to_file_scatter_2,
+        save_to_file_hist_2,
+        save_to_file_output_2,
         seed=seed,
         known_target_values=known_target_values,
         dry_run=dry_run,
