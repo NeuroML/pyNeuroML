@@ -665,7 +665,7 @@ def _run_optimisation(a):
         plt.ylabel("Membrane potential(mV)")
 
         if a.save_to_file_output:
-            plt.savefig(a.save_to_file_output, dpi=300, bbox_inches='tight')
+            plt.savefig(a.save_to_file_output, dpi=300, bbox_inches="tight")
 
         utils.plot_generation_evolution(
             sim_var.keys(),
@@ -680,7 +680,6 @@ def _run_optimisation(a):
 
         if a.show_plot_already:
             plt.show()
-
 
     return reportj
 
@@ -932,7 +931,7 @@ def parse_dict_arg(dict_arg):
     for e in entries:
         if len(e) > 0:
             key = e[: e.rfind(":")]
-            value = e[e.rfind(":") + 1:]
+            value = e[e.rfind(":") + 1 :]
             try:
                 ret[key] = float(value)
             except TypeError:
