@@ -13,7 +13,8 @@ usage: pynml\-tune [\-h] [\-simTime <simTime>] [\-dt <dt>]
 [\-numParallelEvaluations <numParallelEvaluations>]
 [\-seed <seed>] [\-simulator <simulator>]
 [\-knownTargetValues <knownTargetValues>] [\-nogui]
-[\-showPlotAlready] [\-verbose] [\-dryRun]
+[\-showPlotAlready] [\-saveToFile] [\-saveToFileScatter]
+[\-saveToFileHist] [\-saveToFileOutput] [\-verbose] [\-dryRun]
 [\-extraReportInfo <extraReportInfo>] [\-cleanup]
 <prefix> <neuromlFile> <target> <parameters>
 <max_constraints> <min_constraints> <targetData> <weights>
@@ -99,6 +100,22 @@ Should GUI elements be supressed?
 \fB\-showPlotAlready\fR
 Should generated plots be suppressed until show()
 called?
+.TP
+\fB\-saveToFile\fR
+Name of file to save generated fitness plot to,
+default: skip.
+.TP
+\fB\-saveToFileScatter\fR
+Name of file to save generated scatter plot to,
+default: skip.
+.TP
+\fB\-saveToFileHist\fR
+Name of file to save generated histogram plot to,
+default: skip.
+.TP
+\fB\-saveToFileOutput\fR
+Name of file to save generated output plot to,
+default: skip.
 .TP
 \fB\-verbose\fR
 Verbose mode
