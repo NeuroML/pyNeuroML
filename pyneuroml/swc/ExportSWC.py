@@ -6,7 +6,7 @@
 import os
 import sys
 import logging
-from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.utils import read_neuroml2_file
 from pyneuroml import __version__ as pynmlv
 
 try:
