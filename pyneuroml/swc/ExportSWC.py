@@ -9,7 +9,18 @@ import logging
 from pyneuroml import pynml
 from pyneuroml import __version__ as pynmlv
 
+try:
+    from typing import Optional, Dict
+except ImportError:
+    pass
+
 logger = logging.getLogger(__name__)
+
+
+# global variables
+line_count = 1
+line_index_vs_distals = {}  # type: Dict[Optional[str], float]
+line_index_vs_proximals = {}  # type: Dict[str, float]
 
 
 def _get_lines_for_seg_group(cell, sg, type):
@@ -53,7 +64,7 @@ def _get_lines_for_seg_group(cell, sg, type):
                 elif segment.parent.fraction_along == 0:
                     parent_line = line_index_vs_proximals[parent_seg_id]
                 else:
-                    raise Exception(
+                    raise RuntimeError(
                         "Can't handle case where a segment is not connected to the 0 or 1 point along the parent!\n"
                         + "Segment %s is connected %s (%s) along parent %s"
                         % (
@@ -103,8 +114,15 @@ def _get_lines_for_seg_group(cell, sg, type):
 
 
 def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
-    """
-    Find all <cell> elements and create one SWC file for each
+    # type: (str, bool, Optional[str]) -> None
+    """Export all Cell Components in a NeuroML model to SWC format.
+
+    :param nml_file_name: name of NeuroML model file
+    :type nml_file_name: str
+    :param add_comments: whether or not to add extra comments
+    :type add_comments: bool
+    :param target_dir: target dir to save SWC files to
+    :type target_dir: str
     """
     global line_count
     global line_index_vs_distals
@@ -166,9 +184,8 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
         axon_seg_count = len(seg_ids)
         lines += lines_sg
 
-        if (
-            not len(cell.morphology.segments)
-            == soma_seg_count + dend_seg_count + axon_seg_count
+        if len(cell.morphology.segments) != (
+            soma_seg_count + dend_seg_count + axon_seg_count
         ):
             raise Exception(
                 "The numbers of the segments in groups: soma_group+dendrite_group+axon_group (%i), is not the same as total number of segments (%s)! All bets are off!"

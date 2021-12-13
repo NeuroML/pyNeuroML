@@ -40,6 +40,7 @@ from lems.parser.LEMS import LEMSFileParser
 
 from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
+from .swc.ExportSWC import convert_to_swc
 
 import neuroml
 from neuroml import NeuroMLDocument, Cell
@@ -194,6 +195,11 @@ def parse_arguments():
             "(Via jNeuroML) Convert NeuroML2 file (network & cells)\n"
             "to PNG format view of 3D structure"
         ),
+    )
+    mut_exc_opts.add_argument(
+        "-swc",
+        action="store_true",
+        help=("Export all Cells from a NeuroML file to SWC format"),
     )
     mut_exc_opts.add_argument(
         "-dlems",
@@ -1796,7 +1802,9 @@ def reload_saved_data(
                     traces[cols[vi]].append(float(values[vi]))
 
         if remove_dat_files_after_load:
-            logger.warning("Removing file %s after having loading its data!" % file_name)
+            logger.warning(
+                "Removing file %s after having loading its data!" % file_name
+            )
             os.remove(file_name)
 
         if plot:
@@ -2032,6 +2040,10 @@ def evaluate_arguments(args):
         elif args.png:
             confirm_neuroml_file(f)
             post_args = "-png"
+        elif args.swc:
+            confirm_neuroml_file(f)
+            convert_to_swc(f)
+            exit()
         elif args.dlems:
             confirm_lems_file(f)
             post_args = "-dlems"
