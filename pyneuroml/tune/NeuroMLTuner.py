@@ -756,8 +756,7 @@ def run_2stage_optimization(
     :param max_constraints_2: maximum values allowed for parameters for stage 2 tuning
     :type max_constraints_2: list(float, 'x')
     :param min_constraints_2: minimum values allowed for parameters for stage 2 tuning
-    :type min_constraints_2: list(float, 'x')
-    to judge fitness against for stage 1 tuning
+    :type min_constraints_2: list(float, 'x') to judge fitness against for stage 1 tuning
     :param delta_constraints: value in [0, 1) that allows re-scaling of the maximum/minimum constraints of values fitted in stage 1 being used for stage 2
     :type delta_constraints: float
     :param weights_1: weights to assign to each target name/value pair for stage 1 tuning
