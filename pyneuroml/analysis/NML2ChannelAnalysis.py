@@ -15,7 +15,7 @@ import logging
 import airspeed
 import matplotlib.pyplot as plt
 
-from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
+from pyneuroml.utils import run_lems_with_jneuroml, read_neuroml2_file
 
 
 logger = logging.getLogger(__name__)

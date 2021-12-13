@@ -10,7 +10,7 @@ import logging
 
 import pprint
 
-from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
+from pyneuroml.utils import get_value_in_si, read_neuroml2_file
 from pyneuroml.analysis.NML2ChannelAnalysis import get_ion_color
 from neuroml import Cell, Cell2CaPools
 

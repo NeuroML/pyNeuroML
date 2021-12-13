@@ -13,7 +13,7 @@ import os
 import shutil
 import logging
 
-from pyneuroml.pynml import (
+from pyneuroml.utils import (
     extract_lems_definition_files,
     list_exposures,
     list_recording_paths_for_exposures,

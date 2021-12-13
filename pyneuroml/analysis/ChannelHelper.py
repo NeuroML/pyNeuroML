@@ -1,5 +1,5 @@
 from math import exp
-from pyneuroml.pynml import get_value_in_si
+from pyneuroml.utils import get_value_in_si
 import logging
 
 

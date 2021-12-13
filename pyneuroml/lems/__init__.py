@@ -4,7 +4,7 @@ from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 import shutil
 import os
 import logging
-from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color
+from pyneuroml.utils import read_neuroml2_file, get_next_hex_color
 import random
 import neuroml
 

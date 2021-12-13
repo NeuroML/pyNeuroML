@@ -9,8 +9,8 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 import os
 import logging
 
-from pyneuroml.pynml import validate_neuroml1
-from pyneuroml.pynml import validate_neuroml2
+from pyneuroml.utils import validate_neuroml1
+from pyneuroml.utils import validate_neuroml2
 
 from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
 from neuron import *
