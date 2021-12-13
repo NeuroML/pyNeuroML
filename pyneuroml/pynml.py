@@ -40,7 +40,7 @@ from lems.parser.LEMS import LEMSFileParser
 
 from pyneuroml import __version__
 from pyneuroml import JNEUROML_VERSION
-from .swc.ExportSWC import convert_to_swc
+from pyneuroml.swc.ExportSWC import convert_to_swc
 
 import neuroml
 from neuroml import NeuroMLDocument, Cell
