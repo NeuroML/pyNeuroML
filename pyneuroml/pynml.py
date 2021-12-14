@@ -2755,11 +2755,10 @@ def extract_annotations(nml2_file):
 """
 Work in progress: expand a (simple) ComponentType  and evaluate an instance of it by
 giving parameters & required variables
+Used in MOOSE NeuroML reader...
 """
-
-
 def evaluate_component(comp_type, req_variables={}, parameter_values={}):
-    logger.info(
+    logger.debug(
         "Evaluating %s with req:%s; params:%s"
         % (comp_type.name, req_variables, parameter_values)
     )
@@ -2791,8 +2790,8 @@ def evaluate_component(comp_type, req_variables={}, parameter_values={}):
             exec_str += "\n"
 
             exec_str += 'return_vals["%s"] = %s\n' % (cdv.name, cdv.name)
-
-    """logger.info(exec_str)"""
+    exec_str = "from math import exp  # only one required for nml2?\n"+exec_str
+    #logger.info('Exec %s'%exec_str)
     exec(exec_str)
 
     return return_vals
