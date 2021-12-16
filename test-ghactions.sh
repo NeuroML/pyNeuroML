@@ -8,6 +8,14 @@ if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
     run_neuron_examples=true
 fi
 
+# export NEURON_HOME
+if command -v nrniv
+then
+    # double dirname because we also do not want the final `bin`
+    NEURON_HOME=$(dirname $(dirname $(command -v nrniv)))
+    export NEURON_HOME
+fi
+
 ### Test script for pyNeuroML
 
 cd examples
@@ -39,6 +47,7 @@ pynml LEMS_NML2_Ex5_DetCell.xml -sedml
 pynml LEMS_NML2_Ex9_FN.xml -dlems
 pynml LEMS_NML2_Ex9_FN.xml -brian
 pynml LEMS_NML2_Ex5_DetCell.xml -neuron
+pynml LEMS_NML2_Ex5_DetCell.xml -moose
 pynml LEMS_NML2_Ex9_FN.xml -vertex
 pynml LEMS_NML2_Ex9_FN.xml -xpp
 pynml LEMS_NML2_Ex9_FN.xml -dnsim
@@ -130,10 +139,19 @@ if [ "$run_neuron_examples" == true ]; then
         nrnivmodl
         pynml-modchananalysis -stepV 20  NaConductance  -dt 0.01 -nogui
 
+
+    # Requires NEURON
+    echo
+    echo "################################################"
+    echo "##   Test some tuning examples"
+
+        pushd tune
+            python tunePyr.py -tune -nogui
+        popd
+
+    echo
+    echo "################################################"
+    echo "##   Finished all tests! "
+    echo "################################################"
+
 fi
-
-
-echo
-echo "################################################"
-echo "##   Finished all tests! "
-echo "################################################"

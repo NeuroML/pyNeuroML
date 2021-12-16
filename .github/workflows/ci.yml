@@ -2,9 +2,9 @@ name: Continuous builds
 
 on:
   push:
-    branches: [ master, development ]
+    branches: [ master, development, experimental, test* ]
   pull_request:
-    branches: [ master, development ]
+    branches: [ master, development, experimental, test* ]
 
 jobs:
   build:
@@ -13,22 +13,52 @@ jobs:
     strategy:
       matrix:
         python-version: [2.7, 3.7, 3.8, 3.9]
+      fail-fast: false
 
     steps:
+
     - uses: actions/checkout@v2
     - name: Set up Python  ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version:  ${{ matrix.python-version }}
+
+    - name: Print refs
+      run: |
+        echo "github.ref is: ${{ github.ref }}"
+        echo "github.base_ref is: ${{ github.base_ref }}"
+
+    - name: Install deps from development
+      if: ${{ github.ref == 'refs/heads/development' || github.base_ref == 'development' }}
+      run: |
+        echo "Using deps from development for our repos"
+        sed -E -i 's/((libNeuroML|NeuroMLlite|pylems|pyelectro|neurotune).git)@master/\1@development/' requirements-dev.txt
+        sed -E -i 's/((modelspec).git)@main/\1@development/' requirements-dev.txt
+
+    - name: Install deps from experimental
+      if: ${{ github.ref == 'refs/heads/experimental' || github.base_ref == 'experimental' }}
+      run: |
+        echo "Using deps from experimental - assuming development in others"
+        sed -E -i 's/((libNeuroML|NeuroMLlite|pylems|pyelectro|neurotune).git)@master/\1@development/' requirements-dev.txt
+        sed -E -i 's/((modelspec).git)@main/\1@development/' requirements-dev.txt
+
     - name: Install package
       run: |
         python -m pip install --upgrade pip
-        pip install flake8
+        pip install -r requirements-dev.txt
+        pip install pytest
         pip install .
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --exit-zero --show-source --max-line-length=127 --statistics
+
     - name: Run tests
       run: |
+        pytest .
         pynml -h
-        ./test-ghactions.sh
+
+        # For now, only test neuron related examples on py3
+        if [[  ${{ matrix.python-version }} == "3."* ]]; then argnrn=-neuron ; fi
+        ./test-ghactions.sh $argnrn
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 . --count --exit-zero --show-source --max-line-length=127 --statistics

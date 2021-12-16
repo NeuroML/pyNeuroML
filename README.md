@@ -2,14 +2,15 @@ pyNeuroML
 =========
 
 [![GitHub CI](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml)
-[![Travis CI](https://travis-ci.com/NeuroML/pyNeuroML.svg?branch=master)](https://travis-ci.com/NeuroML/pyNeuroML)
 [![PyPI](https://img.shields.io/pypi/v/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
 [![GitHub](https://img.shields.io/github/license/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/blob/master/LICENSE.lesser)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/pulls)
 [![GitHub issues](https://img.shields.io/github/issues/NeuroML/pyNeuroML)](https://github.com/NeuroML/pyNeuroML/issues)
+[![Documentation Status](https://readthedocs.org/projects/pyneuroml/badge/?version=latest)](https://pyneuroml.readthedocs.io/en/latest/?badge=latest)
 [![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social)](https://github.com/NeuroML)
 [![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
+[![Gitter](https://badges.gitter.im/NeuroML/community.svg)](https://gitter.im/NeuroML/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
 

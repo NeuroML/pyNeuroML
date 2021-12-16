@@ -10,146 +10,188 @@
 
 import random
 import argparse
+import logging
 
 import neuroml
 from pyneuroml import pynml
 
-from pyneuroml.pynml import print_comment_v, print_comment
+logger = logging.getLogger(__name__)
 
 _WHITE = "<1,1,1,0.55>"
 _BLACK = "<0,0,0,0.55>"
 _GREY = "<0.85,0.85,0.85,0.55>"
 
-_DUMMY_CELL = 'DUMMY_CELL'
+_DUMMY_CELL = "DUMMY_CELL"
 
 
 def process_args():
     """
     Parse command-line arguments.
     """
-    parser = argparse.ArgumentParser(description="A file for converting NeuroML v2 files into POVRay files for 3D rendering")
+    parser = argparse.ArgumentParser(
+        description="A file for converting NeuroML v2 files into POVRay files for 3D rendering"
+    )
 
-    parser.add_argument('neuroml_file', type=str, metavar='<NeuroML file>',
-                        help='NeuroML (version 2 beta 3+) file to be converted to PovRay format (XML or HDF5 format)')
+    parser.add_argument(
+        "neuroml_file",
+        type=str,
+        metavar="<NeuroML file>",
+        help="NeuroML (version 2 beta 3+) file to be converted to PovRay format (XML or HDF5 format)",
+    )
 
-    parser.add_argument('-split',
-                        action='store_true',
-                        default=False,
-                        help="If this is specified, generate separate pov files for cells & network. Default is false")
+    parser.add_argument(
+        "-split",
+        action="store_true",
+        default=False,
+        help="If this is specified, generate separate pov files for cells & network. Default is false",
+    )
 
-    parser.add_argument('-background',
-                        type=str,
-                        metavar='<background colour>',
-                        default=_WHITE,
-                        help='Colour of background, e.g. <0,0,0,0.55>')
+    parser.add_argument(
+        "-background",
+        type=str,
+        metavar="<background colour>",
+        default=_WHITE,
+        help="Colour of background, e.g. <0,0,0,0.55>",
+    )
 
-    parser.add_argument('-movie',
-                        action='store_true',
-                        default=False,
-                        help="If this is specified, generate a ini file for generating a sequence of frames for a movie of the 3D structure")
+    parser.add_argument(
+        "-movie",
+        action="store_true",
+        default=False,
+        help="If this is specified, generate a ini file for generating a sequence of frames for a movie of the 3D structure",
+    )
 
-    parser.add_argument('-inputs',
-                        action='store_true',
-                        default=False,
-                        help="If this is specified, show the locations of (synaptic, current clamp, etc.) inputs into the cells of the network")
+    parser.add_argument(
+        "-inputs",
+        action="store_true",
+        default=False,
+        help="If this is specified, show the locations of (synaptic, current clamp, etc.) inputs into the cells of the network",
+    )
 
-    parser.add_argument('-conns',
-                        action='store_true',
-                        default=False,
-                        help="If this is specified, show the connections present in the network with lines")
+    parser.add_argument(
+        "-conns",
+        action="store_true",
+        default=False,
+        help="If this is specified, show the connections present in the network with lines",
+    )
 
-    parser.add_argument('-conn_points',
-                        action='store_true',
-                        default=False,
-                        help="If this is specified, show the end points of the connections present in the network")
+    parser.add_argument(
+        "-conn_points",
+        action="store_true",
+        default=False,
+        help="If this is specified, show the end points of the connections present in the network",
+    )
 
-    parser.add_argument('-v',
-                        action='store_true',
-                        default=False,
-                        help="Verbose output")
+    parser.add_argument("-v", action="store_true", default=False, help="Verbose output")
 
-    parser.add_argument('-frames',
-                        type=int,
-                        metavar='<frames>',
-                        default=36,
-                        help='Number of frames in movie')
+    parser.add_argument(
+        "-frames",
+        type=int,
+        metavar="<frames>",
+        default=36,
+        help="Number of frames in movie",
+    )
 
-    parser.add_argument('-posx',
-                        type=float,
-                        metavar='<position offset x>',
-                        default=0,
-                        help='Offset position in x dir (0 is centre, 1 is top)')
-    parser.add_argument('-posy',
-                        type=float,
-                        metavar='<position offset y>',
-                        default=0,
-                        help='Offset position in y dir (0 is centre, 1 is top)')
-    parser.add_argument('-posz',
-                        type=float,
-                        metavar='<position offset z>',
-                        default=0,
-                        help='Offset position in z dir (0 is centre, 1 is top)')
+    parser.add_argument(
+        "-posx",
+        type=float,
+        metavar="<position offset x>",
+        default=0,
+        help="Offset position in x dir (0 is centre, 1 is top)",
+    )
+    parser.add_argument(
+        "-posy",
+        type=float,
+        metavar="<position offset y>",
+        default=0,
+        help="Offset position in y dir (0 is centre, 1 is top)",
+    )
+    parser.add_argument(
+        "-posz",
+        type=float,
+        metavar="<position offset z>",
+        default=0,
+        help="Offset position in z dir (0 is centre, 1 is top)",
+    )
 
-    parser.add_argument('-viewx',
-                        type=float,
-                        metavar='<view offset x>',
-                        default=0,
-                        help='Offset viewing point in x dir (0 is centre, 1 is top)')
-    parser.add_argument('-viewy',
-                        type=float,
-                        metavar='<view offset y>',
-                        default=0,
-                        help='Offset viewing point in y dir (0 is centre, 1 is top)')
-    parser.add_argument('-viewz',
-                        type=float,
-                        metavar='<view offset z>',
-                        default=0,
-                        help='Offset viewing point in z dir (0 is centre, 1 is top)')
+    parser.add_argument(
+        "-viewx",
+        type=float,
+        metavar="<view offset x>",
+        default=0,
+        help="Offset viewing point in x dir (0 is centre, 1 is top)",
+    )
+    parser.add_argument(
+        "-viewy",
+        type=float,
+        metavar="<view offset y>",
+        default=0,
+        help="Offset viewing point in y dir (0 is centre, 1 is top)",
+    )
+    parser.add_argument(
+        "-viewz",
+        type=float,
+        metavar="<view offset z>",
+        default=0,
+        help="Offset viewing point in z dir (0 is centre, 1 is top)",
+    )
 
-    parser.add_argument('-scalex',
-                        type=float,
-                        metavar='<scale position x>',
-                        default=1,
-                        help='Scale position from network in x dir')
-    parser.add_argument('-scaley',
-                        type=float,
-                        metavar='<scale position y>',
-                        default=1.5,
-                        help='Scale position from network in y dir')
-    parser.add_argument('-scalez',
-                        type=float,
-                        metavar='<scale position z>',
-                        default=1,
-                        help='Scale position from network in z dir')
+    parser.add_argument(
+        "-scalex",
+        type=float,
+        metavar="<scale position x>",
+        default=1,
+        help="Scale position from network in x dir",
+    )
+    parser.add_argument(
+        "-scaley",
+        type=float,
+        metavar="<scale position y>",
+        default=1.5,
+        help="Scale position from network in y dir",
+    )
+    parser.add_argument(
+        "-scalez",
+        type=float,
+        metavar="<scale position z>",
+        default=1,
+        help="Scale position from network in z dir",
+    )
 
-    parser.add_argument('-mindiam',
-                        type=float,
-                        metavar='<minimum diameter dendrites/axons>',
-                        default=0,
-                        help='Minimum diameter for dendrites/axons (to improve visualisations)')
+    parser.add_argument(
+        "-mindiam",
+        type=float,
+        metavar="<minimum diameter dendrites/axons>",
+        default=0,
+        help="Minimum diameter for dendrites/axons (to improve visualisations)",
+    )
 
-    parser.add_argument('-plane',
-                        action='store_true',
-                        default=False,
-                        help="If this is specified, add a 2D plane below cell/network")
+    parser.add_argument(
+        "-plane",
+        action="store_true",
+        default=False,
+        help="If this is specified, add a 2D plane below cell/network",
+    )
 
-    parser.add_argument('-segids',
-                        action='store_true',
-                        default=False,
-                        help="Show segment ids")
+    parser.add_argument(
+        "-segids", action="store_true", default=False, help="Show segment ids"
+    )
 
     return parser.parse_args()
 
 
 def define_dummy_cell(pop_id, radius, pov_file):
-    dummy_cell_name = '%s_%s' % (_DUMMY_CELL, pop_id)
-    pov_file.write('''\n/*\n  Defining a dummy cell to use for population %s with radius %s...\n*/\n#declare %s =
+    dummy_cell_name = "%s_%s" % (_DUMMY_CELL, pop_id)
+    pov_file.write(
+        """\n/*\n  Defining a dummy cell to use for population %s with radius %s...\n*/\n#declare %s =
 union {
     sphere {
         <0.000000, 0.000000, 0.000000>, %s
     }
     pigment { color rgb <1,0,0> }
-}\n''' % (pop_id, radius, dummy_cell_name, radius))
+}\n"""
+        % (pop_id, radius, dummy_cell_name, radius)
+    )
 
     return dummy_cell_name
 
@@ -165,11 +207,11 @@ def main():
             pov_file_name.replace(e, ".pov")
 
     if pov_file_name == xmlfile:
-        pov_file_name += '.pov'
+        pov_file_name += ".pov"
 
     pov_file = open(pov_file_name, "w")
 
-    header = '''
+    header = """
 /*
 POV-Ray file generated from NeuroML network
 */
@@ -180,7 +222,7 @@ POV-Ray file generated from NeuroML network
 background {rgbt %s}
 
 
-    \n'''  # end of header
+    \n"""  # end of header
 
     pov_file.write(header % (args.background))
 
@@ -195,11 +237,17 @@ background {rgbt %s}
         splitOut = True
         cells_file = open(cf, "w")
         net_file = open(nf, "w")
-        print_comment_v("Saving into %s and %s and %s" % (pov_file_name, cf, nf))
+        logger.info("Saving into %s and %s and %s" % (pov_file_name, cf, nf))
 
-    print_comment_v("Converting XML file: %s to %s" % (xmlfile, pov_file_name))
+    logger.info("Converting XML file: %s to %s" % (xmlfile, pov_file_name))
 
-    nml_doc = pynml.read_neuroml2_file(xmlfile, include_includes=True, check_validity_pre_include=True, verbose=args.v, optimized=True)
+    nml_doc = pynml.read_neuroml2_file(
+        xmlfile,
+        include_includes=True,
+        check_validity_pre_include=True,
+        verbose=args.v,
+        optimized=True,
+    )
 
     cell_elements = []
     cell_elements.extend(nml_doc.cells)
@@ -221,7 +269,7 @@ background {rgbt %s}
 
     declaredcells = {}
 
-    print_comment_v("There are %i cells in the file" % len(cell_elements))
+    logger.info("There are %i cells in the file" % len(cell_elements))
 
     cell_id_vs_seg_id_vs_proximal = {}
     cell_id_vs_seg_id_vs_distal = {}
@@ -230,7 +278,7 @@ background {rgbt %s}
     for cell in cell_elements:
         cellName = cell.id
         cell_id_vs_cell[cell.id] = cell
-        print_comment_v("Handling cell: %s" % cellName)
+        logger.info("Handling cell: %s" % cellName)
         cell_id_vs_seg_id_vs_proximal[cell.id] = {}
         cell_id_vs_seg_id_vs_distal[cell.id] = {}
 
@@ -258,18 +306,18 @@ background {rgbt %s}
             r = max(float(distal.diameter) / 2.0, args.mindiam)
 
             if (x - r) < minXc:
-                minXc = (x - r)
+                minXc = x - r
             if (y - r) < minYc:
-                minYc = (y - r)
+                minYc = y - r
             if (z - r) < minZc:
-                minZc = (z - r)
+                minZc = z - r
 
             if (x + r) > maxXc:
-                maxXc = (x + r)
+                maxXc = x + r
             if (y + r) > maxYc:
-                maxYc = (y + r)
+                maxYc = y + r
             if (z + r) > maxZc:
-                maxZc = (z + r)
+                maxZc = z + r
 
             distalpoint = "<%f, %f, %f>, %f " % (x, y, z, r)
 
@@ -279,13 +327,24 @@ background {rgbt %s}
             proximalpoint = ""
             if segment.proximal is not None:
                 proximal = segment.proximal
-                proximalpoint = "<%f, %f, %f>, %f " % (float(proximal.x), float(proximal.y), float(proximal.z), max(float(proximal.diameter) / 2.0, args.mindiam))
+                proximalpoint = "<%f, %f, %f>, %f " % (
+                    float(proximal.x),
+                    float(proximal.y),
+                    float(proximal.z),
+                    max(float(proximal.diameter) / 2.0, args.mindiam),
+                )
 
-                cell_id_vs_seg_id_vs_proximal[cell.id][id] = (float(proximal.x), float(proximal.y), float(proximal.z))
+                cell_id_vs_seg_id_vs_proximal[cell.id][id] = (
+                    float(proximal.x),
+                    float(proximal.y),
+                    float(proximal.z),
+                )
             else:
                 parent = int(segment.parent.segments)
                 proximalpoint = distpoints[parent]
-                cell_id_vs_seg_id_vs_proximal[cell.id][id] = cell_id_vs_seg_id_vs_distal[cell.id][parent]
+                cell_id_vs_seg_id_vs_proximal[cell.id][
+                    id
+                ] = cell_id_vs_seg_id_vs_distal[cell.id][parent]
 
             proxpoints[id] = proximalpoint
 
@@ -294,43 +353,59 @@ background {rgbt %s}
                 shape = "sphere"
                 proximalpoint = ""
 
-            if (shape == "cone" and (proximalpoint.split('>')[0] == distalpoint.split('>')[0])):
-                comment = "Ignoring zero length segment (id = %i): %s -> %s\n" % (id, proximalpoint, distalpoint)
-                print_comment_v(comment)
+            if shape == "cone" and (
+                proximalpoint.split(">")[0] == distalpoint.split(">")[0]
+            ):
+                comment = "Ignoring zero length segment (id = %i): %s -> %s\n" % (
+                    id,
+                    proximalpoint,
+                    distalpoint,
+                )
+                logger.warning(comment)
                 cells_file.write("    // " + comment)
             else:
                 cells_file.write("    %s {\n" % shape)
                 cells_file.write("        %s\n" % distalpoint)
                 if len(proximalpoint):
                     cells_file.write("        %s\n" % proximalpoint)
-                cells_file.write("        //%s_%s.%s\n" % ('CELL_GROUP_NAME', '0', id))
+                cells_file.write("        //%s_%s.%s\n" % ("CELL_GROUP_NAME", "0", id))
                 cells_file.write("    }\n")
 
             if args.segids:
-                cells_file.write('    text {\n')
-                cells_file.write('        ttf "timrom.ttf" "------- Segment: %s" .1, 0.01\n' % (segment.id))
-                cells_file.write('        pigment { Red }\n')
-                cells_file.write('        rotate <0,180,0>\n')
-                cells_file.write('        scale <10,10,10>')
-                cells_file.write('        translate %s>\n' % distalpoint.split('>')[0])
-                cells_file.write('    }\n')
+                cells_file.write("    text {\n")
+                cells_file.write(
+                    '        ttf "timrom.ttf" "------- Segment: %s" .1, 0.01\n'
+                    % (segment.id)
+                )
+                cells_file.write("        pigment { Red }\n")
+                cells_file.write("        rotate <0,180,0>\n")
+                cells_file.write("        scale <10,10,10>")
+                cells_file.write("        translate %s>\n" % distalpoint.split(">")[0])
+                cells_file.write("    }\n")
 
-        cells_file.write("    pigment { color rgb <%f,%f,%f> }\n" % (random.random(), random.random(), random.random()))
+        cells_file.write(
+            "    pigment { color rgb <%f,%f,%f> }\n"
+            % (random.random(), random.random(), random.random())
+        )
         cells_file.write("}\n\n")
 
     if splitOut:
-        pov_file.write("#include \"" + cf + "\"\n\n")
-        pov_file.write("#include \"" + nf + "\"\n\n")
+        pov_file.write('#include "' + cf + '"\n\n')
+        pov_file.write('#include "' + nf + '"\n\n')
 
-    pov_file.write('''\n/*\n  Defining a dummy cell to use when cell in population is not found in NeuroML file...\n*/\n#declare %s =
+    pov_file.write(
+        """\n/*\n  Defining a dummy cell to use when cell in population is not found in NeuroML file...\n*/\n#declare %s =
 union {
     sphere {
         <0.000000, 0.000000, 0.000000>, 5.000000
     }
     pigment { color rgb <1,0,0> }
-}\n''' % _DUMMY_CELL)
+}\n"""
+        % _DUMMY_CELL
+    )
 
-    pov_file.write('''\n/*\n  Defining the spheres to use for end points of connections...\n*/
+    pov_file.write(
+        """\n/*\n  Defining the spheres to use for end points of connections...\n*/
     \n#declare conn_start_point =
 union {
     sphere {
@@ -352,14 +427,15 @@ union {
         <0, -40, 0>, 2.5    // Center and radius of other end
     }
     pigment { color rgb <0.2,0.2,0.8> }
-}\n''')
+}\n"""
+    )
 
     positions = {}
     popElements = nml_doc.networks[0].populations
 
     pop_id_vs_cell = {}
 
-    print_comment_v("There are %i populations in the file" % len(popElements))
+    logger.info("There are %i populations in the file" % len(popElements))
 
     for pop in popElements:
         name = pop.id
@@ -369,18 +445,22 @@ union {
         if pop.component in cell_id_vs_cell.keys():
             pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
 
-        info = "Population: %s has %i positioned cells of type: %s" % (name, len(instances), celltype)
-        print_comment_v(info)
+        info = "Population: %s has %i positioned cells of type: %s" % (
+            name,
+            len(instances),
+            celltype,
+        )
+        logger.info(info)
 
         colour = "1"
         substitute_radius = None
 
         for prop in pop.properties:
-            if prop.tag == 'color':
+            if prop.tag == "color":
                 colour = prop.value
                 colour = colour.replace(" ", ",")
                 # print "Colour determined to be: "+colour
-            if prop.tag == 'radius':
+            if prop.tag == "radius":
                 substitute_radius = float(prop.value)
 
         net_file.write("\n\n/* " + info + " */\n\n")
@@ -428,8 +508,12 @@ union {
 
             net_file.write("    translate <%s, %s, %s>\n" % (x, y, z))
 
-            if colour == '1':
-                colour = "%f,%f,%f" % (random.random(), random.random(), random.random())
+            if colour == "1":
+                colour = "%f,%f,%f" % (
+                    random.random(),
+                    random.random(),
+                    random.random(),
+                )
 
             if colour is not None:
                 net_file.write("    pigment { color rgb <%s> }" % (colour))
@@ -441,11 +525,15 @@ union {
         positions[name] = pop_positions
 
         if len(instances) == 0 and int(pop.size > 0):
-            info = "Population: %s has %i unpositioned cells of type: %s" % (name, pop.size, celltype)
-            print_comment_v(info)
+            info = "Population: %s has %i unpositioned cells of type: %s" % (
+                name,
+                pop.size,
+                celltype,
+            )
+            logger.info(info)
 
             colour = "1"
-            '''
+            """
             if pop.annotation:
                 print dir(pop.annotation)
                 print pop.annotation.anytypeobjs_
@@ -462,7 +550,7 @@ union {
                         colour = prop.getAttribute('value')
                         colour = colour.replace(" ", ",")
                     print "Colour determined to be: "+colour
-            '''
+            """
 
             net_file.write("\n\n/* " + info + " */\n\n")
             net_file.write("object {\n")
@@ -486,8 +574,12 @@ union {
                 maxZ = z + maxZc
 
             net_file.write("    translate <%s, %s, %s>\n" % (x, y, z))
-            if colour == '1':
-                colour = "%f,%f,%f" % (random.random(), random.random(), random.random())
+            if colour == "1":
+                colour = "%f,%f,%f" % (
+                    random.random(),
+                    random.random(),
+                    random.random(),
+                )
 
             if colour is not None:
                 net_file.write("    pigment { color rgb <%s> }" % (colour))
@@ -497,7 +589,11 @@ union {
 
     if args.conns or args.conn_points:
 
-        projections = nml_doc.networks[0].projections + nml_doc.networks[0].electrical_projections + nml_doc.networks[0].continuous_projections
+        projections = (
+            nml_doc.networks[0].projections
+            + nml_doc.networks[0].electrical_projections
+            + nml_doc.networks[0].continuous_projections
+        )
         for projection in projections:
             pre = projection.presynaptic_population
             post = projection.postsynaptic_population
@@ -508,15 +604,26 @@ union {
                     connections.append(c)
                 for c in projection.connections:
                     connections.append(c)
-                color = 'Grey'
+                color = "Grey"
             elif isinstance(projection, neuroml.ElectricalProjection):
-                connections = projection.electrical_connections + projection.electrical_connection_instances + projection.electrical_connection_instance_ws
-                color = 'Yellow'
+                connections = (
+                    projection.electrical_connections
+                    + projection.electrical_connection_instances
+                    + projection.electrical_connection_instance_ws
+                )
+                color = "Yellow"
             elif isinstance(projection, neuroml.ContinuousProjection):
-                connections = projection.continuous_connections + projection.continuous_connection_instances + projection.continuous_connection_instance_ws
-                color = 'Blue'
+                connections = (
+                    projection.continuous_connections
+                    + projection.continuous_connection_instances
+                    + projection.continuous_connection_instance_ws
+                )
+                color = "Blue"
 
-            print_comment_v("Adding %i connections for %s: %s -> %s " % (len(connections), projection.id, pre, post))
+            logger.info(
+                "Adding %i connections for %s: %s -> %s "
+                % (len(connections), projection.id, pre, post)
+            )
             # print cell_id_vs_seg_id_vs_distal
             # print cell_id_vs_seg_id_vs_proximal
             for connection in connections:
@@ -533,30 +640,74 @@ union {
 
                 if projection.presynaptic_population in pop_id_vs_cell.keys():
                     pre_cell = pop_id_vs_cell[projection.presynaptic_population]
-                    d = cell_id_vs_seg_id_vs_distal[pre_cell.id][connection.get_pre_segment_id()]
-                    p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][connection.get_pre_segment_id()]
-                    m = [p[i] + connection.get_pre_fraction_along() * (d[i] - p[i]) for i in [0, 1, 2]]
-                    print_comment("Pre point is %s, %s between %s and %s" % (m, connection.get_pre_fraction_along(), p, d))
+                    d = cell_id_vs_seg_id_vs_distal[pre_cell.id][
+                        connection.get_pre_segment_id()
+                    ]
+                    p = cell_id_vs_seg_id_vs_proximal[pre_cell.id][
+                        connection.get_pre_segment_id()
+                    ]
+                    m = [
+                        p[i] + connection.get_pre_fraction_along() * (d[i] - p[i])
+                        for i in [0, 1, 2]
+                    ]
+                    logger.info(
+                        "Pre point is %s, %s between %s and %s"
+                        % (m, connection.get_pre_fraction_along(), p, d)
+                    )
                     pre_loc = [pre_loc[i] + m[i] for i in [0, 1, 2]]
 
                 if projection.postsynaptic_population in pop_id_vs_cell.keys():
                     post_cell = pop_id_vs_cell[projection.postsynaptic_population]
-                    d = cell_id_vs_seg_id_vs_distal[post_cell.id][connection.get_post_segment_id()]
-                    p = cell_id_vs_seg_id_vs_proximal[post_cell.id][connection.get_post_segment_id()]
-                    m = [p[i] + connection.get_post_fraction_along() * (d[i] - p[i]) for i in [0, 1, 2]]
-                    print_comment("Post point is %s, %s between %s and %s" % (m, connection.get_post_fraction_along(), p, d))
+                    d = cell_id_vs_seg_id_vs_distal[post_cell.id][
+                        connection.get_post_segment_id()
+                    ]
+                    p = cell_id_vs_seg_id_vs_proximal[post_cell.id][
+                        connection.get_post_segment_id()
+                    ]
+                    m = [
+                        p[i] + connection.get_post_fraction_along() * (d[i] - p[i])
+                        for i in [0, 1, 2]
+                    ]
+                    logger.info(
+                        "Post point is %s, %s between %s and %s"
+                        % (m, connection.get_post_fraction_along(), p, d)
+                    )
                     post_loc = [post_loc[i] + m[i] for i in [0, 1, 2]]
 
                 if post_loc != pre_loc:
-                    info = "// Connection from %s:%s %s -> %s:%s %s\n" % (pre, pre_cell_id, pre_loc, post, post_cell_id, post_loc)
+                    info = "// Connection from %s:%s %s -> %s:%s %s\n" % (
+                        pre,
+                        pre_cell_id,
+                        pre_loc,
+                        post,
+                        post_cell_id,
+                        post_loc,
+                    )
 
-                    print_comment(info)
+                    logger.info(info)
                     net_file.write("// %s" % info)
                     if args.conns:
-                        net_file.write("cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color %s}}\n" % (pre_loc[0], pre_loc[1], pre_loc[2], post_loc[0], post_loc[1], post_loc[2], color))
+                        net_file.write(
+                            "cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color %s}}\n"
+                            % (
+                                pre_loc[0],
+                                pre_loc[1],
+                                pre_loc[2],
+                                post_loc[0],
+                                post_loc[1],
+                                post_loc[2],
+                                color,
+                            )
+                        )
                     if args.conn_points:
-                        net_file.write("object { conn_start_point translate <%s,%s,%s> }\n" % (pre_loc[0], pre_loc[1], pre_loc[2]))
-                        net_file.write("object { conn_end_point translate <%s,%s,%s> }\n" % (post_loc[0], post_loc[1], post_loc[2]))
+                        net_file.write(
+                            "object { conn_start_point translate <%s,%s,%s> }\n"
+                            % (pre_loc[0], pre_loc[1], pre_loc[2])
+                        )
+                        net_file.write(
+                            "object { conn_end_point translate <%s,%s,%s> }\n"
+                            % (post_loc[0], post_loc[1], post_loc[2])
+                        )
 
     if args.inputs:
         for il in nml_doc.networks[0].input_lists:
@@ -572,23 +723,31 @@ union {
 
                 d = cell_id_vs_seg_id_vs_distal[cell.id][input.get_segment_id()]
                 p = cell_id_vs_seg_id_vs_proximal[cell.id][input.get_segment_id()]
-                m = [p[i] + input.get_fraction_along() * (d[i] - p[i]) for i in [0, 1, 2]]
+                m = [
+                    p[i] + input.get_fraction_along() * (d[i] - p[i]) for i in [0, 1, 2]
+                ]
 
-                input_info = "Input on cell %s:%s at %s; point %s along (%s -> %s): %s" % (popi, cell_id, loc, input.get_fraction_along(), d, p, m)
+                input_info = (
+                    "Input on cell %s:%s at %s; point %s along (%s -> %s): %s"
+                    % (popi, cell_id, loc, input.get_fraction_along(), d, p, m)
+                )
 
                 loc = [loc[i] + m[i] for i in [0, 1, 2]]
 
                 net_file.write("/* %s */\n" % input_info)
-                net_file.write("object { input_object translate <%s,%s,%s> }\n\n" % (loc[0], loc[1], loc[2]))
+                net_file.write(
+                    "object { input_object translate <%s,%s,%s> }\n\n"
+                    % (loc[0], loc[1], loc[2])
+                )
 
-    plane = '''
+    plane = """
 plane {
    y, vv(-1)
    pigment {checker color rgb 1.0, color rgb 0.8 scale 20}
 }
-'''
+"""
 
-    footer = '''
+    footer = """
 
 #declare minX = %f;
 #declare minY = %f;
@@ -638,14 +797,31 @@ camera {
 }
 
 %s
-    \n''' % (minX, minY, minZ, maxX, maxY, maxZ, args.posx, args.scalex, args.posy, args.scaley, args.posz, args.scalez, args.viewx, args.viewy, args.viewz, (plane if args.plane else ""))  # end of footer
+    \n""" % (
+        minX,
+        minY,
+        minZ,
+        maxX,
+        maxY,
+        maxZ,
+        args.posx,
+        args.scalex,
+        args.posy,
+        args.scaley,
+        args.posz,
+        args.scalez,
+        args.viewx,
+        args.viewy,
+        args.viewz,
+        (plane if args.plane else ""),
+    )  # end of footer
 
     pov_file.write(footer)
     pov_file.close()
 
     if args.movie:
         ini_file_name = pov_file_name.replace(".pov", "_movie.ini")
-        ini_movie = '''
+        ini_movie = """
 Antialias=On
 
 +W800 +H600
@@ -663,16 +839,25 @@ Final_Clock=1
 Cyclic_Animation=on
 Pause_when_Done=off
 
-        '''
-        ini_file = open(ini_file_name, 'w')
+        """
+        ini_file = open(ini_file_name, "w")
         ini_file.write(ini_movie % (pov_file_name, args.frames))
         ini_file.close()
 
-        print_comment_v("Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n" % (args.frames, ini_file_name, ini_file_name))
+        logger.info(
+            "Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n"
+            % (args.frames, ini_file_name, ini_file_name)
+        )
     else:
-        print_comment_v("Created file for generating image of network. To run this type:\n\n    povray %s\n" % (pov_file_name))
-        print_comment_v("Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n" % (pov_file_name))
+        logger.info(
+            "Created file for generating image of network. To run this type:\n\n    povray %s\n"
+            % (pov_file_name)
+        )
+        logger.info(
+            "Or for higher resolution:\n\n    povray Antialias=On Antialias_Depth=10 Antialias_Threshold=0.1 +W1200 +H900 %s\n"
+            % (pov_file_name)
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

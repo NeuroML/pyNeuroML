@@ -1,0 +1,28 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.2.xsd" id="cell">
+    <notes>HH cell</notes>
+    <include href="HH_example_na_channel.nml"/>
+    <include href="HH_example_k_channel.nml"/>
+    <include href="HH_example_leak_channel.nml"/>
+    <cell id="hh_cell">
+        <notes>A single compartment HH cell</notes>
+        <morphology id="hh_cell_morph">
+            <segment id="0" name="soma">
+                <proximal x="0.000000e+00" y="0.000000e+00" z="0.000000e+00" diameter="17.841241161527712"/>
+                <distal x="0.000000e+00" y="0.000000e+00" z="0.000000e+00" diameter="17.841241161527712"/>
+            </segment>
+        </morphology>
+        <biophysicalProperties>
+            <membraneProperties>
+                <channelDensity id="na_channels" ionChannel="na_channel" condDensity="120.0 mS_per_cm2" erev="50.0 mV" ion="na"/>
+                <channelDensity id="k_channels" ionChannel="k_channel" condDensity="360 S_per_m2" erev="-77mV" ion="k"/>
+                <channelDensity id="leak_channels" ionChannel="leak_channel" condDensity="3.0 S_per_m2" erev="-54.3mV" ion="non_specific"/>
+                <spikeThresh value="-20mV"/>
+                <specificCapacitance value="1.0 uF_per_cm2"/>
+                <initMembPotential value="-65mV"/>
+            </membraneProperties>
+            <intracellularProperties>
+                <resistivity value="0.03 kohm_cm"/>
+            </intracellularProperties>
+        </biophysicalProperties>
+    </cell>
+</neuroml>

@@ -1,5 +1,3 @@
-from pyneuroml import pynml
-
 import argparse
 
 import matplotlib.pyplot as plt
@@ -8,22 +6,28 @@ import numpy as np
 import re
 import sys
 import os
+import logging
 
 
-DEFAULTS = {'format': 'id_t',
-            'rates': False,
-            'save_spike_plot_to': None,
-            'rate_window': 50,
-            'rate_bins': 500,
-            'show_plots_already': True}
+logger = logging.getLogger(__name__)
 
-POP_NAME_SPIKEFILE_WITH_GIDS = 'Spiketimes for GIDs'
+
+DEFAULTS = {
+    "format": "id_t",
+    "rates": False,
+    "save_spike_plot_to": None,
+    "rate_window": 50,
+    "rate_bins": 500,
+    "show_plots_already": True,
+}
+
+POP_NAME_SPIKEFILE_WITH_GIDS = "Spiketimes for GIDs"
 
 
 def convert_case(name):
     """Converts from camelCase to under_score"""
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def build_namespace(a=None, **kwargs):
@@ -51,50 +55,66 @@ def process_args():
     """
     Parse command-line arguments.
     """
-    parser = argparse.ArgumentParser(description="A script for plotting files containing spike time data")
+    parser = argparse.ArgumentParser(
+        description="A script for plotting files containing spike time data"
+    )
 
-    parser.add_argument('spiketimeFiles',
-                        type=str,
-                        metavar='<spiketime file>',
-                        help='List of text file containing spike times',
-                        nargs='+')
+    parser.add_argument(
+        "spiketimeFiles",
+        type=str,
+        metavar="<spiketime file>",
+        help="List of text file containing spike times",
+        nargs="+",
+    )
 
-    parser.add_argument('-format',
-                        type=str,
-                        metavar='<format>',
-                        default=DEFAULTS['format'],
-                        help='How the spiketimes are represented on each line of file: \n' + \
-                        'id_t: id of cell, space(s) / tab(s), time of spike (default);\n' + \
-                        't_id: time of spike, space(s) / tab(s), id of cell;\n' + \
-                        'sonata: SONATA format HDF5 file containing spike times')
+    parser.add_argument(
+        "-format",
+        type=str,
+        metavar="<format>",
+        default=DEFAULTS["format"],
+        help="How the spiketimes are represented on each line of file: \n"
+        + "id_t: id of cell, space(s) / tab(s), time of spike (default);\n"
+        + "t_id: time of spike, space(s) / tab(s), id of cell;\n"
+        + "sonata: SONATA format HDF5 file containing spike times",
+    )
 
-    parser.add_argument('-rates',
-                        action='store_true',
-                        default=DEFAULTS['rates'],
-                        help='Show a plot of rates')
+    parser.add_argument(
+        "-rates",
+        action="store_true",
+        default=DEFAULTS["rates"],
+        help="Show a plot of rates",
+    )
 
-    parser.add_argument('-showPlotsAlready',
-                        action='store_true',
-                        default=DEFAULTS['show_plots_already'],
-                        help='Show plots once generated')
+    parser.add_argument(
+        "-showPlotsAlready",
+        action="store_true",
+        default=DEFAULTS["show_plots_already"],
+        help="Show plots once generated",
+    )
 
-    parser.add_argument('-saveSpikePlotTo',
-                        type=str,
-                        metavar='<spiketime plot filename>',
-                        default=DEFAULTS['save_spike_plot_to'],
-                        help='Name of file in which to save spiketime plot')
+    parser.add_argument(
+        "-saveSpikePlotTo",
+        type=str,
+        metavar="<spiketime plot filename>",
+        default=DEFAULTS["save_spike_plot_to"],
+        help="Name of file in which to save spiketime plot",
+    )
 
-    parser.add_argument('-rateWindow',
-                        type=int,
-                        metavar='<rate window>',
-                        default=DEFAULTS['rate_window'],
-                        help='Window for rate calculation in ms')
+    parser.add_argument(
+        "-rateWindow",
+        type=int,
+        metavar="<rate window>",
+        default=DEFAULTS["rate_window"],
+        help="Window for rate calculation in ms",
+    )
 
-    parser.add_argument('-rateBins',
-                        type=int,
-                        metavar='<rate bins>',
-                        default=DEFAULTS['rate_bins'],
-                        help='Number of bins for rate histogram')
+    parser.add_argument(
+        "-rateBins",
+        type=int,
+        metavar="<rate bins>",
+        default=DEFAULTS["rate_bins"],
+        help="Number of bins for rate histogram",
+    )
 
     return parser.parse_args()
 
@@ -107,16 +127,21 @@ def main(args=None):
 
 def read_sonata_spikes_hdf5_file(file_name):
     full_path = os.path.abspath(file_name)
-    pynml.print_comment_v("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
+    logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
 
-    import tables   # pytables for HDF5 support
-    h5file = tables.open_file(file_name, mode='r')
+    import tables  # pytables for HDF5 support
 
-    sorting = h5file.root.spikes._v_attrs.sorting if hasattr(h5file.root.spikes._v_attrs, 'sorting') else '???'
-    pynml.print_comment_v("Opened HDF5 file: %s; sorting=%s" % (h5file.filename, sorting))
+    h5file = tables.open_file(file_name, mode="r")
+
+    sorting = (
+        h5file.root.spikes._v_attrs.sorting
+        if hasattr(h5file.root.spikes._v_attrs, "sorting")
+        else "???"
+    )
+    logger.info("Opened HDF5 file: %s; sorting=%s" % (h5file.filename, sorting))
 
     ids_times_pops = {}
-    if hasattr(h5file.root.spikes, 'gids'):
+    if hasattr(h5file.root.spikes, "gids"):
 
         gids = h5file.root.spikes.gids
         timestamps = h5file.root.spikes.timestamps
@@ -135,7 +160,10 @@ def read_sonata_spikes_hdf5_file(file_name):
             count += 1
 
         ids = ids_times.keys()
-        pynml.print_comment_v("Loaded %s spiketimes, ids (%s -> %s) times (%s -> %s)" % (count, min(ids), max(ids), min_t, max_t))
+        logger.info(
+            "Loaded %s spiketimes, ids (%s -> %s) times (%s -> %s)"
+            % (count, min(ids), max(ids), min_t, max_t)
+        )
 
         ids_times_pops[POP_NAME_SPIKEFILE_WITH_GIDS] = ids_times
     else:
@@ -157,7 +185,10 @@ def read_sonata_spikes_hdf5_file(file_name):
                 count += 1
 
             ids = ids_times.keys()
-            pynml.print_comment_v("Loaded %s spiketimes for %s, ids (%s -> %s) times (%s -> %s)" % (count, group._v_name, min(ids), max(ids), min_t, max_t))
+            logger.info(
+                "Loaded %s spiketimes for %s, ids (%s -> %s) times (%s -> %s)"
+                % (count, group._v_name, min(ids), max(ids), min_t, max_t)
+            )
             ids_times_pops[group._v_name] = ids_times
 
     h5file.close()
@@ -167,7 +198,10 @@ def read_sonata_spikes_hdf5_file(file_name):
 
 def run(a=None, **kwargs):
     a = build_namespace(a, **kwargs)
-    pynml.print_comment_v('Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s' % (a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to))
+    logger.info(
+        "Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s"
+        % (a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to)
+    )
 
     xs = []
     ys = []
@@ -183,7 +217,7 @@ def run(a=None, **kwargs):
     times = OrderedDict()
     ids_in_file = OrderedDict()
 
-    if a.format == 'sonata' or a.format == 's':
+    if a.format == "sonata" or a.format == "s":
         for file_name in a.spiketime_files:
             ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
 
@@ -194,11 +228,11 @@ def run(a=None, **kwargs):
                 y = []
                 max_id_here = 0
 
-                name = file_name.split(' / ')[-1]
-                if name.endswith('_spikes.h5'):
-                    name = name[: -10]
-                elif name.endswith('.h5'):
-                    name = name[: -3]
+                name = file_name.split(" / ")[-1]
+                if name.endswith("_spikes.h5"):
+                    name = name[:-10]
+                elif name.endswith(".h5"):
+                    name = name[:-3]
                 times[name] = []
                 ids_in_file[name] = []
 
@@ -222,11 +256,11 @@ def run(a=None, **kwargs):
                 offset_id = max_id_here + 1
                 xs.append(x)
                 ys.append(y)
-                markers.append('.')
-                linestyles.append('')
+                markers.append(".")
+                linestyles.append("")
 
         xlim = [max_time / -20.0, max_time * 1.05]
-        ylim = [max_id / -20., max_id * 1.05] if max_id > 0 else [-1, 1]
+        ylim = [max_id / -20.0, max_id * 1.05] if max_id > 0 else [-1, 1]
         markersizes = []
         for xx in xs:
             if len(unique_ids) > 50:
@@ -238,25 +272,25 @@ def run(a=None, **kwargs):
     else:
 
         for file_name in a.spiketime_files:
-            pynml.print_comment_v("Loading spike times from: %s" % file_name)
+            logger.info("Loading spike times from: %s" % file_name)
             spikes_file = open(file_name)
             x = []
             y = []
             max_id_here = 0
 
             name = spikes_file.name
-            if name.endswith('.spikes'):
-                name = name[: -7]
-            if name.endswith('.spike'):
-                name = name[: -6]
+            if name.endswith(".spikes"):
+                name = name[:-7]
+            if name.endswith(".spike"):
+                name = name[:-6]
             times[name] = []
             ids_in_file[name] = []
 
             for line in spikes_file:
-                if not line.startswith('#'):
-                    if a.format == 'id_t':
+                if not line.startswith("#"):
+                    if a.format == "id_t":
                         [id, t] = line.split()
-                    elif a.format == 't_id':
+                    elif a.format == "t_id":
                         [t, id] = line.split()
                     id_shifted = offset_id + int(float(id))
                     max_id = max(max_id, id_shifted)
@@ -276,11 +310,11 @@ def run(a=None, **kwargs):
             offset_id = max_id_here + 1
             xs.append(x)
             ys.append(y)
-            markers.append('.')
-            linestyles.append('')
+            markers.append(".")
+            linestyles.append("")
 
         xlim = [max_time / -20.0, max_time * 1.05]
-        ylim = [max_id_here / -20., max_id_here * 1.05]
+        ylim = [max_id_here / -20.0, max_id_here * 1.05]
         markersizes = []
         for xx in xs:
             if len(unique_ids) > 50:
@@ -290,21 +324,23 @@ def run(a=None, **kwargs):
             else:
                 markersizes.append(4)
 
-    pynml.generate_plot(xs,
-                        ys,
-                        "Spike times from: %s" % a.spiketime_files,
-                        labels=labels,
-                        linestyles=linestyles,
-                        markers=markers,
-                        xaxis="Time (s)",
-                        yaxis="Cell index",
-                        xlim=xlim,
-                        ylim=ylim,
-                        markersizes=markersizes,
-                        grid=False,
-                        show_plot_already=False,
-                        save_figure_to=a.save_spike_plot_to,
-                        legend_position='right')
+    generate_plot(
+        xs,
+        ys,
+        "Spike times from: %s" % a.spiketime_files,
+        labels=labels,
+        linestyles=linestyles,
+        markers=markers,
+        xaxis="Time (s)",
+        yaxis="Cell index",
+        xlim=xlim,
+        ylim=ylim,
+        markersizes=markersizes,
+        grid=False,
+        show_plot_already=False,
+        save_figure_to=a.save_spike_plot_to,
+        legend_position="right",
+    )
 
     if a.rates:
 
@@ -314,12 +350,20 @@ def run(a=None, **kwargs):
             tt = times[name]
             ids_here = len(ids_in_file[name])
 
-            plt.hist(tt, bins=bins, histtype='step', weights=[bins * max(tt) / (float(ids_here))] * len(tt), label=name + "_h")
-            hist, bin_edges = np.histogram(tt, bins=bins, weights=[bins * max(tt) / (float(ids_here))] * len(tt))
-            '''
+            plt.hist(
+                tt,
+                bins=bins,
+                histtype="step",
+                weights=[bins * max(tt) / (float(ids_here))] * len(tt),
+                label=name + "_h",
+            )
+            hist, bin_edges = np.histogram(
+                tt, bins=bins, weights=[bins * max(tt) / (float(ids_here))] * len(tt)
+            )
+            """
             width = bin_edges[1]-bin_edges[0]
             mids = [i + width / 2 for i in bin_edges[: -1]]
-            plt.plot(mids, hist, label=name)'''
+            plt.plot(mids, hist, label=name)"""
 
         plt.figure()
 
@@ -327,10 +371,12 @@ def run(a=None, **kwargs):
             tt = times[name]
             ids_here = len(ids_in_file[name])
 
-            hist, bin_edges = np.histogram(tt, bins=bins, weights=[bins * max(tt) / (float(ids_here))] * len(tt))
+            hist, bin_edges = np.histogram(
+                tt, bins=bins, weights=[bins * max(tt) / (float(ids_here))] * len(tt)
+            )
 
             width = bin_edges[1] - bin_edges[0]
-            mids = [i + width / 2 for i in bin_edges[: -1]]
+            mids = [i + width / 2 for i in bin_edges[:-1]]
 
             boxes = [5, 10, 20, 50]
             boxes = [20, 50]
@@ -342,7 +388,7 @@ def run(a=None, **kwargs):
 
                 ys = hist_c
                 xs = [i / (float(len(ys))) for i in range(len(ys))]
-                plt.plot(xs, ys, label=name + '_%i_c' % b)
+                plt.plot(xs, ys, label=name + "_%i_c" % b)
 
         # plt.legend()
 
@@ -352,5 +398,5 @@ def run(a=None, **kwargs):
         plt.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
