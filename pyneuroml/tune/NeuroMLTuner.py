@@ -303,7 +303,7 @@ def process_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_optimisation(**kwargs: typing.Any) -> typing.Optional[typing.Dict]:
+def run_optimisation(**kwargs: typing.Any) -> typing.Optional[dict]:
     """Run an optimisation.
 
     The list of parameters here matches the output of `pynml-tune -h`:
@@ -374,7 +374,7 @@ def run_optimisation(**kwargs: typing.Any) -> typing.Optional[typing.Dict]:
     return _run_optimisation(a)
 
 
-def _run_optimisation(a: argparse.Namespace) -> typing.Optional[typing.Dict]:
+def _run_optimisation(a: argparse.Namespace) -> typing.Optional[dict]:
     """Run optimisation.
 
     Internal function that actually runs the optimisation after
@@ -538,7 +538,7 @@ def _run_optimisation(a: argparse.Namespace) -> typing.Optional[typing.Dict]:
 
     secs = time.time() - start
 
-    reportj = {}  # type: dict[str, typing.Union[str, float, typing.Dict]]
+    reportj = {}  # type: dict[str, typing.Union[str, float, dict]]
     info = (
         "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"
         % (
