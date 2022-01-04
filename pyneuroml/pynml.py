@@ -356,7 +356,7 @@ def get_lems_model_with_units() -> lems_model.Model:
 
 
 def extract_lems_definition_files(
-    path: typing.Union[str, None, tempfile.TemporaryDirectory[typing.Any]] = None
+    path: typing.Union[str, None, tempfile.TemporaryDirectory] = None
 ) -> str:
     """Extract the NeuroML2 LEMS definition files to a directory and return its path.
 
