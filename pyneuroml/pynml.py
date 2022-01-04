@@ -12,6 +12,8 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
+# py3.7, 3.8 require this to use standard collections as generics
+from __future__ import annotations
 import warnings
 import os
 import shutil
@@ -28,11 +30,7 @@ from lxml import etree
 import pprint
 import logging
 import tempfile
-
-try:
-    import typing
-except ImportError:
-    pass
+import typing
 
 import matplotlib
 import matplotlib.axes
@@ -53,7 +51,7 @@ DEFAULTS = {
     "v": False,
     "default_java_max_memory": "400M",
     "nogui": False,
-}  # type: typing.Dict[str, typing.Any]
+}  # type: dict[str, typing.Any]
 
 lems_model_with_units = None
 
@@ -414,8 +412,8 @@ def extract_lems_definition_files(
 def list_exposures(
     nml_doc_fn: str, substring: str = ""
 ) -> typing.Union[
-    typing.Dict[
-        lems.model.component.Component, typing.List[lems.model.component.Exposure]
+    dict[
+        lems.model.component.Component, list[lems.model.component.Exposure]
     ],
     None,
 ]:
@@ -445,7 +443,7 @@ def list_exposures(
 
 def list_recording_paths_for_exposures(
     nml_doc_fn: str, substring: str = "", target: str = ""
-) -> typing.List[str]:
+) -> list[str]:
     """List the recording path strings for exposures.
 
     This wraps around `lems.model.list_recording_paths` to list the recording
@@ -1267,7 +1265,7 @@ def nml2_to_png(
 
 
 def include_string(
-    paths_to_include: typing.Union[str, typing.Tuple[str], typing.List[str]]
+    paths_to_include: typing.Union[str, typing.Tuple[str], list[str]]
 ) -> str:
     """Convert a path or list of paths into an include string to be used by
     jnml.
@@ -1298,7 +1296,7 @@ def gui_string(nogui: bool) -> str:
 
 def run_lems_with_jneuroml_neuron(
     lems_file_name: str,
-    paths_to_include: typing.List[str] = [],
+    paths_to_include: list[str] = [],
     max_memory: str = DEFAULTS["default_java_max_memory"],
     skip_run: bool = False,
     nogui: bool = False,
@@ -1433,7 +1431,7 @@ def run_lems_with_jneuroml_neuron(
 
 def run_lems_with_jneuroml_netpyne(
     lems_file_name: str,
-    paths_to_include: typing.List[str] = [],
+    paths_to_include: list[str] = [],
     max_memory: str = DEFAULTS["default_java_max_memory"],
     skip_run: bool = False,
     nogui: bool = False,
@@ -1535,7 +1533,7 @@ def run_lems_with_jneuroml_netpyne(
 # TODO: need to enable run with Brian2!
 def run_lems_with_jneuroml_brian2(
     lems_file_name: str,
-    paths_to_include: typing.List[str] = [],
+    paths_to_include: list[str] = [],
     max_memory: str = DEFAULTS["default_java_max_memory"],
     skip_run: bool = False,
     nogui: bool = False,
@@ -2471,15 +2469,15 @@ def execute_command_in_dir(
 
 
 def generate_plot(
-    xvalues: typing.List[float],
-    yvalues: typing.List[float],
+    xvalues: list[float],
+    yvalues: list[float],
     title: str,
-    labels: typing.Optional[typing.List[str]] = None,
-    colors: typing.Optional[typing.List[str]] = None,
-    linestyles: typing.Optional[typing.List[str]] = None,
-    linewidths: typing.Optional[typing.List[str]] = None,
-    markers: typing.Optional[typing.List[str]] = None,
-    markersizes: typing.Optional[typing.List[str]] = None,
+    labels: typing.Optional[list[str]] = None,
+    colors: typing.Optional[list[str]] = None,
+    linestyles: typing.Optional[list[str]] = None,
+    linewidths: typing.Optional[list[str]] = None,
+    markers: typing.Optional[list[str]] = None,
+    markersizes: typing.Optional[list[str]] = None,
     xaxis: str = None,
     yaxis: str = None,
     xlim: str = None,

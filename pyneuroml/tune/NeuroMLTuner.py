@@ -15,6 +15,7 @@ This module also provides the `pynml-tune` command line utility.
 Please see the output of `pynml-tune -h` for more information on `pynml-tune`.
 """
 
+from __future__ import unicode_literals
 import os
 import os.path
 import time
@@ -23,12 +24,7 @@ from collections import OrderedDict
 import argparse
 import logging
 import pprint
-
-try:
-    import typing
-except ImportError:
-    pass
-
+import typing
 
 from pyelectro import analysis
 from matplotlib import pyplot as plt
@@ -541,7 +537,7 @@ def _run_optimisation(a: argparse.Namespace) -> typing.Optional[typing.Dict]:
 
     secs = time.time() - start
 
-    reportj = {}  # type: typing.Dict[str, typing.Union[str, float, typing.Dict]]
+    reportj = {}  # type: dict[str, typing.Union[str, float, typing.Dict]]
     info = (
         "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"
         % (
@@ -913,7 +909,7 @@ def main(args=None):
     run_optimisation(a=args)
 
 
-def parse_dict_arg(dict_arg: str) -> typing.Optional[typing.Dict[str, typing.Any]]:
+def parse_dict_arg(dict_arg: str) -> typing.Optional[dict[str, typing.Any]]:
     """Parse string arguments to dictionaries
 
     :param dict_arg: string containing list key/value pairs
@@ -922,7 +918,7 @@ def parse_dict_arg(dict_arg: str) -> typing.Optional[typing.Dict[str, typing.Any
     """
     if not dict_arg:
         return None
-    ret = {}  # type: typing.Dict[str, typing.Any]
+    ret = {}  # type: dict[str, typing.Any]
     entries = str(dict_arg[1:-1]).split(",")
     for e in entries:
         if len(e) > 0:
@@ -936,7 +932,7 @@ def parse_dict_arg(dict_arg: str) -> typing.Optional[typing.Dict[str, typing.Any
     return ret
 
 
-def parse_list_arg(str_list_arg: str) -> typing.Optional[typing.List[typing.Any]]:
+def parse_list_arg(str_list_arg: str) -> typing.Optional[list[typing.Any]]:
     """Parse string arguments to a list
 
     :param str_list_arg: string containing list
@@ -945,7 +941,7 @@ def parse_list_arg(str_list_arg: str) -> typing.Optional[typing.List[typing.Any]
     """
     if not str_list_arg:
         return None
-    ret = []  # type: typing.List[typing.Any]
+    ret = []  # type: list[typing.Any]
     entries = str(str_list_arg[1:-1]).split(",")
     for e in entries:
         try:
