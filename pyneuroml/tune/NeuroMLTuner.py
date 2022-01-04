@@ -16,6 +16,7 @@ Please see the output of `pynml-tune -h` for more information on `pynml-tune`.
 """
 
 from __future__ import unicode_literals
+from __future__ import annotations
 import os
 import os.path
 import time
