@@ -35,7 +35,9 @@ except ImportError:
     pass
 
 import matplotlib
+import matplotlib.axes
 import lems.model.model as lems_model
+import lems
 from lems.parser.LEMS import LEMSFileParser
 
 from pyneuroml import __version__
@@ -413,7 +415,7 @@ def list_exposures(
     nml_doc_fn: str, substring: str = ""
 ) -> typing.Union[
     typing.Dict[
-        lems_model.component.Component, typing.List[lems_model.component.Exposure]
+        lems.model.component.Component, typing.List[lems.model.component.Exposure]
     ],
     None,
 ]:
@@ -2179,7 +2181,7 @@ def run_jneuroml(
     report_jnml_output: bool = True,
     exit_on_fail: bool = False,
     return_string: bool = False,
-) -> typing.Union[typing.Tuple[int, str], bool]:
+) -> typing.Union[typing.Tuple[bool, str], bool]:
     """Run jnml with provided arguments.
 
     :param pre_args: pre-file name arguments
@@ -2495,7 +2497,7 @@ def generate_plot(
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
-) -> matplotlib.Axes:
+) -> matplotlib.axes.Axes:
     """Utility function to generate plots using the Matplotlib library.
 
     This function can be used to generate graphs with multiple plot lines.
@@ -2571,7 +2573,7 @@ def generate_plot(
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
-    :returns: matplotlib Axes object
+    :returns: matplotlib.axes.Axes object
     """
 
     logger.info("Generating plot: %s" % (title))
