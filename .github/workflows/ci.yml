@@ -51,7 +51,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest .
+        pytest --cov=pyneuroml .
         pynml -h
 
         # For now, only test neuron related examples on py3
