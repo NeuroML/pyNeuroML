@@ -54,9 +54,7 @@ jobs:
         pytest --cov=pyneuroml .
         pynml -h
 
-        # For now, only test neuron related examples on py3
-        if [[  ${{ matrix.python-version }} == "3."* ]]; then argnrn=-neuron ; fi
-        ./test-ghactions.sh $argnrn
+        ./test-ghactions.sh -neuron
 
     - name: Lint with flake8
       run: |
