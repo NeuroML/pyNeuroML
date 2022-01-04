@@ -46,7 +46,7 @@ setup(
     },
     data_files=[
         (
-            "man/man1",
+            "share/man/man1",
             [
                 "man/man1/pynml.1",
                 "man/man1/pynml-modchananalysis.1",
