@@ -15,6 +15,8 @@ This module also provides the `pynml-tune` command line utility.
 Please see the output of `pynml-tune -h` for more information on `pynml-tune`.
 """
 
+from __future__ import unicode_literals
+from __future__ import annotations
 import os
 import os.path
 import time
@@ -23,12 +25,7 @@ from collections import OrderedDict
 import argparse
 import logging
 import pprint
-
-try:
-    from typing import List, Any, Dict, Union, Optional
-except ImportError:
-    pass
-
+import typing
 
 from pyelectro import analysis
 from matplotlib import pyplot as plt
@@ -69,8 +66,7 @@ DEFAULTS = {
 }
 
 
-def process_args():
-    # type: () -> argparse.Namespace
+def process_args() -> argparse.Namespace:
     """
     Parse command-line arguments for pynml-tune.
     """
@@ -307,8 +303,7 @@ def process_args():
     return parser.parse_args()
 
 
-def run_optimisation(**kwargs):
-    # type: (str) -> Dict
+def run_optimisation(**kwargs: typing.Any) -> typing.Optional[dict]:
     """Run an optimisation.
 
     The list of parameters here matches the output of `pynml-tune -h`:
@@ -379,8 +374,7 @@ def run_optimisation(**kwargs):
     return _run_optimisation(a)
 
 
-def _run_optimisation(a):
-    # type: (Any) -> Optional[Dict]
+def _run_optimisation(a: argparse.Namespace) -> typing.Optional[dict]:
     """Run optimisation.
 
     Internal function that actually runs the optimisation after
@@ -544,7 +538,7 @@ def _run_optimisation(a):
 
     secs = time.time() - start
 
-    reportj = {}  # type: Dict[str, Union[str, float, Dict]]
+    reportj = {}  # type: dict[str, typing.Union[str, float, dict]]
     info = (
         "Ran %s evaluations (pop: %s) in %f seconds (%f mins total; %fs per eval)\n\n"
         % (
@@ -665,7 +659,7 @@ def _run_optimisation(a):
         plt.ylabel("Membrane potential(mV)")
 
         if a.save_to_file_output:
-            plt.savefig(a.save_to_file_output, dpi=300, bbox_inches='tight')
+            plt.savefig(a.save_to_file_output, dpi=300, bbox_inches="tight")
 
         utils.plot_generation_evolution(
             sim_var.keys(),
@@ -680,7 +674,6 @@ def _run_optimisation(a):
 
         if a.show_plot_already:
             plt.show()
-
 
     return reportj
 
@@ -917,8 +910,7 @@ def main(args=None):
     run_optimisation(a=args)
 
 
-def parse_dict_arg(dict_arg):
-    # type: (List[str]) -> Optional[Dict[str, Any]]
+def parse_dict_arg(dict_arg: str) -> typing.Optional[dict[str, typing.Any]]:
     """Parse string arguments to dictionaries
 
     :param dict_arg: string containing list key/value pairs
@@ -927,12 +919,12 @@ def parse_dict_arg(dict_arg):
     """
     if not dict_arg:
         return None
-    ret = {}  # type: Dict[str, Any]
+    ret = {}  # type: dict[str, typing.Any]
     entries = str(dict_arg[1:-1]).split(",")
     for e in entries:
         if len(e) > 0:
             key = e[: e.rfind(":")]
-            value = e[e.rfind(":") + 1:]
+            value = e[e.rfind(":") + 1 :]
             try:
                 ret[key] = float(value)
             except TypeError:
@@ -941,8 +933,7 @@ def parse_dict_arg(dict_arg):
     return ret
 
 
-def parse_list_arg(str_list_arg):
-    # type: (List[str]) -> Optional[List[Any]]
+def parse_list_arg(str_list_arg: str) -> typing.Optional[list[typing.Any]]:
     """Parse string arguments to a list
 
     :param str_list_arg: string containing list
@@ -951,7 +942,7 @@ def parse_list_arg(str_list_arg):
     """
     if not str_list_arg:
         return None
-    ret = []  # type: List[Any]
+    ret = []  # type: list[typing.Any]
     entries = str(str_list_arg[1:-1]).split(",")
     for e in entries:
         try:
@@ -962,8 +953,9 @@ def parse_list_arg(str_list_arg):
     return ret
 
 
-def build_namespace(a=None, **kwargs):
-    # type: (argparse.Namespace, str) -> argparse.Namespace
+def build_namespace(
+    a: typing.Optional[argparse.Namespace] = None, **kwargs: typing.Any
+) -> argparse.Namespace:
     """Build an argparse namespace."""
     if a is None:
         a = argparse.Namespace()
@@ -988,8 +980,7 @@ def build_namespace(a=None, **kwargs):
     return a
 
 
-def convert_case(name):
-    # type: (str) -> str
+def convert_case(name: str) -> str:
     """Converts from camelCase to snake_case"""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()

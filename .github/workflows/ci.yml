@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
       fail-fast: false
 
     steps:
@@ -51,12 +51,10 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest .
+        pytest --cov=pyneuroml .
         pynml -h
 
-        # For now, only test neuron related examples on py3
-        if [[  ${{ matrix.python-version }} == "3."* ]]; then argnrn=-neuron ; fi
-        ./test-ghactions.sh $argnrn
+        ./test-ghactions.sh -neuron
 
     - name: Lint with flake8
       run: |
