@@ -18,8 +18,8 @@ Subpackages
    pyneuroml.povray
    pyneuroml.swc
    pyneuroml.tune
+   pyneuroml.neuron
 
-.. pyneuroml.neuron
 
 pyneuroml.pynml module
 ----------------------
