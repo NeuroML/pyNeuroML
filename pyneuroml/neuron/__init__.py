@@ -8,25 +8,43 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 
 import os
 import logging
+import warnings
 
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
 
 from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
-from neuron import *
-from nrn import *
+from neuron import h
 
 logger = logging.getLogger(__name__)
 
 
 def export_to_neuroml2(
-    hoc_or_python_file,
-    nml2_file_name,
-    includeBiophysicalProperties=True,
-    separateCellFiles=False,
-    known_rev_potentials={},
-    validate=True,
-):
+    hoc_or_python_file: str,
+    nml2_file_name: str,
+    includeBiophysicalProperties: bool = True,
+    separateCellFiles: bool = False,
+    known_rev_potentials: dict[str, float] = {},
+    validate: bool = True,
+) -> None:
+    """Export NEURON hoc morphology files to NeuroML2 format.
+
+    Please note that the conversion of NEURON Python scripts is not yet
+    implemented.
+
+    :param hoc_or_python_file: NEURON hoc or Python file to convert
+    :type hoc_or_python_file: str
+    :param nml2_file_name: name of NeuroML2 file to save to
+    :type nml2_file_name: str
+    :param includeBiophysicalProperties: whether or not to include biophysical properties in the conversion
+    :type includeBiophysicalProperties: bool
+    :param separateCellFiles: whether cells should be exported to individual files
+    :type separateCellFiles:
+    :param known_rev_potentials: known reversal potentials
+    :type known_rev_potentials: dict with ions as keys, and their reveral potentials
+    :param validate: whether the generated files should be validated
+    :type validate: bool
+    """
 
     if hoc_or_python_file is not None:
         if hoc_or_python_file.endswith(".py"):
@@ -73,6 +91,18 @@ def export_to_neuroml2(
 
 
 def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
+    """Export to NeuroML1.
+
+    NOTE: NeuroML1 is deprecated and supporting functions will be removed in a
+    future release. Please use NeuroML2.
+    """
+    logger.info("NOTE: NeuroMLv1 is deprecated. Please use NeuroMLv2.")
+    warnings.warn(
+        "Please note that NeuroMLv1 is deprecated. Functions supporting NeuroMLv1 will be removed in the future.  Please use NeuroMLv2.",
+        FutureWarning,
+        stacklevel=2,
+    )
+
     if not (level == 1 or level == 2):
         logger.info("Only options for Levels in NeuroMLv1.8.1 are 1 or 2")
         return None
