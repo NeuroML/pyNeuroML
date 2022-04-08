@@ -24,7 +24,7 @@ def export_to_neuroml2(
     nml2_file_name: str,
     includeBiophysicalProperties: bool = True,
     separateCellFiles: bool = False,
-    known_rev_potentials: dict[str, float] = {},
+    known_rev_potentials: dict = {},
     validate: bool = True,
 ) -> None:
     """Export NEURON hoc morphology files to NeuroML2 format.
