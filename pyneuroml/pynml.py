@@ -180,6 +180,15 @@ def parse_arguments():
             "        the LEMS file to use"
         ),
     )
+
+    mut_exc_opts.add_argument(
+        "-eden",
+        nargs=argparse.REMAINDER,
+        help=(
+            "Load a LEMS file, and generate a\n"
+            "Python script to load and execute it in EDEN"
+        ),
+    )
     mut_exc_opts.add_argument(
         "-svg",
         action="store_true",
@@ -2022,6 +2031,21 @@ def evaluate_arguments(args):
 
             other_args = [(a if a != "-netpyne" else "") for a in args.netpyne]
             post_args = "-netpyne %s" % " ".join(other_args)
+
+        elif args.eden is not None:
+            confirm_lems_file(f)
+
+            num_eden_args = len(args.eden)
+
+            if num_eden_args < 0 or num_eden_args > 2:
+                logger.error(
+                    "The '-eden' option was given an invalid "
+                    "number of arguments: %d given, 0-4 required" % num_eden_args
+                )
+                sys.exit(-1)
+
+            other_args = [(a if a != "-eden" else "") for a in args.eden]
+            post_args = "-eden %s" % " ".join(other_args)
 
         elif args.svg:
             confirm_neuroml_file(f)
