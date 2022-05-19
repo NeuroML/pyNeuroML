@@ -1634,6 +1634,7 @@ def run_lems_with_jneuroml_brian2(
 def run_lems_with_eden(
     lems_file_name: str,
     load_saved_data: bool = False,
+    reload_events: bool = False,
     verbose: bool = DEFAULTS["v"],
 ) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
     """Run LEMS file with the EDEN simulator
@@ -1642,6 +1643,8 @@ def run_lems_with_eden(
     :type lems_file_name: str
     :param load_saved_data: toggle whether any saved data should be loaded
     :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
     :param verbose: toggle whether to print verbose information
     :type verbose: bool
     """
@@ -1662,6 +1665,9 @@ def run_lems_with_eden(
         logger.info("Completed simulation in EDEN, saved results: %s"%(results.keys()))
 
     if load_saved_data:
+        logger.warning("Event saving is not yet supported in EDEN!!")
+        return results, {}
+    elif load_saved_data:
         return results
     else:
         return True
