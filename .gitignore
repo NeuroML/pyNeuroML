@@ -122,3 +122,5 @@ examples/results/*.dat
 /examples/test_data/ca1/*.hoc
 .venv/
 /examples/LEMS_NML2_Ex5_DetCell_brian2.py
+/examples/*.gen.so
+*_eden.py

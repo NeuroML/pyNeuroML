@@ -35,6 +35,17 @@ if "-brian2" in sys.argv:  # To allow skipping of this for ease of testing
 
 
 ####################################################################
+#   Run LEMS in EDEN
+
+
+if "-eden" in sys.argv:  # To allow skipping of this for ease of testing
+    print("Running with EDEN...")
+    results4 = pynml.run_lems_with_eden(
+        example_lems_file, load_saved_data=True, verbose=True
+    )
+
+
+####################################################################
 #   Reload & plot results
 
 if "-nogui" not in sys.argv:
@@ -51,6 +62,8 @@ if "-nogui" not in sys.argv:
                 plt.plot(results2["t"], results2[key], label="jNeuroML_NEURON: " + key)
             if "-brian2" in sys.argv:
                 plt.plot(results3["t"], results3[key], label="jNeuroML_Brian2: " + key)
+            if "-eden" in sys.argv:
+                plt.plot(results4["t"], results4[key], label="EDEN: " + key)
         plt.legend(loc=2, fontsize="x-small")
 
     plt.show()
