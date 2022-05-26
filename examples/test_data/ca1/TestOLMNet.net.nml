@@ -1,0 +1,21 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.1.xsd" id="TestOLMChannels">
+    <include href="cells/olm.cell.nml"/>
+    <pulseGenerator id="pulseGen0" delay="100ms" duration="800ms" amplitude="28 pA"/>
+    <network id="TestOLMChannels" temperature="35degC">
+        <notes>A test network model: TestOLMChannels</notes>
+        <population id="olmcellPop" component="olmcell" size="3" type="populationList">
+            <instance id="0">
+                <location x="0." y="0." z="0."/>
+            </instance>
+                <instance id="0">
+                    <location x="120." y="0." z="120."/>
+                </instance>
+                    <instance id="0">
+                        <location x="-40." y="-130." z="0."/>
+                    </instance>
+        </population>
+        <inputList id="il" population="olmcellPop" component="pulseGen0">
+            <input id="0" target="../olmcellPop/0/olmcell" destination="synapses" segmentId="3"/>
+        </inputList>
+    </network>
+</neuroml>

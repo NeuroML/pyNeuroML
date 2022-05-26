@@ -124,3 +124,7 @@ examples/results/*.dat
 /examples/LEMS_NML2_Ex5_DetCell_brian2.py
 /examples/*.gen.so
 *_eden.py
+/examples/test_data/Purk2M9s.nml.png
+/examples/test_data/*.pov
+/examples/test_data/ca1/*.pov
+/examples/test_data/ca1/TestOLMNet.net.nml.png
