@@ -24,6 +24,33 @@ _GREY = "<0.85,0.85,0.85,0.55>"
 _DUMMY_CELL = "DUMMY_CELL"
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+defaults = {
+    'split': False,
+    'background': _WHITE,
+    'movie': False,
+    'inputs': False,
+    'conns': False,
+    'conn_points': False,
+    'v': False,
+    'frames': 36,
+    'posx': 0,
+    'posy': 0,
+    'posz': 0,
+    'viewx': 0,
+    'viewy': 0,
+    'viewz': 0,
+    'scalex': 1,
+    'scaley': 1,
+    'scalez': 1,
+    'mindiam': 0,
+    'plane': False,
+    'segids': False
+}
+
 def process_args():
     """
     Parse command-line arguments.
@@ -42,7 +69,7 @@ def process_args():
     parser.add_argument(
         "-split",
         action="store_true",
-        default=False,
+        default=defaults['split'],
         help="If this is specified, generate separate pov files for cells & network. Default is false",
     )
 
@@ -50,45 +77,45 @@ def process_args():
         "-background",
         type=str,
         metavar="<background colour>",
-        default=_WHITE,
+        default=defaults['background'],
         help="Colour of background, e.g. <0,0,0,0.55>",
     )
 
     parser.add_argument(
         "-movie",
         action="store_true",
-        default=False,
+        default=defaults['movie'],
         help="If this is specified, generate a ini file for generating a sequence of frames for a movie of the 3D structure",
     )
 
     parser.add_argument(
         "-inputs",
         action="store_true",
-        default=False,
+        default=defaults['inputs'],
         help="If this is specified, show the locations of (synaptic, current clamp, etc.) inputs into the cells of the network",
     )
 
     parser.add_argument(
         "-conns",
         action="store_true",
-        default=False,
+        default=defaults['conns'],
         help="If this is specified, show the connections present in the network with lines",
     )
 
     parser.add_argument(
         "-conn_points",
         action="store_true",
-        default=False,
+        default=defaults['conn_points'],
         help="If this is specified, show the end points of the connections present in the network",
     )
 
-    parser.add_argument("-v", action="store_true", default=False, help="Verbose output")
+    parser.add_argument("-v", action="store_true", default=defaults['v'], help="Verbose output")
 
     parser.add_argument(
         "-frames",
         type=int,
         metavar="<frames>",
-        default=36,
+        default=defaults['frames'],
         help="Number of frames in movie",
     )
 
@@ -96,21 +123,21 @@ def process_args():
         "-posx",
         type=float,
         metavar="<position offset x>",
-        default=0,
+        default=defaults['posx'],
         help="Offset position in x dir (0 is centre, 1 is top)",
     )
     parser.add_argument(
         "-posy",
         type=float,
         metavar="<position offset y>",
-        default=0,
+        default=defaults['posy'],
         help="Offset position in y dir (0 is centre, 1 is top)",
     )
     parser.add_argument(
         "-posz",
         type=float,
         metavar="<position offset z>",
-        default=0,
+        default=defaults['posz'],
         help="Offset position in z dir (0 is centre, 1 is top)",
     )
 
@@ -118,21 +145,21 @@ def process_args():
         "-viewx",
         type=float,
         metavar="<view offset x>",
-        default=0,
+        default=defaults['viewx'],
         help="Offset viewing point in x dir (0 is centre, 1 is top)",
     )
     parser.add_argument(
         "-viewy",
         type=float,
         metavar="<view offset y>",
-        default=0,
+        default=defaults['viewy'],
         help="Offset viewing point in y dir (0 is centre, 1 is top)",
     )
     parser.add_argument(
         "-viewz",
         type=float,
         metavar="<view offset z>",
-        default=0,
+        default=defaults['viewz'],
         help="Offset viewing point in z dir (0 is centre, 1 is top)",
     )
 
@@ -140,21 +167,21 @@ def process_args():
         "-scalex",
         type=float,
         metavar="<scale position x>",
-        default=1,
+        default=defaults['scalex'],
         help="Scale position from network in x dir",
     )
     parser.add_argument(
         "-scaley",
         type=float,
         metavar="<scale position y>",
-        default=1.5,
+        default=defaults['scaley'],
         help="Scale position from network in y dir",
     )
     parser.add_argument(
         "-scalez",
         type=float,
         metavar="<scale position z>",
-        default=1,
+        default=defaults['scalez'],
         help="Scale position from network in z dir",
     )
 
@@ -162,19 +189,19 @@ def process_args():
         "-mindiam",
         type=float,
         metavar="<minimum diameter dendrites/axons>",
-        default=0,
+        default=defaults['mindiam'],
         help="Minimum diameter for dendrites/axons (to improve visualisations)",
     )
 
     parser.add_argument(
         "-plane",
         action="store_true",
-        default=False,
+        default=defaults['plane'],
         help="If this is specified, add a 2D plane below cell/network",
     )
 
     parser.add_argument(
-        "-segids", action="store_true", default=False, help="Show segment ids"
+        "-segids", action="store_true", default=defaults['segids'], help="Show segment ids"
     )
 
     return parser.parse_args()
@@ -199,7 +226,52 @@ union {
 def main():
     args = process_args()
 
-    xmlfile = args.neuroml_file
+    generate_povray(args.neuroml_file,
+                    args.split,
+                    args.background,
+                    args.movie,
+                    args.inputs,
+                    args.conns,
+                    args.conn_points,
+                    args.v,
+                    args.frames,
+                    args.posx,
+                    args.posy,
+                    args.posz,
+                    args.viewx,
+                    args.viewy,
+                    args.viewz,
+                    args.scalex,
+                    args.scaley,
+                    args.scalez,
+                    args.mindiam,
+                    args.plane,
+                    args.segids)
+
+
+def generate_povray(neuroml_file,
+                    split=defaults['split'],
+                    background=defaults['background'],
+                    movie=defaults['movie'],
+                    inputs=defaults['inputs'],
+                    conns=defaults['conns'],
+                    conn_points=defaults['conn_points'],
+                    v=defaults['v'],
+                    frames=defaults['frames'],
+                    posx=defaults['posx'],
+                    posy=defaults['posy'],
+                    posz=defaults['posz'],
+                    viewx=defaults['viewx'],
+                    viewy=defaults['viewy'],
+                    viewz=defaults['viewz'],
+                    scalex=defaults['scalex'],
+                    scaley=defaults['scaley'],
+                    scalez=defaults['scalez'],
+                    mindiam=defaults['mindiam'],
+                    plane=defaults['plane'],
+                    segids=defaults['segids']):
+
+    xmlfile = neuroml_file
     pov_file_name = xmlfile
     endings = [".xml", ".h5", ".nml"]
     for e in endings:
@@ -224,7 +296,7 @@ background {rgbt %s}
 
     \n"""  # end of header
 
-    pov_file.write(header % (args.background))
+    pov_file.write(header % (background))
 
     cells_file = pov_file
     net_file = pov_file
@@ -233,7 +305,7 @@ background {rgbt %s}
     cf = pov_file_name.replace(".pov", "_cells.inc")
     nf = pov_file_name.replace(".pov", "_net.inc")
 
-    if args.split:
+    if split:
         splitOut = True
         cells_file = open(cf, "w")
         net_file = open(nf, "w")
@@ -245,7 +317,7 @@ background {rgbt %s}
         xmlfile,
         include_includes=True,
         check_validity_pre_include=True,
-        verbose=args.v,
+        verbose=v,
         optimized=True,
     )
 
@@ -303,7 +375,7 @@ background {rgbt %s}
             x = float(distal.x)
             y = float(distal.y)
             z = float(distal.z)
-            r = max(float(distal.diameter) / 2.0, args.mindiam)
+            r = max(float(distal.diameter) / 2.0, mindiam)
 
             if (x - r) < minXc:
                 minXc = x - r
@@ -331,7 +403,7 @@ background {rgbt %s}
                     float(proximal.x),
                     float(proximal.y),
                     float(proximal.z),
-                    max(float(proximal.diameter) / 2.0, args.mindiam),
+                    max(float(proximal.diameter) / 2.0, mindiam),
                 )
 
                 cell_id_vs_seg_id_vs_proximal[cell.id][id] = (
@@ -371,7 +443,7 @@ background {rgbt %s}
                 cells_file.write("        //%s_%s.%s\n" % ("CELL_GROUP_NAME", "0", id))
                 cells_file.write("    }\n")
 
-            if args.segids:
+            if segids:
                 cells_file.write("    text {\n")
                 cells_file.write(
                     '        ttf "timrom.ttf" "------- Segment: %s" .1, 0.01\n'
@@ -431,7 +503,17 @@ union {
     )
 
     positions = {}
-    popElements = nml_doc.networks[0].populations
+
+    if len(nml_doc.networks)>0:
+        popElements = nml_doc.networks[0].populations
+    else:
+        popElements = []
+        nml_doc.networks.append(neuroml.Network(id='dummy_network'))
+        for cell in cell_elements:
+            pop = neuroml.Population(id='dummy_population_%s'%cell.id, size=1, component=cell.id)
+            nml_doc.networks[0].populations.append(pop)
+
+        popElements = nml_doc.networks[0].populations
 
     pop_id_vs_cell = {}
 
@@ -587,7 +669,7 @@ union {
             net_file.write("\n    //%s_%s\n" % (name, id))
             net_file.write("}\n")
 
-    if args.conns or args.conn_points:
+    if conns or conn_points:
 
         projections = (
             nml_doc.networks[0].projections
@@ -686,7 +768,7 @@ union {
 
                     logger.info(info)
                     net_file.write("// %s" % info)
-                    if args.conns:
+                    if conns:
                         net_file.write(
                             "cylinder { <%s,%s,%s>, <%s,%s,%s>, .5  pigment{color %s}}\n"
                             % (
@@ -699,7 +781,7 @@ union {
                                 color,
                             )
                         )
-                    if args.conn_points:
+                    if conn_points:
                         net_file.write(
                             "object { conn_start_point translate <%s,%s,%s> }\n"
                             % (pre_loc[0], pre_loc[1], pre_loc[2])
@@ -709,7 +791,7 @@ union {
                             % (post_loc[0], post_loc[1], post_loc[2])
                         )
 
-    if args.inputs:
+    if inputs:
         for il in nml_doc.networks[0].input_lists:
             for input in il.input:
                 popi = il.populations
@@ -740,7 +822,7 @@ union {
                     % (loc[0], loc[1], loc[2])
                 )
 
-    plane = """
+    plane_ = """
 plane {
    y, vv(-1)
    pigment {checker color rgb 1.0, color rgb 0.8 scale 20}
@@ -804,22 +886,22 @@ camera {
         maxX,
         maxY,
         maxZ,
-        args.posx,
-        args.scalex,
-        args.posy,
-        args.scaley,
-        args.posz,
-        args.scalez,
-        args.viewx,
-        args.viewy,
-        args.viewz,
-        (plane if args.plane else ""),
+        posx,
+        scalex,
+        posy,
+        scaley,
+        posz,
+        scalez,
+        viewx,
+        viewy,
+        viewz,
+        (plane_ if plane else ""),
     )  # end of footer
 
     pov_file.write(footer)
     pov_file.close()
 
-    if args.movie:
+    if movie:
         ini_file_name = pov_file_name.replace(".pov", "_movie.ini")
         ini_movie = """
 Antialias=On
@@ -841,12 +923,12 @@ Pause_when_Done=off
 
         """
         ini_file = open(ini_file_name, "w")
-        ini_file.write(ini_movie % (pov_file_name, args.frames))
+        ini_file.write(ini_movie % (pov_file_name, frames))
         ini_file.close()
 
         logger.info(
             "Created file for generating %i movie frames at: %s. To run this type:\n\n    povray %s\n"
-            % (args.frames, ini_file_name, ini_file_name)
+            % (frames, ini_file_name, ini_file_name)
         )
     else:
         logger.info(

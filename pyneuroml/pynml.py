@@ -1631,6 +1631,49 @@ def run_lems_with_jneuroml_brian2(
         return True
 
 
+def run_lems_with_eden(
+    lems_file_name: str,
+    load_saved_data: bool = False,
+    reload_events: bool = False,
+    verbose: bool = DEFAULTS["v"],
+) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
+    """Run LEMS file with the EDEN simulator
+
+    :param lems_file_name: name of LEMS file to run
+    :type lems_file_name: str
+    :param load_saved_data: toggle whether any saved data should be loaded
+    :type load_saved_data: bool
+    :param reload_events: toggle whether events should be reloaded
+    :type reload_events: bool
+    :param verbose: toggle whether to print verbose information
+    :type verbose: bool
+    """
+
+
+    import eden_simulator
+    logger.info(
+        "Running a simulation of %s in EDEN v%s"
+        % (
+            lems_file_name,
+            eden_simulator.__version__ if hasattr(eden_simulator, "__version__") else "???",
+        )
+    )
+
+    results = eden_simulator.runEden(lems_file_name)
+
+    if verbose:
+        logger.info("Completed simulation in EDEN, saved results: %s"%(results.keys()))
+
+    if load_saved_data:
+        logger.warning("Event saving is not yet supported in EDEN!!")
+        return results, {}
+    elif load_saved_data:
+        return results
+    else:
+        return True
+
+
+
 def reload_saved_data(
     lems_file_name: str,
     base_dir: str = ".",
@@ -2107,9 +2150,9 @@ def evaluate_arguments(args):
             except ValueError:
                 try:
                     engine = engines[level[-1:]]
-                    print("Engine selected: {}".format(engine))
+                    logger.info("Engine selected: {}".format(engine))
                 except KeyError as e:
-                    print(
+                    logger.info(
                         "Unknown value for engine: {}. Please use one of {}".format(
                             e, engines
                         )
@@ -2119,9 +2162,9 @@ def evaluate_arguments(args):
                 # if a valid engine was provided, we try the level again
                 try:
                     level = int(level[:-1])
-                    print("Level selected: {}".format(level))
+                    logger.info("Level selected: {}".format(level))
                 except ValueError:
-                    print("Incorrect value for level: {}.".format(level[:-1]))
+                    logger.info("Incorrect value for level: {}.".format(level[:-1]))
                     sys.exit(-1)
 
             generate_nmlgraph(f, level, engine)
