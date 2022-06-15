@@ -3,6 +3,9 @@ import argparse
 
 import re
 
+from matplotlib import pyplot as plt
+from matplotlib import rcParams
+
 DEFAULTS = {
     "v": False,
     }
@@ -67,6 +70,32 @@ def run(a=None, **kwargs):
 
     if a.v:
         print("Plotting %s"%a.nml_file)
+
+    from pyneuroml.pynml import read_neuroml2_file
+    nml_model = read_neuroml2_file(a.nml_file)
+
+    for cell in nml_model.cells:
+
+        title = "2D plot of %s from %s"%(cell.id, a.nml_file)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.axis('equal')
+
+        plt.get_current_fig_manager().set_window_title(title)
+        #plt.title(title)
+
+        for seg in cell.morphology.segments:
+
+            p = cell.get_actual_proximal(seg.id)
+            d = seg.distal
+            if a.v:
+                print('\nSegment %s, id: %s has proximal point: %s, distal: %s'%(seg.name, seg.id, p, d))
+            width = max(p.diameter, d.diameter)
+            plt.plot([p.x, d.x], [p.y,d.y], linewidth=width, color = 'b')
+
+
+    plt.show()
 
 
 if __name__ == "__main__":
