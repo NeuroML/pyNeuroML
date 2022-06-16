@@ -21,7 +21,7 @@ class TestCellBuilder(unittest.TestCase):
             nml_cell_doc = NeuroMLDocument(id="simple_built_cell")
             cell = create_cell("simple_cell")
             cell.notes = "NeuroML cell created by CellBuilder"
-            nml_cell_file = '../examples/test_data/' + cell.id + ".cell.nml"
+            nml_cell_file = 'examples/test_data/' + cell.id + ".cell.nml"
 
             # Add soma segment
             diam = 10.0
