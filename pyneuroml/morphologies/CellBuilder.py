@@ -67,7 +67,7 @@ def create_soma_group(cell):
     seg_group_soma = SegmentGroup(id='soma_group',
                                   neuro_lex_id=neuro_lex_ids["soma"],
                                   notes="Default soma segment group for the cell")
-                                  
+
     cell.morphology.segment_groups.append(seg_group_soma)
 
 def create_dendrite_group(cell):
@@ -112,7 +112,7 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
     :param name: name of segment
     :type name: str
     :param parent: parent segment
-    :type parent: SegmentParent
+    :type parent: Segment
     :param fraction_along: where the new segment is connected to the parent (0: distal point, 1: proximal point)
     :type fraction_along: float
     :param group: segment group to add the segment to
@@ -133,6 +133,9 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0, gr
         print_function("{}: dist must be a list of 4 elements".format(e))
 
     segid = len(cell.morphology.segments)
+
+    if segid>0 and parent==None:
+        raise Exception("There are currently more than one segments in the cell, but one is being added without specifying a parent segment")
 
     sp = SegmentParent(segments=parent.id, fraction_along=fraction_along) if parent else None
     segment = Segment(id=segid, proximal=p, distal=d, parent=sp)
