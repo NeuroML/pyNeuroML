@@ -1,0 +1,38 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.3.xsd" id="complex_built_cell">
+    <cell id="complex_cell">
+        <notes>NeuroML cell created by CellBuilder</notes>
+        <morphology id="morphology">
+            <segment id="0" name="Seg0_soma_0">
+                <proximal x="0.0" y="0.0" z="0.0" diameter="30.0"/>
+                <distal x="0.0" y="20.0" z="0.0" diameter="30.0"/>
+            </segment>
+            <segment id="1" name="dend_0">
+                <parent segment="0"/>
+                <proximal x="0.0" y="20.0" z="0.0" diameter="5.0"/>
+                <distal x="0.0" y="70.0" z="0.0" diameter="2.0"/>
+            </segment>
+            <segmentGroup id="all">
+                <member segment="0"/>
+                <member segment="1"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="GO:0043025" id="soma_group">
+                <notes>Default soma segment group for the cell</notes>
+                <member segment="0"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="GO:0043025" id="soma_0">
+                <member segment="0"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="GO:0030425" id="dendrite_group">
+                <notes>Default dendrite segment group for the cell</notes>
+                <member segment="1"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="GO:0030425" id="dend_0">
+                <member segment="1"/>
+            </segmentGroup>
+        </morphology>
+        <biophysicalProperties id="biophys">
+            <membraneProperties/>
+            <intracellularProperties/>
+        </biophysicalProperties>
+    </cell>
+</neuroml>
