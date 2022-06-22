@@ -2419,7 +2419,9 @@ def execute_command_in_dir_with_realtime_output(
     if os.name == "nt":
         directory = os.path.normpath(directory)
 
-    logger.info("Executing: (%s) in directory: %s" % (command, directory))
+    print("####################################################################")
+    print("# pyNeuroML executing: (%s) in directory: %s" % (command, directory))
+    print("####################################################################")
     if env is not None:
         logger.info("Extra env variables %s" % (env))
 
@@ -2436,8 +2438,10 @@ def execute_command_in_dir_with_realtime_output(
         )
         with p.stdout:
             for line in iter(p.stdout.readline, ""):
-                logger.debug(line.strip())
+                print("# %s"%line.strip())
         p.wait()  # wait for the subprocess to exit
+
+        print("####################################################################")
     except KeyboardInterrupt as e:
         logger.error("*** Command interrupted: \n       %s" % command)
         if p:
