@@ -2,13 +2,10 @@
 import argparse
 
 import re
+import os
 
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
-
-DEFAULTS = {
-    "v": False,
-    }
 
 
 def convert_case(name):
@@ -36,6 +33,15 @@ def build_namespace(a=None, **kwargs):
             delattr(a, key)
     return a
 
+
+
+DEFAULTS = {
+    "v": False,
+    "nogui": False,
+    "saveToFile": None,
+    }
+
+
 def process_args():
     """
     Parse command-line arguments.
@@ -57,16 +63,31 @@ def process_args():
         "-v", action="store_true", default=DEFAULTS["v"], help="Verbose output"
     )
 
+    parser.add_argument(
+        "-nogui", action="store_true", default=DEFAULTS["nogui"], help="Don't open plot window"
+    )
+
+    parser.add_argument(
+        "-saveToFile",
+        type=str,
+        metavar="<Image file name>",
+        default=None,
+        help="Name of the image file",
+    )
+
 
     return parser.parse_args()
 
 def main(args=None):
     if args is None:
         args = process_args()
-    run(a=args)
+    plot_2D(a=args)
 
-def run(a=None, **kwargs):
+
+def plot_2D(a=None, **kwargs):
     a = build_namespace(a, **kwargs)
+
+    print(a)
 
     if a.v:
         print("Plotting %s"%a.nml_file)
@@ -94,8 +115,15 @@ def run(a=None, **kwargs):
             width = max(p.diameter, d.diameter)
             plt.plot([p.x, d.x], [p.y,d.y], linewidth=width, color = 'b')
 
+    if a.save_to_file:
 
-    plt.show()
+            abs_file = os.path.abspath(a.save_to_file)
+
+            print("Saved image to %s of plot: %s" % (abs_file, title))
+            plt.savefig(abs_file, bbox_inches="tight")
+
+    if not a.nogui:
+        plt.show()
 
 
 if __name__ == "__main__":

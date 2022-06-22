@@ -6,12 +6,14 @@ Copyright 2022 NeuroML contributors
 Author: P Gleeson
 """
 import unittest
+import os
 
 from neuroml import NeuroMLDocument
 from pyneuroml import pynml
 
 
 from pyneuroml.morphologies.CellBuilder import create_cell, add_segment
+from pyneuroml.morphologies.PlotMorphology import plot_2D
 
 
 class TestCellBuilder(unittest.TestCase):
@@ -34,11 +36,7 @@ class TestCellBuilder(unittest.TestCase):
             nml_cell_doc.cells.append(cell)
             pynml.write_neuroml2_file(nml_cell_doc, nml_cell_file, True, True)
 
-            from neuroml.utils import validate_neuroml2
-
-            validate_neuroml2(nml_cell_file)
-
-            pynml.nml2_to_png(nml_cell_file)
+            self.post_process(nml_cell_file, cell)
 
 
         def test_complex_cell(self):
@@ -66,11 +64,23 @@ class TestCellBuilder(unittest.TestCase):
             nml_cell_doc.cells.append(cell)
             pynml.write_neuroml2_file(nml_cell_doc, nml_cell_file, True, True)
 
+            self.post_process(nml_cell_file, cell)
+
+
+        def post_process(self, nml_cell_file, cell):
+
             from neuroml.utils import validate_neuroml2
 
             validate_neuroml2(nml_cell_file)
 
             pynml.nml2_to_png(nml_cell_file)
+
+            img_file = '%s/%s'%(os.path.dirname(os.path.abspath(nml_cell_file)),'%s.morph.png'%cell.id)
+
+            plot_2D(nmlFile=nml_cell_file,
+                    nogui=True,
+                    saveToFile=img_file,
+                    v=True)
 
 
 if __name__ == "__main__":

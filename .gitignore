@@ -130,3 +130,5 @@ examples/results/*.dat
 /examples/test_data/ca1/TestOLMNet.net.nml.png
 /examples/test_data/complex_cell.cell.png
 /examples/test_data/simple_cell.cell.png
+/examples/test_data/complex_cell.morph.png
+/examples/test_data/simple_cell.morph.png
