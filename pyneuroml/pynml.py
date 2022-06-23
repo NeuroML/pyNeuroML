@@ -32,6 +32,7 @@ import pprint
 import logging
 import tempfile
 import typing
+import traceback
 
 import matplotlib
 import matplotlib.axes
@@ -2421,9 +2422,9 @@ def execute_command_in_dir_with_realtime_output(
 
     print("####################################################################")
     print("# pyNeuroML executing: (%s) in directory: %s" % (command, directory))
-    print("####################################################################")
     if env is not None:
-        logger.info("Extra env variables %s" % (env))
+        print("# Extra env variables %s" % (env))
+    print("####################################################################")
 
     p = None
     try:
@@ -2446,6 +2447,12 @@ def execute_command_in_dir_with_realtime_output(
         logger.error("*** Command interrupted: \n       %s" % command)
         if p:
             p.kill()
+        raise e
+    except Exception as e:
+        print("# Exception occured: %s" % (e))
+        print("# More...")
+        print(traceback.format_exc())
+        print("####################################################################")
         raise e
 
     if not p.returncode == 0:
