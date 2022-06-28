@@ -10,8 +10,10 @@ Channel information
             <sup><b>${channel.id}</b><br/>
             <a href="../${channel.file}">${channel.file}</a><br/>
             <b>Ion: ${channel.species}</b><br/>
+            <b>
             <i>${channel.expression}</i><br/>
-            ${channel.notes}</sup>
+            </b>
+            <div style="background-color:#eee">${channel.notes}</div></sup>
 </td>
 <td>
 <a href="${channel.id}.inf.png"><img alt="${channel.id} steady state" src="${channel.id}.inf.png" height="220"/></a>
@@ -22,4 +24,3 @@ Channel information
 </tr>
 #end##   
 </table>
-
