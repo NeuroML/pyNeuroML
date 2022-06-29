@@ -177,6 +177,8 @@ def parse_arguments():
             "        generate NEURON files in directory <dir>\n"
             "    -np <cores>\n"
             "        number of cores to run with (if using MPI)\n"
+            "    -json\n"
+            "        generate network as NetPyNE JSON\n"
             "    <LEMS file>\n"
             "        the LEMS file to use"
         ),
@@ -1445,6 +1447,7 @@ def run_lems_with_jneuroml_netpyne(
     show_plot_already: bool = True,
     exec_in_dir: str = ".",
     only_generate_scripts: bool = False,
+    only_generate_json: bool = False,
     verbose: bool = DEFAULTS["v"],
     exit_on_fail: bool = True,
     cleanup: bool = False,
@@ -1493,8 +1496,10 @@ def run_lems_with_jneuroml_netpyne(
 
     if num_processors != 1:
         post_args += " -np %i" % num_processors
-    if not only_generate_scripts:
+    if not only_generate_scripts and not only_generate_json:
         post_args += " -run"
+    if only_generate_json:
+        post_args += " -json"
 
     post_args += gui_string(nogui)
     post_args += include_string(paths_to_include)
