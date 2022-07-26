@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 """
 Utility functions to help build cells in NeuroML
-
-File: CellBuilder.py
-
-Copyright 2021 NeuroML contributors
-Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 
@@ -48,6 +43,7 @@ def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
 
     if `use_convention` is True, it also creates some default SegmentGroups for
     convenience:
+
     - "all", "soma_group", "dendrite_group", "axon_group" which
       are used by other helper functions to include all, soma, dendrite, and
       axon segments respectively.
@@ -112,13 +108,13 @@ def add_segment(
 ) -> Segment:
     """Add a segment to the cell.
 
-    Suggested convention: use axon_, soma_, dend_ prefixes for axon, soma, and
-    dendrite segments respectivey. This will allow this function to add the
-    correct neurolex IDs to the group.
+    Suggested convention: use `axon_`, `soma_`, `dend_` prefixes for axon,
+    soma, and dendrite segments respectivey. This will allow this function to
+    add the correct neurolex IDs to the group.
 
     If `use_convention` is true, the created segment is also added to the
     default segment groups that were created by the `create_cell` function:
-    "all", "dendrite_group", "soma_group", "axon_group". Note that while it is
+    `all`, `dendrite_group`, `soma_group`, `axon_group`. Note that while it is
     not necessary to use the convention, it is necessary to be consistent.
 
     :param cell: cell to add segment to
