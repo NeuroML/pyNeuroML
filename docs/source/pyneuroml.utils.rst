@@ -6,7 +6,7 @@ pyneuroml.utils package
    :undoc-members:
    :show-inheritance:
 
-pyneuroml.analysis.CellBuilder module
+pyneuroml.utils.CellBuilder module
 ---------------------------------------------
 
 .. automodule:: pyneuroml.utils.CellBuilder
