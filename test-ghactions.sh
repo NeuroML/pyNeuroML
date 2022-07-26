@@ -6,7 +6,7 @@ echo
 echo "################################################"
 echo "##   Running unit tests"
 
-pytest .
+pytest --cov=pyneuroml .
 
 run_neuron_examples=false
 
