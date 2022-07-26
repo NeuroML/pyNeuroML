@@ -63,13 +63,12 @@ class CellBuilderTestCase(unittest.TestCase):
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
                                                             validate=True))
 
-    # @unittest.expectedFailure
-    @unittest.skip("Validator does not catch wrong dimention for InitMembPotential: https://github.com/NeuroML/NeuroML2/issues/162")
+    @unittest.expectedFailure
     def test_setting_init_memb_potential_should_fail(self):
         """Units of membrane potential are wrong: should fail."""
         new_cell = create_cell(cell_id="test_cell")
         add_segment(new_cell, (0, 0, 0, 20), (20, 0, 0, 20), name='soma', group='soma_group')
-        # Make it invalid
+        # Make it invalid: wrong dimensions for membrane potential
         set_init_memb_potential(new_cell, "-65 cm")
 
         nml_doc = NeuroMLDocument(id="test_cell_with_init_memb_pot_wrong_doc")
@@ -90,8 +89,7 @@ class CellBuilderTestCase(unittest.TestCase):
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
                                                             validate=True))
 
-    #  @unittest.expectedFailure
-    @unittest.skip("Validator does not catch wrong dimention for Resistivity: https://github.com/NeuroML/NeuroML2/issues/162")
+    @unittest.expectedFailure
     def test_setting_resistivity_should_fail(self):
         """Test setting the resistivity."""
         new_cell = create_cell(cell_id="test_cell")
@@ -114,8 +112,7 @@ class CellBuilderTestCase(unittest.TestCase):
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
                                                             validate=True))
 
-    #  @unittest.expectedFailure
-    @unittest.skip("Validator does not catch wrong dimention for specific_capacitance: https://github.com/NeuroML/NeuroML2/issues/162")
+    @unittest.expectedFailure
     def test_setting_specific_capacitance_should_fail(self):
         """Test setting the specific_capacitance."""
         new_cell = create_cell(cell_id="test_cell")
