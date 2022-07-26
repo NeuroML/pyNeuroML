@@ -10,18 +10,30 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 
 from typing import List
-from neuroml import (Cell, Morphology, MembraneProperties,  # type: ignore  # noqa
-                     IntracellularProperties, BiophysicalProperties, Segment,
-                     SegmentGroup, Point3DWithDiam, SegmentParent, Member,
-                     InitMembPotential, Resistivity, SpecificCapacitance,
-                     NeuroMLDocument, IncludeType, ChannelDensity,
-                     )
+from neuroml import (
+    Cell,
+    Morphology,
+    MembraneProperties,  # type: ignore  # noqa
+    IntracellularProperties,
+    BiophysicalProperties,
+    Segment,
+    SegmentGroup,
+    Point3DWithDiam,
+    SegmentParent,
+    Member,
+    InitMembPotential,
+    Resistivity,
+    SpecificCapacitance,
+    NeuroMLDocument,
+    IncludeType,
+    ChannelDensity,
+)
 
 
 neuro_lex_ids = {
-    'axon': "GO:0030424",
-    'dend': "GO:0030425",
-    'soma': "GO:0043025",
+    "axon": "GO:0030424",
+    "dend": "GO:0030425",
+    "soma": "GO:0043025",
 }
 
 
@@ -53,25 +65,33 @@ def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
 
     """
     cell = Cell(id=cell_id)
-    cell.morphology = Morphology(id='morphology')
+    cell.morphology = Morphology(id="morphology")
     membrane_properties = MembraneProperties()
     intracellular_properties = IntracellularProperties()
 
     cell.biophysical_properties = BiophysicalProperties(
-        id="biophys", intracellular_properties=intracellular_properties,
-        membrane_properties=membrane_properties)
+        id="biophys",
+        intracellular_properties=intracellular_properties,
+        membrane_properties=membrane_properties,
+    )
 
     if use_convention:
-        seg_group_all = SegmentGroup(id='all')
-        seg_group_soma = SegmentGroup(id='soma_group',
-                                      neuro_lex_id=neuro_lex_ids["soma"],
-                                      notes="Default soma segment group for the cell")
-        seg_group_axon = SegmentGroup(id='axon_group',
-                                      neuro_lex_id=neuro_lex_ids["axon"],
-                                      notes="Default axon segment group for the cell")
-        seg_group_dend = SegmentGroup(id='dendrite_group',
-                                      neuro_lex_id=neuro_lex_ids["dend"],
-                                      notes="Default dendrite segment group for the cell")
+        seg_group_all = SegmentGroup(id="all")
+        seg_group_soma = SegmentGroup(
+            id="soma_group",
+            neuro_lex_id=neuro_lex_ids["soma"],
+            notes="Default soma segment group for the cell",
+        )
+        seg_group_axon = SegmentGroup(
+            id="axon_group",
+            neuro_lex_id=neuro_lex_ids["axon"],
+            notes="Default axon segment group for the cell",
+        )
+        seg_group_dend = SegmentGroup(
+            id="dendrite_group",
+            neuro_lex_id=neuro_lex_ids["dend"],
+            notes="Default dendrite segment group for the cell",
+        )
         cell.morphology.segment_groups.append(seg_group_all)
         cell.morphology.segment_groups.append(seg_group_soma)
         cell.morphology.segment_groups.append(seg_group_axon)
@@ -80,7 +100,16 @@ def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
     return cell
 
 
-def add_segment(cell: Cell, prox: List[float], dist: List[float], name: str = None, parent: SegmentParent = None, fraction_along: float = 1.0, group: SegmentGroup = None, use_convention: bool = True) -> Segment:
+def add_segment(
+    cell: Cell,
+    prox: List[float],
+    dist: List[float],
+    name: str = None,
+    parent: SegmentParent = None,
+    fraction_along: float = 1.0,
+    group: SegmentGroup = None,
+    use_convention: bool = True,
+) -> Segment:
     """Add a segment to the cell.
 
     Suggested convention: use axon_, soma_, dend_ prefixes for axon, soma, and
@@ -125,7 +154,11 @@ def add_segment(cell: Cell, prox: List[float], dist: List[float], name: str = No
 
     segid = len(cell.morphology.segments)
 
-    sp = SegmentParent(segments=parent.id, fraction_along=fraction_along) if parent else None
+    sp = (
+        SegmentParent(segments=parent.id, fraction_along=fraction_along)
+        if parent
+        else None
+    )
     segment = Segment(id=segid, proximal=p, distal=d, parent=sp)
 
     if name:
@@ -138,7 +171,9 @@ def add_segment(cell: Cell, prox: List[float], dist: List[float], name: str = No
         neuro_lex_id = None
 
         if "axon_" in group:
-            neuro_lex_id = neuro_lex_ids["axon"]  # See http://amigo.geneontology.org/amigo/term/GO:0030424
+            neuro_lex_id = neuro_lex_ids[
+                "axon"
+            ]  # See http://amigo.geneontology.org/amigo/term/GO:0030424
             if use_convention:
                 seg_group_default = cell.get_segment_group("axon_group")
         if "soma_" in group:
@@ -183,8 +218,9 @@ def set_init_memb_potential(cell: Cell, v: str, group: str = "all") -> None:
     :param group: id of segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.membrane_properties.init_memb_potentials = \
-        [InitMembPotential(value=v, segment_groups=group)]
+    cell.biophysical_properties.membrane_properties.init_memb_potentials = [
+        InitMembPotential(value=v, segment_groups=group)
+    ]
 
 
 def set_resistivity(cell: Cell, resistivity: str, group: str = "all") -> None:
@@ -196,7 +232,9 @@ def set_resistivity(cell: Cell, resistivity: str, group: str = "all") -> None:
     :param group: segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.intracellular_properties.resistivities = [Resistivity(value=resistivity, segment_groups=group)]
+    cell.biophysical_properties.intracellular_properties.resistivities = [
+        Resistivity(value=resistivity, segment_groups=group)
+    ]
 
 
 def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> None:
@@ -209,10 +247,22 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
     :param group: segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.membrane_properties.specific_capacitances.append(SpecificCapacitance(value=spec_cap, segment_groups=group))
+    cell.biophysical_properties.membrane_properties.specific_capacitances.append(
+        SpecificCapacitance(value=spec_cap, segment_groups=group)
+    )
 
 
-def add_channel_density(cell: Cell, nml_cell_doc: NeuroMLDocument, cd_id: str, cond_density: str, ion_channel: str, ion_chan_def_file: str = "", erev: str = "0.0 mV", ion: str = "non_specific", group: str = "all") -> None:
+def add_channel_density(
+    cell: Cell,
+    nml_cell_doc: NeuroMLDocument,
+    cd_id: str,
+    cond_density: str,
+    ion_channel: str,
+    ion_chan_def_file: str = "",
+    erev: str = "0.0 mV",
+    ion: str = "non_specific",
+    group: str = "all",
+) -> None:
     """Add channel density.
 
     :param cell: cell to be modified
@@ -234,12 +284,14 @@ def add_channel_density(cell: Cell, nml_cell_doc: NeuroMLDocument, cd_id: str, c
     :param group: segment groups to add to
     :type group: str
     """
-    cd = ChannelDensity(id=cd_id,
-                        segment_groups=group,
-                        ion=ion,
-                        ion_channel=ion_channel,
-                        erev=erev,
-                        cond_density=cond_density)
+    cd = ChannelDensity(
+        id=cd_id,
+        segment_groups=group,
+        ion=ion,
+        ion_channel=ion_channel,
+        erev=erev,
+        cond_density=cond_density,
+    )
 
     cell.biophysical_properties.membrane_properties.channel_densities.append(cd)
 
