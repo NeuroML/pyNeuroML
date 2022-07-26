@@ -16,7 +16,6 @@ from neuroml import (Cell, Morphology, MembraneProperties,  # type: ignore  # no
                      InitMembPotential, Resistivity, SpecificCapacitance,
                      NeuroMLDocument, IncludeType, ChannelDensity,
                      )
-from pyneuroml.pynml import print_function  # type: ignore
 
 
 neuro_lex_ids = {
@@ -26,8 +25,7 @@ neuro_lex_ids = {
 }
 
 
-def create_cell(cell_id, use_convention=True):
-    # type: (str, bool) -> Cell
+def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
     """Create a NeuroML Cell.
 
     Initialises the cell with these properties assigning IDs where applicable:
@@ -82,9 +80,7 @@ def create_cell(cell_id, use_convention=True):
     return cell
 
 
-def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0,
-                group=None, use_convention=True):
-    # type: (Cell, List[float], List[float], str, SegmentParent, float, SegmentGroup, bool) -> Segment
+def add_segment(cell: Cell, prox: List[float], dist: List[float], name: str = None, parent: SegmentParent = None, fraction_along: float = 1.0, group: SegmentGroup = None, use_convention: bool = True) -> Segment:
     """Add a segment to the cell.
 
     Suggested convention: use axon_, soma_, dend_ prefixes for axon, soma, and
@@ -121,11 +117,11 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0,
         else:
             p = None
     except IndexError as e:
-        print_function("{}: prox must be a list of 4 elements".format(e))
+        print("{}: prox must be a list of 4 elements".format(e))
     try:
         d = Point3DWithDiam(x=dist[0], y=dist[1], z=dist[2], diameter=dist[3])
     except IndexError as e:
-        print_function("{}: dist must be a list of 4 elements".format(e))
+        print("{}: dist must be a list of 4 elements".format(e))
 
     segid = len(cell.morphology.segments)
 
@@ -177,8 +173,7 @@ def add_segment(cell, prox, dist, name=None, parent=None, fraction_along=1.0,
     return segment
 
 
-def set_init_memb_potential(cell, v, group="all"):
-    # type: (Cell, str, str) -> None
+def set_init_memb_potential(cell: Cell, v: str, group: str = "all") -> None:
     """Set the initial membrane potential of the cell.
 
     :param cell: cell to modify
@@ -192,8 +187,7 @@ def set_init_memb_potential(cell, v, group="all"):
         [InitMembPotential(value=v, segment_groups=group)]
 
 
-def set_resistivity(cell, resistivity, group="all"):
-    # type: (Cell, str, str) -> None
+def set_resistivity(cell: Cell, resistivity: str, group: str = "all") -> None:
     """Set the resistivity of the cell
 
     :param cell: cell to modfify
@@ -205,8 +199,7 @@ def set_resistivity(cell, resistivity, group="all"):
     cell.biophysical_properties.intracellular_properties.resistivities = [Resistivity(value=resistivity, segment_groups=group)]
 
 
-def set_specific_capacitance(cell, spec_cap, group="all"):
-    # type: (Cell, str, str) -> None
+def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> None:
     """Set the specific capacitance for the cell.
 
     :param cell: cell to set specific capacitance for
@@ -219,8 +212,7 @@ def set_specific_capacitance(cell, spec_cap, group="all"):
     cell.biophysical_properties.membrane_properties.specific_capacitances.append(SpecificCapacitance(value=spec_cap, segment_groups=group))
 
 
-def add_channel_density(cell, nml_cell_doc, cd_id, cond_density, ion_channel, ion_chan_def_file="", erev="0.0 mV", ion="non_specific", group="all"):
-    # type: (Cell, NeuroMLDocument, str, str, str, str, str, str, str) -> None
+def add_channel_density(cell: Cell, nml_cell_doc: NeuroMLDocument, cd_id: str, cond_density: str, ion_channel: str, ion_chan_def_file: str = "", erev: str = "0.0 mV", ion: str = "non_specific", group: str = "all") -> None:
     """Add channel density.
 
     :param cell: cell to be modified

@@ -10,7 +10,6 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 """
 
 from __future__ import absolute_import
-from __future__ import print_function
 from __future__ import unicode_literals
 
 # py3.7, 3.8 require this to use standard collections as generics
