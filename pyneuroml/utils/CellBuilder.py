@@ -167,9 +167,15 @@ def add_segment(
 
     if group:
         seg_group = None
-        seg_group = cell.get_segment_group(group)
         seg_group_default = None
         neuro_lex_id = None
+
+        # cell.get_segment_group throws an exception of the segment group
+        # does not exist
+        try:
+            seg_group = cell.get_segment_group(group)
+        except Exception as e:
+            print("Warning: {}".format(e))
 
         if "axon_" in group:
             neuro_lex_id = neuro_lex_ids[
