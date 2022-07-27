@@ -5,7 +5,6 @@ Test the cell builder utilities
 File: test_CellBuilder.py
 
 Copyright 2021 NeuroML contributors
-Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 
@@ -21,8 +20,61 @@ from neuroml import NeuroMLDocument
 class CellBuilderTestCase(unittest.TestCase):
 
     """Test the CellBuilder module"""
+
+    def test_simple_cell(self):
+        "Test a simple cell."
+
+        nml_doc = NeuroMLDocument(id="simple_built_cell")
+        cell = create_cell("simple_cell")
+        cell.notes = "NeuroML cell created by CellBuilder"
+
+        # Add soma segment
+        diam = 10.0
+        soma_0 = add_segment(cell,
+                             prox=[0.0, 0.0, 0.0, diam],
+                             dist=[0.0, 10., 0.0, diam],
+                             name="Seg0_soma_0",
+                             group="soma_0")
+
+        self.assertIsInstance(soma_0, neuroml.Segment)
+
+        nml_doc.add(cell)
+
+        with tempfile.NamedTemporaryFile() as test_file:
+            self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
+                                                            validate=True))
+
+    def test_complex_cell(self):
+        """Test a complex cell."""
+        nml_doc = NeuroMLDocument(id="complex_built_cell")
+        cell = create_cell("complex_cell")
+        cell.notes = "NeuroML cell created by CellBuilder"
+
+        # Add soma segment
+        diam = 30.0
+        soma_0 = add_segment(cell,
+                             prox=[0.0, 0.0, 0.0, diam],
+                             dist=[0.0, 20., 0.0, diam],
+                             name="Seg0_soma_0",
+                             group="soma_0")
+        self.assertIsInstance(soma_0, neuroml.Segment)
+
+        dend_0 = add_segment(cell,
+                             prox=[soma_0.distal.x, soma_0.distal.y, soma_0.distal.z, 5],
+                             dist=[soma_0.distal.x, soma_0.distal.y + 50, soma_0.distal.z, 2],
+                             name="dend_0",
+                             group="dend_0",
+                             parent=soma_0)
+        self.assertIsInstance(dend_0, neuroml.Segment)
+
+        nml_doc.add(cell)
+
+        with tempfile.NamedTemporaryFile() as test_file:
+            self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
+                                                            validate=True))
+
     def test_create_cell(self):
-        """Test cell creationtetest_create_cell."""
+        """Test cell creation"""
         new_cell = create_cell(cell_id="test_cell")
         self.assertIsInstance(new_cell, neuroml.Cell)
 
