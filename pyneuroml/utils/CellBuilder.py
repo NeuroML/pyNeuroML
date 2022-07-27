@@ -150,7 +150,7 @@ def add_segment(
 
     segid = len(cell.morphology.segments)
 
-    if segid > 0 and parent == None:
+    if segid > 0 and parent is None:
         raise Exception(
             "There are currently more than one segments in the cell, but one is being added without specifying a parent segment"
         )
