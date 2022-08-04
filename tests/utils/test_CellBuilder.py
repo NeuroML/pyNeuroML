@@ -187,8 +187,28 @@ class CellBuilderTestCase(unittest.TestCase):
                               type="ionChannelPassive")
         nml_doc.ion_channel.append(ion_chan)
 
-        add_channel_density(new_cell, nml_doc, "pas_chan", "0.021 mS_per_cm2",
-                            "pas", "", "-70.0 mV", "non_specific", group="all")
+        add_channel_density(new_cell, nml_doc, "pas_chan", "pas", "0.021 mS_per_cm2", "-70.0 mV", "all", "non_specific", "",)
+        with tempfile.NamedTemporaryFile(dir=".") as test_file:
+            self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc,
+                                                            test_file.name,
+                                                            validate=True))
+
+    def test_setting_channel_density_v(self):
+        """Test setting the channel_density."""
+        new_cell = create_cell(cell_id="test_cell")
+        add_segment(new_cell, (0, 0, 0, 20), (20, 0, 0, 20), name='soma', group='soma_group')
+        nml_doc = NeuroMLDocument(id="test_cell_with_channel_density_doc")
+        nml_doc.cells.append(new_cell)
+
+        ion_chan = IonChannel(id="pas", conductance="10 pS",
+                              type="ionChannelPassive")
+        nml_doc.ion_channel.append(ion_chan)
+
+        add_channel_density_v("channeldensity", new_cell, nml_doc, "", id="pas_chan",
+                              ion_channel="pas",
+                              cond_density="0.021 mS_per_cm2", erev="-70.0 mV",
+                              segment_groups="all",
+                              ion="non_specific")
         with tempfile.NamedTemporaryFile(dir=".") as test_file:
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc,
                                                             test_file.name,
