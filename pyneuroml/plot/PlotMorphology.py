@@ -101,7 +101,7 @@ def plot_2D(a=None, **kwargs):
         title = "2D plot of %s from %s" % (cell.id, a.nml_file)
 
         fig = plt.figure()
-        plt.axes().set_aspect('equal')
+        plt.axes().set_aspect("equal")
 
         plt.get_current_fig_manager().set_window_title(title)
         # plt.title(title)
@@ -130,5 +130,4 @@ def plot_2D(a=None, **kwargs):
 
 
 if __name__ == "__main__":
-
     main()
