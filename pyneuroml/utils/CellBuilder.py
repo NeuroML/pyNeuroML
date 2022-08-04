@@ -263,12 +263,12 @@ def add_channel_density(
     cell: Cell,
     nml_cell_doc: NeuroMLDocument,
     cd_id: str,
-    cond_density: str,
     ion_channel: str,
-    ion_chan_def_file: str = "",
+    cond_density: str,
     erev: str = "0.0 mV",
-    ion: str = "non_specific",
     group: str = "all",
+    ion: str = "non_specific",
+    ion_chan_def_file: str = "",
 ) -> None:
     """Add channel density.
 
@@ -278,18 +278,18 @@ def add_channel_density(
     :type nml_cell_doc: NeuroMLDocument
     :param cd_id: id for channel density
     :type cd_id: str
-    :param cond_density: value of conductance density with units
-    :type cond_density: str
     :param ion_channel: name of ion channel
     :type ion_channel: str
-    :param ion_chan_def_file: path to NeuroML2 file defining the ion channel, if empty, it assumes the channel is defined in the same file
-    :type ion_chan_def_file: str
+    :param cond_density: value of conductance density with units
+    :type cond_density: str
     :param erev: value of reversal potential with units
     :type erev: str
-    :param ion: name of ion
-    :type ion: str
     :param group: segment groups to add to
     :type group: str
+    :param ion: name of ion
+    :type ion: str
+    :param ion_chan_def_file: path to NeuroML2 file defining the ion channel, if empty, it assumes the channel is defined in the same file
+    :type ion_chan_def_file: str
     """
     cd = ChannelDensity(
         id=cd_id,
