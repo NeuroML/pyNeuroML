@@ -268,23 +268,46 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
     )
 
 
+def add_intracellular_property(
+    property_name: str,
+    cell: Cell,
+    **kwargs: Any
+) -> None:
+    """Generic function to add an intracellular property to the cell.
+
+    For a full list of membrane properties, see:
+    https://docs.neuroml.org/Userdocs/Schemas/Cells.html?#intracellularproperties
+
+    :param property_name: name of intracellular property to add
+    :type property_name: str
+    :param cell: cell to be modified
+    :type cell: Cell
+    :param kwargs: named arguments for intracellular property to be added
+    :type kwargs: Any
+    :returns: None
+
+    """
+    property_obj = component_factory(property_name, **kwargs)
+    cell.biophysical_properties.intracellular_properties.add(property_obj)
+
+
 def add_membrane_property(
     property_name: str,
     cell: Cell,
-    nml_cell_doc: NeuroMLDocument,
     **kwargs: Any
 ) -> None:
     """Generic function to add a membrane property to the cell.
 
     For a full list of membrane properties, see:
-    https://docs.neuroml.org/Userdocs/Schemas/Cells.html?highlight=channeldensitynernst#membraneproperties
+    https://docs.neuroml.org/Userdocs/Schemas/Cells.html?#membraneproperties
+
+    Please also see specific functions in this module, which are designed to be
+    easier to use than this generic function.
 
     :param property_name: name of membrane to add
     :type property_name: str
     :param cell: cell to be modified
     :type cell: Cell
-    :param nml_cell_doc: cell NeuroML document to which channel density is to be added
-    :type nml_cell_doc: NeuroMLDocument
     :param kwargs: named arguments for membrane property to be added
     :type kwargs: Any
     :returns: None
@@ -318,7 +341,7 @@ def add_channel_density_v(
     :returns: None
     """
 
-    add_membrane_property(channel_density_type, cell, nml_cell_doc, **kwargs)
+    add_membrane_property(channel_density_type, cell, **kwargs)
 
     if len(ion_chan_def_file) > 0:
         if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
