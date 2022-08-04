@@ -225,9 +225,9 @@ def set_init_memb_potential(cell: Cell, v: str, group: str = "all") -> None:
     :param group: id of segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.membrane_properties.init_memb_potentials = [
+    cell.biophysical_properties.membrane_properties.init_memb_potentials.append(
         InitMembPotential(value=v, segment_groups=group)
-    ]
+    )
 
 
 def set_resistivity(cell: Cell, resistivity: str, group: str = "all") -> None:
