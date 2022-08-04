@@ -246,3 +246,35 @@ class CellBuilderTestCase(unittest.TestCase):
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc,
                                                             test_file.name,
                                                             validate=True))
+
+    def test_setting_membrane_property(self):
+        """Test adding a new membrane property"""
+        nml_doc = NeuroMLDocument(id="test_cell")
+        new_cell = create_cell(cell_id="test_cell")
+        add_segment(new_cell, (0, 0, 0, 20), (20, 0, 0, 20), name='soma', group='soma_group')
+        add_membrane_property("InitMembPotential", new_cell, value="-65mV")
+
+        self.assertEqual(new_cell.biophysical_properties.membrane_properties.init_memb_potentials[0].value,
+                         "-65mV")
+
+        nml_doc.cells.append(new_cell)
+        with tempfile.NamedTemporaryFile() as test_file:
+            # it is now valid because the cell has a segment
+            self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
+                                                            validate=True))
+
+    def test_setting_intracellular_property(self):
+        """Test adding a new membrane property"""
+        new_cell = create_cell(cell_id="test_cell")
+        add_segment(new_cell, (0, 0, 0, 20), (20, 0, 0, 20), name='soma', group='soma_group')
+        add_intracellular_property("Resistivity", new_cell, value="0ohm_cm", )
+
+        self.assertEqual(new_cell.biophysical_properties.intracellular_properties.resistivities[0].value,
+                         "0ohm_cm")
+
+        nml_doc = NeuroMLDocument(id="test_cell")
+        nml_doc.cells.append(new_cell)
+        with tempfile.NamedTemporaryFile() as test_file:
+            # it is now valid because the cell has a segment
+            self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
+                                                            validate=True))
