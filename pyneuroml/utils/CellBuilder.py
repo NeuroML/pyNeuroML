@@ -268,6 +268,38 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
     )
 
 
+def add_membrane_property(
+    property_name: str,
+    cell: Cell,
+    nml_cell_doc: NeuroMLDocument,
+    **kwargs: Any
+) -> None:
+    """Generic function to add a membrane property to the cell.
+
+    For a full list of membrane properties, see:
+    https://docs.neuroml.org/Userdocs/Schemas/Cells.html?highlight=channeldensitynernst#membraneproperties
+
+    :param property_name: name of membrane to add (case insensitive)
+    :type property_name: str
+    :param cell: cell to be modified
+    :type cell: Cell
+    :param nml_cell_doc: cell NeuroML document to which channel density is to be added
+    :type nml_cell_doc: NeuroMLDocument
+    :param kwargs: named arguments for membrane property to be added
+    :type kwargs: Any
+    :returns: None
+
+    """
+    property_obj = None  # type: Any
+    try:
+        property_class = getattr(neuroml.nml.nml, property_name.upper())
+        property_obj = property_class(**kwargs)
+    except AttributeError as e:
+        print(e)
+
+    cell.biophysical_properties.membrane_properties.add(property_obj)
+
+
 def add_channel_density_v(
     channel_density_type: str,
     cell: Cell,
@@ -289,16 +321,10 @@ def add_channel_density_v(
     :type ion_chan_def_file: str
     :param kwargs: named arguments for required channel density type
     :type kwargs: Any
+    :returns: None
     """
 
-    cd = None  # type: Any
-    try:
-        cd_class = getattr(neuroml.nml.nml, channel_density_type.upper())
-        cd = cd_class(**kwargs)
-    except AttributeError as e:
-        print(e)
-
-    cell.biophysical_properties.membrane_properties.add(cd)
+    add_membrane_property(channel_density_type, cell, nml_cell_doc, **kwargs)
 
     if len(ion_chan_def_file) > 0:
         if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
