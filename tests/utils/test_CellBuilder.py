@@ -188,6 +188,13 @@ class CellBuilderTestCase(unittest.TestCase):
         nml_doc.ion_channel.append(ion_chan)
 
         add_channel_density(new_cell, nml_doc, "pas_chan", "pas", "0.021 mS_per_cm2", "-70.0 mV", "all", "non_specific", "",)
+        # check that it was added
+        self.assertNotEqual(len(new_cell.biophysical_properties.membrane_properties.channel_densities), 0)
+        self.assertEqual(new_cell.biophysical_properties.membrane_properties.channel_densities[0].id,
+                         "pas_chan")
+        self.assertNotEqual(new_cell.biophysical_properties.membrane_properties.channel_densities[0].id,
+                            "some_other_chan")
+
         with tempfile.NamedTemporaryFile(dir=".") as test_file:
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc,
                                                             test_file.name,
@@ -202,13 +209,20 @@ class CellBuilderTestCase(unittest.TestCase):
 
         ion_chan = IonChannel(id="pas", conductance="10 pS",
                               type="ionChannelPassive")
-        nml_doc.ion_channel.append(ion_chan)
+        nml_doc.add(ion_chan)
 
-        add_channel_density_v("channeldensity", new_cell, nml_doc, "", id="pas_chan",
+        add_channel_density_v("ChannelDensity", new_cell, nml_doc, "", id="pas_chan",
                               ion_channel="pas",
                               cond_density="0.021 mS_per_cm2", erev="-70.0 mV",
                               segment_groups="all",
                               ion="non_specific")
+        # check that it was added
+        self.assertNotEqual(len(new_cell.biophysical_properties.membrane_properties.channel_densities), 0)
+        self.assertEqual(new_cell.biophysical_properties.membrane_properties.channel_densities[0].id,
+                         "pas_chan")
+        self.assertNotEqual(new_cell.biophysical_properties.membrane_properties.channel_densities[0].id,
+                            "some_other_chan")
+
         with tempfile.NamedTemporaryFile(dir=".") as test_file:
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc,
                                                             test_file.name,
