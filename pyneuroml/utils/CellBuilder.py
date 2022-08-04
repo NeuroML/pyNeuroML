@@ -278,7 +278,7 @@ def add_membrane_property(
     For a full list of membrane properties, see:
     https://docs.neuroml.org/Userdocs/Schemas/Cells.html?highlight=channeldensitynernst#membraneproperties
 
-    :param property_name: name of membrane to add (case insensitive)
+    :param property_name: name of membrane to add
     :type property_name: str
     :param cell: cell to be modified
     :type cell: Cell
