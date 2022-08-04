@@ -267,6 +267,7 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
         SpecificCapacitance(value=spec_cap, segment_groups=group)
     )
 
+
 def add_membrane_property(
     property_name: str,
     cell: Cell,
