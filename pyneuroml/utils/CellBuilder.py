@@ -4,7 +4,8 @@ Utility functions to help build cells in NeuroML
 """
 
 
-from typing import List
+from typing import List, Union, Any, Optional
+import neuroml
 from neuroml import (
     Cell,
     Morphology,
@@ -22,6 +23,14 @@ from neuroml import (
     NeuroMLDocument,
     IncludeType,
     ChannelDensity,
+    ChannelDensityNernst,
+    ChannelDensityNernstCa2,
+    ChannelDensityGHK,
+    ChannelDensityGHK2,
+    ChannelDensityVShift,
+    ChannelDensityNonUniform,
+    ChannelDensityNonUniformNernst,
+    ChannelDensityNonUniformGHK,
 )
 
 
@@ -257,6 +266,43 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
     cell.biophysical_properties.membrane_properties.specific_capacitances.append(
         SpecificCapacitance(value=spec_cap, segment_groups=group)
     )
+
+
+def add_channel_density_v(
+    channel_density_type: str,
+    cell: Cell,
+    nml_cell_doc: NeuroMLDocument,
+    ion_chan_def_file: str = "",
+    **kwargs: Any
+) -> None:
+    """Generic function to add channel density components to a Cell.
+
+    :param channel_density_type: type of channel density to add.
+        See https://docs.neuroml.org/Userdocs/Schemas/Cells.html for the
+        complete list.
+    :type channel_density_type: str
+    :param cell: cell to be modified
+    :type cell: Cell
+    :param nml_cell_doc: cell NeuroML document to which channel density is to be added
+    :type nml_cell_doc: NeuroMLDocument
+    :param ion_chan_def_file: path to NeuroML2 file defining the ion channel, if empty, it assumes the channel is defined in the same file
+    :type ion_chan_def_file: str
+    :param kwargs: named arguments for required channel density type
+    :type kwargs: Any
+    """
+
+    cd = None  # type: Any
+    try:
+        cd_class = getattr(neuroml.nml.nml, channel_density_type.upper())
+        cd = cd_class(**kwargs)
+    except AttributeError as e:
+        print(e)
+
+    cell.biophysical_properties.membrane_properties.add(cd)
+
+    if len(ion_chan_def_file) > 0:
+        if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
+            nml_cell_doc.add(IncludeType(ion_chan_def_file))
 
 
 def add_channel_density(
