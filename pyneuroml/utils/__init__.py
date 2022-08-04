@@ -17,9 +17,9 @@ def component_factory(
 ):
     """Factory function to create a NeuroML Component object.
 
-    Users can provide the case insensitive name of the component, along with
-    its named constructor arguments, and this function will create a new object
-    of the Component and return it.
+    Users can provide the name of the component, along with its named
+    constructor arguments, and this function will create a new object of the
+    Component and return it.
 
     Users can use the `add()` helper function to further modify components
 
@@ -30,11 +30,5 @@ def component_factory(
     :returns: new Component (object) of provided ComponentType
 
     """
-    obj = None  # type: Any
-    try:
-        comp_type_class = getattr(neuroml.nml.nml, component_type.upper())
-        obj = comp_type_class(**kwargs)
-    except AttributeError as e:
-        print(e)
-
-    return obj
+    comp_type_class = getattr(neuroml.nml.nml, component_type)
+    return comp_type_class(**kwargs)
