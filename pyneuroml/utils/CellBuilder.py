@@ -32,7 +32,7 @@ from neuroml import (
     ChannelDensityNonUniformNernst,
     ChannelDensityNonUniformGHK,
 )
-
+from . import component_factory
 
 neuro_lex_ids = {
     "axon": "GO:0030424",
@@ -267,7 +267,6 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
         SpecificCapacitance(value=spec_cap, segment_groups=group)
     )
 
-
 def add_membrane_property(
     property_name: str,
     cell: Cell,
@@ -290,13 +289,7 @@ def add_membrane_property(
     :returns: None
 
     """
-    property_obj = None  # type: Any
-    try:
-        property_class = getattr(neuroml.nml.nml, property_name.upper())
-        property_obj = property_class(**kwargs)
-    except AttributeError as e:
-        print(e)
-
+    property_obj = component_factory(property_name, **kwargs)
     cell.biophysical_properties.membrane_properties.add(property_obj)
 
 
