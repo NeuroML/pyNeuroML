@@ -47,3 +47,10 @@ class UtilsTestCase(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(pynml.pynml.write_neuroml2_file(nml_doc, test_file.name,
                                                             validate=True))
+
+    def test_component_parameter_checker(self):
+        "Test the parameter checker utility function"
+        iaf_cell = neuroml.nml.nml.IafCell(id="test_cell")
+        with self.assertRaises(ValueError) as cm:
+            check_component_parameters_are_set(iaf_cell)
+        print(cm)

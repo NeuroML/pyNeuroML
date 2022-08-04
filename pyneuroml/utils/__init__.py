@@ -31,4 +31,31 @@ def component_factory(
 
     """
     comp_type_class = getattr(neuroml.nml.nml, component_type)
-    return comp_type_class(**kwargs)
+    comp = comp_type_class(**kwargs)
+    check_component_parameters_are_set(comp)
+
+
+def check_component_parameters_are_set(comp: Any) -> None:
+    """Check if all compulsory parameters of a component are set.
+
+    Throws a Python `ValueError` if a compulsory parameter has not been set in
+    the component. If you wish to set this parameter later, handle this error
+    in a try/except block and continue.
+
+    Note: validating your NeuroML file will also check this.
+
+    :param comp: component to check
+    :type comp: Any
+    :returns: None
+    """
+    members = comp.get_members()
+    for m in members:
+        name = m.get_name()
+        optional = m.get_optional()
+        value = getattr(comp, name)
+
+        if optional == 0 and value is None:
+            print(f"{name} is a compulsory parameter and must be set.")
+            print("If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n")
+            comp.info()
+            raise ValueError
