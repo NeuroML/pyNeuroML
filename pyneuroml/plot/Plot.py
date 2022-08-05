@@ -13,6 +13,9 @@ import logging
 import typing
 import matplotlib
 import matplotlib.axes
+import plotly.graph_objects as go
+import pandas
+import numpy
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -226,3 +229,60 @@ def generate_plot(
         plt.show()
 
     return ax
+
+
+def generate_interactive_plot(
+    xvalues: list[float],
+    yvalues: list[float],
+    title: str,
+    labels: typing.Optional[list[str]] = None,
+    xaxis: str = None,
+    yaxis: str = None,
+    legend_title: str = None,
+) -> None:
+    """Utility function to generate interactive plots using Plotly.
+
+    This function can be used to generate graphs with multiple plot lines.
+    For example, to plot two metrics you can use:
+
+    ::
+
+        generate_interactive_plot(xvalues=[[ax1, ax2, ax3], [bx1, bx2, bx3]], yvalues=[[ay1, ay2, ay3], [by1, by2, by3]], labels=["metric 1", "metric 2"])
+
+    Please note that while plotting multiple plots, you should take care to
+    ensure that the number of x values and y values for each metric correspond.
+    These lists are passed directly to Plotly for plotting without additional
+    sanity checks.
+
+
+    :param xvalues: X values
+    :type xvalues: list of lists
+    :param yvalues: Y values
+    :type yvalues: lists of lists
+    :param title: title of plot
+    :type title: str
+    :param labels: labels for each plot (default: None)
+    :type labels: list of strings
+    :param xaxis: label of X axis (default: None)
+    :type xaxis: str
+    :param yaxis: label of Y axis (default: None)
+    :type yaxis: str
+    :param legend_title: title of legend
+    :type legend_title: str
+    """
+    fig = go.Figure()
+
+    if len(xvalues) != len(yvalues):
+        raise ValueError("length of x values does not match length of y values")
+
+    if not labels or len(labels) != len(xvalues):
+        raise ValueError("labels not provided correctly")
+
+    for i in range(len(xvalues)):
+        fig.add_trace(go.Scatter(x=xvalues[i], y=yvalues[i], name=labels[i]))
+
+    fig.update_layout(title=title,
+                      xaxis_title=xaxis,
+                      yaxis_title=yaxis,
+                      legend_title=legend_title)
+    fig.show()

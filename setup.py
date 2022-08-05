@@ -72,6 +72,8 @@ setup(
         "graphviz",
         'typing; python_version<"3.5"',
         "lxml",
+        "pandas",
+        "plotly"
     ],
     extras_require={
         "neuron": ["NEURON"],

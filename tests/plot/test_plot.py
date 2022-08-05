@@ -13,7 +13,7 @@ import shutil
 import logging
 import pathlib as pl
 
-from pyneuroml.plot import generate_plot
+from pyneuroml.plot import (generate_plot, generate_interactive_plot)
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,25 @@ class TestPlot(BaseTestCase):
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
 
+    def test_generate_interactive_plot(self):
+        """Test generate_interactive_plot function."""
+        xs = [*range(5, 15)]
+        ys = [*range(5, 15)]
+        xs1 = [*range(5, 15)]
+        ys1 = [*range(14, 4, -1)]
+        labels = ["up", "down"]
+        generate_interactive_plot(
+            [xs, xs1],
+            [ys, ys1],
+            "test interactive plot",
+            labels,
+            xaxis="x axis",
+            yaxis="y axis"
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
