@@ -14,8 +14,6 @@ import typing
 import matplotlib
 import matplotlib.axes
 import plotly.graph_objects as go
-import pandas
-import numpy
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -109,7 +107,7 @@ def generate_plot(
     :param font_size: font size (default: 12)
     :type font_size: float
     :param bottom_left_spines_only: enable/disable spines on right and top (default: False)
-                (a spine is line noting the data area boundary)
+                (a spine is the line noting the data area boundary)
     :type bottom_left_spines_only: boolean
     :param cols_in_legend_box: number of columns to use in legend box (default: 3)
     :type cols_in_legend_box: float
@@ -236,9 +234,24 @@ def generate_interactive_plot(
     yvalues: list[float],
     title: str,
     labels: typing.Optional[list[str]] = None,
+    linestyles: typing.Optional[list[str]] = None,
+    linewidths: typing.Optional[typing.Union[list[int], list[float]]] = None,
+    markers: typing.Optional[typing.Union[list[str], list[int]]] = None,
+    markersizes: typing.Optional[typing.Union[list[float], list[int]]] = None,
     xaxis: str = None,
     yaxis: str = None,
     legend_title: str = None,
+    xaxis_color: str = "#fff",
+    yaxis_color: str = "#fff",
+    xaxis_width: typing.Union[float, int] = 1,
+    yaxis_width: typing.Union[float, int] = 1,
+    xaxis_mirror: typing.Union[str, bool] = False,
+    yaxis_mirror: typing.Union[str, bool] = False,
+    grid: bool = True,
+    logx: bool = False,
+    logy: bool = False,
+    show_interactive: bool = True,
+    save_figure_to: typing.Optional[str] = None,
 ) -> None:
     """Utility function to generate interactive plots using Plotly.
 
@@ -254,6 +267,8 @@ def generate_interactive_plot(
     These lists are passed directly to Plotly for plotting without additional
     sanity checks.
 
+    See the plotly documentation for more information:
+    https://plotly.com/python-api-reference/generated/plotly.graph_objects.scatter.html
 
     :param xvalues: X values
     :type xvalues: list of lists
@@ -263,12 +278,49 @@ def generate_interactive_plot(
     :type title: str
     :param labels: labels for each plot (default: None)
     :type labels: list of strings
+    :param linestyles: list of line styles (default: None)
+    :type linestyles: list strings
+    :param linewidths: list of line widths (default: None)
+    :type linewidths: list of floats/int
+    :param markers: list of markers (default: None)
+    :type markers: list of plotly marker values. See:
+        https://plotly.com/python-api-reference/generated/plotly.graph_objects.scatter.html#plotly.graph_objects.scatter.Marker.symbol
+    :param markersizes: list of marker sizes (default: None)
+    :type markersizes: list of ints/floats
     :param xaxis: label of X axis (default: None)
     :type xaxis: str
     :param yaxis: label of Y axis (default: None)
     :type yaxis: str
     :param legend_title: title of legend
     :type legend_title: str
+    :param xaxis_color: color of xaxis
+    :type xaxis_color: str
+    :param yaxis_color: color of yaxis
+    :type yaxis_color: str
+    :param xaxis_width: width of xaxis
+    :type xaxis_width: int/float
+    :param yaxis_width: width of yaxis
+    :type yaxis_width: int/float
+    :param xaxis_mirror: xaxis mirror options:
+        https://plotly.com/python/reference/layout/xaxis/#layout-xaxis-mirror
+    :type xaxis_mirror: bool/str
+    :param yaxis_mirror: yaxis mirror options
+        https://plotly.com/python/reference/layout/xaxis/#layout-xaxis-mirror
+    :type yaxis_mirror: bool/str
+    :param grid: enable/disable grid (default: True)
+    :type grid: boolean
+    :param logx: should the x axis be in log scale (default: False)
+    :type logx: boolean
+    :param logy: should the y ayis be in log scale (default: False)
+    :type logy: boolean
+    :param show_interactive: toggle whether interactive plot should be opened (default: True)
+    :type show_interactive: bool
+    :param save_figure_to: location to save generated figure to (default: None)
+        Requires the kaleido package to be installed.
+        See for supported formats:
+        https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html?#plotly.graph_objects.Figure.write_image
+        Note: you can also save the file from the interactive web page.
+    :type save_figure_to: str
     """
     fig = go.Figure()
 
@@ -278,11 +330,58 @@ def generate_interactive_plot(
     if not labels or len(labels) != len(xvalues):
         raise ValueError("labels not provided correctly")
 
-    for i in range(len(xvalues)):
-        fig.add_trace(go.Scatter(x=xvalues[i], y=yvalues[i], name=labels[i]))
+    if not markersizes:
+        markersizes = len(xvalues) * [6.]
+    if not markers:
+        markers = len(xvalues) * [0]
+    if not linestyles:
+        linestyles = len(xvalues) * ['solid']
+    if not linewidths:
+        linewidths = len(xvalues) * [2.]
 
-    fig.update_layout(title=title,
-                      xaxis_title=xaxis,
-                      yaxis_title=yaxis,
-                      legend_title=legend_title)
-    fig.show()
+    for i in range(len(xvalues)):
+        fig.add_trace(
+            go.Scatter(
+                x=xvalues[i], y=yvalues[i], name=labels[i],
+                marker={
+                    'size': markersizes[i],
+                    'symbol': markers[i]
+                },
+                line={
+                    'dash': linestyles[i],
+                    'width': linewidths[i]
+                }
+            ),
+        )
+
+    fig.update_layout(
+        title={
+            'text': title,
+            'xanchor': "auto"
+        },
+        xaxis_title=xaxis,
+        yaxis_title=yaxis,
+        legend_title=legend_title)
+
+    if logx:
+        fig.update_xaxes(type="log")
+    else:
+        fig.update_xaxes(type="linear")
+    if logy:
+        fig.update_yaxes(type="log")
+    else:
+        fig.update_yaxes(type="linear")
+    fig.update_xaxes(showgrid=grid, linecolor=xaxis_color,
+                     linewidth=xaxis_width, mirror=xaxis_mirror)
+    fig.update_yaxes(showgrid=grid, linecolor=yaxis_color,
+                     linewidth=yaxis_width, mirror=yaxis_mirror)
+
+    if show_interactive:
+        fig.show()
+
+    if save_figure_to:
+        logger.info(
+            "Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title)
+        )
+        fig.write_image(save_figure_to, scale=2, width=1024, height=768)
+        logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
