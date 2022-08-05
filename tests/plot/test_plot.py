@@ -27,6 +27,10 @@ class TestPlot(BaseTestCase):
     def test_generate_plot(self):
         """Test generate_plot function."""
         filename = "test_generate_plot.png"
+
+        # remove the file first
+        pl.Path(filename).unlink(missing_ok=True)
+
         xs = range(0, 10)
         ys = range(0, 10)
         generate_plot(
