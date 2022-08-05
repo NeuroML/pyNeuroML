@@ -55,6 +55,11 @@ class TestPlot(BaseTestCase):
 
     def test_generate_interactive_plot(self):
         """Test generate_interactive_plot function."""
+        filename = "test_generate_interactive_plot.png"
+
+        # remove the file first
+        pl.Path(filename).unlink(missing_ok=True)
+
         xs = [*range(5, 15)]
         ys = [*range(5, 15)]
         xs1 = [*range(5, 15)]
@@ -66,8 +71,12 @@ class TestPlot(BaseTestCase):
             "test interactive plot",
             labels,
             xaxis="x axis",
-            yaxis="y axis"
+            yaxis="y axis",
+            show_interactive=False,
+            save_figure_to=filename
         )
+        self.assertIsFile(filename)
+        pl.Path(filename).unlink()
 
 
 if __name__ == "__main__":
