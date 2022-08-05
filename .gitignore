@@ -130,3 +130,5 @@ examples/results/*.dat
 /examples/test_data/ca1/TestOLMNet.net.nml.png
 /examples/LEMS_NML2_Ex5_DetCell_moose.py
 /examples/NET_NML2_Ex5_DetCell.net.nml
+
+.mypy_cache/
