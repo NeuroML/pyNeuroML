@@ -8,8 +8,6 @@ Copyright 2022 NeuroML contributors
 """
 
 import unittest
-import os
-import shutil
 import logging
 import pathlib as pl
 
@@ -78,9 +76,6 @@ class TestPlot(BaseTestCase):
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
 
-
-if __name__ == "__main__":
-    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
