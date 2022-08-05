@@ -49,7 +49,7 @@ import neuroml.writers as writers
 # to maintain API compatibility:
 # so that existing scripts that use: from pynml import generate_plot
 # continue to work
-from pyneuroml.plot.Plot import generate_plot  # noqa
+from pyneuroml.plot import generate_plot, generate_interactive_plot  # noqa
 
 DEFAULTS = {
     "v": False,
