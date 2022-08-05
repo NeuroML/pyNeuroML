@@ -330,37 +330,31 @@ def generate_interactive_plot(
         raise ValueError("labels not provided correctly")
 
     if not markersizes:
-        markersizes = len(xvalues) * [6.]
+        markersizes = len(xvalues) * [6.0]
     if not markers:
         markers = len(xvalues) * [0]
     if not linestyles:
-        linestyles = len(xvalues) * ['solid']
+        linestyles = len(xvalues) * ["solid"]
     if not linewidths:
-        linewidths = len(xvalues) * [2.]
+        linewidths = len(xvalues) * [2.0]
 
     for i in range(len(xvalues)):
         fig.add_trace(
             go.Scatter(
-                x=xvalues[i], y=yvalues[i], name=labels[i],
-                marker={
-                    'size': markersizes[i],
-                    'symbol': markers[i]
-                },
-                line={
-                    'dash': linestyles[i],
-                    'width': linewidths[i]
-                }
+                x=xvalues[i],
+                y=yvalues[i],
+                name=labels[i],
+                marker={"size": markersizes[i], "symbol": markers[i]},
+                line={"dash": linestyles[i], "width": linewidths[i]},
             ),
         )
 
     fig.update_layout(
-        title={
-            'text': title,
-            'xanchor': "auto"
-        },
+        title={"text": title, "xanchor": "auto"},
         xaxis_title=xaxis,
         yaxis_title=yaxis,
-        legend_title=legend_title)
+        legend_title=legend_title,
+    )
 
     if logx:
         fig.update_xaxes(type="log")
@@ -370,10 +364,12 @@ def generate_interactive_plot(
         fig.update_yaxes(type="log")
     else:
         fig.update_yaxes(type="linear")
-    fig.update_xaxes(showgrid=grid, linecolor=xaxis_color,
-                     linewidth=xaxis_width, mirror=xaxis_mirror)
-    fig.update_yaxes(showgrid=grid, linecolor=yaxis_color,
-                     linewidth=yaxis_width, mirror=yaxis_mirror)
+    fig.update_xaxes(
+        showgrid=grid, linecolor=xaxis_color, linewidth=xaxis_width, mirror=xaxis_mirror
+    )
+    fig.update_yaxes(
+        showgrid=grid, linecolor=yaxis_color, linewidth=yaxis_width, mirror=yaxis_mirror
+    )
 
     if show_interactive:
         fig.show()

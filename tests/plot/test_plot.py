@@ -11,7 +11,7 @@ import unittest
 import logging
 import pathlib as pl
 
-from pyneuroml.plot import (generate_plot, generate_interactive_plot)
+from pyneuroml.plot import generate_plot, generate_interactive_plot
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class TestPlot(BaseTestCase):
             xaxis="x axis",
             yaxis="y axis",
             show_interactive=False,
-            save_figure_to=filename
+            save_figure_to=filename,
         )
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
