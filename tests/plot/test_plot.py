@@ -27,7 +27,10 @@ class TestPlot(BaseTestCase):
         filename = "test_generate_plot.png"
 
         # remove the file first
-        pl.Path(filename).unlink(missing_ok=True)
+        try:
+            pl.Path(filename).unlink()
+        except FileNotFoundError:
+            pass
 
         xs = range(0, 10)
         ys = range(0, 10)
@@ -56,7 +59,10 @@ class TestPlot(BaseTestCase):
         filename = "test_generate_interactive_plot.png"
 
         # remove the file first
-        pl.Path(filename).unlink(missing_ok=True)
+        try:
+            pl.Path(filename).unlink()
+        except FileNotFoundError:
+            pass
 
         xs = [*range(5, 15)]
         ys = [*range(5, 15)]
