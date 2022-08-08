@@ -25,18 +25,19 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_2d_plotter(self):
         """Test plot_2D function."""
-        # test OLM cell file: only in xy plane
+        nml_files = ["tests/plot/Cell_497232312.cell.nml",
+                     "tests/plot/test.cell.nml"]
 
-        nml_file = "tests/plot/test.cell.nml"
-        for plane in ["xy", "yz", "zx"]:
-            filename = f"test_morphology_plot_2d_{plane}.png"
-            # remove the file first
-            try:
+        for nml_file in nml_files:
+            for plane in ["xy", "yz", "xz"]:
+                filename = f"test_morphology_plot_2d_{plane}.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
+
+                plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
+
+                self.assertIsFile(filename)
                 pl.Path(filename).unlink()
-            except FileNotFoundError:
-                pass
-
-            plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
-
-            self.assertIsFile(filename)
-            pl.Path(filename).unlink()
