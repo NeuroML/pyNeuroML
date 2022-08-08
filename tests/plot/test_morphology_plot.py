@@ -19,12 +19,24 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class TestPlot(BaseTestCase):
+class TestMorphologyPlot(BaseTestCase):
 
     """Test Plot module"""
 
-    def test_generate_plot(self):
-        """Test generate_plot function."""
-        filename = "test_generate_plot.png"
+    def test_2d_plotter(self):
+        """Test plot_2D function."""
+        # test OLM cell file: only in xy plane
 
-        # remove the file first
+        nml_file = "tests/plot/test.cell.nml"
+        for plane in ["xy", "yz", "zx"]:
+            filename = f"test_morphology_plot_2d_{plane}.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
+
+            self.assertIsFile(filename)
+            pl.Path(filename).unlink()
