@@ -10,6 +10,7 @@ Copyright 2022 NeuroML contributors
 
 import argparse
 import os
+import sys
 
 import typing
 import logging
@@ -151,12 +152,15 @@ def plot_2D(
                     % (seg.name, seg.id, p, d)
                 )
             width = max(p.diameter, d.diameter)
-            if plane2d == "xy":
+            if plane2d == "xy" or plane2d == "yx":
                 plt.plot([p.x, d.x], [p.y, d.y], linewidth=width, color="b")
-            elif plane2d == "xz":
+            elif plane2d == "xz" or plane2d == "zx":
                 plt.plot([p.x, d.x], [p.z, d.z], linewidth=width, color="b")
-            else:
+            elif plane2d == "yz" or plane2d == "zy":
                 plt.plot([p.y, d.y], [p.z, d.z], linewidth=width, color="b")
+            else:
+                logger.error(f"Invalid value for plane: {plane2d}")
+                sys.exit(-1)
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
