@@ -32,6 +32,7 @@ import pprint
 import logging
 import tempfile
 import typing
+import traceback
 
 import matplotlib
 import matplotlib.axes
@@ -176,6 +177,8 @@ def parse_arguments():
             "        generate NEURON files in directory <dir>\n"
             "    -np <cores>\n"
             "        number of cores to run with (if using MPI)\n"
+            "    -json\n"
+            "        generate network as NetPyNE JSON\n"
             "    <LEMS file>\n"
             "        the LEMS file to use"
         ),
@@ -1444,6 +1447,7 @@ def run_lems_with_jneuroml_netpyne(
     show_plot_already: bool = True,
     exec_in_dir: str = ".",
     only_generate_scripts: bool = False,
+    only_generate_json: bool = False,
     verbose: bool = DEFAULTS["v"],
     exit_on_fail: bool = True,
     cleanup: bool = False,
@@ -1492,8 +1496,10 @@ def run_lems_with_jneuroml_netpyne(
 
     if num_processors != 1:
         post_args += " -np %i" % num_processors
-    if not only_generate_scripts:
+    if not only_generate_scripts and not only_generate_json:
         post_args += " -run"
+    if only_generate_json:
+        post_args += " -json"
 
     post_args += gui_string(nogui)
     post_args += include_string(paths_to_include)
@@ -2419,9 +2425,11 @@ def execute_command_in_dir_with_realtime_output(
     if os.name == "nt":
         directory = os.path.normpath(directory)
 
-    logger.info("Executing: (%s) in directory: %s" % (command, directory))
+    print("####################################################################")
+    print("# pyNeuroML executing: (%s) in directory: %s" % (command, directory))
     if env is not None:
-        logger.info("Extra env variables %s" % (env))
+        print("# Extra env variables %s" % (env))
+    print("####################################################################")
 
     p = None
     try:
@@ -2436,12 +2444,20 @@ def execute_command_in_dir_with_realtime_output(
         )
         with p.stdout:
             for line in iter(p.stdout.readline, ""):
-                logger.debug(line.strip())
+                print("# %s"%line.strip())
         p.wait()  # wait for the subprocess to exit
+
+        print("####################################################################")
     except KeyboardInterrupt as e:
         logger.error("*** Command interrupted: \n       %s" % command)
         if p:
             p.kill()
+        raise e
+    except Exception as e:
+        print("# Exception occured: %s" % (e))
+        print("# More...")
+        print(traceback.format_exc())
+        print("####################################################################")
         raise e
 
     if not p.returncode == 0:
