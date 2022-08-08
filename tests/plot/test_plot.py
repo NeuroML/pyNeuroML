@@ -70,13 +70,17 @@ class TestPlot(BaseTestCase):
         ys1 = [*range(14, 4, -1)]
         labels = ["up", "down"]
         generate_interactive_plot(
-            [xs, xs1],
-            [ys, ys1],
-            "test interactive plot",
-            labels,
+            xvalues=[xs, xs1],
+            yvalues=[ys, ys1],
+            labels=labels,
+            modes=["lines+markers", "markers"],
+            title="test interactive plot",
+            plot_bgcolor="white",
             xaxis="x axis",
             yaxis="y axis",
             show_interactive=False,
+            xaxis_spikelines=True,
+            yaxis_spikelines=False,
             save_figure_to=filename,
         )
         self.assertIsFile(filename)

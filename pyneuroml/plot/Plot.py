@@ -231,12 +231,18 @@ def generate_plot(
 def generate_interactive_plot(
     xvalues: typing.List[float],
     yvalues: typing.List[float],
-    title: str,
     labels: typing.Optional[typing.List[str]] = None,
     linestyles: typing.Optional[typing.List[str]] = None,
-    linewidths: typing.Optional[typing.Union[typing.List[int], typing.List[float]]] = None,
+    linewidths: typing.Optional[
+        typing.Union[typing.List[int], typing.List[float]]
+    ] = None,
     markers: typing.Optional[typing.Union[typing.List[str], typing.List[int]]] = None,
-    markersizes: typing.Optional[typing.Union[typing.List[float], typing.List[int]]] = None,
+    markersizes: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int]]
+    ] = None,
+    title: str = "",
+    plot_bgcolor: typing.Optional[str] = None,
+    modes: typing.Optional[typing.List[str]] = None,
     xaxis: str = None,
     yaxis: str = None,
     legend_title: str = None,
@@ -246,9 +252,12 @@ def generate_interactive_plot(
     yaxis_width: typing.Union[float, int] = 1,
     xaxis_mirror: typing.Union[str, bool] = False,
     yaxis_mirror: typing.Union[str, bool] = False,
+    xaxis_spikelines: bool = False,
+    yaxis_spikelines: bool = False,
     grid: bool = True,
     logx: bool = False,
     logy: bool = False,
+    layout: typing.Optional[dict] = None,
     show_interactive: bool = True,
     save_figure_to: typing.Optional[str] = None,
 ) -> None:
@@ -266,6 +275,12 @@ def generate_interactive_plot(
     These lists are passed directly to Plotly for plotting without additional
     sanity checks.
 
+    A number of options are provided for convenience to allow plotting of
+    multiple traces in the same plot and modification of common layout options.
+    A layout dict can also be passed instead, which will overwrite any
+    individually set options. If you need more customisation, please look at
+    the source code of this method to write your own.
+
     See the plotly documentation for more information:
     https://plotly.com/python-api-reference/generated/plotly.graph_objects.scatter.html
 
@@ -277,6 +292,9 @@ def generate_interactive_plot(
     :type title: str
     :param labels: labels for each plot (default: None)
     :type labels: list of strings
+    :param modes: modes of individual plots: "markers", "lines",
+        "lines+markers": default "lines+markers"
+    :type modes: str
     :param linestyles: list of line styles (default: None)
     :type linestyles: list strings
     :param linewidths: list of line widths (default: None)
@@ -286,6 +304,9 @@ def generate_interactive_plot(
         https://plotly.com/python-api-reference/generated/plotly.graph_objects.scatter.html#plotly.graph_objects.scatter.Marker.symbol
     :param markersizes: list of marker sizes (default: None)
     :type markersizes: list of ints/floats
+    :param plot_bgcolor: background color of plotting area b/w axes
+        See https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html#plotly.graph_objects.Figure
+    :type plot_bgcolor: str
     :param xaxis: label of X axis (default: None)
     :type xaxis: str
     :param yaxis: label of Y axis (default: None)
@@ -306,12 +327,23 @@ def generate_interactive_plot(
     :param yaxis_mirror: yaxis mirror options
         https://plotly.com/python/reference/layout/xaxis/#layout-xaxis-mirror
     :type yaxis_mirror: bool/str
+    :param xaxis_spikelines: toggle spike lines on x axis
+        https://plotly.com/python/hover-text-and-formatting/#spike-lines
+    :type xaxis_spikelines: bool/str
+    :param yaxis_spikelines: toggle spike lines on x axis
+        https://plotly.com/python/hover-text-and-formatting/#spike-lines
+    :type yaxis_spikelines: bool/str
     :param grid: enable/disable grid (default: True)
     :type grid: boolean
     :param logx: should the x axis be in log scale (default: False)
     :type logx: boolean
     :param logy: should the y ayis be in log scale (default: False)
     :type logy: boolean
+    :param layout: plot layout properties: these will overwrite all other
+        layout options specified
+        See:
+        https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html#plotly.graph_objects.Figure.update_layout
+    :type layout: dict
     :param show_interactive: toggle whether interactive plot should be opened (default: True)
     :type show_interactive: bool
     :param save_figure_to: location to save generated figure to (default: None)
@@ -337,6 +369,8 @@ def generate_interactive_plot(
         linestyles = len(xvalues) * ["solid"]
     if not linewidths:
         linewidths = len(xvalues) * [2.0]
+    if not modes:
+        modes = len(xvalues) * ["lines+markers"]
 
     for i in range(len(xvalues)):
         fig.add_trace(
@@ -346,6 +380,7 @@ def generate_interactive_plot(
                 name=labels[i],
                 marker={"size": markersizes[i], "symbol": markers[i]},
                 line={"dash": linestyles[i], "width": linewidths[i]},
+                mode=modes[i],
             ),
         )
 
@@ -354,6 +389,8 @@ def generate_interactive_plot(
         xaxis_title=xaxis,
         yaxis_title=yaxis,
         legend_title=legend_title,
+        plot_bgcolor=plot_bgcolor,
+        hovermode="closest",
     )
 
     if logx:
@@ -365,11 +402,22 @@ def generate_interactive_plot(
     else:
         fig.update_yaxes(type="linear")
     fig.update_xaxes(
-        showgrid=grid, linecolor=xaxis_color, linewidth=xaxis_width, mirror=xaxis_mirror
+        showgrid=grid,
+        linecolor=xaxis_color,
+        linewidth=xaxis_width,
+        mirror=xaxis_mirror,
+        showspikes=xaxis_spikelines,
     )
     fig.update_yaxes(
-        showgrid=grid, linecolor=yaxis_color, linewidth=yaxis_width, mirror=yaxis_mirror
+        showgrid=grid,
+        linecolor=yaxis_color,
+        linewidth=yaxis_width,
+        mirror=yaxis_mirror,
+        showspikes=yaxis_spikelines,
     )
+
+    if layout:
+        fig.update_layout(layout, overwrite=True)
 
     if show_interactive:
         fig.show()
