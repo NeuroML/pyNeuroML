@@ -70,6 +70,7 @@ setup(
         "airspeed>=0.5.5",
         "neuromllite>=0.4.1",  # sets dependency for libNeuroML also
         "matplotlib",
+        "matplotlib-scalebar",
         "graphviz",
         'typing; python_version<"3.5"',
         "lxml",

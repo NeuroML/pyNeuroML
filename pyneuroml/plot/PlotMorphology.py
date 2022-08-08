@@ -16,6 +16,7 @@ import typing
 import logging
 
 from matplotlib import pyplot as plt
+from matplotlib_scalebar.scalebar import ScaleBar
 
 from pyneuroml.utils.cli import build_namespace
 
@@ -138,10 +139,24 @@ def plot_2D(
 
         title = "2D plot of %s from %s" % (cell.id, nml_file)
 
-        fig = plt.figure()  # noqa
-        plt.axes().set_aspect("equal")
-
+        fig, ax = plt.subplots(1, 1)  # noqa
         plt.get_current_fig_manager().set_window_title(title)
+
+        ax.set_aspect("equal")
+        ax.set_xlabel("extent (um)")
+        ax.set_ylabel("extent (um)")
+
+        ax.spines["right"].set_visible(False)
+        ax.spines["top"].set_visible(False)
+        ax.yaxis.set_ticks_position("left")
+        ax.xaxis.set_ticks_position("bottom")
+
+        # add a scalebar
+        # ax = fig.add_axes([0, 0, 1, 1])
+        scalebar1 = ScaleBar(0.001, units="mm", dimension="si-length",
+                             scale_loc="top", location="lower right",
+                             fixed_value=50, fixed_units="um")
+        ax.add_artist(scalebar1)
 
         for seg in cell.morphology.segments:
             p = cell.get_actual_proximal(seg.id)
@@ -164,7 +179,7 @@ def plot_2D(
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
-        plt.savefig(abs_file, bbox_inches="tight")
+        plt.savefig(abs_file, dpi=200)
         print(f"Saved image on plane {plane2d} to {abs_file} of plot: {title}")
 
     if not nogui:
