@@ -15,7 +15,6 @@ import typing
 import logging
 
 from matplotlib import pyplot as plt
-from matplotlib import rcParams
 
 from pyneuroml.utils.cli import build_namespace
 
