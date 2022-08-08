@@ -8,7 +8,6 @@ Copyright 2022 NeuroML contributors
 """
 
 
-import unittest
 import logging
 import pathlib as pl
 
@@ -27,10 +26,10 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_2D function."""
         nml_files = ["tests/plot/Cell_497232312.cell.nml",
                      "tests/plot/test.cell.nml"]
-
         for nml_file in nml_files:
+            ofile = pl.Path(nml_file).name
             for plane in ["xy", "yz", "xz"]:
-                filename = f"test_morphology_plot_2d_{plane}.png"
+                filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
                 # remove the file first
                 try:
                     pl.Path(filename).unlink()
