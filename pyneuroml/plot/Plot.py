@@ -349,7 +349,7 @@ def generate_interactive_plot(
     :param save_figure_to: location to save generated figure to (default: None)
         Requires the kaleido package to be installed.
         See for supported formats:
-        https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html?#plotly.graph_objects.Figure.write_image
+        https://plotly.com/python-api-reference/generated/plotly.graph_objects.Figure.html#plotly.graph_objects.Figure.write_image
         Note: you can also save the file from the interactive web page.
     :type save_figure_to: str
     """
