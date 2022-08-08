@@ -1,37 +1,27 @@
-import argparse
+#!/usr/bin/env python3
+"""
+Utilities to plot NeuroML2 cell morphologies.
 
-import re
+File: pyneuroml/plot/PlotMorphology.py
+
+Copyright 2022 NeuroML contributors
+"""
+
+
+import argparse
 import os
+
+import typing
+import logging
 
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
 
-
-def convert_case(name):
-    """Converts from camelCase to under_score"""
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+from pyneuroml.utils.cli import build_namespace
 
 
-def build_namespace(a=None, **kwargs):
-    if a is None:
-        a = argparse.Namespace()
-
-    # Add arguments passed in by keyword.
-    for key, value in kwargs.items():
-        setattr(a, key, value)
-
-    # Add defaults for arguments not provided.
-    for key, value in DEFAULTS.items():
-        if not hasattr(a, key):
-            setattr(a, key, value)
-    # Change all keys to camel case
-    for key, value in a.__dict__.copy().items():
-        new_key = convert_case(key)
-        if new_key != key:
-            setattr(a, new_key, value)
-            delattr(a, key)
-    return a
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 DEFAULTS = {
