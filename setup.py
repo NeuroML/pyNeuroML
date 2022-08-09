@@ -19,7 +19,6 @@ setup(
         "pyneuroml.povray",
         "pyneuroml.plot",
         "pyneuroml.swc",
-        "pyneuroml.morphologies",
         "pyneuroml.neuron.analysis",
     ],
     entry_points={
