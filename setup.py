@@ -31,6 +31,7 @@ setup(
             "pynml-tune            = pyneuroml.tune.NeuroMLTuner:main",
             "pynml-summary         = pyneuroml.pynml:summary",
             "pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main",
+            "pynml-plotmorph       = pyneuroml.plot.PlotMorphology:main",
             "pynml-sonata          = neuromllite.SonataReader:main",
         ]
     },
