@@ -571,7 +571,7 @@ def convert_to_units(nml2_quantity: str, unit: str) -> float:
                     )
                 )
 
-    logger.info(
+    logger.debug(
         "Converting {} {} to {}: {} ({} in SI units)".format(
             m, u, unit, new_value, si_value
         )

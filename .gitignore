@@ -128,5 +128,9 @@ examples/results/*.dat
 /examples/test_data/*.pov
 /examples/test_data/ca1/*.pov
 /examples/test_data/ca1/TestOLMNet.net.nml.png
+/examples/test_data/complex_cell.cell.png
+/examples/test_data/simple_cell.cell.png
+/examples/test_data/complex_cell.morph.png
+/examples/test_data/simple_cell.morph.png
 /examples/LEMS_NML2_Ex5_DetCell_moose.py
 /examples/NET_NML2_Ex5_DetCell.net.nml
