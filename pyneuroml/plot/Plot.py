@@ -231,6 +231,7 @@ def generate_plot(
 def generate_interactive_plot(
     xvalues: typing.List[float],
     yvalues: typing.List[float],
+    title: str,
     labels: typing.Optional[typing.List[str]] = None,
     linestyles: typing.Optional[typing.List[str]] = None,
     linewidths: typing.Optional[
@@ -240,7 +241,6 @@ def generate_interactive_plot(
     markersizes: typing.Optional[
         typing.Union[typing.List[float], typing.List[int]]
     ] = None,
-    title: str = "",
     plot_bgcolor: typing.Optional[str] = None,
     modes: typing.Optional[typing.List[str]] = None,
     xaxis: str = None,
