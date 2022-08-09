@@ -11,7 +11,7 @@ Copyright 2022 NeuroML contributors
 import logging
 import pathlib as pl
 
-from pyneuroml.plot.PlotMorphology import plot_2D
+from pyneuroml.plot.PlotMorphology import plot_2D, plot_interactive_3D
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -40,3 +40,21 @@ class TestMorphologyPlot(BaseTestCase):
 
                 self.assertIsFile(filename)
                 pl.Path(filename).unlink()
+
+    def test_3d_plotter(self):
+        """Test plot_interactive_3D function."""
+        nml_files = ["tests/plot/Cell_497232312.cell.nml",
+                     "tests/plot/test.cell.nml"]
+        for nml_file in nml_files:
+            ofile = pl.Path(nml_file).name
+            filename = f"test_morphology_plot_3d_{ofile.replace('.', '_', 100)}.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            plot_interactive_3D(nml_file, nogui=True, save_to_file=filename)
+
+            self.assertIsFile(filename)
+            # pl.Path(filename).unlink()

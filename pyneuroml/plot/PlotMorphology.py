@@ -17,7 +17,9 @@ import logging
 
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
+import plotly.graph_objects as go
 
+from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
 
 
@@ -131,8 +133,6 @@ def plot_2D(
     if verbose:
         print("Plotting %s" % nml_file)
 
-    from pyneuroml.pynml import read_neuroml2_file
-
     nml_model = read_neuroml2_file(nml_file)
 
     for cell in nml_model.cells:
@@ -203,7 +203,74 @@ def plot_interactive_3D(
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
     """
-    pass
+    nml_model = read_neuroml2_file(nml_file)
+
+    fig = go.Figure()
+    for cell in nml_model.cells:
+        title = f"3D plot of {cell.id} from {nml_file}"
+
+        for seg in cell.morphology.segments:
+            p = cell.get_actual_proximal(seg.id)
+            d = seg.distal
+            if verbose:
+                print(
+                    f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
+                )
+            width = max(p.diameter, d.diameter)
+            fig.add_trace(go.Scatter3d(
+                x=[p.x, d.x], y=[p.y, d.y], z=[p.z, d.z],
+                name=None,
+                marker={"size": 2, "color": "blue"},
+                line={"width": width, "color": "blue"},
+                mode="lines",
+                showlegend=False,
+                hoverinfo="skip"
+            ))
+
+        fig.update_layout(
+            title={"text": title},
+            hovermode=False,
+            plot_bgcolor="white",
+            scene=dict(
+                xaxis=dict(
+                    backgroundcolor="white",
+                    showbackground=False,
+                    showgrid=False,
+                    showspikes=False,
+                    title=dict(
+                        text="extent (um)"
+                    )
+                ),
+                yaxis=dict(
+                    backgroundcolor="white",
+                    showbackground=False,
+                    showgrid=False,
+                    showspikes=False,
+                    title=dict(
+                        text="extent (um)"
+                    )
+                ),
+                zaxis=dict(
+                    backgroundcolor="white",
+                    showbackground=False,
+                    showgrid=False,
+                    showspikes=False,
+                    title=dict(
+                        text="extent (um)"
+                    )
+                )
+
+            )
+        )
+        if not nogui:
+            fig.show()
+        if save_to_file:
+            logger.info(
+                "Saving image to %s of plot: %s" %
+                (os.path.abspath(save_to_file), title)
+            )
+            fig.write_image(save_to_file, scale=2, width=1024, height=768)
+            logger.info("Saved image to %s of plot: %s" % (save_to_file, title))
 
 
 if __name__ == "__main__":
