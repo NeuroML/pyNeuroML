@@ -14,6 +14,14 @@ pyneuroml.plot.PlotSpikes module
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.plot.PlotMorphology module
+-------------------------------------
+
+.. automodule:: pyneuroml.plot.PlotMorphology
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyneuroml.plot.generate\_test\_data module
 ------------------------------------------
 
