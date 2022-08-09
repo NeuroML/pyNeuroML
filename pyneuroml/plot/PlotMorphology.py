@@ -194,6 +194,13 @@ def plot_interactive_3D(
 ):
     """Plot NeuroML2 cell morphology interactively using Plot.ly
 
+    Please note that the interactive plot uses Plotly, which uses WebGL. So,
+    you need to use a WebGL enabled browser, and performance here may be
+    hardware dependent.
+
+    https://plotly.com/python/webgl-vs-svg/
+    https://en.wikipedia.org/wiki/WebGL
+
     :param nml_file: path to NeuroML cell file
     :type nml_file: str
     :param verbose: show extra information (default: False)
