@@ -18,3 +18,6 @@ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
 
 pytest
 pytest-cov
+
+plotly
+kaleido

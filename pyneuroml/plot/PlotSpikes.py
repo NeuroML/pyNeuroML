@@ -7,6 +7,7 @@ import re
 import sys
 import os
 import logging
+from pyneuroml.plot import generate_plot
 
 
 logger = logging.getLogger(__name__)
