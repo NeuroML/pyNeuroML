@@ -6,6 +6,14 @@ pyneuroml.plot package
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.plot.Plot module
+--------------------------------
+
+.. automodule:: pyneuroml.plot.Plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyneuroml.plot.PlotSpikes module
 --------------------------------
 
