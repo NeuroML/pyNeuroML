@@ -374,7 +374,7 @@ def generate_interactive_plot(
 
     for i in range(len(xvalues)):
         fig.add_trace(
-            go.Scatter(
+            go.Scattergl(
                 x=xvalues[i],
                 y=yvalues[i],
                 name=labels[i],
