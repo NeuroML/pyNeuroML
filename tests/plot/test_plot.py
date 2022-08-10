@@ -64,17 +64,17 @@ class TestPlot(BaseTestCase):
         except FileNotFoundError:
             pass
 
-        xs = [*range(5, 1500)]
-        ys = [*range(5, 1500)]
-        xs1 = [*range(5, 1500)]
-        ys1 = [*range(1499, 4, -1)]
+        xs = [*range(5, 15000)]
+        ys = [*range(5, 15000)]
+        xs1 = [*range(5, 15000)]
+        ys1 = [*range(14999, 4, -1)]
         labels = ["up", "down"]
         generate_interactive_plot(
             xvalues=[xs, xs1],
             yvalues=[ys, ys1],
             labels=labels,
             modes=["lines+markers", "markers"],
-            title="test interactive plot",
+            title=f"test interactive plot with {len(xs) * 2} points",
             plot_bgcolor="white",
             xaxis="x axis",
             yaxis="y axis",
