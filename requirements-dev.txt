@@ -21,3 +21,4 @@ pytest-cov
 
 plotly
 kaleido
+matplotlib-scalebar
