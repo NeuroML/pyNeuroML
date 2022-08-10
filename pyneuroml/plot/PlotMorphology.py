@@ -33,6 +33,7 @@ DEFAULTS = {
     "saveToFile": None,
     "interactive3d": False,
     "plane2d": "xy",
+    "minwidth": 0.8,
 }
 
 
@@ -67,6 +68,13 @@ def process_args():
         action="store_true",
         default=DEFAULTS["plane2d"],
         help="Plane to plot on for 2D plot",
+    )
+
+    parser.add_argument(
+        "-minWidth",
+        action="store_true",
+        default=DEFAULTS["minwidth"],
+        help="Minimum width of lines to use",
     )
 
     parser.add_argument(
@@ -106,12 +114,13 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     if a.interactive3d:
         plot_interactive_3D(a.nml_file, a.v, a.nogui, a.save_to_file)
     else:
-        plot_2D(a.nml_file, a.plane2d, a.v, a.nogui, a.save_to_file)
+        plot_2D(a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file)
 
 
 def plot_2D(
     nml_file: str,
     plane2d: str = "xy",
+    min_width: float = 0.8,
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None
@@ -122,6 +131,11 @@ def plot_2D(
 
     :param nml_file: path to NeuroML cell file
     :type nml_file: str
+    :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
+    :type plane2d: str
+    :param min_width: minimum width for segments (useful for visualising very
+        thin segments): default 0.8um
+    :type min_width: float
     :param verbose: show extra information (default: False)
     :type verbose: bool
     :param nogui: do not show matplotlib GUI (default: false)
@@ -167,12 +181,20 @@ def plot_2D(
                     % (seg.name, seg.id, p, d)
                 )
             width = max(p.diameter, d.diameter)
-            if plane2d == "xy" or plane2d == "yx":
+            if width < min_width:
+                width = min_width
+            if plane2d == "xy":
                 plt.plot([p.x, d.x], [p.y, d.y], linewidth=width, color="b")
-            elif plane2d == "xz" or plane2d == "zx":
+            elif plane2d == "yx":
+                plt.plot([p.y, d.y], [p.x, d.x], linewidth=width, color="b")
+            elif plane2d == "xz":
                 plt.plot([p.x, d.x], [p.z, d.z], linewidth=width, color="b")
-            elif plane2d == "yz" or plane2d == "zy":
+            elif plane2d == "zx":
+                plt.plot([p.z, d.z], [p.x, d.x], linewidth=width, color="b")
+            elif plane2d == "yz":
                 plt.plot([p.y, d.y], [p.z, d.z], linewidth=width, color="b")
+            elif plane2d == "zy":
+                plt.plot([p.z, d.z], [p.y, d.y], linewidth=width, color="b")
             else:
                 logger.error(f"Invalid value for plane: {plane2d}")
                 sys.exit(-1)
