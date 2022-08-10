@@ -33,7 +33,7 @@ DEFAULTS = {
     "saveToFile": None,
     "interactive3d": False,
     "plane2d": "xy",
-    "minwidth": 0.8,
+    "minwidth": 0,
 }
 
 
@@ -65,7 +65,8 @@ def process_args():
 
     parser.add_argument(
         "-plane2d",
-        action="store_true",
+        type=str,
+        metavar="<plane, e.g. xy, yz, zx>",
         default=DEFAULTS["plane2d"],
         help="Plane to plot on for 2D plot",
     )
@@ -116,11 +117,35 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     else:
         plot_2D(a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file)
 
+##########################################################################################
+# Taken from https://stackoverflow.com/questions/19394505/expand-the-line-with-specified-width-in-data-unit
+from matplotlib.lines import Line2D
+
+class LineDataUnits(Line2D):
+    def __init__(self, *args, **kwargs):
+        _lw_data = kwargs.pop("linewidth", 1)
+        super().__init__(*args, **kwargs)
+        self._lw_data = _lw_data
+
+    def _get_lw(self):
+        if self.axes is not None:
+            ppd = 72./self.axes.figure.dpi
+            trans = self.axes.transData.transform
+            return ((trans((1, self._lw_data))-trans((0, 0)))*ppd)[1]
+        else:
+            return 1
+
+    def _set_lw(self, lw):
+        self._lw_data = lw
+
+    _linewidth = property(_get_lw, _set_lw)
+
+##########################################################################################
 
 def plot_2D(
     nml_file: str,
     plane2d: str = "xy",
-    min_width: float = 0.8,
+    min_width: float = DEFAULTS["minwidth"],
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None
@@ -157,8 +182,6 @@ def plot_2D(
         plt.get_current_fig_manager().set_window_title(title)
 
         ax.set_aspect("equal")
-        ax.set_xlabel("extent (um)")
-        ax.set_ylabel("extent (um)")
 
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
@@ -169,35 +192,64 @@ def plot_2D(
         # ax = fig.add_axes([0, 0, 1, 1])
         scalebar1 = ScaleBar(0.001, units="mm", dimension="si-length",
                              scale_loc="top", location="lower right",
-                             fixed_value=50, fixed_units="um")
+                             fixed_value=50, fixed_units="um", box_alpha=.8)
         ax.add_artist(scalebar1)
+
+        if plane2d == "xy":
+            ax.set_xlabel("x (um)")
+            ax.set_ylabel("y (um)")
+        elif plane2d == "yx":
+            ax.set_xlabel("y (um)")
+            ax.set_ylabel("x (um)")
+        elif plane2d == "xz":
+            ax.set_xlabel("x (um)")
+            ax.set_ylabel("z (um)")
+        elif plane2d == "zx":
+            ax.set_xlabel("z (um)")
+            ax.set_ylabel("x (um)")
+        elif plane2d == "yz":
+            ax.set_xlabel("y (um)")
+            ax.set_ylabel("z (um)")
+        elif plane2d == "zy":
+            ax.set_xlabel("z (um)")
+            ax.set_ylabel("y (um)")
+        else:
+            logger.error(f"Invalid value for plane: {plane2d}")
+            sys.exit(-1)
 
         for seg in cell.morphology.segments:
             p = cell.get_actual_proximal(seg.id)
             d = seg.distal
+            width = (p.diameter + d.diameter)/2
             if verbose:
                 print(
-                    "\nSegment %s, id: %s has proximal point: %s, distal: %s"
-                    % (seg.name, seg.id, p, d)
+                    "\nSegment %s, id: %s has proximal point: %s, distal: %s (so width: %s)"
+                    % (seg.name, seg.id, p, d, width)
                 )
-            width = max(p.diameter, d.diameter)
             if width < min_width:
                 width = min_width
-            if plane2d == "xy":
-                plt.plot([p.x, d.x], [p.y, d.y], linewidth=width, color="b")
-            elif plane2d == "yx":
-                plt.plot([p.y, d.y], [p.x, d.x], linewidth=width, color="b")
-            elif plane2d == "xz":
-                plt.plot([p.x, d.x], [p.z, d.z], linewidth=width, color="b")
-            elif plane2d == "zx":
-                plt.plot([p.z, d.z], [p.x, d.x], linewidth=width, color="b")
-            elif plane2d == "yz":
-                plt.plot([p.y, d.y], [p.z, d.z], linewidth=width, color="b")
-            elif plane2d == "zy":
-                plt.plot([p.z, d.z], [p.y, d.y], linewidth=width, color="b")
+
+            if p.x ==  d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
+                if verbose: print("Segment is spherical")
+                ax.add_line(LineDataUnits([p.x+width/1000., d.x], [p.y, d.y+width/1000.], linewidth=width, solid_capstyle='round',color='r'))
             else:
-                logger.error(f"Invalid value for plane: {plane2d}")
-                sys.exit(-1)
+                if plane2d == "xy":
+                    ax.add_line(LineDataUnits([p.x, d.x], [p.y, d.y], linewidth=width, solid_capstyle='butt'))
+                elif plane2d == "yx":
+                    ax.add_line(LineDataUnits([p.y, d.y], [p.x, d.x], linewidth=width, solid_capstyle='butt'))
+                elif plane2d == "xz":
+                    ax.add_line(LineDataUnits([p.x, d.x], [p.z, d.z], linewidth=width, solid_capstyle='butt'))
+                elif plane2d == "zx":
+                    ax.add_line(LineDataUnits([p.z, d.z], [p.x, d.x], linewidth=width, solid_capstyle='butt'))
+                elif plane2d == "yz":
+                    ax.add_line(LineDataUnits([p.y, d.y], [p.z, d.z], linewidth=width, solid_capstyle='butt'))
+                elif plane2d == "zy":
+                    ax.add_line(LineDataUnits([p.z, d.z], [p.y, d.y], linewidth=width, solid_capstyle='butt'))
+                else:
+                    logger.error(f"Invalid value for plane: {plane2d}")
+                    sys.exit(-1)
+
+        plt.autoscale()
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
