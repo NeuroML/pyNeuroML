@@ -112,7 +112,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
-        plot_interactive_3D(a.nml_file, a.v, a.nogui, a.save_to_file)
+        plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.nogui, a.save_to_file)
     else:
         plot_2D(a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file)
 
@@ -210,6 +210,7 @@ def plot_2D(
 
 def plot_interactive_3D(
     nml_file: str,
+    min_width: float = 0.8,
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None
@@ -225,6 +226,9 @@ def plot_interactive_3D(
 
     :param nml_file: path to NeuroML cell file
     :type nml_file: str
+    :param min_width: minimum width for segments (useful for visualising very
+        thin segments): default 0.8um
+    :type min_width: float
     :param verbose: show extra information (default: False)
     :type verbose: bool
     :param nogui: do not show matplotlib GUI (default: false)
@@ -246,6 +250,8 @@ def plot_interactive_3D(
                     f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
                 )
             width = max(p.diameter, d.diameter)
+            if width < min_width:
+                width = min_width
             fig.add_trace(go.Scatter3d(
                 x=[p.x, d.x], y=[p.y, d.y], z=[p.z, d.z],
                 name=None,
