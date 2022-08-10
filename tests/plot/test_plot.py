@@ -64,10 +64,10 @@ class TestPlot(BaseTestCase):
         except FileNotFoundError:
             pass
 
-        xs = [*range(5, 15)]
-        ys = [*range(5, 15)]
-        xs1 = [*range(5, 15)]
-        ys1 = [*range(14, 4, -1)]
+        xs = [*range(5, 1500)]
+        ys = [*range(5, 1500)]
+        xs1 = [*range(5, 1500)]
+        ys1 = [*range(1499, 4, -1)]
         labels = ["up", "down"]
         generate_interactive_plot(
             xvalues=[xs, xs1],
@@ -78,7 +78,7 @@ class TestPlot(BaseTestCase):
             plot_bgcolor="white",
             xaxis="x axis",
             yaxis="y axis",
-            show_interactive=False,
+            show_interactive=True,
             xaxis_spikelines=True,
             yaxis_spikelines=False,
             save_figure_to=filename,
