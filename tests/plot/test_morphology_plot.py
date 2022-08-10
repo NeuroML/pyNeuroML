@@ -11,7 +11,14 @@ Copyright 2022 NeuroML contributors
 import logging
 import pathlib as pl
 
-from pyneuroml.plot.PlotMorphology import plot_2D, plot_interactive_3D
+import numpy as np
+import plotly.graph_objects as go
+
+from pyneuroml.plot.PlotMorphology import (
+    plot_2D, plot_interactive_3D,
+    get_sphere_surface,
+    get_cylinder_surface
+)
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -45,6 +52,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_interactive_3D function."""
         nml_files = ["tests/plot/Cell_497232312.cell.nml",
                      "tests/plot/test.cell.nml"]
+        nml_files = ["tests/plot/test.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
             filename = f"test_morphology_plot_3d_{ofile.replace('.', '_', 100)}.png"
@@ -54,7 +62,42 @@ class TestMorphologyPlot(BaseTestCase):
             except FileNotFoundError:
                 pass
 
-            plot_interactive_3D(nml_file, nogui=True, save_to_file=filename)
+            plot_interactive_3D(nml_file, min_width=2., nogui=False, save_to_file=filename)
 
             self.assertIsFile(filename)
-            # pl.Path(filename).unlink()
+            pl.Path(filename).unlink()
+
+    def test_sphere(self):
+        """Test plot_interactive_3D function."""
+        X, Y, Z = get_sphere_surface(0, 0, 0, 5, 100)
+
+        # Test some points we know should be in there
+        self.assertAlmostEqual(-5., np.min(X), delta=0.2)
+        self.assertAlmostEqual(5., np.max(X), delta=0.2)
+        self.assertAlmostEqual(-5., np.min(Y), delta=0.2)
+        self.assertAlmostEqual(5., np.max(Y), delta=0.2)
+        self.assertAlmostEqual(-5., np.min(Z), delta=0.2)
+        self.assertAlmostEqual(5., np.max(Z), delta=0.2)
+
+    def test_cylinder(self):
+        """Test plot_interactive_3D function."""
+        X, Y, Z = get_cylinder_surface(x1=0, y1=0, z1=0, radius1=10, x2=0,
+                                       y2=100, z2=0, radius2=10)
+        print(X)
+        print(Y)
+        print(Z)
+        fig = go.Figure()
+        fig.add_trace(go.Surface(x=X, y=Y, z=Z,
+                                 surfacecolor=(len(X) * len(Y) * ["blue"])))
+        fig.show()
+
+        """
+
+        # Test some points we know should be in there
+        self.assertAlmostEqual(-5., np.min(X), delta=0.2)
+        self.assertAlmostEqual(5., np.max(X), delta=0.2)
+        self.assertAlmostEqual(-5., np.min(Y), delta=0.2)
+        self.assertAlmostEqual(5., np.max(Y), delta=0.2)
+        self.assertAlmostEqual(-5., np.min(Z), delta=0.2)
+        self.assertAlmostEqual(5., np.max(Z), delta=0.2)
+        """

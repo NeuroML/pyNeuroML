@@ -15,6 +15,7 @@ import sys
 import typing
 import logging
 
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 import plotly.graph_objects as go
@@ -435,18 +436,8 @@ def plot_interactive_3D(
                 print(
                     f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
                 )
-            width = max(p.diameter, d.diameter)
-            if width < min_width:
-                width = min_width
-            fig.add_trace(go.Scatter3d(
-                x=[p.x, d.x], y=[p.y, d.y], z=[p.z, d.z],
-                name=None,
-                marker={"size": 2, "color": "blue"},
-                line={"width": width, "color": "blue"},
-                mode="lines",
-                showlegend=False,
-                hoverinfo="skip"
-            ))
+            (X, Y, Z) = get_cylinder_surface(p.x, p.y, p.z, p.diameter / 2, d.x, d.y, d.z, d.diameter / 2, 20)
+            fig.add_trace(go.Surface(x=X, y=Y, z=Z, surfacecolor=(len(X) * len(Y) * ["blue"])))
 
         fig.update_layout(
             title={"text": title},
@@ -492,6 +483,85 @@ def plot_interactive_3D(
             )
             fig.write_image(save_to_file, scale=2, width=1024, height=768)
             logger.info("Saved image to %s of plot: %s" % (save_to_file, title))
+
+
+def get_sphere_surface(
+    x: float, y: float, z: float, radius: float, resolution: int = 20
+) -> typing.Any:
+    """Get surface points of a sphere centered at x, y, z with radius.
+
+    Reference: https://stackoverflow.com/a/71053527/375067
+
+    :param x: center x
+    :type x: float
+    :param y: center y
+    :type y: float
+    :param z: center z
+    :type z: float
+    :param radius: radius of sphere
+    :type radius: float
+    :param resolution: resolution (number of points in the surface)
+    :type resolution: int
+    :returns: list of [x, y, z] values
+
+
+    """
+    u, v = np.mgrid[0:2 * np.pi:resolution * 2j, 0:np.pi:resolution * 1j]  # noqa
+    X = radius * np.cos(u) * np.sin(v) + x
+    Y = radius * np.sin(u) * np.sin(v) + y
+    Z = radius * np.cos(v) + z
+
+    fig = go.Figure()
+    fig.add_trace(go.Surface(x=X, y=Y, z=Z, surfacecolor=(len(Z) * ["blue"])))
+    fig.show()
+
+    return (X, Y, Z)
+
+
+def get_cylinder_surface(
+    x1: float, y1: float, z1: float,
+    radius1: float,
+    x2: float, y2: float, z2: float,
+    radius2: typing.Optional[float] = None,
+    resolution: int = 20
+) -> typing.Any:
+    """Get surface points of a cylinder centered at x, y, z with radius.
+
+    :param x1: proximal center x
+    :type x1: float
+    :param y1: proximal center y
+    :type y1: float
+    :param z1: proximal center z
+    :type z1: float
+    :param radius1: proximal of cylinder
+    :type radius1: float
+    :param x1: distal center x
+    :type x1: float
+    :param y1: distal center y
+    :type y1: float
+    :param z1: distal center z
+    :type z1: float
+    :param resolution: resolution (number of points in the surface)
+    :param radius2: distal of cylinder
+    :type radius2: float
+    :type resolution: int
+    :returns: list of [x, y, z] values
+
+    """
+
+    print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
+    center_z = np.linspace(0, z2, resolution)
+    theta = np.linspace(0, 2 * np.pi, 15)
+    theta_grid, Z = np.meshgrid(theta, center_z)
+    if radius2 is None:
+        X = radius1 * np.cos(theta_grid) + x1
+        Y = radius1 * np.sin(theta_grid) + y1
+    else:
+        radius = np.linspace(radius1, radius2, resolution)  # type: ignore
+        X = radius * np.cos(theta_grid).transpose() + x1
+        Y = radius * np.sin(theta_grid).transpose() + y1
+
+    return (X.transpose(), Y.transpose(), Z)
 
 
 if __name__ == "__main__":
