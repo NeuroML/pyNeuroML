@@ -557,19 +557,30 @@ def get_cylinder_surface(
     print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
 
     radius = radius1
-    new_axis = np.array([x2, y2, z2]) - np.array([x1, y1, z1])
-    new_axis_unit = new_axis / np.linalg.norm(new_axis)
+    origin = np.array([0, 0, 0])
+    p1 = np.array([x1, y1, z1])
+    p2 = np.array([x2, y2, z2])
+    axis_vector = p2 - p1
+    axis_mag = np.linalg.norm(axis_vector)
 
-    center_z = np.linspace(0, z2 - z1, 15)
-    theta = np.linspace(0, 2 * np.pi, 15)
-    theta_grid, z_grid = np.meshgrid(theta, center_z)
-    x_grid = radius * np.cos(theta_grid) + x1
-    y_grid = radius * np.sin(theta_grid) + y1
-    z_grid = z_grid + z1
+    axis_unit_vector = axis_vector / axis_mag
 
-    print(x_grid.shape)
+    somev = np.array([1, 0, 0])
+    if (axis_unit_vector == somev).all():
+        somev = np.array([0, 1, 0])
 
-    return x_grid, y_grid, z_grid
+    perpv1 = np.cross(axis_unit_vector, somev)
+    perpv1_unit = perpv1 / np.linalg.norm(perpv1)
+    perpv2_unit = np.cross(axis_unit_vector, perpv1_unit)
+
+    t = np.linspace(0, axis_mag, resolution)
+    theta = np.linspace(0, 2 * np.pi, angular_resolution)
+
+    t_grid, theta_grid = np.meshgrid(t, theta)
+
+    X, Y, Z = [p1[i] + axis_unit_vector[i] * t_grid * radius * np.sin(theta_grid) * perpv1_unit[i] + radius * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
+
+    return X, Y, Z
 
 
 if __name__ == "__main__":
