@@ -188,12 +188,6 @@ def plot_2D(
         ax.yaxis.set_ticks_position("left")
         ax.xaxis.set_ticks_position("bottom")
 
-        # add a scalebar
-        # ax = fig.add_axes([0, 0, 1, 1])
-        scalebar1 = ScaleBar(0.001, units="mm", dimension="si-length",
-                             scale_loc="top", location="lower right",
-                             fixed_value=50, fixed_units="um", box_alpha=.8)
-        ax.add_artist(scalebar1)
 
         if plane2d == "xy":
             ax.set_xlabel("x (um)")
@@ -229,12 +223,21 @@ def plot_2D(
             if width < min_width:
                 width = min_width
 
+            max_xaxis = -1*float('inf')
+            min_xaxis = float('inf')
+
             if p.x ==  d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
                 if verbose: print("Segment is spherical")
                 ax.add_line(LineDataUnits([p.x+width/1000., d.x], [p.y, d.y+width/1000.], linewidth=width, solid_capstyle='round',color='r'))
             else:
                 if plane2d == "xy":
+                    add_line(ax, [p.x, d.x], [p.y, d.y], width, min_xaxis, max_xaxis)
+                    '''
                     ax.add_line(LineDataUnits([p.x, d.x], [p.y, d.y], linewidth=width, solid_capstyle='butt'))
+                    min_xaxis=min(min_xaxis,p.x)
+                    min_xaxis=min(min_xaxis,d.x)
+                    max_xaxis=max(max_xaxis,p.x)
+                    max_xaxis=max(max_xaxis,d.x)'''
                 elif plane2d == "yx":
                     ax.add_line(LineDataUnits([p.y, d.y], [p.x, d.x], linewidth=width, solid_capstyle='butt'))
                 elif plane2d == "xz":
@@ -249,16 +252,37 @@ def plot_2D(
                     logger.error(f"Invalid value for plane: {plane2d}")
                     sys.exit(-1)
 
+        print('Extent x: %s -> %s'%(min_xaxis, max_xaxis))
+        # add a scalebar
+        # ax = fig.add_axes([0, 0, 1, 1])
+        sc_val = 50
+        if max_xaxis-min_xaxis<100:
+            sc_val = 5
+        if max_xaxis-min_xaxis<10:
+            sc_val = 1
+        scalebar1 = ScaleBar(0.001, units="mm", dimension="si-length",
+                             scale_loc="top", location="lower right",
+                             fixed_value=sc_val, fixed_units="um", box_alpha=.8)
+        ax.add_artist(scalebar1)
+
         plt.autoscale()
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
-        plt.savefig(abs_file, dpi=200)
+        plt.savefig(abs_file, dpi=200, bbox_inches="tight")
         print(f"Saved image on plane {plane2d} to {abs_file} of plot: {title}")
 
     if not nogui:
         plt.show()
 
+def add_line(ax, xv, yv, width, min_xaxis, max_xaxis):
+
+    ax.add_line(LineDataUnits(xv, yv, linewidth=width, solid_capstyle='butt'))
+    min_xaxis=min(min_xaxis,xv[0])
+    min_xaxis=min(min_xaxis,xv[1])
+    max_xaxis=max(max_xaxis,yv[0])
+    max_xaxis=max(max_xaxis,yv[1])
+    return min_xaxis, max_xaxis
 
 def plot_interactive_3D(
     nml_file: str,
