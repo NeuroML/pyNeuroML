@@ -36,6 +36,7 @@ DEFAULTS = {
     "interactive3d": False,
     "plane2d": "xy",
     "minwidth": 0,
+    "square": False,
 }
 
 
@@ -95,6 +96,14 @@ def process_args():
         help="Name of the image file",
     )
 
+
+    parser.add_argument(
+        "-square",
+        action="store_true",
+        default=DEFAULTS["square"],
+        help="Scale axes so that image is approximately square",
+    )
+
     return parser.parse_args()
 
 
@@ -117,7 +126,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     if a.interactive3d:
         plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.nogui, a.save_to_file)
     else:
-        plot_2D(a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file)
+        plot_2D(a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file, a.square)
 
 ##########################################################################################
 # Taken from https://stackoverflow.com/questions/19394505/expand-the-line-with-specified-width-in-data-unit
@@ -150,7 +159,8 @@ def plot_2D(
     min_width: float = DEFAULTS["minwidth"],
     verbose: bool = False,
     nogui: bool = False,
-    save_to_file: typing.Optional[str] = None
+    save_to_file: typing.Optional[str] = None,
+    square: bool = False
 ):
     """Plot cell morphology in 2D.
 
@@ -169,6 +179,8 @@ def plot_2D(
     :type nogui: bool
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
+    :param square: scale axes so that image is approximately square
+    :type square: bool
     """
 
     if verbose:
@@ -302,6 +314,35 @@ def plot_2D(
         ax.add_artist(scalebar1)
 
         plt.autoscale()
+        xl = plt.xlim()
+        yl = plt.ylim()
+        if verbose: print('Auto limits - x: %s , y: %s'%(xl, yl))
+
+        small = 0.1
+        if xl[1]-xl[0]<small and yl[1]-yl[0]<small: # i.e. only a point
+            plt.xlim([-100,100])
+            plt.ylim([-100,100])
+        elif xl[1]-xl[0]<small:
+            d_10 = (yl[1]-yl[0])/10
+            m = xl[0] + (xl[1]-xl[0])/2.
+            plt.xlim([m-d_10,m+d_10])
+        elif yl[1]-yl[0]<small:
+            d_10 = (xl[1]-xl[0])/10
+            m = yl[0] + (yl[1]-yl[0])/2.
+            plt.ylim([m-d_10,m+d_10])
+
+        if square:
+            if xl[1]-xl[0]>yl[1]-yl[0]:
+                d2 = (xl[1]-xl[0])/2
+                m = yl[0] + (yl[1]-yl[0])/2.
+                plt.ylim([m-d2,m+d2])
+
+            if xl[1]-xl[0]<yl[1]-yl[0]:
+                d2 = (yl[1]-yl[0])/2
+                m = xl[0] + (xl[1]-xl[0])/2.
+                plt.xlim([m-d2,m+d2])
+
+
 
 
     if save_to_file:
