@@ -82,10 +82,13 @@ class TestMorphologyPlot(BaseTestCase):
     def test_cylinder(self):
         """Test plot_interactive_3D function."""
         X, Y, Z = get_cylinder_surface(x1=0, y1=0, z1=0, radius1=10, x2=0,
-                                       y2=100, z2=0, radius2=10)
-        print(X)
-        print(Y)
-        print(Z)
+                                       y2=0, z2=10, radius2=None)
+        # print("x")
+        # print(X)
+        # print("y")
+        # print(Y)
+        # print("z")
+        # print(Z)
         fig = go.Figure()
         fig.add_trace(go.Surface(x=X, y=Y, z=Z,
                                  surfacecolor=(len(X) * len(Y) * ["blue"])))

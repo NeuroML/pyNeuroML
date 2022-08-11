@@ -523,7 +523,8 @@ def get_cylinder_surface(
     radius1: float,
     x2: float, y2: float, z2: float,
     radius2: typing.Optional[float] = None,
-    resolution: int = 20
+    resolution: int = 20,
+    angular_resolution: int = 15
 ) -> typing.Any:
     """Get surface points of a cylinder centered at x, y, z with radius.
 
@@ -541,27 +542,34 @@ def get_cylinder_surface(
     :type y1: float
     :param z1: distal center z
     :type z1: float
-    :param resolution: resolution (number of points in the surface)
     :param radius2: distal of cylinder
     :type radius2: float
+    :param resolution: resolution (number of points in the surface)
     :type resolution: int
+    :param angular_resolution: resolution (number of angles for drawing the surface)
+        More angles would result in a smoother surface, but also in a heavier
+        (and so possibly slower) plot
+    :type angular_resolution: int
     :returns: list of [x, y, z] values
 
     """
 
     print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
-    center_z = np.linspace(0, z2, resolution)
-    theta = np.linspace(0, 2 * np.pi, 15)
-    theta_grid, Z = np.meshgrid(theta, center_z)
-    if radius2 is None:
-        X = radius1 * np.cos(theta_grid) + x1
-        Y = radius1 * np.sin(theta_grid) + y1
-    else:
-        radius = np.linspace(radius1, radius2, resolution)  # type: ignore
-        X = radius * np.cos(theta_grid).transpose() + x1
-        Y = radius * np.sin(theta_grid).transpose() + y1
 
-    return (X.transpose(), Y.transpose(), Z)
+    radius = radius1
+    new_axis = np.array([x2, y2, z2]) - np.array([x1, y1, z1])
+    new_axis_unit = new_axis / np.linalg.norm(new_axis)
+
+    center_z = np.linspace(0, z2 - z1, 15)
+    theta = np.linspace(0, 2 * np.pi, 15)
+    theta_grid, z_grid = np.meshgrid(theta, center_z)
+    x_grid = radius * np.cos(theta_grid) + x1
+    y_grid = radius * np.sin(theta_grid) + y1
+    z_grid = z_grid + z1
+
+    print(x_grid.shape)
+
+    return x_grid, y_grid, z_grid
 
 
 if __name__ == "__main__":
