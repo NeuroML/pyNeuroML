@@ -6,6 +6,7 @@ def extract_position_info(nml_model, verbose):
     positions = {}
     pop_id_vs_cell = {}
     pop_id_vs_color = {}
+    pop_id_vs_radii = {}
 
     cell_elements = []
     cell_elements.extend(nml_model.cells)
@@ -37,6 +38,8 @@ def extract_position_info(nml_model, verbose):
 
         if pop.component in cell_id_vs_cell.keys():
             pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
+        else:
+            pop_id_vs_cell[pop.id] = None
 
         info = "Population: %s has %i positioned cells of type: %s" % (
             name,
@@ -55,7 +58,7 @@ def extract_position_info(nml_model, verbose):
             props.extend(pop.annotation.properties)'''
 
         for prop in props:
-            print(prop)
+            #print(prop)
             if prop.tag == "color":
                 color = prop.value
                 color = (float(color.split(' ')[0]),
@@ -63,9 +66,10 @@ def extract_position_info(nml_model, verbose):
                          float(color.split(' ')[2]))
 
                 pop_id_vs_color[pop.id]=color
-                print("Colour determined to be: %s"%str(color))
+                #print("Colour determined to be: %s"%str(color))
             if prop.tag == "radius":
                 substitute_radius = float(prop.value)
+                pop_id_vs_radii[pop.id]=substitute_radius
 
         pop_positions = {}
 
@@ -84,4 +88,4 @@ def extract_position_info(nml_model, verbose):
 
         positions[name] = pop_positions
 
-    return cell_id_vs_cell, pop_id_vs_cell, positions, pop_id_vs_color
+    return cell_id_vs_cell, pop_id_vs_cell, positions, pop_id_vs_color, pop_id_vs_radii

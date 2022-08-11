@@ -195,7 +195,7 @@ def plot_2D(
 
     from pyneuroml.utils import extract_position_info
 
-    cell_id_vs_cell, pop_id_vs_cell, positions, pop_id_vs_color = extract_position_info(nml_model, verbose)
+    cell_id_vs_cell, pop_id_vs_cell, positions, pop_id_vs_color, pop_id_vs_radii = extract_position_info(nml_model, verbose)
 
     title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
 
@@ -204,6 +204,7 @@ def plot_2D(
         print("pop_id_vs_cell: %s"%pop_id_vs_cell)
         print("cell_id_vs_cell: %s"%cell_id_vs_cell)
         print("pop_id_vs_color: %s"%pop_id_vs_color)
+        print("pop_id_vs_radii: %s"%pop_id_vs_radii)
 
     fig, ax = plt.subplots(1, 1)  # noqa
     plt.get_current_fig_manager().set_window_title(title)
@@ -260,47 +261,71 @@ def plot_2D(
             except:
                 axon_segs = []
 
-            for seg in cell.morphology.segments:
-                p = cell.get_actual_proximal(seg.id)
-                d = seg.distal
-                width = (p.diameter + d.diameter)/2
+            if cell is None:
 
-                if width < min_width:
-                    width = min_width
-
+                radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
                 color = 'b'
                 if pop_id in pop_id_vs_color:
                     color = pop_id_vs_color[pop_id]
-                else:
-                    if seg.id in soma_segs: color = 'g'
-                    if seg.id in axon_segs: color = 'r'
-
-                spherical = p.x ==  d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
-
-                if verbose:
-                    print(
-                        "\nSeg %s, id: %s%s has proximal: %s, distal: %s (width: %s, min_width: %s), color: %s"
-                        % (seg.name, seg.id, ' (spherical)' if spherical else '', p, d, width, min_width, str(color))
-                    )
-
 
                 if plane2d == "xy":
-                    min_xaxis, max_xaxis = add_line(ax, [pos[0]+p.x, pos[0]+d.x], [pos[1]+p.y, pos[1]+d.y], width, color, min_xaxis, max_xaxis)
+                    min_xaxis, max_xaxis = add_line(ax, [pos[0], pos[0]], [pos[1], pos[1]], radius, color, min_xaxis, max_xaxis)
                 elif plane2d == "yx":
-                    min_xaxis, max_xaxis = add_line(ax, [pos[1]+p.y, pos[1]+d.y], [pos[0]+p.x, pos[0]+d.x], width, color, min_xaxis, max_xaxis)
+                    min_xaxis, max_xaxis = add_line(ax, [pos[1], pos[1]], [pos[0], pos[0]], radius, color, min_xaxis, max_xaxis)
                 elif plane2d == "xz":
-                    min_xaxis, max_xaxis = add_line(ax, [pos[0]+p.x, pos[0]+d.x], [pos[2]+p.z, pos[2]+d.z], width, color, min_xaxis, max_xaxis)
+                    min_xaxis, max_xaxis = add_line(ax, [pos[0], pos[0]], [pos[2], pos[2]], radius, color, min_xaxis, max_xaxis)
                 elif plane2d == "zx":
-                    min_xaxis, max_xaxis = add_line(ax, [pos[2]+p.z, pos[2]+d.z], [pos[0]+p.x, pos[0]+d.x], width, color, min_xaxis, max_xaxis)
+                    min_xaxis, max_xaxis = add_line(ax, [pos[2], pos[2]], [pos[0], pos[0]], radius, color, min_xaxis, max_xaxis)
                 elif plane2d == "yz":
-                    min_xaxis, max_xaxis = add_line(ax, [pos[1]+p.y, pos[1]+d.y], [pos[2]+p.z, pos[2]+d.z], width, color, min_xaxis, max_xaxis)
+                    min_xaxis, max_xaxis = add_line(ax, [pos[1], pos[1]], [pos[2], pos[2]], radius, color, min_xaxis, max_xaxis)
                 elif plane2d == "zy":
-                    min_xaxis, max_xaxis = add_line(ax, [pos[2]+p.z, pos[2]+d.z], [pos[1]+p.y, pos[1]+d.y], width, color, min_xaxis, max_xaxis)
+                    min_xaxis, max_xaxis = add_line(ax, [pos[2], pos[2]], [pos[1], pos[1]], radius, color, min_xaxis, max_xaxis)
                 else:
-                    logger.error(f"Invalid value for plane: {plane2d}")
-                    sys.exit(-1)
+                    raise Exception(f"Invalid value for plane: {plane2d}")
 
-                if verbose: print('Extent x: %s -> %s'%(min_xaxis, max_xaxis))
+            else:
+
+                for seg in cell.morphology.segments:
+                    p = cell.get_actual_proximal(seg.id)
+                    d = seg.distal
+                    width = (p.diameter + d.diameter)/2
+
+                    if width < min_width:
+                        width = min_width
+
+                    color = 'b'
+                    if pop_id in pop_id_vs_color:
+                        color = pop_id_vs_color[pop_id]
+                    else:
+                        if seg.id in soma_segs: color = 'g'
+                        if seg.id in axon_segs: color = 'r'
+
+                    spherical = p.x ==  d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
+
+                    if verbose:
+                        print(
+                            "\nSeg %s, id: %s%s has proximal: %s, distal: %s (width: %s, min_width: %s), color: %s"
+                            % (seg.name, seg.id, ' (spherical)' if spherical else '', p, d, width, min_width, str(color))
+                        )
+
+
+                    if plane2d == "xy":
+                        min_xaxis, max_xaxis = add_line(ax, [pos[0]+p.x, pos[0]+d.x], [pos[1]+p.y, pos[1]+d.y], width, color, min_xaxis, max_xaxis)
+                    elif plane2d == "yx":
+                        min_xaxis, max_xaxis = add_line(ax, [pos[1]+p.y, pos[1]+d.y], [pos[0]+p.x, pos[0]+d.x], width, color, min_xaxis, max_xaxis)
+                    elif plane2d == "xz":
+                        min_xaxis, max_xaxis = add_line(ax, [pos[0]+p.x, pos[0]+d.x], [pos[2]+p.z, pos[2]+d.z], width, color, min_xaxis, max_xaxis)
+                    elif plane2d == "zx":
+                        min_xaxis, max_xaxis = add_line(ax, [pos[2]+p.z, pos[2]+d.z], [pos[0]+p.x, pos[0]+d.x], width, color, min_xaxis, max_xaxis)
+                    elif plane2d == "yz":
+                        min_xaxis, max_xaxis = add_line(ax, [pos[1]+p.y, pos[1]+d.y], [pos[2]+p.z, pos[2]+d.z], width, color, min_xaxis, max_xaxis)
+                    elif plane2d == "zy":
+                        min_xaxis, max_xaxis = add_line(ax, [pos[2]+p.z, pos[2]+d.z], [pos[1]+p.y, pos[1]+d.y], width, color, min_xaxis, max_xaxis)
+                    else:
+                        raise Exception(f"Invalid value for plane: {plane2d}")
+
+                    if verbose: print('Extent x: %s -> %s'%(min_xaxis, max_xaxis))
+
         # add a scalebar
         # ax = fig.add_axes([0, 0, 1, 1])
         sc_val = 50
