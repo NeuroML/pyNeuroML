@@ -190,69 +190,84 @@ def plot_2D(
 
 
         if plane2d == "xy":
-            ax.set_xlabel("x (um)")
-            ax.set_ylabel("y (um)")
+            ax.set_xlabel("x (μm)")
+            ax.set_ylabel("y (μm)")
         elif plane2d == "yx":
-            ax.set_xlabel("y (um)")
-            ax.set_ylabel("x (um)")
+            ax.set_xlabel("y (μm)")
+            ax.set_ylabel("x (μm)")
         elif plane2d == "xz":
-            ax.set_xlabel("x (um)")
-            ax.set_ylabel("z (um)")
+            ax.set_xlabel("x (μm)")
+            ax.set_ylabel("z (μm)")
         elif plane2d == "zx":
-            ax.set_xlabel("z (um)")
-            ax.set_ylabel("x (um)")
+            ax.set_xlabel("z (μm)")
+            ax.set_ylabel("x (μm)")
         elif plane2d == "yz":
-            ax.set_xlabel("y (um)")
-            ax.set_ylabel("z (um)")
+            ax.set_xlabel("y (μm)")
+            ax.set_ylabel("z (μm)")
         elif plane2d == "zy":
-            ax.set_xlabel("z (um)")
-            ax.set_ylabel("y (um)")
+            ax.set_xlabel("z (μm)")
+            ax.set_ylabel("y (μm)")
         else:
             logger.error(f"Invalid value for plane: {plane2d}")
             sys.exit(-1)
+
+        max_xaxis = -1*float('inf')
+        min_xaxis = float('inf')
+
+        try:
+            soma_segs = cell.get_all_segments_in_group('soma_group')
+        except:
+            soma_segs = []
+        try:
+            dend_segs = cell.get_all_segments_in_group('dendrite_group')
+        except:
+            dend_segs = []
+        try:
+            axon_segs = cell.get_all_segments_in_group('axon_group')
+        except:
+            axon_segs = []
 
         for seg in cell.morphology.segments:
             p = cell.get_actual_proximal(seg.id)
             d = seg.distal
             width = (p.diameter + d.diameter)/2
-            if verbose:
-                print(
-                    "\nSegment %s, id: %s has proximal point: %s, distal: %s (so width: %s)"
-                    % (seg.name, seg.id, p, d, width)
-                )
+
             if width < min_width:
                 width = min_width
 
-            max_xaxis = -1*float('inf')
-            min_xaxis = float('inf')
+            color = 'b'
+            if seg.id in soma_segs: color = 'g'
+            if seg.id in axon_segs: color = 'r'
 
-            if p.x ==  d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
+            spherical = p.x ==  d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
+
+            if verbose:
+                print(
+                    "\nSeg %s, id: %s%s has proximal: %s, distal: %s (width: %s, min_width: %s), color: %s"
+                    % (seg.name, seg.id, ' (spherical)' if spherical else '', p, d, width, min_width, color)
+                )
+
+            if spherical:
                 if verbose: print("Segment is spherical")
                 ax.add_line(LineDataUnits([p.x+width/1000., d.x], [p.y, d.y+width/1000.], linewidth=width, solid_capstyle='round',color='r'))
             else:
                 if plane2d == "xy":
-                    add_line(ax, [p.x, d.x], [p.y, d.y], width, min_xaxis, max_xaxis)
-                    '''
-                    ax.add_line(LineDataUnits([p.x, d.x], [p.y, d.y], linewidth=width, solid_capstyle='butt'))
-                    min_xaxis=min(min_xaxis,p.x)
-                    min_xaxis=min(min_xaxis,d.x)
-                    max_xaxis=max(max_xaxis,p.x)
-                    max_xaxis=max(max_xaxis,d.x)'''
+                    min_xaxis, max_xaxis = add_line(ax, [p.x, d.x], [p.y, d.y], width, color, min_xaxis, max_xaxis)
                 elif plane2d == "yx":
-                    ax.add_line(LineDataUnits([p.y, d.y], [p.x, d.x], linewidth=width, solid_capstyle='butt'))
+                    min_xaxis, max_xaxis = add_line(ax, [p.y, d.y], [p.x, d.x], width, color, min_xaxis, max_xaxis)
                 elif plane2d == "xz":
-                    ax.add_line(LineDataUnits([p.x, d.x], [p.z, d.z], linewidth=width, solid_capstyle='butt'))
+                    min_xaxis, max_xaxis = add_line(ax, [p.x, d.x], [p.z, d.z], width, color, min_xaxis, max_xaxis)
                 elif plane2d == "zx":
-                    ax.add_line(LineDataUnits([p.z, d.z], [p.x, d.x], linewidth=width, solid_capstyle='butt'))
+                    min_xaxis, max_xaxis = add_line(ax, [p.z, d.z], [p.x, d.x], width, color, min_xaxis, max_xaxis)
                 elif plane2d == "yz":
-                    ax.add_line(LineDataUnits([p.y, d.y], [p.z, d.z], linewidth=width, solid_capstyle='butt'))
+                    min_xaxis, max_xaxis = add_line(ax, [p.y, d.y], [p.z, d.z], width, color, min_xaxis, max_xaxis)
                 elif plane2d == "zy":
-                    ax.add_line(LineDataUnits([p.z, d.z], [p.y, d.y], linewidth=width, solid_capstyle='butt'))
+                    min_xaxis, max_xaxis = add_line(ax, [p.z, d.z], [p.y, d.y], width, color, min_xaxis, max_xaxis)
                 else:
                     logger.error(f"Invalid value for plane: {plane2d}")
                     sys.exit(-1)
 
-        print('Extent x: %s -> %s'%(min_xaxis, max_xaxis))
+                if verbose: print('Extent x: %s -> %s'%(min_xaxis, max_xaxis))
         # add a scalebar
         # ax = fig.add_axes([0, 0, 1, 1])
         sc_val = 50
@@ -267,6 +282,7 @@ def plot_2D(
 
         plt.autoscale()
 
+
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
         plt.savefig(abs_file, dpi=200, bbox_inches="tight")
@@ -275,13 +291,20 @@ def plot_2D(
     if not nogui:
         plt.show()
 
-def add_line(ax, xv, yv, width, min_xaxis, max_xaxis):
+def add_line(ax, xv, yv, width, color, min_xaxis, max_xaxis):
 
-    ax.add_line(LineDataUnits(xv, yv, linewidth=width, solid_capstyle='butt'))
+    if abs(xv[0]-xv[1])<0.01 and abs(yv[0]-yv[1])<0.01: # looking at the cylinder from the top, so draw a circle
+        xv[1]=xv[1]+width/1000.
+        yv[1]=yv[1]+width/1000.
+
+        ax.add_line(LineDataUnits(xv, yv, linewidth=width, solid_capstyle='round',color=color))
+
+    ax.add_line(LineDataUnits(xv, yv, linewidth=width, solid_capstyle='butt', color=color))
+
     min_xaxis=min(min_xaxis,xv[0])
     min_xaxis=min(min_xaxis,xv[1])
-    max_xaxis=max(max_xaxis,yv[0])
-    max_xaxis=max(max_xaxis,yv[1])
+    max_xaxis=max(max_xaxis,xv[0])
+    max_xaxis=max(max_xaxis,xv[1])
     return min_xaxis, max_xaxis
 
 def plot_interactive_3D(
