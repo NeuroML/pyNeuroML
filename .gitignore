@@ -136,3 +136,5 @@ examples/results/*.dat
 /examples/NET_NML2_Ex5_DetCell.net.nml
 
 .mypy_cache/
+/examples/test_data/TwoCell.net.png
+/examples/test_data/Purk2M9s.png
