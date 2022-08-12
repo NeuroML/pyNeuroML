@@ -528,6 +528,8 @@ def get_cylinder_surface(
 ) -> typing.Any:
     """Get surface points of a cylinder centered at x, y, z with radius.
 
+    Reference: https://stackoverflow.com/a/32383775/375067
+
     :param x1: proximal center x
     :type x1: float
     :param y1: proximal center y
