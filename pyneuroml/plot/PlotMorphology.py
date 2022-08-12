@@ -524,7 +524,8 @@ def get_frustrum_surface(
     x2: float, y2: float, z2: float,
     radius2: typing.Optional[float] = None,
     resolution: int = 15,
-    angular_resolution: int = 25
+    angular_resolution: int = 25,
+    capped: bool = True
 ) -> typing.Any:
     """Get surface points of a capped frustrum with centers at (x1, y1, z1) and
     (x2, y2, z2) and radii radius1 and radius2 respectively.
@@ -556,16 +557,19 @@ def get_frustrum_surface(
         More angles would result in a smoother surface, but also in a heavier
         (and so possibly slower) plot
     :type angular_resolution: int
-    :returns: list of [x, y, z] values
+    :param capped: whether the cylinder should be capped at the distal end
+    :type capped: bool
+    :returns: x, y, z, x_cap, y_cap, z_cap: surface points (None for the cap
+        surface if capped is False)
 
     """
     if radius2 is None:
         radius2 = radius1
     print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
 
-    p1 = np.array([x1, y1, z1])
-    p2 = np.array([x2, y2, z2])
-    axis_vector = p2 - p1
+    p_proximal = np.array([x1, y1, z1])
+    p_distal = np.array([x2, y2, z2])
+    axis_vector = p_distal - p_proximal
     axis_mag = np.linalg.norm(axis_vector)
 
     axis_unit_vector = axis_vector / axis_mag
@@ -585,8 +589,21 @@ def get_frustrum_surface(
     t_grid, theta_grid = np.meshgrid(t, theta)
     r_grid, _ = np.meshgrid(r, theta)
 
-    X, Y, Z = [p1[i] + axis_unit_vector[i] * t_grid + r_grid * np.sin(theta_grid) * perpv1_unit[i] + r_grid * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
-    return X, Y, Z
+    X, Y, Z = [p_proximal[i] + axis_unit_vector[i] * t_grid + r_grid * np.sin(theta_grid) * perpv1_unit[i] + r_grid * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
+
+    # create the cap surface, a circle at the distal end
+    X_cap = None
+    Y_cap = None
+    Z_cap = None
+    if capped:
+        # does not need high resolution
+        # enough to have points at the center and the circumference
+        cap_r = np.linspace(0, radius2, 2)
+        cap_r_grid, theta_grid2 = np.meshgrid(cap_r, theta)
+
+        X_cap, Y_cap, Z_cap = [p_distal[i] + cap_r_grid * np.sin(theta_grid2) * perpv1_unit[i] + cap_r_grid * np.cos(theta_grid2) * perpv2_unit[i] for i in [0, 1, 2]]
+
+    return X, Y, Z, X_cap, Y_cap, Z_cap
 
 
 if __name__ == "__main__":
