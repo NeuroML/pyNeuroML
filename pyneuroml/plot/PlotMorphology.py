@@ -518,15 +518,19 @@ def get_sphere_surface(
     return (X, Y, Z)
 
 
-def get_cylinder_surface(
+def get_frustrum_surface(
     x1: float, y1: float, z1: float,
     radius1: float,
     x2: float, y2: float, z2: float,
     radius2: typing.Optional[float] = None,
-    resolution: int = 20,
-    angular_resolution: int = 15
+    resolution: int = 15,
+    angular_resolution: int = 25
 ) -> typing.Any:
-    """Get surface points of a cylinder centered at x, y, z with radius.
+    """Get surface points of a capped frustrum with centers at (x1, y1, z1) and
+    (x2, y2, z2) and radii radius1 and radius2 respectively.
+
+    If radius2 is not given, or radius1 and radius2 are the same, this results
+    in a cylinder.
 
     Reference: https://stackoverflow.com/a/32383775/375067
 
@@ -536,7 +540,7 @@ def get_cylinder_surface(
     :type y1: float
     :param z1: proximal center z
     :type z1: float
-    :param radius1: proximal of cylinder
+    :param radius1: proximal radius of cylinder
     :type radius1: float
     :param x1: distal center x
     :type x1: float
@@ -544,7 +548,7 @@ def get_cylinder_surface(
     :type y1: float
     :param z1: distal center z
     :type z1: float
-    :param radius2: distal of cylinder
+    :param radius2: distal radius of cylinder
     :type radius2: float
     :param resolution: resolution (number of points in the surface)
     :type resolution: int
@@ -555,10 +559,10 @@ def get_cylinder_surface(
     :returns: list of [x, y, z] values
 
     """
-
+    if radius2 is None:
+        radius2 = radius1
     print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
 
-    radius = radius1
     p1 = np.array([x1, y1, z1])
     p2 = np.array([x2, y2, z2])
     axis_vector = p2 - p1
@@ -574,13 +578,14 @@ def get_cylinder_surface(
     perpv1_unit = perpv1 / np.linalg.norm(perpv1)
     perpv2_unit = np.cross(axis_unit_vector, perpv1_unit)
 
-    t = np.linspace(0, axis_mag, resolution)
+    t = np.linspace(0., axis_mag, resolution)
+    r = np.linspace(radius1, radius2, resolution)
     theta = np.linspace(0, 2 * np.pi, angular_resolution)
 
     t_grid, theta_grid = np.meshgrid(t, theta)
+    r_grid, _ = np.meshgrid(r, theta)
 
-    X, Y, Z = [p1[i] + axis_unit_vector[i] * t_grid + radius * np.sin(theta_grid) * perpv1_unit[i] + radius * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
-
+    X, Y, Z = [p1[i] + axis_unit_vector[i] * t_grid + r_grid * np.sin(theta_grid) * perpv1_unit[i] + r_grid * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
     return X, Y, Z
 
 
