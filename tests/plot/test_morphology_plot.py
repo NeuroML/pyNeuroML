@@ -15,9 +15,13 @@ import numpy as np
 import plotly.graph_objects as go
 
 from pyneuroml.plot.PlotMorphology import (
-    plot_2D, plot_interactive_3D,
+    plot_2D, plot_interactive_3D_web,
+    plot_interactive_3D_web_naive,
+    plot_interactive_3D_matplotlib,
+    plot_interactive_3D_matplotlib_naive,
+    plot_interactive_3D,
     get_sphere_surface,
-    get_cylinder_surface
+    get_frustrum_surface,
 )
 from .. import BaseTestCase
 
@@ -31,8 +35,9 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_2d_plotter(self):
         """Test plot_2D function."""
-        nml_files = ["tests/plot/Cell_497232312.cell.nml",
-                     "tests/plot/test.cell.nml"]
+        nml_files = ["tests/plot/olm.cell.nml",
+                     "tests/plot/L23_PC_simplified.cell.nml",
+                     "tests/plot/Cell_497232312.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
             for plane in ["xy", "yz", "xz"]:
@@ -50,19 +55,41 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_3d_plotter(self):
         """Test plot_interactive_3D function."""
-        nml_files = ["tests/plot/Cell_497232312.cell.nml",
-                     "tests/plot/test.cell.nml"]
-        nml_files = ["tests/plot/test.cell.nml"]
+        nml_files = ["tests/plot/olm.cell.nml",
+                     "tests/plot/L23_PC_simplified.cell.nml",
+                     "tests/plot/Cell_497232312.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
-            filename = f"test_morphology_plot_3d_{ofile.replace('.', '_', 100)}.png"
+
+            for engine in ["matplotlib", "matplotlib_surface", "plotly"]:
+                filename = f"test_morphology_plot_3d_{engine}_{ofile.replace('.', '_', 100)}.png"
             # remove the file first
             try:
                 pl.Path(filename).unlink()
             except FileNotFoundError:
                 pass
 
-            plot_interactive_3D(nml_file, min_width=2., nogui=False, save_to_file=filename)
+            plot_interactive_3D(nml_file, nogui=True,
+                                save_to_file=filename, verbose=False,
+                                engine=engine)
+
+            self.assertIsFile(filename)
+            pl.Path(filename).unlink()
+
+        # only a simple morphology for plotly surface
+        nml_files = ["tests/plot/olm.cell.nml"]
+        for nml_file in nml_files:
+            ofile = pl.Path(nml_file).name
+            filename = f"test_morphology_plot_3d_plotly_surface{ofile.replace('.', '_', 100)}.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            plot_interactive_3D(nml_file, nogui=True,
+                                save_to_file=filename, verbose=False,
+                                engine="plotly_surface")
 
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
@@ -79,28 +106,14 @@ class TestMorphologyPlot(BaseTestCase):
         self.assertAlmostEqual(-5., np.min(Z), delta=0.2)
         self.assertAlmostEqual(5., np.max(Z), delta=0.2)
 
-    def test_cylinder(self):
+    def test_frustrum(self):
         """Test plot_interactive_3D function."""
-        X, Y, Z = get_cylinder_surface(x1=0, y1=0, z1=0, radius1=10, x2=0,
-                                       y2=0, z2=10, radius2=None)
-        # print("x")
-        # print(X)
-        # print("y")
-        # print(Y)
-        # print("z")
-        # print(Z)
-        fig = go.Figure()
-        fig.add_trace(go.Surface(x=X, y=Y, z=Z,
-                                 surfacecolor=(len(X) * len(Y) * ["blue"])))
-        fig.show()
-
-        """
-
+        X, Y, Z, X_cap, Y_cap, Z_cap = get_frustrum_surface(
+            x1=0, y1=0, z1=0, radius1=5, x2=0, y2=0, z2=5, radius2=5, capped=True)
         # Test some points we know should be in there
         self.assertAlmostEqual(-5., np.min(X), delta=0.2)
         self.assertAlmostEqual(5., np.max(X), delta=0.2)
         self.assertAlmostEqual(-5., np.min(Y), delta=0.2)
         self.assertAlmostEqual(5., np.max(Y), delta=0.2)
-        self.assertAlmostEqual(-5., np.min(Z), delta=0.2)
-        self.assertAlmostEqual(5., np.max(Z), delta=0.2)
-        """
+        self.assertAlmostEqual(0., np.min(Z), delta=0.2)
+        self.assertAlmostEqual(10., np.max(Z), delta=0.2)
