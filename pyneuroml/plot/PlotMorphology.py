@@ -559,7 +559,6 @@ def get_cylinder_surface(
     print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
 
     radius = radius1
-    origin = np.array([0, 0, 0])
     p1 = np.array([x1, y1, z1])
     p2 = np.array([x2, y2, z2])
     axis_vector = p2 - p1
@@ -580,7 +579,7 @@ def get_cylinder_surface(
 
     t_grid, theta_grid = np.meshgrid(t, theta)
 
-    X, Y, Z = [p1[i] + axis_unit_vector[i] * t_grid * radius * np.sin(theta_grid) * perpv1_unit[i] + radius * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
+    X, Y, Z = [p1[i] + axis_unit_vector[i] * t_grid + radius * np.sin(theta_grid) * perpv1_unit[i] + radius * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
 
     return X, Y, Z
 
