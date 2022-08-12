@@ -27,7 +27,7 @@ import neuroml
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 DEFAULTS = {
@@ -125,7 +125,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
-        plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.nogui, a.save_to_file)
+        plot_interactive_3D_matplotlib(a.nml_file, a.v, a.nogui, a.save_to_file)
     else:
         plot_2D(a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file, a.square)
 
@@ -397,12 +397,210 @@ def add_line(ax, xv, yv, width, color, min_xaxis, max_xaxis):
 
 def plot_interactive_3D(
     nml_file: str,
-    min_width: float = 0.8,
     verbose: bool = False,
     nogui: bool = False,
-    save_to_file: typing.Optional[str] = None
+    engine: str = "matplotlib",
+    save_to_file: typing.Optional[str] = None,
 ):
-    """Plot NeuroML2 cell morphology interactively using Plot.ly
+    """Plot morphology interactively using a provided engine.
+
+    The engines available are:
+
+    - matplotlib: 3D plot using lines of constant widths in Matplotlib
+    - matplotlib_surface: 3D plot using surfaces in Matplotlib
+    - plotly: 3D plot using lines of constant widths using Plotly, for viewing
+      in web browsers
+    - plotly_surface: 3D plot using surfaces in Plotly, for viewing in web
+      browsers
+
+    In terms of performance, the surface plots require more computational
+    resources since these plot 3D surfaces that contain a much larger number of
+    points than their naive couterparts.
+
+    Between Matplotlib and Plotly, Matplotlib performs better.
+
+    :param nml_file: path to NeuroML cell file
+    :type nml_file: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param nogui: do not show GUI (default: false)
+    :type nogui: bool
+    :param engine: plotting engine to use
+    :type engine: str
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    """
+    if engine == "matplotlib_surface":
+        plot_interactive_3D_matplotlib(nml_file, verbose, nogui, save_to_file)
+    elif engine == "matplotlib":
+        plot_interactive_3D_matplotlib_naive(nml_file, verbose, nogui, save_to_file)
+    elif engine == "plotly":
+        plot_interactive_3D_web_naive(nml_file, verbose, nogui, save_to_file)
+    elif engine == "plotly_surface":
+        plot_interactive_3D_web(nml_file, verbose, nogui, save_to_file)
+
+
+def plot_interactive_3D_matplotlib_naive(
+    nml_file: str,
+    verbose: bool = False,
+    nogui: bool = False,
+    save_to_file: typing.Optional[str] = None,
+):
+    """Plot NeuroML2 cell morphology interactively using matplotlib lines.
+
+    These plots are limited to cylinders and spheres only. So, they will not
+    show segments that are frustrums (different proximan and distal diameters).
+
+    :param nml_file: path to NeuroML cell file
+    :type nml_file: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param nogui: do not show matplotlib GUI (default: false)
+    :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    """
+    nml_model = read_neuroml2_file(nml_file)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+    ax.set_xlabel("extent (um)")
+    ax.set_ylabel("extent (um)")
+    ax.set_zlabel("extent (um)")
+
+    for cell in nml_model.cells:
+        title = f"3D plot of {cell.id} from {nml_file}"
+
+        logger.info(
+            f"Plotting morphology of cell {cell.id} from {nml_file} with {len(cell.morphology.segments)} segments"
+        )
+        for seg in cell.morphology.segments:
+            p = cell.get_actual_proximal(seg.id)
+            d = seg.distal
+            if verbose:
+                print(
+                    f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
+                )
+            # spherical segment
+            if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
+                ax.scatter(
+                    [p.x], [p.y], [p.z], color="red", marker="o", linewidth=p.diameter
+                )
+            else:
+                ax.plot(
+                    [p.x, d.x],
+                    [p.y, d.y],
+                    [p.z, d.z],
+                    color="blue",
+                    linewidth=(p.diameter + d.diameter) / 2,
+                )
+
+        limits = np.array([getattr(ax, f"get_{axis}lim")() for axis in "xyz"])
+        ax.set_box_aspect(np.ptp(limits, axis=1))
+
+        if save_to_file:
+            logger.info(
+                "Saving image to %s of plot: %s"
+                % (os.path.abspath(save_to_file), title)
+            )
+            abs_file = os.path.abspath(save_to_file)
+            plt.savefig(abs_file, dpi=200)
+
+        if not nogui:
+            plt.show()
+
+
+def plot_interactive_3D_matplotlib(
+    nml_file: str,
+    verbose: bool = False,
+    nogui: bool = False,
+    save_to_file: typing.Optional[str] = None,
+):
+    """Plot NeuroML2 cell morphology interactively using matplotlib surfaces.
+
+    :param nml_file: path to NeuroML cell file
+    :type nml_file: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param nogui: do not show matplotlib GUI (default: false)
+    :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    """
+    nml_model = read_neuroml2_file(nml_file)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+    ax.set_xlabel("extent (um)")
+    ax.set_ylabel("extent (um)")
+    ax.set_zlabel("extent (um)")
+
+    for cell in nml_model.cells:
+        title = f"3D plot of {cell.id} from {nml_file}"
+
+        logger.info(
+            f"Plotting morphology of cell {cell.id} from {nml_file} with {len(cell.morphology.segments)} segments"
+        )
+        for seg in cell.morphology.segments:
+            p = cell.get_actual_proximal(seg.id)
+            d = seg.distal
+            if verbose:
+                print(
+                    f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
+                )
+            X = Y = Z = X_cap = Y_cap = Z_cap = None
+            # spherical segment
+            if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
+                X, Y, Z = get_sphere_surface(
+                    p.x, p.y, p.z, p.diameter / 2, resolution=8
+                )
+                ax.plot_surface(X=X, Y=Y, Z=Z, color="red")
+            else:
+                # for a cylinder, only use two points on axis
+                if p.diameter == d.diameter:
+                    resolution = 2
+                else:
+                    resolution = 3
+
+                X, Y, Z, X_cap, Y_cap, Z_cap = get_frustrum_surface(
+                    p.x,
+                    p.y,
+                    p.z,
+                    p.diameter / 2,
+                    d.x,
+                    d.y,
+                    d.z,
+                    d.diameter / 2,
+                    resolution=resolution,
+                )
+                ax.plot_surface(X=X, Y=Y, Z=Z, color="blue")
+
+            if X_cap is not None and Y_cap is not None and Z_cap is not None:
+                ax.plot_surface(X=X_cap, Y=Y_cap, Z=Z_cap, color="blue")
+
+        limits = np.array([getattr(ax, f"get_{axis}lim")() for axis in "xyz"])
+        ax.set_box_aspect(np.ptp(limits, axis=1))
+
+        if save_to_file:
+            logger.info(
+                "Saving image to %s of plot: %s"
+                % (os.path.abspath(save_to_file), title)
+            )
+            abs_file = os.path.abspath(save_to_file)
+            plt.savefig(abs_file, dpi=200)
+
+        if not nogui:
+            plt.show()
+
+
+def plot_interactive_3D_web(
+    nml_file: str,
+    verbose: bool = False,
+    nogui: bool = False,
+    save_to_file: typing.Optional[str] = None,
+):
+    """Plot NeuroML2 cell morphology interactively in your web browser using Plot.ly
+    This function works well for cell morphologies that contain < 1000 segments.
 
     Please note that the interactive plot uses Plotly, which uses WebGL. So,
     you need to use a WebGL enabled browser, and performance here may be
@@ -413,9 +611,6 @@ def plot_interactive_3D(
 
     :param nml_file: path to NeuroML cell file
     :type nml_file: str
-    :param min_width: minimum width for segments (useful for visualising very
-        thin segments): default 0.8um
-    :type min_width: float
     :param verbose: show extra information (default: False)
     :type verbose: bool
     :param nogui: do not show matplotlib GUI (default: false)
@@ -429,6 +624,9 @@ def plot_interactive_3D(
     for cell in nml_model.cells:
         title = f"3D plot of {cell.id} from {nml_file}"
 
+        logger.info(
+            f"Plotting morphology of cell {cell.id} from {nml_file} with {len(cell.morphology.segments)} segments"
+        )
         for seg in cell.morphology.segments:
             p = cell.get_actual_proximal(seg.id)
             d = seg.distal
@@ -436,8 +634,182 @@ def plot_interactive_3D(
                 print(
                     f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
                 )
-            (X, Y, Z) = get_cylinder_surface(p.x, p.y, p.z, p.diameter / 2, d.x, d.y, d.z, d.diameter / 2, 20)
-            fig.add_trace(go.Surface(x=X, y=Y, z=Z, surfacecolor=(len(X) * len(Y) * ["blue"])))
+            X = Y = Z = X_cap = Y_cap = Z_cap = None
+            # spherical segment
+            if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
+                X, Y, Z = get_sphere_surface(
+                    p.x, p.y, p.z, p.diameter / 2, resolution=8
+                )
+                fig.add_trace(
+                    go.Surface(
+                        x=X,
+                        y=Y,
+                        z=Z,
+                        surfacecolor=(len(Z) * ["red"]),
+                        contours=dict(
+                            x=None,
+                            y=None,
+                            z=None,
+                        ),
+                        hoverinfo="skip",
+                        showscale=False,
+                    )
+                )
+            else:
+                # for a cylinder, only use two points on axis
+                if p.diameter == d.diameter:
+                    resolution = 2
+                else:
+                    resolution = 3
+
+                X, Y, Z, X_cap, Y_cap, Z_cap = get_frustrum_surface(
+                    p.x,
+                    p.y,
+                    p.z,
+                    p.diameter / 2,
+                    d.x,
+                    d.y,
+                    d.z,
+                    d.diameter / 2,
+                    resolution=resolution,
+                )
+                fig.add_trace(
+                    go.Surface(
+                        x=X,
+                        y=Y,
+                        z=Z,
+                        surfacecolor=(len(X) * len(Y) * ["blue"]),
+                        contours=dict(
+                            x=None,
+                            y=None,
+                            z=None,
+                        ),
+                        hoverinfo="skip",
+                        showscale=False,
+                    )
+                )
+
+            if X_cap is not None and Y_cap is not None and Z_cap is not None:
+                fig.add_trace(
+                    go.Surface(
+                        x=X_cap,
+                        y=Y_cap,
+                        z=Z_cap,
+                        surfacecolor=(len(X_cap) * len(Y_cap) * ["blue"]),
+                        contours=dict(
+                            x=None,
+                            y=None,
+                            z=None,
+                        ),
+                        hoverinfo="skip",
+                        showscale=False,
+                    )
+                )
+
+        fig.update_layout(
+            title={"text": title},
+            hovermode=False,
+            plot_bgcolor="white",
+            scene=dict(
+                aspectmode="data",
+                aspectratio=dict(
+                    x=1.0,
+                    y=1.0,
+                    z=1.0,
+                ),
+                xaxis=dict(
+                    backgroundcolor="white",
+                    showbackground=False,
+                    showgrid=False,
+                    showspikes=False,
+                    title=dict(text="extent (um)"),
+                ),
+                yaxis=dict(
+                    backgroundcolor="white",
+                    showbackground=False,
+                    showgrid=False,
+                    showspikes=False,
+                    title=dict(text="extent (um)"),
+                ),
+                zaxis=dict(
+                    backgroundcolor="white",
+                    showbackground=False,
+                    showgrid=False,
+                    showspikes=False,
+                    title=dict(text="extent (um)"),
+                ),
+            ),
+        )
+        if not nogui:
+            fig.show()
+        if save_to_file:
+            logger.info(
+                "Saving image to %s of plot: %s"
+                % (os.path.abspath(save_to_file), title)
+            )
+            fig.write_image(save_to_file, scale=2, width=1024, height=768)
+            logger.info("Saved image to %s of plot: %s" % (save_to_file, title))
+
+
+def plot_interactive_3D_web_naive(
+    nml_file: str,
+    verbose: bool = False,
+    nogui: bool = False,
+    min_width: float = 0.2,
+    save_to_file: typing.Optional[str] = None,
+):
+    """Plot NeuroML2 cell morphology interactively in your web browser using
+    Plot.ly using lines.
+
+    This is a more performant version of `plot_interactive_3D_web` that is able
+    to plot more complex cell morphologies. Similar to the
+    `plot_interactive_3D_matplotlib_naive` function, this uses lines instead of
+    surfaces to represent segments.
+
+    Please note that the interactive plot uses Plotly, which uses WebGL. So,
+    you need to use a WebGL enabled browser, and performance here may be
+    hardware dependent.
+
+    https://plotly.com/python/webgl-vs-svg/
+    https://en.wikipedia.org/wiki/WebGL
+
+    :param nml_file: path to NeuroML cell file
+    :type nml_file: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param nogui: do not show matplotlib GUI (default: false)
+    :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    """
+    nml_model = read_neuroml2_file(nml_file)
+    fig = go.Figure()
+    for cell in nml_model.cells:
+        title = f"3D plot of {cell.id} from {nml_file}"
+
+        for seg in cell.morphology.segments:
+            p = cell.get_actual_proximal(seg.id)
+            d = seg.distal
+            if verbose:
+                print(
+                    f"\nSegment {seg.name}, id: {seg.id} has proximal point: {p}, distal: {d}"
+                )
+            width = max(p.diameter, d.diameter)
+            if width < min_width:
+                width = min_width
+            fig.add_trace(
+                go.Scatter3d(
+                    x=[p.x, d.x],
+                    y=[p.y, d.y],
+                    z=[p.z, d.z],
+                    name=None,
+                    marker={"size": 2, "color": "blue"},
+                    line={"width": width, "color": "blue"},
+                    mode="lines",
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
 
         fig.update_layout(
             title={"text": title},
@@ -449,37 +821,30 @@ def plot_interactive_3D(
                     showbackground=False,
                     showgrid=False,
                     showspikes=False,
-                    title=dict(
-                        text="extent (um)"
-                    )
+                    title=dict(text="extent (um)"),
                 ),
                 yaxis=dict(
                     backgroundcolor="white",
                     showbackground=False,
                     showgrid=False,
                     showspikes=False,
-                    title=dict(
-                        text="extent (um)"
-                    )
+                    title=dict(text="extent (um)"),
                 ),
                 zaxis=dict(
                     backgroundcolor="white",
                     showbackground=False,
                     showgrid=False,
                     showspikes=False,
-                    title=dict(
-                        text="extent (um)"
-                    )
-                )
-
-            )
+                    title=dict(text="extent (um)"),
+                ),
+            ),
         )
         if not nogui:
             fig.show()
         if save_to_file:
             logger.info(
-                "Saving image to %s of plot: %s" %
-                (os.path.abspath(save_to_file), title)
+                "Saving image to %s of plot: %s"
+                % (os.path.abspath(save_to_file), title)
             )
             fig.write_image(save_to_file, scale=2, width=1024, height=768)
             logger.info("Saved image to %s of plot: %s" % (save_to_file, title))
@@ -506,26 +871,27 @@ def get_sphere_surface(
 
 
     """
-    u, v = np.mgrid[0:2 * np.pi:resolution * 2j, 0:np.pi:resolution * 1j]  # noqa
+    logger.debug(f"Sphere: got: {x}, {y}, {z}, {radius}")
+    u, v = np.mgrid[0 : 2 * np.pi : resolution * 2j, 0 : np.pi : resolution * 1j]  # type: ignore
     X = radius * np.cos(u) * np.sin(v) + x
     Y = radius * np.sin(u) * np.sin(v) + y
     Z = radius * np.cos(v) + z
 
-    fig = go.Figure()
-    fig.add_trace(go.Surface(x=X, y=Y, z=Z, surfacecolor=(len(Z) * ["blue"])))
-    fig.show()
-
-    return (X, Y, Z)
+    return X, Y, Z
 
 
 def get_frustrum_surface(
-    x1: float, y1: float, z1: float,
+    x1: float,
+    y1: float,
+    z1: float,
     radius1: float,
-    x2: float, y2: float, z2: float,
+    x2: float,
+    y2: float,
+    z2: float,
     radius2: typing.Optional[float] = None,
-    resolution: int = 15,
-    angular_resolution: int = 25,
-    capped: bool = True
+    resolution: int = 3,
+    angular_resolution: int = 4,
+    capped: bool = False,
 ) -> typing.Any:
     """Get surface points of a capped frustrum with centers at (x1, y1, z1) and
     (x2, y2, z2) and radii radius1 and radius2 respectively.
@@ -551,11 +917,11 @@ def get_frustrum_surface(
     :type z1: float
     :param radius2: distal radius of cylinder
     :type radius2: float
-    :param resolution: resolution (number of points in the surface)
+    :param resolution: resolution (number of intermediate points on axis)
     :type resolution: int
-    :param angular_resolution: resolution (number of angles for drawing the surface)
-        More angles would result in a smoother surface, but also in a heavier
-        (and so possibly slower) plot
+    :param angular_resolution: resolution (number of angles for drawing the
+        frustrum surface). More angles would result in a smoother surface, but
+        also in a heavier (and so possibly slower) plot
     :type angular_resolution: int
     :param capped: whether the cylinder should be capped at the distal end
     :type capped: bool
@@ -565,7 +931,10 @@ def get_frustrum_surface(
     """
     if radius2 is None:
         radius2 = radius1
-    print(f"Got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}")
+
+    logger.debug(
+        f"Frustrum: got: {x1}, {y1}, {z1}, {radius1} -> {x2}, {y2}, {z2}, {radius2}"
+    )
 
     p_proximal = np.array([x1, y1, z1])
     p_distal = np.array([x2, y2, z2])
@@ -582,14 +951,20 @@ def get_frustrum_surface(
     perpv1_unit = perpv1 / np.linalg.norm(perpv1)
     perpv2_unit = np.cross(axis_unit_vector, perpv1_unit)
 
-    t = np.linspace(0., axis_mag, resolution)
+    t = np.linspace(0.0, axis_mag, resolution)
     r = np.linspace(radius1, radius2, resolution)
     theta = np.linspace(0, 2 * np.pi, angular_resolution)
 
     t_grid, theta_grid = np.meshgrid(t, theta)
     r_grid, _ = np.meshgrid(r, theta)
 
-    X, Y, Z = [p_proximal[i] + axis_unit_vector[i] * t_grid + r_grid * np.sin(theta_grid) * perpv1_unit[i] + r_grid * np.cos(theta_grid) * perpv2_unit[i] for i in [0, 1, 2]]
+    X, Y, Z = [
+        p_proximal[i]
+        + axis_unit_vector[i] * t_grid
+        + r_grid * np.sin(theta_grid) * perpv1_unit[i]
+        + r_grid * np.cos(theta_grid) * perpv2_unit[i]
+        for i in [0, 1, 2]
+    ]
 
     # create the cap surface, a circle at the distal end
     X_cap = None
@@ -601,7 +976,12 @@ def get_frustrum_surface(
         cap_r = np.linspace(0, radius2, 2)
         cap_r_grid, theta_grid2 = np.meshgrid(cap_r, theta)
 
-        X_cap, Y_cap, Z_cap = [p_distal[i] + cap_r_grid * np.sin(theta_grid2) * perpv1_unit[i] + cap_r_grid * np.cos(theta_grid2) * perpv2_unit[i] for i in [0, 1, 2]]
+        X_cap, Y_cap, Z_cap = [
+            p_distal[i]
+            + cap_r_grid * np.sin(theta_grid2) * perpv1_unit[i]
+            + cap_r_grid * np.cos(theta_grid2) * perpv2_unit[i]
+            for i in [0, 1, 2]
+        ]
 
     return X, Y, Z, X_cap, Y_cap, Z_cap
 

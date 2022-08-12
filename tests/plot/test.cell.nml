@@ -8,7 +8,7 @@
         <morphology id="morphology">
             <segment id="0" name="Seg0_soma_0">
                 <proximal x="0.0" y="0.0" z="0.0" diameter="10.0"/>
-                <distal x="0.0" y="10.0" z="0.0" diameter="10.0"/>
+                <distal x="0.0" y="0.0" z="0.0" diameter="10.0"/>
             </segment>
             <segment id="1" name="Seg1_soma_0">
                 <parent segment="0"/>
