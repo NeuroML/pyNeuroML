@@ -435,7 +435,7 @@ def plot_interactive_3D(
     elif engine == "matplotlib":
         plot_interactive_3D_matplotlib_naive(nml_file, verbose, nogui, save_to_file)
     elif engine == "plotly":
-        plot_interactive_3D_web_naive(nml_file, verbose, nogui, save_to_file)
+        plot_interactive_3D_web_naive(nml_file, verbose, nogui, save_to_file=save_to_file)
     elif engine == "plotly_surface":
         plot_interactive_3D_web(nml_file, verbose, nogui, save_to_file)
 
@@ -872,7 +872,7 @@ def get_sphere_surface(
 
     """
     logger.debug(f"Sphere: got: {x}, {y}, {z}, {radius}")
-    u, v = np.mgrid[0 : 2 * np.pi : resolution * 2j, 0 : np.pi : resolution * 1j]  # type: ignore
+    u, v = np.mgrid[0:2 * np.pi:resolution * 2j, 0:np.pi:resolution * 1j]  # type: ignore
     X = radius * np.cos(u) * np.sin(v) + x
     Y = radius * np.sin(u) * np.sin(v) + y
     Z = radius * np.cos(v) + z
