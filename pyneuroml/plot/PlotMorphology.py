@@ -123,7 +123,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
-        plot_interactive_3D_matplotlib(a.nml_file, a.v, a.nogui, a.save_to_file)
+        plot_interactive_3D(nml_file=a.nml_file, verbose=a.v, nogui=a.nogui, save_to_file=a.save_to_file, engine=a.interactive3d)
     else:
         plot_2D(
             a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file, a.square
@@ -234,15 +234,17 @@ def plot_2D(
 
             try:
                 soma_segs = cell.get_all_segments_in_group("soma_group")
-            except:
+            except Exception:
                 soma_segs = []
             try:
                 dend_segs = cell.get_all_segments_in_group("dendrite_group")
-            except:
-                dend_segs = []
+            except Exception:
+                dend_segs = []  # noqa
+                # is not used because checks are made against the other two
+                # lists
             try:
                 axon_segs = cell.get_all_segments_in_group("axon_group")
-            except:
+            except Exception:
                 axon_segs = []
 
             if cell is None:
@@ -507,7 +509,7 @@ def plot_interactive_3D(
     nml_file: str,
     verbose: bool = False,
     nogui: bool = False,
-    engine: str = "matplotlib",
+    engine: typing.Union[str, bool] = "matplotlib",
     save_to_file: typing.Optional[str] = None,
 ):
     """Plot morphology interactively using a provided engine.
@@ -538,10 +540,10 @@ def plot_interactive_3D(
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
     """
-    if engine == "matplotlib_surface":
-        plot_interactive_3D_matplotlib(nml_file, verbose, nogui, save_to_file)
-    elif engine == "matplotlib":
+    if engine is True or engine == "matplotlib":
         plot_interactive_3D_matplotlib_naive(nml_file, verbose, nogui, save_to_file)
+    elif engine == "matplotlib_surface":
+        plot_interactive_3D_matplotlib(nml_file, verbose, nogui, save_to_file)
     elif engine == "plotly":
         plot_interactive_3D_web_naive(
             nml_file, verbose, nogui, save_to_file=save_to_file
