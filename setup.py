@@ -20,6 +20,7 @@ setup(
         "pyneuroml.plot",
         "pyneuroml.swc",
         "pyneuroml.neuron.analysis",
+        "pyneuroml.utils",
     ],
     entry_points={
         "console_scripts": [
@@ -30,6 +31,7 @@ setup(
             "pynml-tune            = pyneuroml.tune.NeuroMLTuner:main",
             "pynml-summary         = pyneuroml.pynml:summary",
             "pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main",
+            "pynml-plotmorph       = pyneuroml.plot.PlotMorphology:main",
             "pynml-sonata          = neuromllite.SonataReader:main",
         ]
     },
@@ -69,6 +71,7 @@ setup(
         "airspeed>=0.5.5",
         "neuromllite>=0.4.1",  # sets dependency for libNeuroML also
         "matplotlib",
+        "matplotlib-scalebar",
         "graphviz",
         'typing; python_version<"3.5"',
         "lxml",

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" 
+         id="NaV">
+
+
+    <ionChannelKS id="NaV" conductance="10pS" species="na">
+
+        <notes>Mouse sodium current
+: Kinetics of Carter et al. (2012)
+: Based on 37 degC recordings from mouse hippocampal CA1 pyramids</notes>
+                
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="NaV">
+                    
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Na channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/neurondb/channelGene2.aspx#table2"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+    
+        <gateKS id="n" instances="1">
+            
+            <closedState id="C1"/>
+            <closedState id="C2"/>
+            <closedState id="C3"/>
+            <closedState id="C4"/>
+            <closedState id="C5"/>
+            
+            <closedState id="I1"/>
+            <closedState id="I2"/>
+            <closedState id="I3"/>
+            <closedState id="I4"/>
+            <closedState id="I5"/>
+            <closedState id="I6"/>
+            
+            <openState id="O"/>
+            
+            <forwardTransition id="f01" from="C1" to="C2" >
+                <rate type="Generic_NaV_rate1" forward_n="4" backward_n="0" alfac="1" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b01" from="C1" to="C2" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="1" alfac="1" btfac="1"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f02" from="C2" to="C3" >
+                <rate type="Generic_NaV_rate1" forward_n="3" backward_n="0" alfac="1" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b02" from="C2" to="C3" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="2" alfac="1" btfac="1"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f03" from="C3" to="C4" >
+                <rate type="Generic_NaV_rate1" forward_n="2" backward_n="0" alfac="1" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b03" from="C3" to="C4" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="3" alfac="1" btfac="1"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f04" from="C4" to="C5" >
+                <rate type="Generic_NaV_rate1" forward_n="1" backward_n="0" alfac="1" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b04" from="C4" to="C5" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="4" alfac="1" btfac="1"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f00" from="C5" to="O" >
+                <rate type="Generic_NaV_rate2" rate="250 per_ms" factor="1" power="0"/>
+            </forwardTransition>
+            <reverseTransition id="b00" from="C5" to="O" >
+                <rate type="Generic_NaV_rate2" rate="60 per_ms" factor="1" power="0"/>
+            </reverseTransition>
+            
+            <forwardTransition id="fin" from="O" to="I6" >
+                <rate type="Generic_NaV_rate2" rate="8 per_ms" factor="1" power="0"/>
+            </forwardTransition>
+            <reverseTransition id="bin" from="O" to="I6" >
+                <rate type="Generic_NaV_rate2" rate="0.05 per_ms" factor="1" power="0"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f11" from="I1" to="I2" >
+                <rate type="Generic_NaV_rate1" forward_n="4" backward_n="0" alfac="2.51" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b11" from="I1" to="I2" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="1" alfac="1" btfac="5.32"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f12" from="I2" to="I3" >
+                <rate type="Generic_NaV_rate1" forward_n="3" backward_n="0" alfac="2.51" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b12" from="I2" to="I3" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="2" alfac="1" btfac="5.32"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f13" from="I3" to="I4" >
+                <rate type="Generic_NaV_rate1" forward_n="2" backward_n="0" alfac="2.51" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b13" from="I3" to="I4" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="3" alfac="1" btfac="5.32"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f14" from="I4" to="I5" >
+                <rate type="Generic_NaV_rate1" forward_n="1" backward_n="0" alfac="2.51" btfac="1"/>
+            </forwardTransition>
+            <reverseTransition id="b14" from="I4" to="I5" >
+                <rate type="Generic_NaV_rate1" forward_n="0" backward_n="4" alfac="1" btfac="5.32"/>
+            </reverseTransition>
+            
+            <forwardTransition id="f1n" from="I5" to="I6" >
+                <rate type="Generic_NaV_rate2" rate="250 per_ms" factor="1" power="0"/>
+            </forwardTransition>
+            <reverseTransition id="b1n" from="I5" to="I6" >
+                <rate type="Generic_NaV_rate2" rate="60 per_ms" factor="1" power="0"/>
+            </reverseTransition>
+            
+            <forwardTransition id="fi1" from="C1" to="I1" >
+                <rate type="Generic_NaV_rate2" rate="0.01 per_ms" factor="1" power="0"/>
+            </forwardTransition>
+            <reverseTransition id="bi1" from="C1" to="I1" >
+                <rate type="Generic_NaV_rate2" rate="40 per_ms" factor="1" power="0"/>
+            </reverseTransition>
+            
+            <forwardTransition id="fi2" from="C2" to="I2" >
+                <rate type="Generic_NaV_rate2" rate="0.01 per_ms" factor="2.51" power="1"/>
+            </forwardTransition>
+            <reverseTransition id="bi2" from="C2" to="I2" >
+                <rate type="Generic_NaV_rate2" rate="40 per_ms" factor="5.32" power="-1"/>
+            </reverseTransition>
+            
+            <forwardTransition id="fi3" from="C3" to="I3" >
+                <rate type="Generic_NaV_rate2" rate="0.01 per_ms" factor="2.51" power="2"/>
+            </forwardTransition>
+            <reverseTransition id="bi3" from="C3" to="I3" >
+                <rate type="Generic_NaV_rate2" rate="40 per_ms" factor="5.32" power="-2"/>
+            </reverseTransition>
+            
+            <forwardTransition id="fi4" from="C4" to="I4" >
+                <rate type="Generic_NaV_rate2" rate="0.01 per_ms" factor="2.51" power="3"/>
+            </forwardTransition>
+            <reverseTransition id="bi4" from="C4" to="I4" >
+                <rate type="Generic_NaV_rate2" rate="40 per_ms" factor="5.32" power="-3"/>
+            </reverseTransition>
+            
+            <forwardTransition id="fi5" from="C5" to="I5" >
+                <rate type="Generic_NaV_rate2" rate="0.01 per_ms" factor="2.51" power="4"/>
+            </forwardTransition>
+            <reverseTransition id="bi5" from="C5" to="I5" >
+                <rate type="Generic_NaV_rate2" rate="40 per_ms" factor="5.32" power="-4"/>
+            </reverseTransition>
+            
+            
+            
+        </gateKS>
+  
+    </ionChannelKS>
+    
+    
+    <ComponentType name="Generic_NaV_rate1" extends="baseVoltageDepRate">
+        
+        <Parameter name="forward_n" dimension="none"/> 
+        <Parameter name="backward_n" dimension="none"/> 
+        
+        <Parameter name="alfac" dimension="none"/> 
+        <Parameter name="btfac" dimension="none"/> 
+        
+        <Constant name="alpha" dimension="per_time" value="400 per_ms"/>
+        <Constant name="beta" dimension="per_time" value="12 per_ms"/>
+
+        <Constant name="x1" dimension="voltage" value="24 mV"/>
+        <Constant name="x2" dimension="voltage" value="-24 mV"/>
+        
+        <Constant name="base_q10" dimension="temperature" value="37 degC"/>
+        <Constant name="TENDEGREES" dimension="temperature" value="10K"/>
+        
+        <Requirement name="temperature" dimension="temperature"/>
+
+        <Dynamics>
+            <DerivedVariable name="qt" dimension="none" value="2.3^((temperature-base_q10)/TENDEGREES)"/>
+            <DerivedVariable name="r" exposure="r" dimension="per_time" value="(qt * forward_n * alpha * alfac * exp(v/x1)) + (qt * backward_n * beta * exp(v/x2) / btfac)"/>
+        </Dynamics>
+
+    </ComponentType>
+    
+    <ComponentType name="Generic_NaV_rate2" extends="baseVoltageDepRate">
+        
+        <Parameter name="rate" dimension="per_time"/> 
+        <Parameter name="factor" dimension="none"/> 
+        <Parameter name="power" dimension="none"/> 
+        
+        <Constant name="base_q10" dimension="temperature" value="37 degC"/>
+        <Constant name="TENDEGREES" dimension="temperature" value="10K"/>
+        
+        <Requirement name="temperature" dimension="temperature"/>
+
+        <Dynamics>
+            <DerivedVariable name="qt" dimension="none" value="2.3^((temperature-base_q10)/TENDEGREES)"/>
+            <DerivedVariable name="r" exposure="r" dimension="per_time" value="qt * rate * (factor^power)"/>
+        </Dynamics>
+
+    </ComponentType>
+    
+
+</neuroml>
