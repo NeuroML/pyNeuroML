@@ -78,7 +78,7 @@ class TestPlot(BaseTestCase):
             plot_bgcolor="white",
             xaxis="x axis",
             yaxis="y axis",
-            show_interactive=True,
+            show_interactive=False,
             xaxis_spikelines=True,
             yaxis_spikelines=False,
             save_figure_to=filename,

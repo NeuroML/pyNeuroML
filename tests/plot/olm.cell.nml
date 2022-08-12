@@ -1,9 +1,9 @@
 <neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta5.xsd" id="NeuroML2_file_exported_from_NEURON">
-    <include href="../channels/HCNolm.channel.nml"></include>
-    <include href="../channels/Kdrfast.channel.nml"></include>
-    <include href="../channels/KvAolm.channel.nml"></include>
-    <include href="../channels/Nav.channel.nml"></include>
-    <include href="../channels/leak_chan.channel.nml"></include>
+    <include href="./olm_channels/HCNolm.channel.nml"></include>
+    <include href="./olm_channels/Kdrfast.channel.nml"></include>
+    <include href="./olm_channels/KvAolm.channel.nml"></include>
+    <include href="./olm_channels/Nav.channel.nml"></include>
+    <include href="./olm_channels/leak_chan.channel.nml"></include>
     <cell id="olmcell">
         <notes>Cell: olmcell exported from NEURON ModelView</notes>
         <morphology id="morphology">

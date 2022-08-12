@@ -1,17 +1,17 @@
 <neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta5.xsd" id="NeuroML2_file_exported_from_NEURON">
-    <include href="pas.channel.nml"></include>
-    <include href="Ih.channel.nml"></include>
-    <include href="NaTs2_t.channel.nml"></include>
-    <include href="SKv3_1.channel.nml"></include>
-    <include href="Im.channel.nml"></include>
-    <include href="NaTa_t.channel.nml"></include>
-    <include href="K_Tst.channel.nml"></include>
-    <include href="Nap_Et2.channel.nml"></include>
-    <include href="SK_E2.channel.nml"></include>
-    <include href="Ca_HVA.channel.nml"></include>
-    <include href="K_Pst.channel.nml"></include>
-    <include href="CaDynamics_E2_NML2.nml"></include>
-    <include href="Ca_LVAst.channel.nml"></include>
+    <include href="./L23_channels/pas.channel.nml"></include>
+    <include href="./L23_channels/Ih.channel.nml"></include>
+    <include href="./L23_channels/NaTs2_t.channel.nml"></include>
+    <include href="./L23_channels/SKv3_1.channel.nml"></include>
+    <include href="./L23_channels/Im.channel.nml"></include>
+    <include href="./L23_channels/NaTa_t.channel.nml"></include>
+    <include href="./L23_channels/K_Tst.channel.nml"></include>
+    <include href="./L23_channels/Nap_Et2.channel.nml"></include>
+    <include href="./L23_channels/SK_E2.channel.nml"></include>
+    <include href="./L23_channels/Ca_HVA.channel.nml"></include>
+    <include href="./L23_channels/K_Pst.channel.nml"></include>
+    <include href="./L23_channels/CaDynamics_E2_NML2.nml"></include>
+    <include href="./L23_channels/Ca_LVAst.channel.nml"></include>
     <cell id="L23_PC_simplified">
         <notes>
 

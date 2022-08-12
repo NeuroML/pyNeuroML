@@ -109,11 +109,12 @@ class TestMorphologyPlot(BaseTestCase):
     def test_frustrum(self):
         """Test plot_interactive_3D function."""
         X, Y, Z, X_cap, Y_cap, Z_cap = get_frustrum_surface(
-            x1=0, y1=0, z1=0, radius1=5, x2=0, y2=0, z2=5, radius2=5, capped=True)
+            x1=0, y1=0, z1=0, radius1=5, x2=0, y2=0, z2=5, radius2=5,
+            capped=True, resolution=40, angular_resolution=50)
         # Test some points we know should be in there
         self.assertAlmostEqual(-5., np.min(X), delta=0.2)
         self.assertAlmostEqual(5., np.max(X), delta=0.2)
         self.assertAlmostEqual(-5., np.min(Y), delta=0.2)
         self.assertAlmostEqual(5., np.max(Y), delta=0.2)
         self.assertAlmostEqual(0., np.min(Z), delta=0.2)
-        self.assertAlmostEqual(10., np.max(Z), delta=0.2)
+        self.assertAlmostEqual(5., np.max(Z), delta=0.2)
