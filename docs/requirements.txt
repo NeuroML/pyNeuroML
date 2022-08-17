@@ -5,6 +5,7 @@ opencv-python
 libneuroml
 pyelectro
 matplotlib
+plotly
 scipy
 pylems
 graphviz
