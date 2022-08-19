@@ -45,21 +45,8 @@ def export_to_neuroml2(
     :param validate: whether the generated files should be validated
     :type validate: bool
     """
-
     if hoc_or_python_file is not None:
-        if hoc_or_python_file.endswith(".py"):
-            logger.info(
-                "***************\nImporting Python scripts not yet implemented...\n***************"
-            )
-        else:
-            if not os.path.isfile(hoc_or_python_file):
-                logger.info(
-                    "***************\nProblem importing file %s (%s)..\n***************"
-                    % (hoc_or_python_file, os.path.abspath(hoc_or_python_file))
-                )
-            h.load_file(
-                1, hoc_or_python_file
-            )  # Using 1 to force loading of the file, in case file with same name was loaded before...
+        load_hoc_or_python_file(hoc_or_python_file)
     else:
         logger.info(
             "hoc_or_python_file variable is None; exporting what's currently in memory..."
@@ -67,8 +54,6 @@ def export_to_neuroml2(
 
     for ion in known_rev_potentials.keys():
         set_erev_for_mechanism(ion, known_rev_potentials[ion])
-
-    logger.info("Loaded NEURON file: %s" % hoc_or_python_file)
 
     h.load_file("mview.hoc")
 
@@ -126,3 +111,36 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
     if validate:
 
         validate_neuroml1(nml1_file_name)
+
+
+def load_hoc_or_python_file(
+    hoc_or_python_file: str
+) -> bool:
+    """Load a NEURON hoc file or Python script.
+
+    Note: loading Python scripts is not yet supported.
+
+    :param hoc_or_python_file: NEURON hoc or Python file to convert
+    :type hoc_or_python_file: str
+    :returns: 0 if file was loaded, 1 if an error occurred
+    """
+    if hoc_or_python_file.endswith(".py"):
+        logger.info(
+            "***************\nImporting Python scripts not yet implemented...\n***************"
+        )
+        return False
+    else:
+        if not os.path.isfile(hoc_or_python_file):
+            logger.info(
+                "***************\nProblem importing file %s (%s)..\n***************"
+                % (hoc_or_python_file, os.path.abspath(hoc_or_python_file))
+            )
+            return False
+        resp = h.load_file(
+            1, hoc_or_python_file
+        )  # Using 1 to force loading of the file, in case file with same name was loaded before...
+        if "syntax error" in str(resp):
+            logger.error("Syntax error while loading {hoc_or_python_file}:\n{resp}")
+
+    logger.info(f"Loaded NEURON file: {hoc_or_python_file}")
+    return True
