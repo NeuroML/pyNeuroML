@@ -139,8 +139,10 @@ def load_hoc_or_python_file(
         resp = h.load_file(
             1, hoc_or_python_file
         )  # Using 1 to force loading of the file, in case file with same name was loaded before...
-        if "syntax error" in str(resp):
-            logger.error("Syntax error while loading {hoc_or_python_file}:\n{resp}")
+        # returns 1.0 if loads fine, 0.0 if error
+        if int(resp) == 0:
+            logger.error(f"Error while loading {hoc_or_python_file}:\n{resp}")
+            return False
 
     logger.info(f"Loaded NEURON file: {hoc_or_python_file}")
     return True
