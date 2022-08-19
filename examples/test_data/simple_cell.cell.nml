@@ -1,0 +1,25 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.3.xsd" id="simple_built_cell">
+    <cell id="simple_cell">
+        <notes>NeuroML cell created by CellBuilder</notes>
+        <morphology id="morphology">
+            <segment id="0" name="Seg0_soma_0">
+                <proximal x="0.0" y="0.0" z="0.0" diameter="10.0"/>
+                <distal x="0.0" y="10.0" z="0.0" diameter="10.0"/>
+            </segment>
+            <segmentGroup id="all">
+                <member segment="0"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="GO:0043025" id="soma_group">
+                <notes>Default soma segment group for the cell</notes>
+                <member segment="0"/>
+            </segmentGroup>
+            <segmentGroup neuroLexId="GO:0043025" id="soma_0">
+                <member segment="0"/>
+            </segmentGroup>
+        </morphology>
+        <biophysicalProperties id="biophys">
+            <membraneProperties/>
+            <intracellularProperties/>
+        </biophysicalProperties>
+    </cell>
+</neuroml>

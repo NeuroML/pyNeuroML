@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="NeuroML_ionChannel">
+
+    <notes>NeuroML file containing a single ion channel</notes>
+
+    <ionChannel id="Kdrfast" conductance="1pS" type="ionChannelHH" species="k">
+        
+        <notes>Fast delayed rectifier K+ channel description (from Yuen and Durand 1991, modeled by Marianne Bezaire)</notes>
+        
+        <gateHHrates id="n" instances="4">
+            <q10Settings type="q10ExpTemp" q10Factor="3" experimentalTemp="34 degC"/> <!-- without q10: Cutsuridis model-->
+            <forwardRate type="HHExpLinearRate" rate="0.42per_ms" midpoint="-18mV" scale="6mV"/>
+            <reverseRate type="Bezaire_Kdrfast_betaq"/>
+        </gateHHrates>
+                            
+    </ionChannel>
+    
+    
+    <ComponentType name="Bezaire_Kdrfast_betaq"
+            extends="baseVoltageDepRate"
+            description="reverse rate to describe Kdrfast">
+        
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>       
+            <DerivedVariable name="r" dimension="per_time" value="((0.264) / (exp((V+43)/40))) / TIME_SCALE" exposure="r"/>          
+        </Dynamics>
+          
+    </ComponentType>
+    
+</neuroml>
