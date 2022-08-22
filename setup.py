@@ -42,6 +42,7 @@ setup(
             "analysis/ChannelInfo_TEMPLATE.html",
             "analysis/ChannelInfo_TEMPLATE.md",
             "lems/LEMS_TEMPLATE.xml",
+            "neuron/utils.hoc",
             "neuron/mview_neuroml1.hoc",
             "neuron/mview_neuroml2.hoc",
         ]
