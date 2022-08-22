@@ -210,3 +210,18 @@ def allca() -> None:
         h("allca()")
     else:
         logger.error("Could not run allca(). Error loading utils hoc")
+
+
+def allsyns(var: str) -> None:
+    """Prints information on network connections for all cells stored in the
+    variable `var`
+
+    :param var: name of NEURON variable holding cell to get information for
+    :type var: str
+    """
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h(f"allCells = {var}")
+        h("allsyns()")
+    else:
+        logger.error("Could not run allsyns(). Error loading utils hoc")
