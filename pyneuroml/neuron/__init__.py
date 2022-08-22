@@ -192,3 +192,12 @@ def areainfo() -> None:
         h("areainfo()")
     else:
         logger.error("Could not run morph(). Error loading utils hoc")
+
+
+def allv() -> None:
+    """Prints voltage of all compartments (segments)."""
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h("allv()")
+    else:
+        logger.error("Could not run morph(). Error loading utils hoc")
