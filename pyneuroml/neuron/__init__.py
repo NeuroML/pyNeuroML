@@ -20,9 +20,6 @@ from neuron import h
 
 logger = logging.getLogger(__name__)
 
-cwd = pathlib.Path(__file__)
-utils_hoc = "utils.hoc"
-
 
 def get_utils_hoc() -> pathlib.Path:
     """Get full path of utils.hoc file
