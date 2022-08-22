@@ -162,3 +162,12 @@ def load_hoc_or_python_file(
 
     logger.info(f"Loaded NEURON file: {hoc_or_python_file}")
     return True
+
+
+def morph():
+    """Provides information on the morphology of the currently accessed section."""
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h("morph()")
+    else:
+        logger.error("Could not run morph(). Error loading utils hoc")
