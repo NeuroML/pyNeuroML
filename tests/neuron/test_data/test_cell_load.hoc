@@ -1,0 +1,34 @@
+dt = 0.01
+
+//======================== settings ===================================
+
+v_init = -80
+
+//step 1: 0.619
+//step 2: 0.793
+//step 3: 1.507
+step_amp = 0.793
+tstop = 3000
+//tstop = 800
+
+//=================== creating cell object ===========================
+load_file("import3d.hoc")
+objref L5PC
+
+strdef morphology_file
+morphology_file = "./morphologies/cell1.asc"
+
+load_file("./models/L5PCbiophys3.hoc")
+load_file("./models/L5PCtemplate.hoc")
+L5PC = new L5PCtemplate(morphology_file)
+
+//==================== stimulus settings ===========================
+
+objref st1
+
+st1 = new IClamp(0.5)
+st1.dur = 2000
+st1.del = 700
+st1.amp = step_amp
+
+L5PC.soma st1
