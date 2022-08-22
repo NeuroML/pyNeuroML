@@ -14,7 +14,7 @@ import neuroml
 def component_factory(
     component_type: str,
     **kwargs: Any
-):
+) -> Any:
     """Factory function to create a NeuroML Component object.
 
     Users can provide the name of the component, along with its named
@@ -33,6 +33,7 @@ def component_factory(
     comp_type_class = getattr(neuroml.nml.nml, component_type)
     comp = comp_type_class(**kwargs)
     check_component_parameters_are_set(comp)
+    return comp
 
 
 def check_component_parameters_are_set(comp: Any) -> None:
