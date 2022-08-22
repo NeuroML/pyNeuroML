@@ -191,7 +191,7 @@ def areainfo() -> None:
     if retval is True:
         h("areainfo()")
     else:
-        logger.error("Could not run morph(). Error loading utils hoc")
+        logger.error("Could not run areainfo(). Error loading utils hoc")
 
 
 def allv() -> None:
@@ -200,4 +200,13 @@ def allv() -> None:
     if retval is True:
         h("allv()")
     else:
-        logger.error("Could not run morph(). Error loading utils hoc")
+        logger.error("Could not run allv(). Error loading utils hoc")
+
+
+def allca() -> None:
+    """Prints Ca conc of all compartments (segments)."""
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h("allca()")
+    else:
+        logger.error("Could not run allca(). Error loading utils hoc")
