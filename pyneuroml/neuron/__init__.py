@@ -177,6 +177,15 @@ def morph() -> None:
         logger.error("Could not run morph(). Error loading utils hoc")
 
 
+def cellinfo() -> None:
+    """Provide information on current cell."""
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h("cellInfo()")
+    else:
+        logger.error("Could not run cellInfo(). Error loading utils hoc")
+
+
 def secinfo() -> None:
     """Provide information on current section, like an expanded `psection()`."""
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
