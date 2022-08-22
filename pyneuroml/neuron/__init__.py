@@ -9,6 +9,7 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 import os
 import logging
 import warnings
+import pathlib
 
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
@@ -16,7 +17,22 @@ from pyneuroml.pynml import validate_neuroml2
 from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
 from neuron import h
 
+
 logger = logging.getLogger(__name__)
+
+cwd = pathlib.Path(__file__)
+utils_hoc = "utils.hoc"
+
+
+def get_utils_hoc() -> pathlib.Path:
+    """Get full path of utils.hoc file
+
+    :returns: pathlib.Path object for utils.hoc file
+
+    """
+    cwd = pathlib.Path(__file__).parent
+    utils_hoc = cwd / pathlib.Path("utils.hoc")
+    return utils_hoc
 
 
 def export_to_neuroml2(
