@@ -164,10 +164,31 @@ def load_hoc_or_python_file(
     return True
 
 
-def morph():
-    """Provides information on the morphology of the currently accessed section."""
+def morph() -> None:
+    """Provides information on the morphology of the currently accessed section.
+
+    Please note that you must load and access the section you wish to get
+    information for before calling this function.
+    """
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
     if retval is True:
         h("morph()")
+    else:
+        logger.error("Could not run morph(). Error loading utils hoc")
+
+
+def areainfo() -> None:
+    """Provide information on the area of the cell.
+
+    Iterates over all sections of the current cell providing:
+
+    - x, y, z, diameter information for each segment in the section
+    - total area of the section
+    - summary metrics for the whole cell
+
+    """
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h("areainfo()")
     else:
         logger.error("Could not run morph(). Error loading utils hoc")
