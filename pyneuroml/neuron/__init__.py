@@ -216,7 +216,7 @@ def allsyns(var: str) -> None:
     """Prints information on network connections for all cells stored in the
     variable `var`
 
-    :param var: name of NEURON variable holding cell to get information for
+    :param var: name of NEURON variable holding cells to get information for
     :type var: str
     """
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
@@ -225,3 +225,17 @@ def allsyns(var: str) -> None:
         h("allsyns()")
     else:
         logger.error("Could not run allsyns(). Error loading utils hoc")
+
+
+def allcells(var: str) -> None:
+    """Prints information on all cells stored in the variable `var`.
+
+    :param var: name of NEURON variable holding cells to get information for
+    :type var: str
+    """
+    retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
+    if retval is True:
+        h(f"allCells = {var}")
+        h("allcells()")
+    else:
+        logger.error("Could not run allcells(). Error loading utils hoc")
