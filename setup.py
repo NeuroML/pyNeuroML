@@ -80,7 +80,7 @@ setup(
         "plotly"
     ],
     extras_require={
-        "neuron": ["NEURON"],
+        "neuron": ["NEURON", "pyyaml"],
         "brian": ["Brian2"],
         "netpyne": ["netpyne"],
         "povray": ["opencv-python"],
