@@ -480,7 +480,7 @@ def secinfo(section: str = "", doprint: str = "json"):
         'name': str(cas),
         'nsegs': cas.nseg,
         'voltage': cas.v,
-        'subsections': {
+        'segments': {
         }
     }
 
@@ -497,9 +497,9 @@ def secinfo(section: str = "", doprint: str = "json"):
         total_area += area_here
         total_ri += ri_here
 
-        sectiondict['subsections'][i] = {
-            'start': this_point,
-            'end': next_point,
+        sectiondict['segments'][i] = {
+            'section start': this_point,
+            'section end': next_point,
             'area': area_here,
             'ri': str(ri_here * 1e3) + " ohm",
         }
