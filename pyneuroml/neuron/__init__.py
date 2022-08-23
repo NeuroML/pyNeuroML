@@ -9,8 +9,12 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 import os
 import logging
 import warnings
+import typing
 import pathlib
 import json
+import math
+
+
 import yaml
 try:
     from yaml import CDumper as Dumper
@@ -167,17 +171,103 @@ def load_hoc_or_python_file(
     return True
 
 
-def morph() -> None:
+def morphhoc(section: typing.Optional[str] = None) -> None:
     """Provides information on the morphology of the currently accessed section.
 
-    Please note that you must load and access the section you wish to get
-    information for before calling this function.
+    Uses the hoc utility function. Please prefer the `morph` function
+    instead, which is written in pure Python and provides the output in JSON
+    which makes it easier to compare information from different cells.
+
+    :param section: section name, current section if None (default)
+    :type section: str or None
     """
+    warnings.warn(
+        "This function will be removed in a future release. Please prefer the pure python `morph` function",
+        FutureWarning,
+        stacklevel=2,
+    )
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
     if retval is True:
+        if section:
+            h(f'access {section}')
         h("morph()")
     else:
         logger.error("Could not run morph(). Error loading utils hoc")
+
+
+def morph(section: typing.Optional[str] = None, doprint: str = "") -> dict:
+    """Provides morphology of the provided section.
+
+    Returns a dictionary, and also prints out the information in yaml or json.
+
+    :param section: section name, current section if None (default)
+    :type section: str or None
+    :param doprint: toggle printing to std output and its format.
+        Use "json" or "yaml" to print in the required format, any other value
+        to disable printing.
+    :type doprint: str
+    :returns: morphology information dict
+    """
+    if section:
+        h(f'access {section}')
+
+    logger.info(f"Getting information for section: {section}")
+    totalarea = 0
+    cas = h.cas()
+
+    sectiondict = {
+        'name': str(cas),
+        'nsegs': cas.nseg,
+        'n3d': cas.n3d(),
+        '3d points': {
+        },
+        'segments': {
+        }
+    }
+
+    lastx = lasty = lastz = 0
+    for i in range(cas.n3d()):
+        delx = cas.x3d(i) - lastx
+        dely = cas.y3d(i) - lasty
+        delz = cas.z3d(i) - lastz
+        length = math.sqrt((delx * delx) + (dely * dely) + (delz * delz))
+        if i == 0:
+            delx = dely = delz = length = 0
+
+        lastx = cas.x3d(i)
+        lasty = cas.y3d(i)
+        lastz = cas.z3d(i)
+
+        sectiondict['3d points'][i] = {
+            'x': cas.x3d(i),
+            'y': cas.y3d(i),
+            'z': cas.z3d(i),
+            'diam': cas.diam3d(i),
+            'delx': delx,
+            'dely': dely,
+            'delz': delz,
+            'length': length
+        }
+
+    for i in range(cas.nseg + 2):
+        sectiondict['segments'][float(i / (cas.nseg + 1))] = {
+            'diam': cas(i / (cas.nseg + 1)).diam,
+            'area': str(h.area(i / (cas.nseg + 1))) + " um^2",
+        }
+        totalarea = totalarea + h.area(i / (cas.nseg + 1))
+
+    sectiondict['totalarea'] = totalarea
+
+    if doprint == "yaml":
+        logger.info(yaml.dump(sectiondict, sort_keys=True, indent=4))
+        if doprint:
+            print(yaml.dump(sectiondict, sort_keys=True, indent=4))
+    elif doprint == "json":
+        logger.info(json.dumps(sectiondict, indent=4, sort_keys=True))
+        if doprint:
+            print(json.dumps(sectiondict, indent=4, sort_keys=True))
+
+    return sectiondict
 
 
 def cellinfohoc() -> None:
