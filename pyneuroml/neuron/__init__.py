@@ -277,6 +277,11 @@ def cellinfohoc() -> None:
     instead, which is written in pure Python and provides the output in JSON
     which makes it easier to compare information from different cells.
     """
+    warnings.warn(
+        "This function will be removed in a future release. Please prefer the pure python `cellinfo` function",
+        FutureWarning,
+        stacklevel=2,
+    )
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
     if retval is True:
         h("cellInfo()")
@@ -293,7 +298,7 @@ def cellinfo(doprint: str = "") -> dict:
         Use "json" or "yaml" to print in the required format, any other value
         to disable printing.
     :type doprint: str
-
+    :returns: cellinfo dict
     """
     # initialise metrics
     totalDiam = 0
