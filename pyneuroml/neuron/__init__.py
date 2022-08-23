@@ -11,6 +11,11 @@ import logging
 import warnings
 import pathlib
 import json
+import yaml
+try:
+    from yaml import CDumper as Dumper
+except ImportError:
+    from yaml import Dumper
 
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
@@ -189,14 +194,15 @@ def cellinfohoc() -> None:
         logger.error("Could not run cellInfo(). Error loading utils hoc")
 
 
-def cellinfo(doprint: bool = False) -> dict:
+def cellinfo(doprint: str = "") -> dict:
     """Provide summary information on the current cell.
 
-    Returns a dictionary, and also prints it out to.
+    Returns a dictionary, and also prints out the information in yaml or json.
 
-    :param doprint: toggle printing to std output
-    :type doprint: bool
-    :returns: cellinfo
+    :param doprint: toggle printing to std output and its format.
+        Use "json" or "yaml" to print in the required format, any other value
+        to disable printing.
+    :type doprint: str
 
     """
     # initialise metrics
@@ -324,9 +330,15 @@ def cellinfo(doprint: bool = False) -> dict:
             mt_dict['parameters'][pname[0]] = param_dict
         cellinfo['mechanisms'][mname[0]] = mt_dict
 
-    logger.info(json.dumps(cellinfo, indent=4, sort_keys=True))
-    if doprint:
-        print(json.dumps(cellinfo, indent=4, sort_keys=True))
+    if doprint == "yaml":
+        logger.info(yaml.dump(cellinfo, sort_keys=True, indent=4))
+        if doprint:
+            print(yaml.dump(cellinfo, sort_keys=True, indent=4))
+    elif doprint == "json":
+        logger.info(json.dumps(cellinfo, indent=4, sort_keys=True))
+        if doprint:
+            print(json.dumps(cellinfo, indent=4, sort_keys=True))
+
     return cellinfo
 
 
