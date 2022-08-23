@@ -1,3 +1,12 @@
+"""
+Utilities required by the NEURON -> NeuroML exporter.
+
+When changing this file, please ensure that `mview_neuroml2.hoc` is also
+updated accordingly.
+
+"""
+
+
 from neuron import h
 from nrn import *
 
