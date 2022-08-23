@@ -437,13 +437,86 @@ def cellinfo(doprint: str = "") -> dict:
     return cellinfo
 
 
-def secinfo() -> None:
-    """Provide information on current section, like an expanded `psection()`."""
+def secinfohoc(section: str = "") -> None:
+    """Provide information on current section, like an expanded `psection()`.
+    Uses the hoc utility function. Please prefer the `cellinfo` function
+    instead, which is written in pure Python and provides the output in JSON
+    which makes it easier to compare information from different cells.
+    """
+    warnings.warn(
+        "This function will be removed in a future release. Please prefer the pure python `secinfo` function",
+        FutureWarning,
+        stacklevel=2,
+    )
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
     if retval is True:
+        if section:
+            h(f"access {section}")
         h("secinfo()")
     else:
         logger.error("Could not run secinfo(). Error loading utils hoc")
+
+
+def secinfo(section: str = "", doprint: str = "json"):
+    """Print information on provided section, like an expanded `psection()`.
+    Returns a dictionary, and also prints out the information in yaml or json.
+
+    :param section: section to investigate, or current section if ""
+    :type section: str
+    :param doprint: toggle printing to std output and its format.
+        Use "json" or "yaml" to print in the required format, any other value
+        to disable printing.
+    :type doprint: str
+    :returns: section information dict
+
+    """
+    if section:
+        h(f'access {section}')
+
+    logger.info(f"Getting information for section: {section}")
+    cas = h.cas()
+
+    sectiondict = {
+        'name': str(cas),
+        'nsegs': cas.nseg,
+        'voltage': cas.v,
+        'subsections': {
+        }
+    }
+
+    total_area = 0
+    total_ri = 0
+    for i in range(1, cas.nseg + 2):
+        this_point = i / (cas.nseg + 1)
+        next_point = (i + 1) / (cas.nseg + 1)
+        half_point = this_point
+
+        area_here = h.area(half_point)
+        ri_here = h.ri(half_point)
+
+        total_area += area_here
+        total_ri += ri_here
+
+        sectiondict['subsections'][i] = {
+            'start': this_point,
+            'end': next_point,
+            'area': area_here,
+            'ri': str(ri_here * 1e3) + " ohm",
+        }
+
+    sectiondict['total area'] = total_area
+    sectiondict['total ri'] = str(total_ri * 1e3) + " ohm"
+
+    if doprint == "yaml":
+        logger.info(yaml.dump(sectiondict, sort_keys=True, indent=4))
+        if doprint:
+            print(yaml.dump(sectiondict, sort_keys=True, indent=4))
+    elif doprint == "json":
+        logger.info(json.dumps(sectiondict, indent=4, sort_keys=True))
+        if doprint:
+            print(json.dumps(sectiondict, indent=4, sort_keys=True))
+
+    return sectiondict
 
 
 def areainfo() -> None:
