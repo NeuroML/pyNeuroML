@@ -10,6 +10,7 @@ import os
 import logging
 import warnings
 import pathlib
+import json
 
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
@@ -174,13 +175,159 @@ def morph() -> None:
         logger.error("Could not run morph(). Error loading utils hoc")
 
 
-def cellinfo() -> None:
-    """Provide information on current cell."""
+def cellinfohoc() -> None:
+    """Provide information on current cell.
+
+    Uses the hoc utility function. Please prefer the `cellinfo` function
+    instead, which is written in pure Python and provides the output in JSON
+    which makes it easier to compare information from different cells.
+    """
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
     if retval is True:
         h("cellInfo()")
     else:
         logger.error("Could not run cellInfo(). Error loading utils hoc")
+
+
+def cellinfo(doprint: bool = False) -> dict:
+    """Provide summary information on the current cell.
+
+    Returns a dictionary, and also prints it out to.
+
+    :param doprint: toggle printing to std output
+    :type doprint: bool
+    :returns: cellinfo
+
+    """
+    # initialise metrics
+    totalDiam = 0
+    totalNseg = 0
+    totalL = 0
+    totalRa = 0
+    totalCm = 0
+    numSections = 0
+    totEk = 0
+    totko = 0
+    totki = 0
+    numEk = 0
+    totEna = 0
+    totnao = 0
+    totnai = 0
+    numEna = 0
+    totEca = 0
+    totcai = 0
+    totcao = 0
+    numEca = 0
+
+    cas = h.cas()
+    ccell = cas.cell()
+    seclist = ccell.all
+
+    for sec in seclist:
+        totalDiam = totalDiam + sec.diam
+        totalNseg = totalNseg + sec.nseg
+        totalRa = totalRa + sec.Ra
+        totalCm = totalCm + sec.cm
+
+        totalL = totalL + sec.L
+        numSections = numSections + 1
+
+        if (h.ismembrane("k_ion", sec=sec)):
+            numEk = numEk + 1
+            totEk = totEk + sec.ek
+            totko = totko + sec.ko
+            totki = totki + sec.ki
+        if (h.ismembrane("na_ion", sec=sec)):
+            numEna = numEna + 1
+            totEna = totEna + sec.ena
+            totnao = totnao + sec.nao
+            totnai = totnai + sec.nai
+        if (h.ismembrane("ca_ion", sec=sec)):
+            numEca = numEca + 1
+            totEca = totEca + sec.eca
+            totcai = totcai + sec.cai
+            totcao = totcao + sec.cao
+
+    # construct dict to return, so far:
+    cellinfo = {
+        'temperature': h.celsius,
+        'total_diam': totalDiam,
+        'total_nseg': totalNseg,
+        'total_L': totalL,
+        'total_Ra': totalRa,
+        'total_Cm': totalCm,
+        'num_sections': numSections,
+        'k_ion': {
+            'nsecs': numEk,
+            'avg_rev_pot': (totEk / numEk),
+            'int_conc': (totki / numEk),
+            'ext_conc': (totko / numEk),
+        },
+        'na_ion': {
+            'nsecs': numEna,
+            'avg_rev_pot': (totEna / numEna),
+            'int_conc': (totnai / numEna),
+            'ext_conc': (totnao / numEna),
+        },
+        'ca_ion': {
+            'nsecs': numEca,
+            'avg_rev_pot': (totEca / numEca),
+            'int_conc': (totcai / numEca),
+            'ext_conc': (totcao / numEca),
+        },
+        'mechanisms': {
+        },
+    }
+
+    # https://neuronsimulator.github.io/nrn/python/modelspec/programmatic/mechtype.html#MechanismType
+    mt = h.MechanismType(0)
+    mname = h.ref('')
+    pname = h.ref('')
+
+    for i in range(mt.count()):
+        mt.select(i)
+        mt.selected(mname)
+        ms = h.MechanismStandard(mname, 1)
+        numParams = ms.count()
+        numPresent = 0
+
+        totParamVal = {}
+        for j in range(numParams):
+            totParamVal[j] = 0
+
+        for sec in seclist:
+            if (h.ismembrane(mname, sec=sec)):
+                numPresent += 1
+                ms._in(sec=sec)
+                for j in range(numParams):
+                    ms.name(pname, j)
+                    totParamVal[j] += ms.get(pname)
+
+        mt_dict = {
+            'present_on': numPresent,
+            'num_params': numParams,
+            'parameters': {
+            }
+        }
+
+        for j in range(numParams):
+            ms.name(pname, j)
+            try:
+                param_dict = {
+                    'ave_all_sections': totParamVal[j] / numPresent
+                }
+            except ZeroDivisionError:
+                param_dict = {
+                    'ave_all_sections': 'NA'
+                }
+
+            mt_dict['parameters'][pname[0]] = param_dict
+        cellinfo['mechanisms'][mname[0]] = mt_dict
+
+    logger.info(json.dumps(cellinfo, indent=4, sort_keys=True))
+    if doprint:
+        print(json.dumps(cellinfo, indent=4, sort_keys=True))
+    return cellinfo
 
 
 def secinfo() -> None:
