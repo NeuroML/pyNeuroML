@@ -377,27 +377,54 @@ def seclistinfo(seclist: list, doprint: str = ""):
         'total_Ra': totalRa,
         'total_Cm': totalCm,
         'num_sections': numSections,
-        'k_ion': {
+        'mechanisms': {
+        },
+    }
+
+    if numEk > 0:
+        cellinfo['k_ion'] = {
             'nsecs': numEk,
             'avg_rev_pot': (totEk / numEk),
             'int_conc': (totki / numEk),
             'ext_conc': (totko / numEk),
-        },
-        'na_ion': {
+        }
+    else:
+        cellinfo['k_ion'] = {
+            'nsecs': numEk,
+            'avg_rev_pot': 'NA',
+            'int_conc': 'NA',
+            'ext_conc': 'NA',
+        }
+
+    if numEna > 0:
+        cellinfo['na_ion'] = {
             'nsecs': numEna,
             'avg_rev_pot': (totEna / numEna),
             'int_conc': (totnai / numEna),
             'ext_conc': (totnao / numEna),
-        },
-        'ca_ion': {
+        }
+    else:
+        cellinfo['na_ion'] = {
+            'nsecs': numEna,
+            'avg_rev_pot': 'NA',
+            'int_conc': 'NA',
+            'ext_conc': 'NA',
+        }
+
+    if numEca > 0:
+        cellinfo['ca_ion'] = {
             'nsecs': numEca,
             'avg_rev_pot': (totEca / numEca),
             'int_conc': (totcai / numEca),
             'ext_conc': (totcao / numEca),
-        },
-        'mechanisms': {
-        },
-    }
+        }
+    else:
+        cellinfo['ca_ion'] = {
+            'nsecs': numEca,
+            'avg_rev_pot': 'NA',
+            'int_conc': 'NA',
+            'ext_conc': 'NA',
+        }
 
     # https://neuronsimulator.github.io/nrn/python/modelspec/programmatic/mechtype.html#MechanismType
     mt = h.MechanismType(0)
