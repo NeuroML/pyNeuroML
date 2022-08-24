@@ -318,6 +318,9 @@ def seclistinfo(seclist: list, doprint: str = ""):
 
     Returns a dictionary, and also prints out the information in yaml or json.
 
+    TODO: also iterate over all segments of sections to get segment specific
+    information for inhomogenous parameters?
+
     :param doprint: toggle printing to std output and its format.
         Use "json" or "yaml" to print in the required format, any other value
         to disable printing.
