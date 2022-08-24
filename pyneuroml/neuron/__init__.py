@@ -301,6 +301,29 @@ def cellinfo(doprint: str = "") -> dict:
     :returns: cellinfo dict
     """
     # initialise metrics
+    cas = h.cas()
+    ccell = cas.cell()
+
+    # check of the section is part of a cell
+    if ccell is None:
+        logger.error("Could not find a cell for this section. Exiting.")
+        return {}
+
+    seclist = ccell.all
+    return seclistinfo(seclist, doprint)
+
+
+def seclistinfo(seclist: list, doprint: str = ""):
+    """Provide detailed information on the provided section list.
+
+    Returns a dictionary, and also prints out the information in yaml or json.
+
+    :param doprint: toggle printing to std output and its format.
+        Use "json" or "yaml" to print in the required format, any other value
+        to disable printing.
+    :type doprint: str
+    :returns: dict
+    """
     totalDiam = 0
     totalNseg = 0
     totalL = 0
@@ -319,16 +342,6 @@ def cellinfo(doprint: str = "") -> dict:
     totcai = 0
     totcao = 0
     numEca = 0
-
-    cas = h.cas()
-    ccell = cas.cell()
-
-    # check of the section is part of a cell
-    if ccell is None:
-        logger.error("Could not find a cell for this section. Exiting.")
-        return {}
-
-    seclist = ccell.all
 
     for sec in seclist:
         totalDiam = totalDiam + sec.diam
