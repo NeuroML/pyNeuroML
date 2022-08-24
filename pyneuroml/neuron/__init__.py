@@ -322,6 +322,12 @@ def cellinfo(doprint: str = "") -> dict:
 
     cas = h.cas()
     ccell = cas.cell()
+
+    # check of the section is part of a cell
+    if ccell is None:
+        logger.error("Could not find a cell for this section. Exiting.")
+        return {}
+
     seclist = ccell.all
 
     for sec in seclist:
