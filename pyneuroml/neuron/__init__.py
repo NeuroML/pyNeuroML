@@ -393,8 +393,11 @@ def cellinfo(doprint: str = "") -> dict:
         numPresent = 0
 
         totParamVal = {}
+        paramsectiondict = {}  # type: dict[typing.Any, typing.Any]
         for j in range(numParams):
+            ms.name(pname, j)
             totParamVal[j] = 0
+            paramsectiondict[pname[0]] = {}
 
         for sec in seclist:
             if (h.ismembrane(mname, sec=sec)):
@@ -403,6 +406,7 @@ def cellinfo(doprint: str = "") -> dict:
                 for j in range(numParams):
                     ms.name(pname, j)
                     totParamVal[j] += ms.get(pname)
+                    paramsectiondict[pname[0]][str(sec)] = ms.get(pname)
 
         mt_dict = {
             'present_on': numPresent,
@@ -415,11 +419,13 @@ def cellinfo(doprint: str = "") -> dict:
             ms.name(pname, j)
             try:
                 param_dict = {
-                    'ave_all_sections': totParamVal[j] / numPresent
+                    'ave_all_sections': totParamVal[j] / numPresent,
+                    'values': paramsectiondict[pname[0]]
                 }
             except ZeroDivisionError:
                 param_dict = {
-                    'ave_all_sections': 'NA'
+                    'ave_all_sections': 'NA',
+                    'values': 'NA'
                 }
 
             mt_dict['parameters'][pname[0]] = param_dict
