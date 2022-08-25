@@ -13,6 +13,7 @@ import typing
 import pathlib
 import json
 import math
+import re
 
 
 import yaml
@@ -465,8 +466,10 @@ def getinfo(seclist: list, doprint: str = ""):
                     for j in range(numParams):
                         ms.name(pname, j)
                         totParamVal[j] += ms.get(pname)
-                        if not (str(sec)) in paramsectiondict[pname[0]].keys():
-                            paramsectiondict[pname[0]][str(sec)] = {}
+                        if not replace_brackets(str(sec)) in paramsectiondict[pname[0]].keys():
+                            paramsectiondict[pname[0]][replace_brackets(str(sec))] = {
+                                'id': str(sec),
+                            }
                         seginfo[seg] = ms.get(pname)
 
                 values = seginfo.values()
@@ -475,17 +478,17 @@ def getinfo(seclist: list, doprint: str = ""):
                 for j in range(numParams):
                     ms.name(pname, j)
                     if len(unique_values) == 1:
-                        paramsectiondict[pname[0]][str(sec)] = {
+                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update({
                             "nseg": sec.nseg,
                             "values": {
                                 '*': unique_values[0]
                             }
-                        }
+                        })
                     else:
-                        paramsectiondict[pname[0]][str(sec)] = {
+                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update({
                             "nseg": sec.nseg,
                             "values": seginfo
-                        }
+                        })
 
         mt_dict = {
             'present_on_secs': numSecPresent,
@@ -692,3 +695,17 @@ def get_seg_midpoint(seg: int, nseg: int) -> float:
     :returns: location of mid point of segment in (0, 1)
     """
     return (2. * seg - 1.) / (2. * nseg)
+
+
+def replace_brackets(astring: str) -> str:
+    """Replaces the [] in strings with _.
+    if ] is the last char, just skips it.
+
+    :param astring: id to convert
+    :type astring: str
+    :returns: converted id
+
+    """
+    if astring[-1] == "]":
+        astring = astring[:-1]
+    return astring.replace("[", "_").replace("]", "_")
