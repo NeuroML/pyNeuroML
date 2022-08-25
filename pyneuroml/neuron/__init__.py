@@ -450,9 +450,11 @@ def getinfo(seclist: list, doprint: str = ""):
             paramsectiondict[pname[0]] = {}
 
         numSecPresent = 0
+        numSegsPresent = 0
         for sec in seclist:
             if (h.ismembrane(mname, sec=sec)):
                 numSecPresent += 1
+                numSegsPresent += (sec.nseg)
                 # segment information is provided as a fraction of the total
                 # section length, not the segment list
                 seginfo = {}
@@ -496,7 +498,7 @@ def getinfo(seclist: list, doprint: str = ""):
             ms.name(pname, j)
             try:
                 param_dict = {
-                    'ave_all_sections': totParamVal[j] / numSecPresent,
+                    'ave_all_segs': totParamVal[j] / numSegsPresent,
                     'values': paramsectiondict[pname[0]]
                 }
             except ZeroDivisionError:
