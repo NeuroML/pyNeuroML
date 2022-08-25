@@ -11,14 +11,23 @@ Copyright 2022 NeuroML contributors
 """
 
 
-import sys
+import argparse
 import logging
 import typing
 import pathlib
 from lxml.etree import parse, XSLT, tostring
 
 
+from pyneuroml.utils.cli import build_namespace
+
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+DEFAULTS = {
+    "saveToFile": None,
+    "xsltfile": None,
+}
 
 
 def channelml2nml(
@@ -59,3 +68,55 @@ def channelml2nml(
     converted_string = (tostring(newdom, pretty_print=True)).decode()
     logger.debug(f"{converted_string}")
     return converted_string
+
+
+def process_args():
+    """
+    Parse command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=("A script to convert ChannelML files to NeuroML2")
+    )
+
+    parser.add_argument(
+        "channelmlfile",
+        type=str,
+        metavar="<ChannelML file>",
+        help="Path of the ChannelML file",
+    )
+
+    parser.add_argument(
+        "-xsltfile",
+        type=str,
+        metavar="<XSLT file>",
+        help="Path to the XSLT file",
+        default=None,
+    )
+
+    parser.add_argument(
+        "-saveToFile",
+        type=str,
+        metavar="<Output file name>",
+        default=None,
+        help="Name of the outputfile file",
+    )
+
+    return parser.parse_args()
+
+
+def main(args=None):
+    """Main runner for entrypoint """
+    if args is None:
+        args = process_args()
+
+    a = build_namespace(DEFAULTS, args)
+    retval = channelml2nml(a.channelmlfile, a.xsltfile)
+    print(retval)
+    if a.save_to_file:
+        with open(a.save_to_file, 'w') as f:
+            print(retval, file=f, flush=True)
+            logger.info(f"Output saved to {a.save_to_file}")
+
+
+if __name__ == "__main__":
+    main()

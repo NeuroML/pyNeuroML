@@ -33,6 +33,7 @@ setup(
             "pynml-summary         = pyneuroml.pynml:summary",
             "pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main",
             "pynml-plotmorph       = pyneuroml.plot.PlotMorphology:main",
+            "pynml-channelml2nml   = pyneuroml.channelml:main",
             "pynml-sonata          = neuromllite.SonataReader:main",
         ]
     },
