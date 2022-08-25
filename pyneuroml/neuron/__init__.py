@@ -434,28 +434,58 @@ def getinfo(seclist: list, doprint: str = ""):
     for i in range(mt.count()):
         mt.select(i)
         mt.selected(mname)
+        # provide storage for mechanism
+        # https://neuronsimulator.github.io/nrn/python/programming/mechstan.html#MechanismStandard
         ms = h.MechanismStandard(mname, 1)
         numParams = ms.count()
-        numPresent = 0
 
+        # construct empty dicts to hold information
         totParamVal = {}
         paramsectiondict = {}  # type: dict[typing.Any, typing.Any]
         for j in range(numParams):
+            # assign pname the name of the jth parameter
             ms.name(pname, j)
             totParamVal[j] = 0
             paramsectiondict[pname[0]] = {}
 
+        numSecPresent = 0
         for sec in seclist:
             if (h.ismembrane(mname, sec=sec)):
-                numPresent += 1
-                ms._in(sec=sec)
+                numSecPresent += 1
+                # segment information is provided as a fraction of the total
+                # section length, not the segment list
+                seginfo = {}
+                for seg in range(1, sec.nseg + 1):
+                    mid_pt = get_seg_midpoint(seg, sec.nseg)
+                    logger.debug(f"section {sec}: {seg}/{sec.nseg}: {mid_pt}")
+                    ms._in(mid_pt, sec=sec)
+                    for j in range(numParams):
+                        ms.name(pname, j)
+                        totParamVal[j] += ms.get(pname)
+                        if not (str(sec)) in paramsectiondict[pname[0]].keys():
+                            paramsectiondict[pname[0]][str(sec)] = {}
+                        seginfo[seg] = ms.get(pname)
+
+                values = seginfo.values()
+                unique_values = list(set(values))
+                # if all values are the same, only print them once as '*'
                 for j in range(numParams):
                     ms.name(pname, j)
-                    totParamVal[j] += ms.get(pname)
-                    paramsectiondict[pname[0]][str(sec)] = ms.get(pname)
+                    if len(unique_values) == 1:
+                        paramsectiondict[pname[0]][str(sec)] = {
+                            "nseg": sec.nseg,
+                            "values": {
+                                '*': unique_values[0]
+                            }
+                        }
+                    else:
+                        paramsectiondict[pname[0]][str(sec)] = {
+                            "nseg": sec.nseg,
+                            "values": seginfo
+                        }
 
         mt_dict = {
-            'present_on': numPresent,
+            'present_on_secs': numSecPresent,
             'num_params': numParams,
             'parameters': {
             }
@@ -465,7 +495,7 @@ def getinfo(seclist: list, doprint: str = ""):
             ms.name(pname, j)
             try:
                 param_dict = {
-                    'ave_all_sections': totParamVal[j] / numPresent,
+                    'ave_all_sections': totParamVal[j] / numSecPresent,
                     'values': paramsectiondict[pname[0]]
                 }
             except ZeroDivisionError:
@@ -645,3 +675,17 @@ def allcells(var: str) -> None:
         h("allcells()")
     else:
         logger.error("Could not run allcells(). Error loading utils hoc")
+
+
+def get_seg_midpoint(seg: int, nseg: int) -> float:
+    """Get mid point of segment
+
+    The total section is from 0 -> 1.
+
+    :param seg: segment to get mid point of
+    :type seg: int
+    :param nseg: total number of segments
+    :type nseg: int
+    :returns: location of mid point of segment in (0, 1)
+    """
+    return (2. * seg - 1.) / (2. * nseg)
