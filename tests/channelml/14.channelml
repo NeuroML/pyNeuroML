@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channelml xmlns="http://morphml.org/channelml/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:meta="http://morphml.org/metadata/schema" xsi:schemaLocation="http://morphml.org/channelml/schema  http://www.neuroml.org/NeuroMLValidator/NeuroMLFiles/Schemata/v1.8.1/Level2/ChannelML_v1.8.1.xsd" units="Physiological Units">
+  <meta:notes>A ion channel model from Channelpedia(www.channelpedia.net)</meta:notes>
+  <channel_type name="Ih">
+    <status value="stable">
+      <meta:comment>TBD</meta:comment>
+      <meta:contributor>
+        <meta:name>Rajnish Ranjan</meta:name>
+      </meta:contributor>
+    </status>
+    <meta:notes>Ih channel, with rate equations expressed in tau and inf form</meta:notes>
+    <meta:authorList>
+      <meta:modelAuthor>
+        <meta:name>Ranjan, R.</meta:name>
+      </meta:modelAuthor>
+      <meta:modelTranslator>
+        <meta:name>Rajnish Ranjan</meta:name>
+        <meta:institution>EPFL</meta:institution>
+        <meta:email>ranjan.rajnish-at-epfl.ch</meta:email>
+      </meta:modelTranslator>
+    </meta:authorList>
+    <meta:publication>
+      <meta:fullTitle>Single Ih channels in pyramidal neuron dendrites: properties, distribution, and impact on action potential output. J. Neurosci., ChannelML 2006,26,1677-87</meta:fullTitle>
+      <meta:pubmedRef>http://www.ncbi.nlm.nih.gov/pubmed/16467515</meta:pubmedRef>
+    </meta:publication>
+    <meta:neuronDBref>
+      <meta:modelName>Ih_206</meta:modelName>
+      <meta:uri>channelpedia.net/icmodel/getchannelMLfile/206/14</meta:uri>
+    </meta:neuronDBref>
+    <current_voltage_relation cond_law="ohmic" ion="Hcn" default_gmax="1" default_erev="-45.0">
+      <q10_settings q10_factor="1" experimental_temp="34.0"/>
+      <gate name="m" instances="1">
+        <closed_state id="m0"/>
+        <open_state id="m"/>
+        <transition name="alpha" from="m0" to="m" expr_form="generic" expr="v &amp;neq; -154.9 ? 0.001*6.43*(v+154.9)/(exp((v+154.9)/11.9)-1)"/>
+        <transition name="beta" from="m" to="m0" expr_form="generic" expr="0.001*193*exp(v/33.1)"/>
+      </gate>
+    </current_voltage_relation>
+  </channel_type>
+</channelml>
