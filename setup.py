@@ -13,6 +13,7 @@ setup(
     packages=[
         "pyneuroml",
         "pyneuroml.analysis",
+        "pyneuroml.channelml",
         "pyneuroml.lems",
         "pyneuroml.tune",
         "pyneuroml.neuron",
@@ -44,6 +45,8 @@ setup(
             "lems/LEMS_TEMPLATE.xml",
             "neuron/mview_neuroml1.hoc",
             "neuron/mview_neuroml2.hoc",
+            "channelml/ChannelML2NeuroML2.xsl",
+            "channelml/ChannelML2NeuroML2beta.xsl",
         ]
     },
     data_files=[
