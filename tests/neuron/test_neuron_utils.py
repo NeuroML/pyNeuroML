@@ -17,7 +17,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 
-from pyneuroml.neuron import load_hoc_or_python_file, morph, get_utils_hoc
+from pyneuroml.neuron import load_hoc_or_python_file, morphinfo, get_utils_hoc
 from pyneuroml.pynml import execute_command_in_dir
 
 
@@ -89,4 +89,4 @@ class TestNeuronUtils(unittest.TestCase):
         from neuron import h
         load_hoc_or_python_file("test_cell_load.hoc")
         # segfaults here, so we can't test other functions either
-        morph()
+        morphinfo()
