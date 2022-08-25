@@ -171,7 +171,7 @@ def load_hoc_or_python_file(
     return True
 
 
-def morphhoc(section: typing.Optional[str] = None) -> None:
+def morphinfohoc(section: typing.Optional[str] = None) -> None:
     """Provides information on the morphology of the currently accessed section.
 
     Uses the hoc utility function. Please prefer the `morph` function
@@ -195,7 +195,7 @@ def morphhoc(section: typing.Optional[str] = None) -> None:
         logger.error("Could not run morph(). Error loading utils hoc")
 
 
-def morph(section: typing.Optional[str] = None, doprint: str = "") -> dict:
+def morphinfo(section: typing.Optional[str] = None, doprint: str = "") -> dict:
     """Provides morphology of the provided section.
 
     Returns a dictionary, and also prints out the information in yaml or json.
