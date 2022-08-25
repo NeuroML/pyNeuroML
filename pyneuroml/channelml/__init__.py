@@ -5,6 +5,9 @@ ChannelML related functions
 Initial implementation at
 https://sourceforge.net/p/neuroml/code/HEAD/tree/NeuroML2/ChannelMLConvert/
 
+For converting Channelpedia XML files in the BlueBrain format, please refer to
+https://github.com/OpenSourceBrain/BlueBrainProjectShowcase/blob/master/Channelpedia/ChannelpediaToNeuroML2.py
+
 File: pyneuroml/channelml/__init__.py
 
 Copyright 2022 NeuroML contributors
