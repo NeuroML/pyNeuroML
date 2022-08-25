@@ -372,7 +372,7 @@ def seclistinfo(seclist: list, doprint: str = ""):
             totcao = totcao + sec.cao
 
     # construct dict to return, so far:
-    cellinfo = {
+    infodict = {
         'temperature': h.celsius,
         'total_diam': totalDiam,
         'total_nseg': totalNseg,
@@ -385,14 +385,14 @@ def seclistinfo(seclist: list, doprint: str = ""):
     }
 
     if numEk > 0:
-        cellinfo['k_ion'] = {
+        infodict['k_ion'] = {
             'nsecs': numEk,
             'avg_rev_pot': (totEk / numEk),
             'int_conc': (totki / numEk),
             'ext_conc': (totko / numEk),
         }
     else:
-        cellinfo['k_ion'] = {
+        infodict['k_ion'] = {
             'nsecs': numEk,
             'avg_rev_pot': 'NA',
             'int_conc': 'NA',
@@ -400,14 +400,14 @@ def seclistinfo(seclist: list, doprint: str = ""):
         }
 
     if numEna > 0:
-        cellinfo['na_ion'] = {
+        infodict['na_ion'] = {
             'nsecs': numEna,
             'avg_rev_pot': (totEna / numEna),
             'int_conc': (totnai / numEna),
             'ext_conc': (totnao / numEna),
         }
     else:
-        cellinfo['na_ion'] = {
+        infodict['na_ion'] = {
             'nsecs': numEna,
             'avg_rev_pot': 'NA',
             'int_conc': 'NA',
@@ -415,14 +415,14 @@ def seclistinfo(seclist: list, doprint: str = ""):
         }
 
     if numEca > 0:
-        cellinfo['ca_ion'] = {
+        infodict['ca_ion'] = {
             'nsecs': numEca,
             'avg_rev_pot': (totEca / numEca),
             'int_conc': (totcai / numEca),
             'ext_conc': (totcao / numEca),
         }
     else:
-        cellinfo['ca_ion'] = {
+        infodict['ca_ion'] = {
             'nsecs': numEca,
             'avg_rev_pot': 'NA',
             'int_conc': 'NA',
@@ -478,18 +478,18 @@ def seclistinfo(seclist: list, doprint: str = ""):
                 }
 
             mt_dict['parameters'][pname[0]] = param_dict
-        cellinfo['mechanisms'][mname[0]] = mt_dict
+        infodict['mechanisms'][mname[0]] = mt_dict
 
     if doprint == "yaml":
-        logger.info(yaml.dump(cellinfo, sort_keys=True, indent=4))
+        logger.info(yaml.dump(infodict, sort_keys=True, indent=4))
         if doprint:
-            print(yaml.dump(cellinfo, sort_keys=True, indent=4))
+            print(yaml.dump(infodict, sort_keys=True, indent=4))
     elif doprint == "json":
-        logger.info(json.dumps(cellinfo, indent=4, sort_keys=True))
+        logger.info(json.dumps(infodict, indent=4, sort_keys=True))
         if doprint:
-            print(json.dumps(cellinfo, indent=4, sort_keys=True))
+            print(json.dumps(infodict, indent=4, sort_keys=True))
 
-    return cellinfo
+    return infodict
 
 
 def secinfohoc(section: str = "") -> None:
@@ -513,7 +513,19 @@ def secinfohoc(section: str = "") -> None:
 
 
 def secinfo(section: str = "", doprint: str = "json"):
-    """Print information on provided section, like an expanded `psection()`.
+    """Print summary information on provided section, like an expanded
+    `psection()`:
+
+    - number of segments in the section,
+    - voltage of the section
+    - total area
+    - total ri
+    - information in each segment
+      - start
+      - end
+      - area
+      - ri
+
     Returns a dictionary, and also prints out the information in yaml or json.
 
     :param section: section to investigate, or current section if ""
