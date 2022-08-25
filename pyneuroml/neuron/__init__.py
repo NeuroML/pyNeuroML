@@ -212,9 +212,8 @@ def morphinfo(section: typing.Optional[str] = None, doprint: str = "") -> dict:
     if section:
         h(f'access {section}')
 
-    logger.info(f"Getting information for section: {section}")
-    totalarea = 0
     cas = h.cas()
+    logger.info(f"Getting information for section: {cas}")
 
     sectiondict = {
         'name': str(cas),
@@ -226,6 +225,7 @@ def morphinfo(section: typing.Optional[str] = None, doprint: str = "") -> dict:
         }
     }
 
+    totalarea = 0
     lastx = lasty = lastz = 0
     for i in range(cas.n3d()):
         delx = cas.x3d(i) - lastx
@@ -568,8 +568,8 @@ def secinfo(section: str = "", doprint: str = "json"):
     if section:
         h(f'access {section}')
 
-    logger.info(f"Getting information for section: {section}")
     cas = h.cas()
+    logger.info(f"Getting information for section: {cas}")
 
     sectiondict = {
         'name': str(cas),
