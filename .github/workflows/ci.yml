@@ -56,14 +56,14 @@ jobs:
         pip install -r requirements-dev.txt
         pip install pytest
         pip install .
-        
+
     - name: List packages so far
       run: |
         pip list
 
     - name: Run tests
       run: |
-        pytest --cov=pyneuroml .
+        pytest --cov=pyneuroml -m "not localonly" .
         pynml -h
 
         ./test-ghactions.sh -neuron

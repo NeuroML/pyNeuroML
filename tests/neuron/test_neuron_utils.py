@@ -11,12 +11,13 @@ Copyright 2022 NeuroML contributors
 import unittest
 import logging
 import tempfile
-import pathlib
-import subprocess
+import pytest
 
 
 from pyneuroml.neuron import (load_hoc_or_python_file, morphinfo,
                               get_utils_hoc, getinfo)
+
+from . import load_olm_cell
 
 
 logger = logging.getLogger(__name__)
@@ -26,19 +27,6 @@ logger.setLevel(logging.DEBUG)
 class TestNeuronUtils(unittest.TestCase):
 
     """Test Neuron Utils"""
-
-    @classmethod
-    def setup_class(cls):
-        """Setup for all tests """
-        thispath = pathlib.Path(__file__)
-        dirname = str(thispath.parent / pathlib.Path("test_data"))
-        subprocess.run(["nrnivmodl", dirname + "/mods"])
-        # must be done after mod files have been compiled
-        from neuron import h
-        cls.retval = load_hoc_or_python_file(f"{dirname}/olm.hoc")
-        h("objectvar acell")
-        h("acell = new olm()")
-        cls.allsections = list(h.allsec())
 
     def test_hoc_loader(self):
         """Test hoc loader util function"""
@@ -81,9 +69,12 @@ class TestNeuronUtils(unittest.TestCase):
         a = get_utils_hoc()
         self.assertTrue(a.is_file())
 
+    @pytest.mark.localonly
     def test_morphinfo(self):
         """Test the morphinfo function"""
-        self.assertTrue(self.retval)
+        if not hasattr(self, 'allsections'):
+            self.allsections = load_olm_cell()
+        self.assertGreater(len(self.allsections), 0)
         logger.debug(f"All sections are: {self.allsections}")
         # default section is soma_0
         soma_morph = morphinfo(doprint="json")
@@ -107,10 +98,13 @@ class TestNeuronUtils(unittest.TestCase):
         self.assertEqual(dend_morph["3d points"][1]["y"], 120.0)
         self.assertEqual(dend_morph["3d points"][2]["y"], 197.0)
 
+    @pytest.mark.localonly
     def test_getinfo(self):
         """Test the getinfo function"""
         # compile mods
-        self.assertTrue(self.retval)
+        if not hasattr(self, 'allsections'):
+            self.allsections = load_olm_cell()
+        self.assertGreater(len(self.allsections), 0)
         logger.debug(f"All sections are: {self.allsections}")
         allinfo = getinfo(self.allsections, doprint="json")
         logger.debug(f"Info on all sections: {allinfo}")
