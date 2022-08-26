@@ -30,7 +30,7 @@ from neuron import h
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.info)
 
 
 def get_utils_hoc() -> pathlib.Path:
@@ -458,8 +458,9 @@ def getinfo(seclist: list, doprint: str = ""):
                 numSegsPresent += (sec.nseg)
                 # segment information is provided as a fraction of the total
                 # section length, not the segment list
-                seginfo = {}
+                seginfo = {}  # type: dict[typing.Any, typing.Any]
                 for seg in range(1, sec.nseg + 1):
+                    seginfo[seg] = {}
                     mid_pt = get_seg_midpoint(seg, sec.nseg)
                     logger.debug(f"section {sec}: {seg}/{sec.nseg}: {mid_pt}")
                     ms._in(mid_pt, sec=sec)
@@ -470,13 +471,21 @@ def getinfo(seclist: list, doprint: str = ""):
                             paramsectiondict[pname[0]][replace_brackets(str(sec))] = {
                                 'id': str(sec),
                             }
-                        seginfo[seg] = ms.get(pname)
+                        if pname[0] in seginfo[seg]:
+                            logger.debug(f"{pname[0]} already exists in {seg}")
+                        seginfo[seg][pname[0]] = ms.get(pname)
 
-                values = seginfo.values()
-                unique_values = list(set(values))
-                # if all values are the same, only print them once as '*'
                 for j in range(numParams):
                     ms.name(pname, j)
+                    newseginfo = {}
+                    for seg, value in seginfo.items():
+                        if pname[0] in value:
+                            newseginfo[seg] = value[pname[0]]
+                            logger.debug(f"{seg}: {value[pname[0]]}")
+
+                    values = list(newseginfo.values())
+                    unique_values = list(set(values))
+                    # if all values are the same, only print them once as '*'
                     if len(unique_values) == 1:
                         paramsectiondict[pname[0]][replace_brackets(str(sec))].update({
                             "nseg": sec.nseg,
@@ -487,7 +496,7 @@ def getinfo(seclist: list, doprint: str = ""):
                     else:
                         paramsectiondict[pname[0]][replace_brackets(str(sec))].update({
                             "nseg": sec.nseg,
-                            "values": seginfo
+                            "values": newseginfo
                         })
 
         mt_dict = {
