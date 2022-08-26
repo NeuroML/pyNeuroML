@@ -30,7 +30,7 @@ from neuron import h
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.info)
+logger.setLevel(logging.INFO)
 
 
 def get_utils_hoc() -> pathlib.Path:
