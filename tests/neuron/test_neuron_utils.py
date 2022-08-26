@@ -34,7 +34,10 @@ class TestNeuronUtils(unittest.TestCase):
             print(
                 """
                 print "Empty test hoc file"
-                """, file=f, flush=True)
+                """,
+                file=f,
+                flush=True,
+            )
 
             self.assertTrue(load_hoc_or_python_file(f.name))
 
@@ -42,7 +45,10 @@ class TestNeuronUtils(unittest.TestCase):
             print(
                 """
                 a line that should cause a syntax error
-                """, file=f, flush=True)
+                """,
+                file=f,
+                flush=True,
+            )
 
             self.assertFalse(load_hoc_or_python_file(f.name))
 
@@ -51,14 +57,15 @@ class TestNeuronUtils(unittest.TestCase):
             print(
                 """
                 print("An empty test python file")
-                """, file=f, flush=True)
+                """,
+                file=f,
+                flush=True,
+            )
 
             self.assertFalse(load_hoc_or_python_file(f.name))
 
     def test_get_utils_hoc(self):
-        """Test the get_utils_hoc function
-
-        """
+        """Test the get_utils_hoc function"""
         a = get_utils_hoc()
         self.assertTrue(a.is_file())
 
@@ -74,7 +81,10 @@ class TestNeuronUtils(unittest.TestCase):
     The directory "mod" is provided twice here, which is fishy. Running it all
     manually seems to work, so this is very odd.
     """
-    @pytest.mark.skip("NEURON works on a local install, but segfaults in a virtual environment")
+
+    @pytest.mark.skip(
+        "NEURON works on a local install, but segfaults in a virtual environment"
+    )
     def test_morph_proc(self):
         """Test the morph proc wrapper"""
         monkeypatch = MonkeyPatch()
@@ -87,6 +97,7 @@ class TestNeuronUtils(unittest.TestCase):
         subprocess.run(["nrnivmodl", "mod"])
         # must be done after mod files have been compiled
         from neuron import h
+
         load_hoc_or_python_file("test_cell_load.hoc")
         # segfaults here, so we can't test other functions either
         morphinfo()

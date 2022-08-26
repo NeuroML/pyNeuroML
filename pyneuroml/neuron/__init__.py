@@ -17,6 +17,7 @@ import re
 
 
 import yaml
+
 try:
     from yaml import CDumper as Dumper
 except ImportError:
@@ -138,9 +139,7 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
         validate_neuroml1(nml1_file_name)
 
 
-def load_hoc_or_python_file(
-    hoc_or_python_file: str
-) -> bool:
+def load_hoc_or_python_file(hoc_or_python_file: str) -> bool:
     """Load a NEURON hoc file or Python script.
 
     Note: loading Python scripts is not yet supported.
@@ -191,7 +190,7 @@ def morphinfohoc(section: typing.Optional[str] = None) -> None:
     retval = load_hoc_or_python_file(str(get_utils_hoc().absolute()))
     if retval is True:
         if section:
-            h(f'access {section}')
+            h(f"access {section}")
         h("morph()")
     else:
         logger.error("Could not run morph(). Error loading utils hoc")
@@ -211,19 +210,17 @@ def morphinfo(section: typing.Optional[str] = None, doprint: str = "") -> dict:
     :returns: morphology information dict
     """
     if section:
-        h(f'access {section}')
+        h(f"access {section}")
 
     cas = h.cas()
     logger.info(f"Getting information for section: {cas}")
 
     sectiondict = {
-        'name': str(cas),
-        'nsegs': cas.nseg,
-        'n3d': cas.n3d(),
-        '3d points': {
-        },
-        'segments': {
-        }
+        "name": str(cas),
+        "nsegs": cas.nseg,
+        "n3d": cas.n3d(),
+        "3d points": {},
+        "segments": {},
     }
 
     totalarea = 0
@@ -240,25 +237,25 @@ def morphinfo(section: typing.Optional[str] = None, doprint: str = "") -> dict:
         lasty = cas.y3d(i)
         lastz = cas.z3d(i)
 
-        sectiondict['3d points'][i] = {
-            'x': cas.x3d(i),
-            'y': cas.y3d(i),
-            'z': cas.z3d(i),
-            'diam': cas.diam3d(i),
-            'delx': delx,
-            'dely': dely,
-            'delz': delz,
-            'length': length
+        sectiondict["3d points"][i] = {
+            "x": cas.x3d(i),
+            "y": cas.y3d(i),
+            "z": cas.z3d(i),
+            "diam": cas.diam3d(i),
+            "delx": delx,
+            "dely": dely,
+            "delz": delz,
+            "length": length,
         }
 
     for i in range(cas.nseg + 2):
-        sectiondict['segments'][float(i / (cas.nseg + 1))] = {
-            'diam': cas(i / (cas.nseg + 1)).diam,
-            'area': str(h.area(i / (cas.nseg + 1))) + " um^2",
+        sectiondict["segments"][float(i / (cas.nseg + 1))] = {
+            "diam": cas(i / (cas.nseg + 1)).diam,
+            "area": str(h.area(i / (cas.nseg + 1))) + " um^2",
         }
         totalarea = totalarea + h.area(i / (cas.nseg + 1))
 
-    sectiondict['totalarea'] = totalarea
+    sectiondict["totalarea"] = totalarea
 
     if doprint == "yaml":
         logger.info(yaml.dump(sectiondict, sort_keys=True, indent=4))
@@ -354,17 +351,17 @@ def getinfo(seclist: list, doprint: str = ""):
         totalL = totalL + sec.L
         numSections = numSections + 1
 
-        if (h.ismembrane("k_ion", sec=sec)):
+        if h.ismembrane("k_ion", sec=sec):
             numEk = numEk + 1
             totEk = totEk + sec.ek
             totko = totko + sec.ko
             totki = totki + sec.ki
-        if (h.ismembrane("na_ion", sec=sec)):
+        if h.ismembrane("na_ion", sec=sec):
             numEna = numEna + 1
             totEna = totEna + sec.ena
             totnao = totnao + sec.nao
             totnai = totnai + sec.nai
-        if (h.ismembrane("ca_ion", sec=sec)):
+        if h.ismembrane("ca_ion", sec=sec):
             numEca = numEca + 1
             totEca = totEca + sec.eca
             totcai = totcai + sec.cai
@@ -372,66 +369,65 @@ def getinfo(seclist: list, doprint: str = ""):
 
     # construct dict to return, so far:
     infodict = {
-        'temperature': h.celsius,
-        'total_diam': totalDiam,
-        'total_nseg': totalNseg,
-        'total_L': totalL,
-        'total_Ra': totalRa,
-        'total_Cm': totalCm,
-        'num_sections': numSections,
-        'mechanisms': {
-        },
+        "temperature": h.celsius,
+        "total_diam": totalDiam,
+        "total_nseg": totalNseg,
+        "total_L": totalL,
+        "total_Ra": totalRa,
+        "total_Cm": totalCm,
+        "num_sections": numSections,
+        "mechanisms": {},
     }
 
     if numEk > 0:
-        infodict['k_ion'] = {
-            'nsecs': numEk,
-            'avg_rev_pot': (totEk / numEk),
-            'int_conc': (totki / numEk),
-            'ext_conc': (totko / numEk),
+        infodict["k_ion"] = {
+            "nsecs": numEk,
+            "avg_rev_pot": (totEk / numEk),
+            "int_conc": (totki / numEk),
+            "ext_conc": (totko / numEk),
         }
     else:
-        infodict['k_ion'] = {
-            'nsecs': numEk,
-            'avg_rev_pot': 'NA',
-            'int_conc': 'NA',
-            'ext_conc': 'NA',
+        infodict["k_ion"] = {
+            "nsecs": numEk,
+            "avg_rev_pot": "NA",
+            "int_conc": "NA",
+            "ext_conc": "NA",
         }
 
     if numEna > 0:
-        infodict['na_ion'] = {
-            'nsecs': numEna,
-            'avg_rev_pot': (totEna / numEna),
-            'int_conc': (totnai / numEna),
-            'ext_conc': (totnao / numEna),
+        infodict["na_ion"] = {
+            "nsecs": numEna,
+            "avg_rev_pot": (totEna / numEna),
+            "int_conc": (totnai / numEna),
+            "ext_conc": (totnao / numEna),
         }
     else:
-        infodict['na_ion'] = {
-            'nsecs': numEna,
-            'avg_rev_pot': 'NA',
-            'int_conc': 'NA',
-            'ext_conc': 'NA',
+        infodict["na_ion"] = {
+            "nsecs": numEna,
+            "avg_rev_pot": "NA",
+            "int_conc": "NA",
+            "ext_conc": "NA",
         }
 
     if numEca > 0:
-        infodict['ca_ion'] = {
-            'nsecs': numEca,
-            'avg_rev_pot': (totEca / numEca),
-            'int_conc': (totcai / numEca),
-            'ext_conc': (totcao / numEca),
+        infodict["ca_ion"] = {
+            "nsecs": numEca,
+            "avg_rev_pot": (totEca / numEca),
+            "int_conc": (totcai / numEca),
+            "ext_conc": (totcao / numEca),
         }
     else:
-        infodict['ca_ion'] = {
-            'nsecs': numEca,
-            'avg_rev_pot': 'NA',
-            'int_conc': 'NA',
-            'ext_conc': 'NA',
+        infodict["ca_ion"] = {
+            "nsecs": numEca,
+            "avg_rev_pot": "NA",
+            "int_conc": "NA",
+            "ext_conc": "NA",
         }
 
     # https://neuronsimulator.github.io/nrn/python/modelspec/programmatic/mechtype.html#MechanismType
     mt = h.MechanismType(0)
-    mname = h.ref('')
-    pname = h.ref('')
+    mname = h.ref("")
+    pname = h.ref("")
 
     for i in range(mt.count()):
         mt.select(i)
@@ -453,9 +449,9 @@ def getinfo(seclist: list, doprint: str = ""):
         numSecPresent = 0
         numSegsPresent = 0
         for sec in seclist:
-            if (h.ismembrane(mname, sec=sec)):
+            if h.ismembrane(mname, sec=sec):
                 numSecPresent += 1
-                numSegsPresent += (sec.nseg)
+                numSegsPresent += sec.nseg
                 # segment information is provided as a fraction of the total
                 # section length, not the segment list
                 seginfo = {}  # type: dict[typing.Any, typing.Any]
@@ -467,9 +463,12 @@ def getinfo(seclist: list, doprint: str = ""):
                     for j in range(numParams):
                         ms.name(pname, j)
                         totParamVal[j] += ms.get(pname)
-                        if not replace_brackets(str(sec)) in paramsectiondict[pname[0]].keys():
+                        if (
+                            not replace_brackets(str(sec))
+                            in paramsectiondict[pname[0]].keys()
+                        ):
                             paramsectiondict[pname[0]][replace_brackets(str(sec))] = {
-                                'id': str(sec),
+                                "id": str(sec),
                             }
                         if pname[0] in seginfo[seg]:
                             logger.debug(f"{pname[0]} already exists in {seg}")
@@ -487,40 +486,32 @@ def getinfo(seclist: list, doprint: str = ""):
                     unique_values = list(set(values))
                     # if all values are the same, only print them once as '*'
                     if len(unique_values) == 1:
-                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update({
-                            "nseg": sec.nseg,
-                            "values": {
-                                '*': unique_values[0]
-                            }
-                        })
+                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update(
+                            {"nseg": sec.nseg, "values": {"*": unique_values[0]}}
+                        )
                     else:
-                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update({
-                            "nseg": sec.nseg,
-                            "values": newseginfo
-                        })
+                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update(
+                            {"nseg": sec.nseg, "values": newseginfo}
+                        )
 
         mt_dict = {
-            'present_on_secs': numSecPresent,
-            'num_params': numParams,
-            'parameters': {
-            }
+            "present_on_secs": numSecPresent,
+            "num_params": numParams,
+            "parameters": {},
         }
 
         for j in range(numParams):
             ms.name(pname, j)
             try:
                 param_dict = {
-                    'ave_all_segs': totParamVal[j] / numSegsPresent,
-                    'values': paramsectiondict[pname[0]]
+                    "ave_all_segs": totParamVal[j] / numSegsPresent,
+                    "values": paramsectiondict[pname[0]],
                 }
             except ZeroDivisionError:
-                param_dict = {
-                    'ave_all_sections': 'NA',
-                    'values': 'NA'
-                }
+                param_dict = {"ave_all_sections": "NA", "values": "NA"}
 
-            mt_dict['parameters'][pname[0]] = param_dict
-        infodict['mechanisms'][mname[0]] = mt_dict
+            mt_dict["parameters"][pname[0]] = param_dict
+        infodict["mechanisms"][mname[0]] = mt_dict
 
     if doprint == "yaml":
         logger.info(yaml.dump(infodict, sort_keys=True, indent=4))
@@ -580,17 +571,16 @@ def secinfo(section: str = "", doprint: str = "json"):
 
     """
     if section:
-        h(f'access {section}')
+        h(f"access {section}")
 
     cas = h.cas()
     logger.info(f"Getting information for section: {cas}")
 
     sectiondict = {
-        'name': str(cas),
-        'nsegs': cas.nseg,
-        'voltage': cas.v,
-        'segments': {
-        }
+        "name": str(cas),
+        "nsegs": cas.nseg,
+        "voltage": cas.v,
+        "segments": {},
     }
 
     total_area = 0
@@ -606,15 +596,15 @@ def secinfo(section: str = "", doprint: str = "json"):
         total_area += area_here
         total_ri += ri_here
 
-        sectiondict['segments'][i] = {
-            'section start': this_point,
-            'section end': next_point,
-            'area': area_here,
-            'ri': str(ri_here * 1e3) + " ohm",
+        sectiondict["segments"][i] = {
+            "section start": this_point,
+            "section end": next_point,
+            "area": area_here,
+            "ri": str(ri_here * 1e3) + " ohm",
         }
 
-    sectiondict['total area'] = total_area
-    sectiondict['total ri'] = str(total_ri * 1e3) + " ohm"
+    sectiondict["total area"] = total_area
+    sectiondict["total ri"] = str(total_ri * 1e3) + " ohm"
 
     if doprint == "yaml":
         logger.info(yaml.dump(sectiondict, sort_keys=True, indent=4))
@@ -703,7 +693,7 @@ def get_seg_midpoint(seg: int, nseg: int) -> float:
     :type nseg: int
     :returns: location of mid point of segment in (0, 1)
     """
-    return (2. * seg - 1.) / (2. * nseg)
+    return (2.0 * seg - 1.0) / (2.0 * nseg)
 
 
 def replace_brackets(astring: str) -> str:
