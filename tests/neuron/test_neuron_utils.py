@@ -13,12 +13,10 @@ import logging
 import tempfile
 import pathlib
 import subprocess
-import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 
-from pyneuroml.neuron import load_hoc_or_python_file, morphinfo, get_utils_hoc
-from pyneuroml.pynml import execute_command_in_dir
+from pyneuroml.neuron import (load_hoc_or_python_file, morphinfo,
+                              get_utils_hoc, getinfo)
 
 
 logger = logging.getLogger(__name__)
@@ -106,3 +104,37 @@ class TestNeuronUtils(unittest.TestCase):
         self.assertEqual(dend_morph["3d points"][0]["diam"], 3.0)
         self.assertEqual(dend_morph["3d points"][1]["y"], 120.0)
         self.assertEqual(dend_morph["3d points"][2]["y"], 197.0)
+
+    def test_getinfo(self):
+        """Test the getinfo function"""
+        # compile mods
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent / pathlib.Path("test_data"))
+        subprocess.run(["nrnivmodl", dirname + "/mods"])
+        # must be done after mod files have been compiled
+        from neuron import h
+
+        retval = load_hoc_or_python_file(f"{dirname}/olm.hoc")
+        self.assertTrue(retval)
+        h("objectvar acell")
+        h("acell = new olm()")
+        allsections = list(h.allsec())
+        logger.debug(f"All sections are: {allsections}")
+        allinfo = getinfo(allsections, doprint="json")
+        logger.debug(f"Info on all sections: {allinfo}")
+
+        soma_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"]["gmax_KvAolm"]["values"]["olm_0_.soma_0"]["values"]["*"]
+        self.assertEqual(soma_0_KvAolm_gmax, 0.00495)
+        soma_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.soma_0"]["values"]["*"]
+        self.assertEqual(soma_0_leak_gmax, 1E-5)
+
+        dend_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"]["gmax_KvAolm"]["values"]["olm_0_.dend_0"]["values"]["*"]
+        self.assertEqual(dend_0_KvAolm_gmax, 0.0028)
+        dend_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.dend_0"]["values"]["*"]
+        self.assertEqual(dend_0_leak_gmax, 1E-5)
+
+        axon_0_Nav_gmax = allinfo["mechanisms"]["Nav"]["parameters"]["gmax_Nav"]["values"]["olm_0_.axon_0"]["values"]["*"]
+        self.assertEqual(axon_0_Nav_gmax, 0.01712)
+
+        axon_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.axon_0"]["values"]["*"]
+        self.assertEqual(axon_0_leak_gmax, 1E-5)
