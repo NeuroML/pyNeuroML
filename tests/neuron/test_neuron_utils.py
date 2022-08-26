@@ -27,6 +27,19 @@ class TestNeuronUtils(unittest.TestCase):
 
     """Test Neuron Utils"""
 
+    @classmethod
+    def setup_class(cls):
+        """Setup for all tests """
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent / pathlib.Path("test_data"))
+        subprocess.run(["nrnivmodl", dirname + "/mods"])
+        # must be done after mod files have been compiled
+        from neuron import h
+        cls.retval = load_hoc_or_python_file(f"{dirname}/olm.hoc")
+        h("objectvar acell")
+        h("acell = new olm()")
+        cls.allsections = list(h.allsec())
+
     def test_hoc_loader(self):
         """Test hoc loader util function"""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".hoc") as f:
@@ -70,19 +83,8 @@ class TestNeuronUtils(unittest.TestCase):
 
     def test_morphinfo(self):
         """Test the morphinfo function"""
-        # compile mods
-        thispath = pathlib.Path(__file__)
-        dirname = str(thispath.parent / pathlib.Path("test_data"))
-        subprocess.run(["nrnivmodl", dirname + "/mods"])
-        # must be done after mod files have been compiled
-        from neuron import h
-
-        retval = load_hoc_or_python_file(f"{dirname}/olm.hoc")
-        self.assertTrue(retval)
-        h("objectvar acell")
-        h("acell = new olm()")
-        allsections = list(h.allsec())
-        logger.debug(f"All sections are: {allsections}")
+        self.assertTrue(self.retval)
+        logger.debug(f"All sections are: {self.allsections}")
         # default section is soma_0
         soma_morph = morphinfo(doprint="json")
         self.assertEqual(soma_morph["nsegs"], 1)
@@ -108,19 +110,9 @@ class TestNeuronUtils(unittest.TestCase):
     def test_getinfo(self):
         """Test the getinfo function"""
         # compile mods
-        thispath = pathlib.Path(__file__)
-        dirname = str(thispath.parent / pathlib.Path("test_data"))
-        subprocess.run(["nrnivmodl", dirname + "/mods"])
-        # must be done after mod files have been compiled
-        from neuron import h
-
-        retval = load_hoc_or_python_file(f"{dirname}/olm.hoc")
-        self.assertTrue(retval)
-        h("objectvar acell")
-        h("acell = new olm()")
-        allsections = list(h.allsec())
-        logger.debug(f"All sections are: {allsections}")
-        allinfo = getinfo(allsections, doprint="json")
+        self.assertTrue(self.retval)
+        logger.debug(f"All sections are: {self.allsections}")
+        allinfo = getinfo(self.allsections, doprint="json")
         logger.debug(f"Info on all sections: {allinfo}")
 
         soma_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"]["gmax_KvAolm"]["values"]["olm_0_.soma_0"]["values"]["*"]
