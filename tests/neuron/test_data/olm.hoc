@@ -1,0 +1,351 @@
+// Cell: olm
+/*
+{
+  "id" : "olm",
+  "sections" : [ {
+    "name" : "soma_0",
+    "id" : "soma_0",
+    "points3d" : [ "0.0, 0.0, 0.0, 10.0", "0.0, 10.0, 0.0, 10.0", "0.0, 20.0, 0.0, 10.0" ]
+  }, {
+    "name" : "axon_0",
+    "id" : "axon_0",
+    "points3d" : [ "0.0, 0.0, 0.0, 1.5", "0.0, -75.0, 0.0, 1.5", "0.0, -150.0, 0.0, 1.5" ],
+    "parent" : "soma_0",
+    "fractionAlong" : 0.0
+  }, {
+    "name" : "dend_0",
+    "id" : "dend_0",
+    "points3d" : [ "0.0, 20.0, 0.0, 3.0", "100.0, 120.0, 0.0, 3.0", "177.0, 197.0, 0.0, 3.0" ],
+    "parent" : "soma_0",
+    "fractionAlong" : 1.0
+  }, {
+    "name" : "dend_1",
+    "id" : "dend_1",
+    "points3d" : [ "0.0, 20.0, 0.0, 3.0", "-100.0, 120.0, 0.0, 3.0", "-177.0, 197.0, 0.0, 3.0" ],
+    "parent" : "soma_0",
+    "fractionAlong" : 1.0
+  } ],
+  "groups" : [ {
+    "name" : "soma_group",
+    "segments" : [ null, null ],
+    "groups" : [ ],
+    "sections" : [ "soma_0" ]
+  }, {
+    "name" : "axon_group",
+    "segments" : [ null, null ],
+    "groups" : [ ],
+    "sections" : [ "axon_0" ]
+  }, {
+    "name" : "dendrite_group",
+    "segments" : [ null, null, null, null ],
+    "groups" : [ ],
+    "sections" : [ "dend_0", "dend_1" ]
+  }, {
+    "name" : "all",
+    "sections" : [ "soma_0", "soma_0", "axon_0", "axon_0", "dend_0", "dend_0", "dend_1", "dend_1" ]
+  } ],
+  "specificCapacitance" : [ {
+    "group" : "all",
+    "value" : "1.3000001"
+  } ],
+  "initMembPotential" : [ {
+    "group" : "all",
+    "value" : "-67.0"
+  } ],
+  "resistivity" : [ {
+    "group" : "all",
+    "value" : "150.0"
+  } ],
+  "channelDensity" : [ {
+    "id" : "leak_all",
+    "ionChannel" : "leak_chan",
+    "ion" : "non_specific",
+    "group" : "all",
+    "condDens" : "1.0E-5",
+    "erev" : "-67.0"
+  }, {
+    "id" : "HCNolm_soma",
+    "ionChannel" : "HCNolm",
+    "ion" : "h",
+    "group" : "soma_group",
+    "condDens" : "4.9999997E-4",
+    "erev" : "-32.9"
+  }, {
+    "id" : "Kdrfast_soma",
+    "ionChannel" : "Kdrfast",
+    "ion" : "k",
+    "group" : "soma_group",
+    "condDens" : "0.07337",
+    "erev" : "-77.0"
+  }, {
+    "id" : "Kdrfast_dendrite",
+    "ionChannel" : "Kdrfast",
+    "ion" : "k",
+    "group" : "dendrite_group",
+    "condDens" : "0.105799995",
+    "erev" : "-77.0"
+  }, {
+    "id" : "Kdrfast_axon",
+    "ionChannel" : "Kdrfast",
+    "ion" : "k",
+    "group" : "axon_group",
+    "condDens" : "0.117392",
+    "erev" : "-77.0"
+  }, {
+    "id" : "KvAolm_soma",
+    "ionChannel" : "KvAolm",
+    "ion" : "k",
+    "group" : "soma_group",
+    "condDens" : "0.00495",
+    "erev" : "-77.0"
+  }, {
+    "id" : "KvAolm_dendrite",
+    "ionChannel" : "KvAolm",
+    "ion" : "k",
+    "group" : "dendrite_group",
+    "condDens" : "0.0028",
+    "erev" : "-77.0"
+  }, {
+    "id" : "Nav_soma",
+    "ionChannel" : "Nav",
+    "ion" : "na",
+    "group" : "soma_group",
+    "condDens" : "0.0106999995",
+    "erev" : "50.0"
+  }, {
+    "id" : "Nav_dendrite",
+    "ionChannel" : "Nav",
+    "ion" : "na",
+    "group" : "dendrite_group",
+    "condDens" : "0.0234",
+    "erev" : "50.0"
+  }, {
+    "id" : "Nav_axon",
+    "ionChannel" : "Nav",
+    "ion" : "na",
+    "group" : "axon_group",
+    "condDens" : "0.01712",
+    "erev" : "50.0"
+  } ],
+  "species" : [ ]
+}
+*/
+
+load_file("subiter.hoc")
+
+begintemplate olm
+
+public init, topol, basic_shape, subsets, geom, memb
+public x, y, z, position
+
+
+//  Some methods for referencing the cells
+
+public toString, netInfo, set_initial_v, set_initial_ion_properties, synlist
+
+
+// Section: soma_0, id: soma_0, parent: $s.parent
+create soma_0
+public soma_0
+// Section: axon_0, id: axon_0, parent: soma_0
+create axon_0
+public axon_0
+// Section: dend_0, id: dend_0, parent: soma_0
+create dend_0
+public dend_0
+// Section: dend_1, id: dend_1, parent: soma_0
+create dend_1
+public dend_1
+
+// Group: {name=soma_group, segments=[null, null], groups=[], sections=[soma_0]}
+objref soma_group
+// Group: {name=axon_group, segments=[null, null], groups=[], sections=[axon_0]}
+objref axon_group
+// Group: {name=dendrite_group, segments=[null, null, null, null], groups=[], sections=[dend_0, dend_1]}
+objref dendrite_group
+// Group: {name=all, sections=[soma_0, soma_0, axon_0, axon_0, dend_0, dend_0, dend_1, dend_1]}
+objref all
+
+objref synlist
+
+proc init() {
+    topol()
+    geom_nseg()
+    subsets()
+    subsets_inhomogeneous()
+    biophys()
+    biophys_inhomogeneous()
+    synlist = new List()
+    x = y = z = 0
+
+}
+
+proc set_initial_v() {
+    // Taken from the initMembPotential value
+    forsec all v = -67.0  // units: mV
+}
+
+
+proc set_initial_ion_properties() {
+    // From species
+}
+
+
+proc topol() {
+    basic_shape()
+    connect axon_0(0), soma_0(0.0)
+    connect dend_0(0), soma_0(1.0)
+    connect dend_1(0), soma_0(1.0)
+
+}
+
+
+proc basic_shape() {
+
+    // Section: soma_0, id: soma_0, parent: $s.parent (entry count 0/100)
+    soma_0 { pt3dclear() }
+    soma_0 { pt3dadd( 0.0, 0.0, 0.0, 10.0 ) }
+    soma_0 { pt3dadd( 0.0, 10.0, 0.0, 10.0 ) }
+    soma_0 { pt3dadd( 0.0, 20.0, 0.0, 10.0 ) }
+    // Section: axon_0, id: axon_0, parent: soma_0 (entry count 3/100)
+    axon_0 { pt3dclear() }
+    axon_0 { pt3dadd( 0.0, 0.0, 0.0, 1.5 ) }
+    axon_0 { pt3dadd( 0.0, -75.0, 0.0, 1.5 ) }
+    axon_0 { pt3dadd( 0.0, -150.0, 0.0, 1.5 ) }
+    // Section: dend_0, id: dend_0, parent: soma_0 (entry count 6/100)
+    dend_0 { pt3dclear() }
+    dend_0 { pt3dadd( 0.0, 20.0, 0.0, 3.0 ) }
+    dend_0 { pt3dadd( 100.0, 120.0, 0.0, 3.0 ) }
+    dend_0 { pt3dadd( 177.0, 197.0, 0.0, 3.0 ) }
+    // Section: dend_1, id: dend_1, parent: soma_0 (entry count 9/100)
+    dend_1 { pt3dclear() }
+    dend_1 { pt3dadd( 0.0, 20.0, 0.0, 3.0 ) }
+    dend_1 { pt3dadd( -100.0, 120.0, 0.0, 3.0 ) }
+    dend_1 { pt3dadd( -177.0, 197.0, 0.0, 3.0 ) }
+
+}
+
+
+proc subsets() { local i
+
+    // Group: {name=soma_group, segments=[null, null], groups=[], sections=[soma_0]}
+    soma_group = new SectionList()
+    soma_0 soma_group.append()
+
+    // Group: {name=axon_group, segments=[null, null], groups=[], sections=[axon_0]}
+    axon_group = new SectionList()
+    axon_0 axon_group.append()
+
+    // Group: {name=dendrite_group, segments=[null, null, null, null], groups=[], sections=[dend_0, dend_1]}
+    dendrite_group = new SectionList()
+    dend_0 dendrite_group.append()
+    dend_1 dendrite_group.append()
+
+    // Group: {name=all, sections=[soma_0, soma_0, axon_0, axon_0, dend_0, dend_0, dend_1, dend_1]}
+    all = new SectionList()
+    soma_0 all.append()
+    soma_0 all.append()
+    axon_0 all.append()
+    axon_0 all.append()
+    dend_0 all.append()
+    dend_0 all.append()
+    dend_1 all.append()
+    dend_1 all.append()
+
+}
+
+
+proc subsets_inhomogeneous() {
+}
+
+proc biophys() {
+
+    // Specific capacitance
+    forsec all cm = 1.3000001  // units: uF/cm2
+
+    // Specific axial resistance/resistivity
+    forsec all Ra = 150.0  // units: ohm cm
+
+    // Channel densities
+    forsec all {
+        insert leak_chan
+        gmax_leak_chan = 1.0E-5  // units: S cm-2
+        e_leak_chan = -67.0  // units: mV
+    }
+    forsec soma_group {
+        insert HCNolm
+        gmax_HCNolm = 4.9999997E-4  // units: S cm-2
+        eh = -32.9  // units: mV
+    }
+    forsec soma_group {
+        insert Kdrfast
+        gmax_Kdrfast = 0.07337  // units: S cm-2
+        ek = -77.0  // units: mV
+    }
+    forsec dendrite_group {
+        insert Kdrfast
+        gmax_Kdrfast = 0.105799995  // units: S cm-2
+        ek = -77.0  // units: mV
+    }
+    forsec axon_group {
+        insert Kdrfast
+        gmax_Kdrfast = 0.117392  // units: S cm-2
+        ek = -77.0  // units: mV
+    }
+    forsec soma_group {
+        insert KvAolm
+        gmax_KvAolm = 0.00495  // units: S cm-2
+        ek = -77.0  // units: mV
+    }
+    forsec dendrite_group {
+        insert KvAolm
+        gmax_KvAolm = 0.0028  // units: S cm-2
+        ek = -77.0  // units: mV
+    }
+    forsec soma_group {
+        insert Nav
+        gmax_Nav = 0.0106999995  // units: S cm-2
+        ena = 50.0  // units: mV
+    }
+    forsec dendrite_group {
+        insert Nav
+        gmax_Nav = 0.0234  // units: S cm-2
+        ena = 50.0  // units: mV
+    }
+    forsec axon_group {
+        insert Nav
+        gmax_Nav = 0.01712  // units: S cm-2
+        ena = 50.0  // units: mV
+    }
+
+    // Concentration models for species
+
+}
+
+func H() { // Heaviside function
+    if ($1>=0) return 1
+    if ($1==0) return 0.5
+    return 0
+}
+
+proc biophys_inhomogeneous() {
+}
+
+proc geom_nseg() {
+    // All sections not mentioned here have nseg = 1
+}
+
+
+proc position() { local i
+    forsec all {
+        for i = 0, n3d()-1 {
+            pt3dchange(i, $1+x3d(i), $2+y3d(i), $3+z3d(i), diam3d(i))
+        }
+    }
+    x = $1  y = $2  z = $3
+}
+
+
+endtemplate olm
+
+
