@@ -146,7 +146,7 @@ def load_hoc_or_python_file(hoc_or_python_file: str) -> bool:
 
     :param hoc_or_python_file: NEURON hoc or Python file to convert
     :type hoc_or_python_file: str
-    :returns: 0 if file was loaded, 1 if an error occurred
+    :returns: True if file was loaded, False if an error occurred
     """
     if hoc_or_python_file.endswith(".py"):
         logger.info(
