@@ -312,7 +312,7 @@ def cellinfo(doprint: str = "") -> dict:
     return getinfo(seclist, doprint)
 
 
-def getinfo(seclist: list, doprint: str = ""):
+def getinfo(seclist: list, doprint: str = "", listall: bool = False):
     """Provide detailed information on the provided section list.
 
     Returns a dictionary, and also prints out the information in yaml or json.
@@ -321,6 +321,8 @@ def getinfo(seclist: list, doprint: str = ""):
         Use "json" or "yaml" to print in the required format, any other value
         to disable printing.
     :type doprint: str
+    :param listall: also list mechs that are not present on any sections
+    :type listall: bool
     :returns: dict
     """
     totalDiam = 0
@@ -494,24 +496,25 @@ def getinfo(seclist: list, doprint: str = ""):
                             {"nseg": sec.nseg, "values": newseginfo}
                         )
 
-        mt_dict = {
-            "present_on_secs": numSecPresent,
-            "num_params": numParams,
-            "parameters": {},
-        }
+        if listall or numSecPresent > 0:
+            mt_dict = {
+                "present_on_secs": numSecPresent,
+                "num_params": numParams,
+                "parameters": {},
+            }
 
-        for j in range(numParams):
-            ms.name(pname, j)
-            try:
-                param_dict = {
-                    "ave_all_segs": totParamVal[j] / numSegsPresent,
-                    "values": paramsectiondict[rm_NML_str(pname[0])],
-                }
-            except ZeroDivisionError:
-                param_dict = {"ave_all_sections": "NA", "values": "NA"}
+            for j in range(numParams):
+                ms.name(pname, j)
+                try:
+                    param_dict = {
+                        "ave_all_segs": totParamVal[j] / numSegsPresent,
+                        "values": paramsectiondict[rm_NML_str(pname[0])],
+                    }
+                except ZeroDivisionError:
+                    param_dict = {"ave_all_sections": "NA", "values": "NA"}
 
-            mt_dict["parameters"][rm_NML_str(pname[0])] = param_dict
-        infodict["mechanisms"][rm_NML_str(mname[0])] = mt_dict
+                mt_dict["parameters"][rm_NML_str(pname[0])] = param_dict
+            infodict["mechanisms"][rm_NML_str(mname[0])] = mt_dict
 
     if doprint == "yaml":
         logger.info(yaml.dump(infodict, sort_keys=True, indent=4))
