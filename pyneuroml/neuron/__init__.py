@@ -444,7 +444,7 @@ def getinfo(seclist: list, doprint: str = ""):
             # assign pname the name of the jth parameter
             ms.name(pname, j)
             totParamVal[j] = 0
-            paramsectiondict[pname[0]] = {}
+            paramsectiondict[rm_NML_str(pname[0])] = {}
 
         numSecPresent = 0
         numSegsPresent = 0
@@ -465,32 +465,32 @@ def getinfo(seclist: list, doprint: str = ""):
                         totParamVal[j] += ms.get(pname)
                         if (
                             not replace_brackets(str(sec))
-                            in paramsectiondict[pname[0]].keys()
+                            in paramsectiondict[rm_NML_str(pname[0])].keys()
                         ):
-                            paramsectiondict[pname[0]][replace_brackets(str(sec))] = {
+                            paramsectiondict[rm_NML_str(pname[0])][replace_brackets(str(sec))] = {
                                 "id": str(sec),
                             }
-                        if pname[0] in seginfo[seg]:
-                            logger.debug(f"{pname[0]} already exists in {seg}")
-                        seginfo[seg][pname[0]] = ms.get(pname)
+                        if rm_NML_str(pname[0]) in seginfo[seg]:
+                            logger.warning(f"{pname[0]} already exists in {seg}")
+                        seginfo[seg][rm_NML_str(pname[0])] = ms.get(pname)
 
                 for j in range(numParams):
                     ms.name(pname, j)
                     newseginfo = {}
                     for seg, value in seginfo.items():
-                        if pname[0] in value:
-                            newseginfo[seg] = value[pname[0]]
-                            logger.debug(f"{seg}: {value[pname[0]]}")
+                        if rm_NML_str(pname[0]) in value:
+                            newseginfo[seg] = value[rm_NML_str(pname[0])]
+                            logger.debug(f"{seg}: {value[rm_NML_str(pname[0])]}")
 
                     values = list(newseginfo.values())
                     unique_values = list(set(values))
                     # if all values are the same, only print them once as '*'
                     if len(unique_values) == 1:
-                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update(
+                        paramsectiondict[rm_NML_str(pname[0])][replace_brackets(str(sec))].update(
                             {"nseg": sec.nseg, "values": {"*": unique_values[0]}}
                         )
                     else:
-                        paramsectiondict[pname[0]][replace_brackets(str(sec))].update(
+                        paramsectiondict[rm_NML_str(pname[0])][replace_brackets(str(sec))].update(
                             {"nseg": sec.nseg, "values": newseginfo}
                         )
 
@@ -505,13 +505,13 @@ def getinfo(seclist: list, doprint: str = ""):
             try:
                 param_dict = {
                     "ave_all_segs": totParamVal[j] / numSegsPresent,
-                    "values": paramsectiondict[pname[0]],
+                    "values": paramsectiondict[rm_NML_str(pname[0])],
                 }
             except ZeroDivisionError:
                 param_dict = {"ave_all_sections": "NA", "values": "NA"}
 
-            mt_dict["parameters"][pname[0]] = param_dict
-        infodict["mechanisms"][mname[0]] = mt_dict
+            mt_dict["parameters"][rm_NML_str(pname[0])] = param_dict
+        infodict["mechanisms"][rm_NML_str(mname[0])] = mt_dict
 
     if doprint == "yaml":
         logger.info(yaml.dump(infodict, sort_keys=True, indent=4))
@@ -708,3 +708,16 @@ def replace_brackets(astring: str) -> str:
     if astring[-1] == "]":
         astring = astring[:-1]
     return astring.replace("[", "_").replace("]", "_")
+
+
+def rm_NML_str(astring: str) -> str:
+    """Replaces the _NML2 suffix from names to ease comparison
+
+    :param astring: string to modify
+    :type astring: str
+    :returns: new string
+    """
+    # inform the user of this change
+    if "_NML2" in astring:
+        logger.info(f"Removing '_NML2' string from {astring} to ease comparison")
+    return astring.replace("_NML2", "")
