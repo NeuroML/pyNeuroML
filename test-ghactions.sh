@@ -6,7 +6,8 @@ echo
 echo "################################################"
 echo "##   Running unit tests"
 
-pytest --cov=pyneuroml .
+# skip a few tests that segfault etc. on GH
+pytest --cov=pyneuroml -m "not localonly" .
 
 run_neuron_examples=false
 

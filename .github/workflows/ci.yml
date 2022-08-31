@@ -62,7 +62,6 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest --cov=pyneuroml -m "not localonly" .
         pynml -h
 
         ./test-ghactions.sh -neuron
