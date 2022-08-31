@@ -13,6 +13,7 @@ Subpackages
    :maxdepth: 4
 
    pyneuroml.analysis
+   pyneuroml.channelml
    pyneuroml.lems
    pyneuroml.plot
    pyneuroml.povray
