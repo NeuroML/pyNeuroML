@@ -13,6 +13,7 @@ setup(
     packages=[
         "pyneuroml",
         "pyneuroml.analysis",
+        "pyneuroml.channelml",
         "pyneuroml.lems",
         "pyneuroml.tune",
         "pyneuroml.neuron",
@@ -32,6 +33,7 @@ setup(
             "pynml-summary         = pyneuroml.pynml:summary",
             "pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main",
             "pynml-plotmorph       = pyneuroml.plot.PlotMorphology:main",
+            "pynml-channelml2nml   = pyneuroml.channelml:main",
             "pynml-sonata          = neuromllite.SonataReader:main",
         ]
     },
@@ -45,6 +47,8 @@ setup(
             "neuron/utils.hoc",
             "neuron/mview_neuroml1.hoc",
             "neuron/mview_neuroml2.hoc",
+            "channelml/ChannelML2NeuroML2.xsl",
+            "channelml/ChannelML2NeuroML2beta.xsl",
         ]
     },
     data_files=[
@@ -71,6 +75,7 @@ setup(
         "pylems>=0.5.7",
         "airspeed>=0.5.5",
         "neuromllite>=0.4.1",  # sets dependency for libNeuroML also
+        "libNeuroML>=0.3.1",
         "matplotlib",
         "matplotlib-scalebar",
         "graphviz",

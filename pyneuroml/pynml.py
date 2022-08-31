@@ -10,7 +10,6 @@ Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
 """
 
 from __future__ import absolute_import
-from __future__ import print_function
 from __future__ import unicode_literals
 
 # py3.7, 3.8 require this to use standard collections as generics
@@ -1094,7 +1093,7 @@ def write_neuroml2_file(
     writers.NeuroMLWriter.write(nml2_doc, nml2_file_name)
 
     if validate:
-        validate_neuroml2(nml2_file_name, verbose_validate)
+        return validate_neuroml2(nml2_file_name, verbose_validate)
 
 
 def read_lems_file(

@@ -1,6 +1,7 @@
 [see also]
 .BR pynml (1),
 .BR pynml-channelanalysis (1),
+.BR pynml-channelml2nml (1),
 .BR pynml-plotspikes (1),
 .BR pynml-plotmorph (1),
 .BR pynml-modchannelanalysis (1),
