@@ -13,6 +13,7 @@ setup(
     packages=[
         "pyneuroml",
         "pyneuroml.analysis",
+        "pyneuroml.channelml",
         "pyneuroml.lems",
         "pyneuroml.tune",
         "pyneuroml.neuron",
@@ -32,6 +33,7 @@ setup(
             "pynml-summary         = pyneuroml.pynml:summary",
             "pynml-plotspikes      = pyneuroml.plot.PlotSpikes:main",
             "pynml-plotmorph       = pyneuroml.plot.PlotMorphology:main",
+            "pynml-channelml2nml   = pyneuroml.channelml:main",
             "pynml-sonata          = neuromllite.SonataReader:main",
         ]
     },
@@ -44,6 +46,8 @@ setup(
             "lems/LEMS_TEMPLATE.xml",
             "neuron/mview_neuroml1.hoc",
             "neuron/mview_neuroml2.hoc",
+            "channelml/ChannelML2NeuroML2.xsl",
+            "channelml/ChannelML2NeuroML2beta.xsl",
         ]
     },
     data_files=[
