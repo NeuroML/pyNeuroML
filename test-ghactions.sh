@@ -2,6 +2,12 @@ set -e
 
 python setup.py install
 
+echo
+echo "################################################"
+echo "##   Running unit tests"
+
+pytest --cov=pyneuroml .
+
 run_neuron_examples=false
 
 if [[ ($# -eq 1) && ($1 == '-neuron') ]]; then
