@@ -57,7 +57,7 @@ def channelml2nml(
         return None
     if not xsltfile:
         cwd = pathlib.Path(__file__).parent
-        xsltfile = str(cwd / pathlib.Path("ChannelML2NeuroML2.xsl"))
+        xsltfile = str(cwd / pathlib.Path("ChannelML2NeuroML2beta.xsl"))
 
     try:
         xslt = parse(xsltfile)
