@@ -15,3 +15,4 @@ git+https://github.com/NeuralEnsemble/neurotune.git#egg=neurotune
 git+https://github.com/NeuralEnsemble/pyelectro.git@master#egg=pyelectro
 git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
 neuron
+pydata-sphinx-theme
