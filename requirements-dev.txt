@@ -7,7 +7,7 @@ NEURON
 ppft
 
 # change these to development if working on the development branch
-git+https://github.com/NeuralEnsemble/libNeuroML.git@master#egg=libNeuroML
+git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML
 git+https://github.com/LEMS/pylems.git@master#egg=pylems
 
 
