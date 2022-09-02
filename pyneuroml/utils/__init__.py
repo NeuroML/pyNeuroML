@@ -58,6 +58,8 @@ def check_component_parameters_are_set(comp: Any) -> None:
     :param comp: component to check
     :type comp: Any
     :returns: None
+    :rtype: None
+    :raises ValueError: if compulsory parameter are not set
     """
     members = comp.get_members()
     for m in members:
