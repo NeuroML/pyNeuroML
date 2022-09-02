@@ -55,4 +55,4 @@ class TestMorphologyPlot(BaseTestCase):
             plot_interactive_3D(nml_file, nogui=True, save_to_file=filename)
 
             self.assertIsFile(filename)
-            # pl.Path(filename).unlink()
+            pl.Path(filename).unlink()
