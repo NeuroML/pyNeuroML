@@ -7,30 +7,40 @@ Copyright 2021 NeuroML Contributors
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-from typing import Any
+from typing import Any, Union
 import neuroml
 
 
 def component_factory(
-    component_type: str,
+    component_type: Union[str, type],
     **kwargs: Any
 ) -> Any:
     """Factory function to create a NeuroML Component object.
 
-    Users can provide the name of the component, along with its named
-    constructor arguments, and this function will create a new object of the
-    Component and return it.
+    Users can provide the name of the component as a string or the class
+    variable, along with its named constructor arguments, and this function
+    will create a new object of the Component and return it.
 
     Users can use the `add()` helper function to further modify components
 
-    :param component_type: name of component type to create component from
-    :type component_type: str
+    :param component_type: component type to create component from:
+        this can either be the name of the component as a string, e.g.
+        "NeuroMLDocument", or it can be the class type itself: NeuroMLDocument.
+        Note that when providing the class type, one will need to import it,
+        e.g.: `import NeuroMLDocument`, to ensure that it is defined, whereas
+        this will not be required when using the string.
+    :type component_type: str/type
     :param **kwargs: named arguments to be passed to ComponentType constructor
     :type **kwargs: named arguments
     :returns: new Component (object) of provided ComponentType
+    :rtype: object
 
     """
-    comp_type_class = getattr(neuroml.nml.nml, component_type)
+    if isinstance(component_type, str):
+        comp_type_class = getattr(neuroml.nml.nml, component_type)
+    else:
+        comp_type_class = getattr(neuroml.nml.nml, component_type.__name__)
+
     comp = comp_type_class(**kwargs)
     check_component_parameters_are_set(comp)
     return comp
