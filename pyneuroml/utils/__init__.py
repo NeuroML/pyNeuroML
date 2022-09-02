@@ -11,10 +11,7 @@ from typing import Any, Union
 import neuroml
 
 
-def component_factory(
-    component_type: Union[str, type],
-    **kwargs: Any
-) -> Any:
+def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
     """Factory function to create a NeuroML Component object.
 
     Users can provide the name of the component as a string or the class
@@ -69,7 +66,9 @@ def check_component_parameters_are_set(comp: Any) -> None:
 
         if optional == 0 and value is None:
             print(f"{name} is a compulsory parameter and must be set.")
-            print("If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n")
+            print(
+                "If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n"
+            )
             comp.info()
             raise ValueError
 
@@ -89,21 +88,22 @@ def extract_position_info(nml_model, verbose):
     for cell in cell_elements:
         cell_id_vs_cell[cell.id] = cell
 
-    if len(nml_model.networks)>0:
+    if len(nml_model.networks) > 0:
         popElements = nml_model.networks[0].populations
     else:
         popElements = []
-        net = neuroml.Network(id='x')
+        net = neuroml.Network(id="x")
         nml_model.networks.append(net)
-        cell_str = ''
+        cell_str = ""
         for cell in cell_elements:
-            pop = neuroml.Population(id='dummy_population_%s'%cell.id, size=1, component=cell.id)
+            pop = neuroml.Population(
+                id="dummy_population_%s" % cell.id, size=1, component=cell.id
+            )
             net.populations.append(pop)
-            cell_str+=cell.id+'__'
-        net.id=cell_str[:-2]
+            cell_str += cell.id + "__"
+        net.id = cell_str[:-2]
 
         popElements = nml_model.networks[0].populations
-
 
     for pop in popElements:
         name = pop.id
@@ -120,34 +120,37 @@ def extract_position_info(nml_model, verbose):
             len(instances),
             celltype,
         )
-        if verbose: print(info)
+        if verbose:
+            print(info)
 
         colour = "b"
         substitute_radius = None
 
         props = []
         props.extend(pop.properties)
-        ''' TODO
+        """ TODO
         if pop.annotation:
-            props.extend(pop.annotation.properties)'''
+            props.extend(pop.annotation.properties)"""
 
         for prop in props:
-            #print(prop)
+            # print(prop)
             if prop.tag == "color":
                 color = prop.value
-                color = (float(color.split(' ')[0]),
-                         float(color.split(' ')[1]),
-                         float(color.split(' ')[2]))
+                color = (
+                    float(color.split(" ")[0]),
+                    float(color.split(" ")[1]),
+                    float(color.split(" ")[2]),
+                )
 
-                pop_id_vs_color[pop.id]=color
-                #print("Colour determined to be: %s"%str(color))
+                pop_id_vs_color[pop.id] = color
+                # print("Colour determined to be: %s"%str(color))
             if prop.tag == "radius":
                 substitute_radius = float(prop.value)
-                pop_id_vs_radii[pop.id]=substitute_radius
+                pop_id_vs_radii[pop.id] = substitute_radius
 
         pop_positions = {}
 
-        if len(instances)>0:
+        if len(instances) > 0:
             for instance in instances:
                 location = instance.location
                 id = int(instance.id)
@@ -158,7 +161,7 @@ def extract_position_info(nml_model, verbose):
                 pop_positions[id] = (x, y, z)
         else:
             for id in range(pop.size):
-                pop_positions[id] = (0,0,0)
+                pop_positions[id] = (0, 0, 0)
 
         positions[name] = pop_positions
 
