@@ -24,8 +24,7 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_2d_plotter(self):
         """Test plot_2D function."""
-        nml_files = ["tests/plot/Cell_497232312.cell.nml",
-                     "tests/plot/test.cell.nml"]
+        nml_files = ["tests/plot/Cell_497232312.cell.nml", "tests/plot/test.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
             for plane in ["xy", "yz", "xz"]:
@@ -43,8 +42,7 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_3d_plotter(self):
         """Test plot_interactive_3D function."""
-        nml_files = ["tests/plot/Cell_497232312.cell.nml",
-                     "tests/plot/test.cell.nml"]
+        nml_files = ["tests/plot/Cell_497232312.cell.nml", "tests/plot/test.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
             filename = f"test_morphology_plot_3d_{ofile.replace('.', '_', 100)}.png"

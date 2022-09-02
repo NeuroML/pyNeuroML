@@ -268,11 +268,7 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
     )
 
 
-def add_intracellular_property(
-    property_name: str,
-    cell: Cell,
-    **kwargs: Any
-) -> None:
+def add_intracellular_property(property_name: str, cell: Cell, **kwargs: Any) -> None:
     """Generic function to add an intracellular property to the cell.
 
     For a full list of membrane properties, see:
@@ -291,11 +287,7 @@ def add_intracellular_property(
     cell.biophysical_properties.intracellular_properties.add(property_obj)
 
 
-def add_membrane_property(
-    property_name: str,
-    cell: Cell,
-    **kwargs: Any
-) -> None:
+def add_membrane_property(property_name: str, cell: Cell, **kwargs: Any) -> None:
     """Generic function to add a membrane property to the cell.
 
     For a full list of membrane properties, see:
