@@ -20,6 +20,14 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
 
     Users can use the `add()` helper function to further modify components
 
+    This factory runs two checks while creating the component object:
+
+    - that the *required* ComponentType members are set
+    - that arguments not in the permitted ComponentType members are not passed.
+
+    It is therefore less error prone than creating Components directly using
+    the ComponentType constructors.
+
     :param component_type: component type to create component from:
         this can either be the name of the component as a string, e.g.
         "NeuroMLDocument", or it can be the class type itself: NeuroMLDocument.
