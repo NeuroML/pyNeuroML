@@ -9,6 +9,10 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 from typing import Any, Union
 import neuroml
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
@@ -88,7 +92,7 @@ def check_component_type_arg_list(comp: Any, **kwargs: Any) -> None:
 
     for arg in args:
         if arg not in member_names:
-            print(f"'{arg}' is not a permitted argument for ComponentType '{comp.__class__.__name__}'")
+            logger.error(f"'{arg}' is not a permitted argument for ComponentType '{comp.__class__.__name__}'\n")
             comp.info()
             raise ValueError
 
@@ -115,8 +119,8 @@ def check_component_parameters_are_set(comp: Any) -> None:
         value = getattr(comp, name)
 
         if optional == 0 and value is None:
-            print(f"{name} is a compulsory parameter and must be set.")
-            print(
+            logger.error(f"ValueError: {name} is a compulsory parameter and must be set.\n")
+            logger.error(
                 "If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n"
             )
             comp.info()
