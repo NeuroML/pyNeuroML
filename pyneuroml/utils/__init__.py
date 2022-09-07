@@ -51,8 +51,8 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
         comp_type_class = getattr(neuroml.nml.nml, component_type.__name__)
 
     comp = comp_type_class(**kwargs)
-    check_component_parameters_are_set(comp)
     check_component_type_arg_list(comp, **kwargs)
+    comp.validate()
     return comp
 
 
@@ -92,39 +92,10 @@ def check_component_type_arg_list(comp: Any, **kwargs: Any) -> None:
 
     for arg in args:
         if arg not in member_names:
-            logger.error(f"'{arg}' is not a permitted argument for ComponentType '{comp.__class__.__name__}'\n")
+            err = f"'{arg}' is not a permitted argument for ComponentType '{comp.__class__.__name__}'\n"
+            logger.error(err)
             comp.info()
-            raise ValueError
-
-
-def check_component_parameters_are_set(comp: Any) -> None:
-    """Check if all compulsory parameters of a component are set.
-
-    Throws a Python `ValueError` if a compulsory parameter has not been set in
-    the component. If you wish to set this parameter later, handle this error
-    in a try/except block and continue.
-
-    Note: validating your NeuroML file will also check this.
-
-    :param comp: component to check
-    :type comp: Any
-    :returns: None
-    :rtype: None
-    :raises ValueError: if compulsory parameter are not set
-    """
-    members = comp.get_members()
-    for m in members:
-        name = m.get_name()
-        optional = m.get_optional()
-        value = getattr(comp, name)
-
-        if optional == 0 and value is None:
-            logger.error(f"ValueError: {name} is a compulsory parameter and must be set.\n")
-            logger.error(
-                "If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n"
-            )
-            comp.info()
-            raise ValueError
+            raise ValueError(err)
 
 
 def extract_position_info(nml_model, verbose):

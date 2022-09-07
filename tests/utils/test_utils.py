@@ -56,17 +56,10 @@ class UtilsTestCase(unittest.TestCase):
                 pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
-    def test_component_parameter_checker(self):
-        "Test the parameter checker utility function"
-        iaf_cell = neuroml.nml.nml.IafCell(id="test_cell")
-        with self.assertRaises(ValueError) as cm:
-            check_component_parameters_are_set(iaf_cell)
-        print(cm)
-
     def test_component_argument_list_checker(self):
         """Test the check_component_type_arg_list utility function"""
         nml_doc = neuroml.nml.nml.NeuroMLDocument()
         with self.assertRaises(ValueError) as cm:
             check_component_type_arg_list(nml_doc, random_argument="nope")
-        print(cm)
+        print(cm.exception)
         check_component_type_arg_list(nml_doc, id="yep")
