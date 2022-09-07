@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
+def component_factory(component_type: Union[str, type], validate: bool = True, **kwargs: Any) -> Any:
     """Factory function to create a NeuroML Component object.
 
     Users can provide the name of the component as a string or the class
@@ -26,11 +26,15 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
 
     This factory runs two checks while creating the component object:
 
-    - that the *required* ComponentType members are set
-    - that arguments not in the permitted ComponentType members are not passed.
+    - that all arguments given do belong to the ComponentType (useful for
+      caching typos)
+    - that the created component is valid NeuroML
 
     It is therefore less error prone than creating Components directly using
     the ComponentType constructors.
+
+    It may be useful to disable validation when starting a model. The `validate`
+    parameter can be set to False for this.
 
     :param component_type: component type to create component from:
         this can either be the name of the component as a string, e.g.
@@ -39,10 +43,13 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
         e.g.: `import NeuroMLDocument`, to ensure that it is defined, whereas
         this will not be required when using the string.
     :type component_type: str/type
+    :param validate: toggle validation (default: True)
+    :type validate: bool
     :param **kwargs: named arguments to be passed to ComponentType constructor
     :type **kwargs: named arguments
     :returns: new Component (object) of provided ComponentType
     :rtype: object
+    :raises ValueError: if validation/checks fail
 
     """
     if isinstance(component_type, str):
@@ -52,7 +59,8 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
 
     comp = comp_type_class(**kwargs)
     check_component_type_arg_list(comp, **kwargs)
-    comp.validate()
+    if validate:
+        comp.validate()
     return comp
 
 
