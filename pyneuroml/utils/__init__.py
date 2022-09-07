@@ -9,6 +9,10 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 from typing import Any, Union
 import neuroml
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
@@ -19,6 +23,14 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
     will create a new object of the Component and return it.
 
     Users can use the `add()` helper function to further modify components
+
+    This factory runs two checks while creating the component object:
+
+    - that the *required* ComponentType members are set
+    - that arguments not in the permitted ComponentType members are not passed.
+
+    It is therefore less error prone than creating Components directly using
+    the ComponentType constructors.
 
     :param component_type: component type to create component from:
         this can either be the name of the component as a string, e.g.
@@ -40,7 +52,49 @@ def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
 
     comp = comp_type_class(**kwargs)
     check_component_parameters_are_set(comp)
+    check_component_type_arg_list(comp, **kwargs)
     return comp
+
+
+def check_component_type_arg_list(comp: Any, **kwargs: Any) -> None:
+    """Check that the correct arguments have been passed for creation of a
+    particular Component comp.
+
+    This is required because generally, in Python, if one passes a keyword
+    argument that is not listed in a Class constructor, Python will error.
+    However, in libNeuroML/nml.py, all constructors have a last keyword
+    argument `**kwargs` which means extra keyword arguments that do not match
+    the members are silently accepted and then ignored---because they are not
+    used in the constructor.
+
+    This means that common mistakes like typos will not be caught by Python,
+    and in larger models, one will have to inspect the model in great detail to
+    realise that a mistake has been made while creating a component from a
+    NeuroML ComponentType.
+
+    This function makes this check manually.
+
+    :param comp: component to check
+    :type comp: Any
+    :param **kwargs: arg list passed for creation of component
+    :type **kwargs: Any
+    :returns: None
+    :rtype: None
+    :raises ValueError: if given argument list does not match permitted  member
+
+    """
+    members = comp.get_members()
+    member_names = []
+    for m in members:
+        member_names.append(m.get_name())
+
+    args = list(kwargs.keys())
+
+    for arg in args:
+        if arg not in member_names:
+            logger.error(f"'{arg}' is not a permitted argument for ComponentType '{comp.__class__.__name__}'\n")
+            comp.info()
+            raise ValueError
 
 
 def check_component_parameters_are_set(comp: Any) -> None:
@@ -65,8 +119,8 @@ def check_component_parameters_are_set(comp: Any) -> None:
         value = getattr(comp, name)
 
         if optional == 0 and value is None:
-            print(f"{name} is a compulsory parameter and must be set.")
-            print(
+            logger.error(f"ValueError: {name} is a compulsory parameter and must be set.\n")
+            logger.error(
                 "If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n"
             )
             comp.info()

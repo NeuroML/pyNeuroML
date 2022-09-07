@@ -62,3 +62,11 @@ class UtilsTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             check_component_parameters_are_set(iaf_cell)
         print(cm)
+
+    def test_component_argument_list_checker(self):
+        """Test the check_component_type_arg_list utility function"""
+        nml_doc = neuroml.nml.nml.NeuroMLDocument()
+        with self.assertRaises(ValueError) as cm:
+            check_component_type_arg_list(nml_doc, random_argument="nope")
+        print(cm)
+        check_component_type_arg_list(nml_doc, id="yep")
