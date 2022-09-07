@@ -7,59 +7,95 @@ Copyright 2021 NeuroML Contributors
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-from typing import Any
+from typing import Any, Union
 import neuroml
+import logging
 
 
-def component_factory(
-    component_type: str,
-    **kwargs: Any
-) -> Any:
+logger = logging.getLogger(__name__)
+
+
+def component_factory(component_type: Union[str, type], **kwargs: Any) -> Any:
     """Factory function to create a NeuroML Component object.
 
-    Users can provide the name of the component, along with its named
-    constructor arguments, and this function will create a new object of the
-    Component and return it.
+    Users can provide the name of the component as a string or the class
+    variable, along with its named constructor arguments, and this function
+    will create a new object of the Component and return it.
 
     Users can use the `add()` helper function to further modify components
 
-    :param component_type: name of component type to create component from
-    :type component_type: str
+    This factory runs two checks while creating the component object:
+
+    - that the *required* ComponentType members are set
+    - that arguments not in the permitted ComponentType members are not passed.
+
+    It is therefore less error prone than creating Components directly using
+    the ComponentType constructors.
+
+    :param component_type: component type to create component from:
+        this can either be the name of the component as a string, e.g.
+        "NeuroMLDocument", or it can be the class type itself: NeuroMLDocument.
+        Note that when providing the class type, one will need to import it,
+        e.g.: `import NeuroMLDocument`, to ensure that it is defined, whereas
+        this will not be required when using the string.
+    :type component_type: str/type
     :param **kwargs: named arguments to be passed to ComponentType constructor
     :type **kwargs: named arguments
     :returns: new Component (object) of provided ComponentType
+    :rtype: object
 
     """
-    comp_type_class = getattr(neuroml.nml.nml, component_type)
+    if isinstance(component_type, str):
+        comp_type_class = getattr(neuroml.nml.nml, component_type)
+    else:
+        comp_type_class = getattr(neuroml.nml.nml, component_type.__name__)
+
     comp = comp_type_class(**kwargs)
-    check_component_parameters_are_set(comp)
+    check_component_type_arg_list(comp, **kwargs)
+    comp.validate()
     return comp
 
 
-def check_component_parameters_are_set(comp: Any) -> None:
-    """Check if all compulsory parameters of a component are set.
+def check_component_type_arg_list(comp: Any, **kwargs: Any) -> None:
+    """Check that the correct arguments have been passed for creation of a
+    particular Component comp.
 
-    Throws a Python `ValueError` if a compulsory parameter has not been set in
-    the component. If you wish to set this parameter later, handle this error
-    in a try/except block and continue.
+    This is required because generally, in Python, if one passes a keyword
+    argument that is not listed in a Class constructor, Python will error.
+    However, in libNeuroML/nml.py, all constructors have a last keyword
+    argument `**kwargs` which means extra keyword arguments that do not match
+    the members are silently accepted and then ignored---because they are not
+    used in the constructor.
 
-    Note: validating your NeuroML file will also check this.
+    This means that common mistakes like typos will not be caught by Python,
+    and in larger models, one will have to inspect the model in great detail to
+    realise that a mistake has been made while creating a component from a
+    NeuroML ComponentType.
+
+    This function makes this check manually.
 
     :param comp: component to check
     :type comp: Any
+    :param **kwargs: arg list passed for creation of component
+    :type **kwargs: Any
     :returns: None
+    :rtype: None
+    :raises ValueError: if given argument list does not match permitted  member
+
     """
     members = comp.get_members()
+    member_names = []
     for m in members:
-        name = m.get_name()
-        optional = m.get_optional()
-        value = getattr(comp, name)
+        member_names.append(m.get_name())
 
-        if optional == 0 and value is None:
-            print(f"{name} is a compulsory parameter and must be set.")
-            print("If you wish to ignore this error and set this parameter later, please handle the exception and continue.\n")
+    args = list(kwargs.keys())
+
+    for arg in args:
+        if arg not in member_names:
+            err = f"'{arg}' is not a permitted argument for ComponentType '{comp.__class__.__name__}'\n"
+            logger.error(err)
             comp.info()
-            raise ValueError
+            raise ValueError(err)
 
 
 def extract_position_info(nml_model, verbose):
@@ -77,21 +113,22 @@ def extract_position_info(nml_model, verbose):
     for cell in cell_elements:
         cell_id_vs_cell[cell.id] = cell
 
-    if len(nml_model.networks)>0:
+    if len(nml_model.networks) > 0:
         popElements = nml_model.networks[0].populations
     else:
         popElements = []
-        net = neuroml.Network(id='x')
+        net = neuroml.Network(id="x")
         nml_model.networks.append(net)
-        cell_str = ''
+        cell_str = ""
         for cell in cell_elements:
-            pop = neuroml.Population(id='dummy_population_%s'%cell.id, size=1, component=cell.id)
+            pop = neuroml.Population(
+                id="dummy_population_%s" % cell.id, size=1, component=cell.id
+            )
             net.populations.append(pop)
-            cell_str+=cell.id+'__'
-        net.id=cell_str[:-2]
+            cell_str += cell.id + "__"
+        net.id = cell_str[:-2]
 
         popElements = nml_model.networks[0].populations
-
 
     for pop in popElements:
         name = pop.id
@@ -108,34 +145,37 @@ def extract_position_info(nml_model, verbose):
             len(instances),
             celltype,
         )
-        if verbose: print(info)
+        if verbose:
+            print(info)
 
         colour = "b"
         substitute_radius = None
 
         props = []
         props.extend(pop.properties)
-        ''' TODO
+        """ TODO
         if pop.annotation:
-            props.extend(pop.annotation.properties)'''
+            props.extend(pop.annotation.properties)"""
 
         for prop in props:
-            #print(prop)
+            # print(prop)
             if prop.tag == "color":
                 color = prop.value
-                color = (float(color.split(' ')[0]),
-                         float(color.split(' ')[1]),
-                         float(color.split(' ')[2]))
+                color = (
+                    float(color.split(" ")[0]),
+                    float(color.split(" ")[1]),
+                    float(color.split(" ")[2]),
+                )
 
-                pop_id_vs_color[pop.id]=color
-                #print("Colour determined to be: %s"%str(color))
+                pop_id_vs_color[pop.id] = color
+                # print("Colour determined to be: %s"%str(color))
             if prop.tag == "radius":
                 substitute_radius = float(prop.value)
-                pop_id_vs_radii[pop.id]=substitute_radius
+                pop_id_vs_radii[pop.id] = substitute_radius
 
         pop_positions = {}
 
-        if len(instances)>0:
+        if len(instances) > 0:
             for instance in instances:
                 location = instance.location
                 id = int(instance.id)
@@ -146,7 +186,7 @@ def extract_position_info(nml_model, verbose):
                 pop_positions[id] = (x, y, z)
         else:
             for id in range(pop.size):
-                pop_positions[id] = (0,0,0)
+                pop_positions[id] = (0, 0, 0)
 
         positions[name] = pop_positions
 

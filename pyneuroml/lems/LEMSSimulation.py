@@ -123,8 +123,10 @@ class LEMSSimulation:
             self.lems_info["report"] = ' reportFile="%s"' % report_file_name
 
     def include_neuroml2_file(
-        self, nml2_file_name: str, include_included: bool = True,
-        relative_to_dir: str = "."
+        self,
+        nml2_file_name: str,
+        include_included: bool = True,
+        relative_to_dir: str = ".",
     ) -> None:
         """Include additional NeuroML2 file.
 
@@ -154,7 +156,9 @@ class LEMSSimulation:
                     include.href, include_included=True, relative_to_dir=base_path
                 )
 
-    def include_lems_file(self, lems_file_name: str, include_included: bool = True) -> None:
+    def include_lems_file(
+        self, lems_file_name: str, include_included: bool = True
+    ) -> None:
         """Include additional LEMS file in the simulation.
 
         :param lems_file_name: name of LEMS file to include
@@ -172,8 +176,9 @@ class LEMSSimulation:
             for inc in model.included_files:
                 self.lems_info["include_files"].append(inc)
 
-    def create_display(self, id: str, title: str, ymin: str, ymax: str,
-                       timeScale: str = "1ms") -> None:
+    def create_display(
+        self, id: str, title: str, ymin: str, ymax: str, timeScale: str = "1ms"
+    ) -> None:
         """Create a new display
 
         :param id: id of display
@@ -241,8 +246,13 @@ class LEMSSimulation:
         eof["selections"] = []
 
     def add_line_to_display(
-        self, display_id: str, line_id: str, quantity: str, scale: float = 1.,
-        color: str = None, timeScale: str = "1ms"
+        self,
+        display_id: str,
+        line_id: str,
+        quantity: str,
+        scale: float = 1.0,
+        color: str = None,
+        timeScale: str = "1ms",
     ) -> None:
         """Add a new line to the display
 
@@ -266,7 +276,9 @@ class LEMSSimulation:
             if d["id"] == display_id:
                 disp = d
         if not disp:
-            raise ValueError(f"Display with id {display_id} not found. Please check the provided display_id, or create it first.")
+            raise ValueError(
+                f"Display with id {display_id} not found. Please check the provided display_id, or create it first."
+            )
 
         line = {}  # type: dict[str, typing.Any]
         disp["lines"].append(line)
@@ -276,8 +288,9 @@ class LEMSSimulation:
         line["color"] = color if color else get_next_hex_color(self.my_random)
         line["time_scale"] = timeScale
 
-    def add_column_to_output_file(self, output_file_id: str, column_id: str,
-                                  quantity: str) -> None:
+    def add_column_to_output_file(
+        self, output_file_id: str, column_id: str, quantity: str
+    ) -> None:
         """Add a column to the output file with id `output_file_id`
 
         :param output_file_id: id of output file (must be created first using
@@ -296,7 +309,9 @@ class LEMSSimulation:
                 of = o
 
         if not of:
-            raise ValueError(f"Output file with id {output_file_id} not found.  Please check the provided output_file_id, or create it first.")
+            raise ValueError(
+                f"Output file with id {output_file_id} not found.  Please check the provided output_file_id, or create it first."
+            )
 
         column = {}  # type: dict[str, typing.Any]
         of["columns"].append(column)
@@ -304,8 +319,7 @@ class LEMSSimulation:
         column["quantity"] = quantity
 
     def add_selection_to_event_output_file(
-        self, event_output_file_id: str, event_id: str, select: str,
-        event_port: str
+        self, event_output_file_id: str, event_id: str, select: str, event_port: str
     ) -> None:
         """Add a column to the event output file with id
         `event_output_file_id`.
@@ -327,7 +341,9 @@ class LEMSSimulation:
             if o["id"] == event_output_file_id:
                 eof = o
         if not eof:
-            raise ValueError(f"Output file with id {event_output_file_id} not found.  Please check the provided event_output_file_id, or create it first.")
+            raise ValueError(
+                f"Output file with id {event_output_file_id} not found.  Please check the provided event_output_file_id, or create it first."
+            )
 
         selection = {}  # type: dict[str, typing.Any]
         eof["selections"].append(selection)
