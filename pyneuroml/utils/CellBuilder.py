@@ -45,6 +45,7 @@ def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
     """Create a NeuroML Cell.
 
     Initialises the cell with these properties assigning IDs where applicable:
+
     - Morphology: "morphology"
     - BiophysicalProperties: "biophys"
     - MembraneProperties
