@@ -32,7 +32,7 @@ from neuroml import (
     ChannelDensityNonUniformNernst,
     ChannelDensityNonUniformGHK,
 )
-from . import component_factory
+from neuroml.utils import component_factory
 
 neuro_lex_ids = {
     "axon": "GO:0030424",
