@@ -6,32 +6,6 @@ Utility functions to help build cells in NeuroML
 
 from typing import List, Union, Any, Optional
 import neuroml
-from neuroml import (
-    Cell,
-    Morphology,
-    MembraneProperties,  # type: ignore  # noqa
-    IntracellularProperties,
-    BiophysicalProperties,
-    Segment,
-    SegmentGroup,
-    Point3DWithDiam,
-    SegmentParent,
-    Member,
-    InitMembPotential,
-    Resistivity,
-    SpecificCapacitance,
-    NeuroMLDocument,
-    IncludeType,
-    ChannelDensity,
-    ChannelDensityNernst,
-    ChannelDensityNernstCa2,
-    ChannelDensityGHK,
-    ChannelDensityGHK2,
-    ChannelDensityVShift,
-    ChannelDensityNonUniform,
-    ChannelDensityNonUniformNernst,
-    ChannelDensityNonUniformGHK,
-)
 from neuroml.utils import component_factory
 
 neuro_lex_ids = {
@@ -41,7 +15,7 @@ neuro_lex_ids = {
 }
 
 
-def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
+def create_cell(cell_id: str, use_convention: bool = True) -> neuroml.Cell:
     """Create a NeuroML Cell.
 
     Initialises the cell with these properties assigning IDs where applicable:
@@ -70,52 +44,59 @@ def create_cell(cell_id: str, use_convention: bool = True) -> Cell:
     :returns: created cell object of type neuroml.Cell
 
     """
-    cell = Cell(id=cell_id)
-    cell.morphology = Morphology(id="morphology")
-    membrane_properties = MembraneProperties()
-    intracellular_properties = IntracellularProperties()
+    cell = component_factory("Cell", id=cell_id)
+    # do not validate yet, because segments are required
+    cell.add("Morphology", id="morphology", validate=False)
 
-    cell.biophysical_properties = BiophysicalProperties(
+    membrane_properties = component_factory("MembraneProperties")
+    intracellular_properties = component_factory("IntracellularProperties")
+
+    cell.biophysical_properties = component_factory(
+        "BiophysicalProperties",
         id="biophys",
         intracellular_properties=intracellular_properties,
         membrane_properties=membrane_properties,
     )
 
     if use_convention:
-        seg_group_all = SegmentGroup(id="all")
-        seg_group_soma = SegmentGroup(
+        seg_group_all = component_factory("SegmentGroup", id="all")
+        seg_group_soma = component_factory(
+            "SegmentGroup",
             id="soma_group",
             neuro_lex_id=neuro_lex_ids["soma"],
             notes="Default soma segment group for the cell",
         )
-        seg_group_axon = SegmentGroup(
+        seg_group_axon = component_factory(
+            "SegmentGroup",
             id="axon_group",
             neuro_lex_id=neuro_lex_ids["axon"],
             notes="Default axon segment group for the cell",
         )
-        seg_group_dend = SegmentGroup(
+        seg_group_dend = component_factory(
+            "SegmentGroup",
             id="dendrite_group",
             neuro_lex_id=neuro_lex_ids["dend"],
             notes="Default dendrite segment group for the cell",
         )
-        cell.morphology.segment_groups.append(seg_group_all)
-        cell.morphology.segment_groups.append(seg_group_soma)
-        cell.morphology.segment_groups.append(seg_group_axon)
-        cell.morphology.segment_groups.append(seg_group_dend)
+        # skip validation: segments etc needed, cell is invalid
+        cell.morphology.add(seg_group_all, validate=False)
+        cell.morphology.add(seg_group_soma, validate=False)
+        cell.morphology.add(seg_group_axon, validate=False)
+        cell.morphology.add(seg_group_dend, validate=False)
 
     return cell
 
 
 def add_segment(
-    cell: Cell,
+    cell: neuroml.Cell,
     prox: List[float],
     dist: List[float],
     name: str = None,
-    parent: SegmentParent = None,
+    parent: neuroml.SegmentParent = None,
     fraction_along: float = 1.0,
-    group: SegmentGroup = None,
+    group: neuroml.SegmentGroup = None,
     use_convention: bool = True,
-) -> Segment:
+) -> neuroml.Segment:
     """Add a segment to the cell.
 
     Suggested convention: use `axon_`, `soma_`, `dend_` prefixes for axon,
@@ -148,13 +129,17 @@ def add_segment(
     """
     try:
         if prox:
-            p = Point3DWithDiam(x=prox[0], y=prox[1], z=prox[2], diameter=prox[3])
+            p = component_factory(
+                "Point3DWithDiam", x=prox[0], y=prox[1], z=prox[2], diameter=prox[3]
+            )
         else:
             p = None
     except IndexError as e:
         print("{}: prox must be a list of 4 elements".format(e))
     try:
-        d = Point3DWithDiam(x=dist[0], y=dist[1], z=dist[2], diameter=dist[3])
+        d = component_factory(
+            "Point3DWithDiam", x=dist[0], y=dist[1], z=dist[2], diameter=dist[3]
+        )
     except IndexError as e:
         print("{}: dist must be a list of 4 elements".format(e))
 
@@ -166,11 +151,13 @@ def add_segment(
         )
 
     sp = (
-        SegmentParent(segments=parent.id, fraction_along=fraction_along)
+        component_factory(
+            "SegmentParent", segments=parent.id, fraction_along=fraction_along
+        )
         if parent
         else None
     )
-    segment = Segment(id=segid, proximal=p, distal=d, parent=sp)
+    segment = component_factory("Segment", id=segid, proximal=p, distal=d, parent=sp)
 
     if name:
         segment.name = name
@@ -203,10 +190,12 @@ def add_segment(
                 seg_group_default = cell.get_segment_group("dendrite_group")
 
         if seg_group is None:
-            seg_group = SegmentGroup(id=group, neuro_lex_id=neuro_lex_id)
-            cell.morphology.segment_groups.append(seg_group)
+            seg_group = component_factory(
+                "SegmentGroup", id=group, neuro_lex_id=neuro_lex_id
+            )
+            cell.morphology.add(seg_group, validate=False)
 
-        seg_group.members.append(Member(segments=segment.id))
+        seg_group.add(component_factory("Member", segments=segment.id))
         # Ideally, these higher level segment groups should just include other
         # segment groups using Include, which would result in smaller NML
         # files. However, because these default segment groups are defined
@@ -215,17 +204,17 @@ def add_segment(
         # TODO: clarify if the order of definition is important, or if the jnml
         # validator needs to be updated to manage this use case.
         if use_convention and seg_group_default:
-            seg_group_default.members.append(Member(segments=segment.id))
+            seg_group_default.add(component_factory("Member", segments=segment.id))
 
     if use_convention:
         seg_group_all = cell.get_segment_group("all")
-        seg_group_all.members.append(Member(segments=segment.id))
+        seg_group_all.add(component_factory("Member", segments=segment.id))
 
-    cell.morphology.segments.append(segment)
+    cell.morphology.add(segment)
     return segment
 
 
-def set_init_memb_potential(cell: Cell, v: str, group: str = "all") -> None:
+def set_init_memb_potential(cell: neuroml.Cell, v: str, group: str = "all") -> None:
     """Set the initial membrane potential of the cell.
 
     :param cell: cell to modify
@@ -235,12 +224,12 @@ def set_init_memb_potential(cell: Cell, v: str, group: str = "all") -> None:
     :param group: id of segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.membrane_properties.init_memb_potentials.append(
-        InitMembPotential(value=v, segment_groups=group)
+    cell.biophysical_properties.membrane_properties.add(
+        "InitMembPotential", value=v, segment_groups=group
     )
 
 
-def set_resistivity(cell: Cell, resistivity: str, group: str = "all") -> None:
+def set_resistivity(cell: neuroml.Cell, resistivity: str, group: str = "all") -> None:
     """Set the resistivity of the cell
 
     :param cell: cell to modfify
@@ -249,12 +238,14 @@ def set_resistivity(cell: Cell, resistivity: str, group: str = "all") -> None:
     :param group: segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.intracellular_properties.resistivities.append(
-        Resistivity(value=resistivity, segment_groups=group)
+    cell.biophysical_properties.intracellular_properties.add(
+        "Resistivity", value=resistivity, segment_groups=group
     )
 
 
-def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> None:
+def set_specific_capacitance(
+    cell: neuroml.Cell, spec_cap: str, group: str = "all"
+) -> None:
     """Set the specific capacitance for the cell.
 
     :param cell: cell to set specific capacitance for
@@ -264,12 +255,14 @@ def set_specific_capacitance(cell: Cell, spec_cap: str, group: str = "all") -> N
     :param group: segment group to modify
     :type group: str
     """
-    cell.biophysical_properties.membrane_properties.specific_capacitances.append(
-        SpecificCapacitance(value=spec_cap, segment_groups=group)
+    cell.biophysical_properties.membrane_properties.add(
+        "SpecificCapacitance", value=spec_cap, segment_groups=group
     )
 
 
-def add_intracellular_property(property_name: str, cell: Cell, **kwargs: Any) -> None:
+def add_intracellular_property(
+    property_name: str, cell: neuroml.Cell, **kwargs: Any
+) -> None:
     """Generic function to add an intracellular property to the cell.
 
     For a full list of membrane properties, see:
@@ -284,11 +277,12 @@ def add_intracellular_property(property_name: str, cell: Cell, **kwargs: Any) ->
     :returns: None
 
     """
-    property_obj = component_factory(property_name, **kwargs)
-    cell.biophysical_properties.intracellular_properties.add(property_obj)
+    cell.biophysical_properties.intracellular_properties.add(property_name, **kwargs)
 
 
-def add_membrane_property(property_name: str, cell: Cell, **kwargs: Any) -> None:
+def add_membrane_property(
+    property_name: str, cell: neuroml.Cell, **kwargs: Any
+) -> None:
     """Generic function to add a membrane property to the cell.
 
     For a full list of membrane properties, see:
@@ -306,14 +300,13 @@ def add_membrane_property(property_name: str, cell: Cell, **kwargs: Any) -> None
     :returns: None
 
     """
-    property_obj = component_factory(property_name, **kwargs)
-    cell.biophysical_properties.membrane_properties.add(property_obj)
+    cell.biophysical_properties.membrane_properties.add(property_name, **kwargs)
 
 
 def add_channel_density_v(
     channel_density_type: str,
-    cell: Cell,
-    nml_cell_doc: NeuroMLDocument,
+    cell: neuroml.Cell,
+    nml_cell_doc: neuroml.NeuroMLDocument,
     ion_chan_def_file: str = "",
     **kwargs: Any
 ) -> None:
@@ -337,13 +330,16 @@ def add_channel_density_v(
     add_membrane_property(channel_density_type, cell, **kwargs)
 
     if len(ion_chan_def_file) > 0:
-        if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
-            nml_cell_doc.add(IncludeType(ion_chan_def_file))
+        if (
+            component_factory("IncludeType", ion_chan_def_file)
+            not in nml_cell_doc.includes
+        ):
+            nml_cell_doc.add("IncludeType", ion_chan_def_file)
 
 
 def add_channel_density(
-    cell: Cell,
-    nml_cell_doc: NeuroMLDocument,
+    cell: neuroml.Cell,
+    nml_cell_doc: neuroml.NeuroMLDocument,
     cd_id: str,
     ion_channel: str,
     cond_density: str,
@@ -373,7 +369,8 @@ def add_channel_density(
     :param ion_chan_def_file: path to NeuroML2 file defining the ion channel, if empty, it assumes the channel is defined in the same file
     :type ion_chan_def_file: str
     """
-    cd = ChannelDensity(
+    cd = cell.biophysical_properties.membrane_properties.add(
+        "ChannelDensity",
         id=cd_id,
         segment_groups=group,
         ion=ion,
@@ -382,8 +379,9 @@ def add_channel_density(
         cond_density=cond_density,
     )
 
-    cell.biophysical_properties.membrane_properties.channel_densities.append(cd)
-
     if len(ion_chan_def_file) > 0:
-        if IncludeType(ion_chan_def_file) not in nml_cell_doc.includes:
-            nml_cell_doc.includes.append(IncludeType(ion_chan_def_file))
+        if (
+            component_factory("IncludeType", ion_chan_def_file)
+            not in nml_cell_doc.includes
+        ):
+            nml_cell_doc.add("IncludeType", ion_chan_def_file)

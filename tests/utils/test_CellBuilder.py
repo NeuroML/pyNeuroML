@@ -12,7 +12,7 @@ import unittest
 import tempfile
 import neuroml
 from neuroml import IonChannel
-import pyneuroml as pynml
+from pyneuroml import pynml
 from pyneuroml.utils.CellBuilder import *
 from neuroml import NeuroMLDocument
 
@@ -44,7 +44,7 @@ class CellBuilderTestCase(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_complex_cell(self):
@@ -78,7 +78,7 @@ class CellBuilderTestCase(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_create_cell(self):
@@ -91,7 +91,7 @@ class CellBuilderTestCase(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as test_file:
             # cell does not have segments: is invalid NeuroML
             self.assertFalse(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_add_segment(self):
@@ -111,7 +111,7 @@ class CellBuilderTestCase(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as test_file:
             # it is now valid because the cell has a segment
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_init_memb_potential(self):
@@ -127,7 +127,7 @@ class CellBuilderTestCase(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as test_file:
             # it is now valid because the cell has a segment
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     @unittest.expectedFailure
@@ -144,7 +144,7 @@ class CellBuilderTestCase(unittest.TestCase):
         nml_doc.cells.append(new_cell)
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_resistivity(self):
@@ -158,7 +158,7 @@ class CellBuilderTestCase(unittest.TestCase):
         nml_doc.cells.append(new_cell)
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     @unittest.expectedFailure
@@ -173,7 +173,7 @@ class CellBuilderTestCase(unittest.TestCase):
         nml_doc.cells.append(new_cell)
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_specific_capacitance(self):
@@ -187,7 +187,7 @@ class CellBuilderTestCase(unittest.TestCase):
         nml_doc.cells.append(new_cell)
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     @unittest.expectedFailure
@@ -202,7 +202,7 @@ class CellBuilderTestCase(unittest.TestCase):
         nml_doc.cells.append(new_cell)
         with tempfile.NamedTemporaryFile() as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_channel_density(self):
@@ -244,7 +244,7 @@ class CellBuilderTestCase(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile(dir=".") as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_channel_density_v(self):
@@ -287,7 +287,7 @@ class CellBuilderTestCase(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile(dir=".") as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     @unittest.expectedFailure
@@ -316,7 +316,7 @@ class CellBuilderTestCase(unittest.TestCase):
         )
         with tempfile.NamedTemporaryFile(dir=".") as test_file:
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_membrane_property(self):
@@ -339,7 +339,7 @@ class CellBuilderTestCase(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as test_file:
             # it is now valid because the cell has a segment
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
 
     def test_setting_intracellular_property(self):
@@ -366,5 +366,5 @@ class CellBuilderTestCase(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as test_file:
             # it is now valid because the cell has a segment
             self.assertTrue(
-                pynml.pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
+                pynml.write_neuroml2_file(nml_doc, test_file.name, validate=True)
             )
