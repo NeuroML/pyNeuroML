@@ -118,7 +118,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
 
     :param a: arguments object
     :type a:
-    :param **kwargs: other arguments
+    :param kwargs: other arguments
     """
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
