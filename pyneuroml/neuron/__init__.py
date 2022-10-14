@@ -469,7 +469,9 @@ def getinfo(seclist: list, doprint: str = "", listall: bool = False):
                             not replace_brackets(str(sec))
                             in paramsectiondict[rm_NML_str(pname[0])].keys()
                         ):
-                            paramsectiondict[rm_NML_str(pname[0])][replace_brackets(str(sec))] = {
+                            paramsectiondict[rm_NML_str(pname[0])][
+                                replace_brackets(str(sec))
+                            ] = {
                                 "id": str(sec),
                             }
                         if rm_NML_str(pname[0]) in seginfo[seg]:
@@ -488,13 +490,13 @@ def getinfo(seclist: list, doprint: str = "", listall: bool = False):
                     unique_values = list(set(values))
                     # if all values are the same, only print them once as '*'
                     if len(unique_values) == 1:
-                        paramsectiondict[rm_NML_str(pname[0])][replace_brackets(str(sec))].update(
-                            {"nseg": sec.nseg, "values": {"*": unique_values[0]}}
-                        )
+                        paramsectiondict[rm_NML_str(pname[0])][
+                            replace_brackets(str(sec))
+                        ].update({"nseg": sec.nseg, "values": {"*": unique_values[0]}})
                     else:
-                        paramsectiondict[rm_NML_str(pname[0])][replace_brackets(str(sec))].update(
-                            {"nseg": sec.nseg, "values": newseginfo}
-                        )
+                        paramsectiondict[rm_NML_str(pname[0])][
+                            replace_brackets(str(sec))
+                        ].update({"nseg": sec.nseg, "values": newseginfo})
 
         if listall or numSecPresent > 0:
             mt_dict = {
