@@ -44,6 +44,7 @@ setup(
             "analysis/ChannelInfo_TEMPLATE.html",
             "analysis/ChannelInfo_TEMPLATE.md",
             "lems/LEMS_TEMPLATE.xml",
+            "neuron/utils.hoc",
             "neuron/mview_neuroml1.hoc",
             "neuron/mview_neuroml2.hoc",
             "channelml/ChannelML2NeuroML2.xsl",
@@ -84,7 +85,7 @@ setup(
         "plotly"
     ],
     extras_require={
-        "neuron": ["NEURON"],
+        "neuron": ["NEURON", "pyyaml"],
         "brian": ["Brian2"],
         "netpyne": ["netpyne"],
         "povray": ["opencv-python"],
