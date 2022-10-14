@@ -4,9 +4,9 @@ The utils package contains various utility functions to aid users working with
 PyNeuroML
 
 Copyright 2021 NeuroML Contributors
-Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import typing
 import neuroml
 import logging
 
@@ -14,7 +14,26 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def extract_position_info(nml_model, verbose):
+def extract_position_info(
+    nml_model: neuroml.NeuroMLDocument, verbose: bool = False
+) -> tuple:
+    """Extract position information from a NeuroML model
+
+    Returns a tuple of dictionaries:
+
+    - cell_id_vs_cell: dict(cell id, cell object)
+    - pop_id_vs_cell: dict(pop id, cell object)
+    - positions: dict(pop id, dict(cell id, position in x, y, z))
+    - pop_id_vs_color: dict(pop id, colour property)
+    - pop_id_vs_radii: dict(pop id, radius property)
+
+    :param nml_model: NeuroML2 model to extract position information from
+    :type nml_model: NeuroMLDocument
+    :param verbose: toggle function verbosity
+    :type verbose: bool
+    :returns: [cell id vs cell dict, pop id vs cell dict, positions dict, pop id vs colour dict, pop id vs radii dict]
+    :rtype: tuple of dicts
+    """
 
     cell_id_vs_cell = {}
     positions = {}
