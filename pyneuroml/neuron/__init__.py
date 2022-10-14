@@ -13,9 +13,8 @@ import typing
 import pathlib
 import json
 import math
-import re
-
-
+import pprint
+import airspeed
 import yaml
 
 try:
@@ -30,6 +29,7 @@ from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
 from neuron import h
 
 
+pp = pprint.PrettyPrinter(depth=4)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -724,3 +724,131 @@ def rm_NML_str(astring: str) -> str:
     if "_NML2" in astring:
         logger.info(f"Removing '_NML2' string from {astring} to ease comparison")
     return astring.replace("_NML2", "")
+
+
+def export_mod_to_neuroml2(mod_file: str):
+    """Helper function to export a mod file describing an ion channel to
+    NeuroML2 format.
+
+    Note that these exports usually require more manual work before they are
+    the converstion is complete. This method tries to take as much information
+    as it can from the mod file to convert it into a NeuroML2 channel file.
+
+    Please use `pynml-channelanalysis` and `pynml-modchannelanalysis` commands
+    to generate steady state etc. plots for the two implementations to compare
+    them.
+
+    See also: https://docs.neuroml.org/Userdocs/CreatingNeuroMLModels.html#b-convert-channels-to-neuroml
+
+    :param mod_file: full path to mod file
+    :type mod_file: str
+    """
+    logger.info("Generating NeuroML2 representation for mod file: " + mod_file)
+
+    blocks = {}
+    info = {}
+    lines = [(str(ll.strip())).replace("\t", " ") for ll in open(mod_file)]
+    line_num = 0
+    while line_num < len(lines):
+        l = lines[line_num]
+        if len(l) > 0:
+            logger.info(">>> %i > %s" % (line_num, l))
+            # @type l str
+            if l.startswith("TITLE"):
+                blocks["TITLE"] = l[6:].strip()
+            if "{" in l:
+                block_name = l[: l.index("{")].strip()
+                blocks[block_name] = []
+
+                li = l[l.index("{") + 1 :]
+                bracket_depth = __check_brackets(li, 1)
+                while bracket_depth > 0:
+                    if len(li) > 0:
+                        blocks[block_name].append(li)
+                        logger.info("        > %s > %s" % (block_name, li))
+                    line_num += 1
+                    li = lines[line_num]
+
+                    bracket_depth = __check_brackets(li, bracket_depth)
+
+                rem = li[:-1].strip()
+                if len(rem) > 0:
+                    blocks[block_name].append(rem)
+
+        line_num += 1
+
+    for line in blocks["STATE"]:
+        if " " in line or "\t" in line:
+            blocks["STATE"].remove(line)
+            for s in line.split():
+                blocks["STATE"].append(s)
+
+    for line in blocks["NEURON"]:
+        if line.startswith("SUFFIX"):
+            info["id"] = line[7:].strip()
+        if line.startswith("USEION") and "WRITE" in line:
+            info["species"] = line.split()[1]
+
+    gates = []
+    for s in blocks["STATE"]:
+        gate = {}
+        gate["id"] = s
+        gate["type"] = "???"
+        gate["instances"] = "???"
+        gates.append(gate)
+
+    info["type"] = "ionChannelHH"
+    info["gates"] = gates
+
+    info["notes"] = (
+        "NeuroML2 file automatically generated from NMODL file: %s" % mod_file
+    )
+
+    pp.pprint(blocks)
+
+    chan_file_name = "%s.channel.nml" % info["id"]
+    chan_file = open(chan_file_name, "w")
+    chan_file.write(__merge_with_template(info))
+    chan_file.close()
+
+
+def __check_brackets(line, bracket_depth):
+    """Check matching brackets
+
+    :param line: line to check
+    :type line: str
+    :param bracket_depth: current depth/level of brackets
+    :type bracket_depth: int
+    :returns: new bracket depth
+    :rtype: int
+    """
+    if len(line) > 0:
+        bracket_depth0 = bracket_depth
+        for c in line:
+            if c == "{":
+                bracket_depth += 1
+            elif c == "}":
+                bracket_depth -= 1
+        if bracket_depth0 != bracket_depth:
+            logger.info(
+                "       <%s> moved bracket %i -> %i"
+                % (line, bracket_depth0, bracket_depth)
+            )
+    return bracket_depth
+
+
+def __merge_with_template(info):
+    """Merge information with the airspeed template file
+
+    :param info: information to fill in the template
+    :type info:
+    :returns: filled template
+    :rtype: str
+    """
+    templfile = "TEMPLATE.channel.nml"
+    if not os.path.isfile(templfile):
+        templfile = os.path.join(os.path.dirname(__file__), templfile)
+    logger.info("Merging with template %s" % templfile)
+    with open(templfile) as f:
+        templ = airspeed.Template(f.read())
+    return templ.merge(info)
