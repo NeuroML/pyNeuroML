@@ -1,23 +1,21 @@
 #!/usr/bin/env python
 
-#
-#
-#   A file which can be run in (Python enabled) NEURON to analyse the rate
-#   variables contained in a mod file
-#
-#
+"""
+Implementation of the pynml-modchananalysis command
+"""
+
+#   TODO: clean up and refactor to allow usage from Python API
 
 import argparse
 import re
 from math import log
 import neuron
-
-print("\n\n")
-
 import matplotlib.pyplot as pylab
 from pylab import *
-
 from pyneuroml.analysis.NML2ChannelAnalysis import get_state_color
+
+
+print("\n\n")
 
 
 def process_args():

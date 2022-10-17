@@ -12,10 +12,11 @@ import unittest
 import logging
 import tempfile
 import pytest
+import pathlib
 
 
 from pyneuroml.neuron import (load_hoc_or_python_file, morphinfo,
-                              get_utils_hoc, getinfo)
+                              get_utils_hoc, getinfo, export_mod_to_neuroml2)
 
 from . import load_olm_cell
 
@@ -124,3 +125,16 @@ class TestNeuronUtils(unittest.TestCase):
 
         axon_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.axon_0"]["values"]["*"]
         self.assertEqual(axon_0_leak_gmax, 1E-5)
+
+    def test_export_mod_to_neuroml2(self):
+        """Test the export_mod_to_neuroml2 method."""
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent / pathlib.Path("test_data") / pathlib.Path("mods"))
+
+        export_mod_to_neuroml2(str(dirname) + "/leak_chan.mod")
+        path = pathlib.Path("leak_chan.channel.nml")
+        self.assertTrue(path.is_file())
+
+        export_mod_to_neuroml2(str(dirname) + "/Nav.mod")
+        path = pathlib.Path("Nav.channel.nml")
+        self.assertTrue(path.is_file())
