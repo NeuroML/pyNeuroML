@@ -33,9 +33,7 @@ DEFAULTS = {
 }
 
 
-def channelml2nml(
-    channelmlfile: str, xsltfile: str = None
-) -> typing.Optional[str]:
+def channelml2nml(channelmlfile: str, xsltfile: str = None) -> typing.Optional[str]:
     """Convert a ChannelML file to NeuroMLv2.
 
     The second argument is optional, and if not set, the XSL file provided by
@@ -108,7 +106,7 @@ def process_args():
 
 
 def main(args=None):
-    """Main runner for entrypoint """
+    """Main runner for entrypoint"""
     if args is None:
         args = process_args()
 
@@ -116,7 +114,7 @@ def main(args=None):
     retval = channelml2nml(a.channelmlfile, a.xsltfile)
     print(retval)
     if a.save_to_file:
-        with open(a.save_to_file, 'w') as f:
+        with open(a.save_to_file, "w") as f:
             print(retval, file=f, flush=True)
             logger.info(f"Output saved to {a.save_to_file}")
 

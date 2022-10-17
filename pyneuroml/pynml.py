@@ -1656,20 +1656,24 @@ def run_lems_with_eden(
     :type verbose: bool
     """
 
-
     import eden_simulator
+
     logger.info(
         "Running a simulation of %s in EDEN v%s"
         % (
             lems_file_name,
-            eden_simulator.__version__ if hasattr(eden_simulator, "__version__") else "???",
+            eden_simulator.__version__
+            if hasattr(eden_simulator, "__version__")
+            else "???",
         )
     )
 
     results = eden_simulator.runEden(lems_file_name)
 
     if verbose:
-        logger.info("Completed simulation in EDEN, saved results: %s"%(results.keys()))
+        logger.info(
+            "Completed simulation in EDEN, saved results: %s" % (results.keys())
+        )
 
     if load_saved_data:
         logger.warning("Event saving is not yet supported in EDEN!!")
@@ -1678,7 +1682,6 @@ def run_lems_with_eden(
         return results
     else:
         return True
-
 
 
 def reload_saved_data(
@@ -2445,7 +2448,7 @@ def execute_command_in_dir_with_realtime_output(
         )
         with p.stdout:
             for line in iter(p.stdout.readline, ""):
-                print("# %s"%line.strip())
+                print("# %s" % line.strip())
         p.wait()  # wait for the subprocess to exit
 
         print("####################################################################")
@@ -2539,6 +2542,7 @@ def execute_command_in_dir(
     except Exception as e:
         logger.critical("*** Unknown problem running command: %s" % e)
         return (-1, str(e))
+
 
 """
     As usually saved by jLEMS, etc. First column is time (in seconds), multiple other columns

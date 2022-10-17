@@ -36,7 +36,7 @@ class TestChannelML(BaseTestCase):
             outfile = f"{file}.channel.nml"
             retval = channelml2nml(inputfile)
             print(retval)
-            with open(outfile, 'w') as f:
+            with open(outfile, "w") as f:
                 print(retval, file=f, flush=True)
             self.assertTrue(validate_neuroml2(outfile))
             pl.Path(outfile).unlink()

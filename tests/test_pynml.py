@@ -20,7 +20,7 @@ from pyneuroml.pynml import (
     execute_command_in_dir,
     execute_command_in_dir_with_realtime_output,
     run_jneuroml,
-    validate_neuroml2
+    validate_neuroml2,
 )
 
 
@@ -162,7 +162,9 @@ class TestHelperUtils(unittest.TestCase):
 
         retval = None
         retstring = None
-        retval, retstring = validate_neuroml2("HH_example_k_channel.nml", return_string=True)
+        retval, retstring = validate_neuroml2(
+            "HH_example_k_channel.nml", return_string=True
+        )
         self.assertTrue(retval)
         self.assertIn("Valid against schema and all tests", retstring)
         os.chdir("../")
