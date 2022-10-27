@@ -112,7 +112,7 @@ def generate_plot(
     :type cols_in_legend_box: float
     :param legend_position: position of legend:
                 See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
-                Extra options: 
+                Extra options:
 
                 - "outer right" places the legend on the right, but outside the axes box
                 - "bottom center" places the legend on the bottom, below the
