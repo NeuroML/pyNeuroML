@@ -19,8 +19,8 @@ logger.setLevel(logging.INFO)
 
 
 def generate_plot(
-    xvalues: typing.List[float],
-    yvalues: typing.List[float],
+    xvalues: typing.List[typing.List[float]],
+    yvalues: typing.List[typing.List[float]],
     title: str,
     labels: typing.Optional[typing.List[str]] = None,
     colors: typing.Optional[typing.List[str]] = None,
