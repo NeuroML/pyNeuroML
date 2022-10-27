@@ -334,10 +334,10 @@ def analyse_multi_compartmental_neuron(
 
     :param nml_cell: cell to analyse
     :type nml_cell: neuroml.Cell or neuroml.Cell2CaPools
-    :param input_segment_id: segments id to provide stimuluation to
-    :type input_segment_id: dict
+    :param input_segment_id: segment id to provide stimuluation to
+    :type input_segment_id: str
     :param output_segment_ids: list of segments ids to record membrane potentials from
-    :type output_segment_ids: dict
+    :type output_segment_ids: list
     :param includes: extra includes, for example ion channel definition files
     :type includes: list
     :param min_amplitude: minimum current amplitude value in nA
@@ -489,3 +489,78 @@ def analyse_multi_compartmental_neuron(
         )
 
     return data_array
+
+
+def compare_multi_compartmental_neurons(
+    nml_cells: list[typing.Union[neuroml.Cell, neuroml.Cell2CaPools]],
+    input_segment_id: list[str] = None,
+    output_segment_ids: list[list[str]] = None,
+    includes: list[list[neuroml.Include]] = None,
+    min_amplitude: float = 0.01,
+    max_amplitude: float = 0.1,
+    num_amplitudes: int = 5,
+    duration: float = 2000,
+    dt: float = 0.1,
+    pulse_duration: float = 1500,
+    pulse_delay: float = 200,
+    plot: bool = True,
+    plot_individuals: bool = False,
+):
+    """Wrapper around `analyse_multi_compartmental_neuron` to compare multiple
+    multi-compartmental neurons.
+
+    For each of the provided cells, we run the
+    `analyse_multi_compartmental_neuron` method, collect the data, and plot
+    membrane potential and I-F plots.
+
+    :param nml_cells: cells to analyse/compare
+    :type nml_cells: list of neuron models
+    :param input_segment_ids: list of segment ids to provide stimuluation to,
+        one for each neuron
+    :type input_segment_id: list
+    :param output_segment_ids: list of list of segments ids to record membrane
+        potentials from, one list for each neuron
+    :type output_segment_ids: list of lists
+    :param includes: list of list of extra includes, for example ion channel
+        definition files, one list for each neuron
+    :type includes: list of list
+    :param min_amplitude: minimum current amplitude value in nA
+    :type min_amplitude: float
+    :param max_amplitude: maximum current amplitude in nA
+    :type max_amplitude: float
+    :param num_amplitudes: number of amplitude points
+    :type num_amplitudes: int
+    :param duration: duration of test simulations in ms
+    :type duration: float
+    :param dt: dt to use, in ms
+    :type dt: float
+    :param pulse_duration: duration of pulse, in ms
+    :type pulse_duration: float
+    :param pulse_delay: delay for pulse, in ms
+    :type pulse_delay: float
+    :param plot: toggle plotting
+    :type plot: bool
+    :param plot_individuals: toggle plotting of individual cell plots
+    :type plot_individuals: bool
+
+    :returns: dict
+        { 'cellid': { 'amplitude': { 'v': [[time], [memb potential]], 'spikes': [spike times] }}}
+
+    """
+    all_data = {}
+    cells = len(nml_cells)
+    for i in range(0, cells):
+        all_data[nml_cells[i].id] = analyse_multi_compartmental_neuron(
+            nml_cells[i],
+            input_segment_id[i],
+            output_segment_ids[i],
+            includes[i],
+            min_amplitude,
+            max_amplitude,
+            num_amplitudes,
+            duration,
+            dt,
+            pulse_duration,
+            pulse_delay,
+            plot_individuals,
+        )
