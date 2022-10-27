@@ -32,8 +32,8 @@ class LEMSSimulation:
     def __init__(
         self,
         sim_id: str,
-        duration: str,
-        dt: str,
+        duration: float,
+        dt: float,
         target: str = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
@@ -44,10 +44,10 @@ class LEMSSimulation:
 
         :param sim_id: id for simulation
         :type sim_id: str
-        :param duration: duration of simulation (eg: "50ms")
-        :type duration: str
-        :param dt: simulation time step (eg: "0.1ms")
-        :type dt: str
+        :param duration: duration of simulation in ms
+        :type duration: float
+        :param dt: simulation time step in ms
+        :type dt: float
         :param target: id of target component (usually the network)
         :type target: str
         :param comment: comment to add to simulation file
