@@ -138,3 +138,4 @@ examples/results/*.dat
 .mypy_cache/
 /examples/test_data/TwoCell.net.png
 /examples/test_data/Purk2M9s.png
+/.coverage
