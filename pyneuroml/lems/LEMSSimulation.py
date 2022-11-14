@@ -250,7 +250,7 @@ class LEMSSimulation:
         display_id: str,
         line_id: str,
         quantity: str,
-        scale: float = 1.0,
+        scale: str = "1",
         color: str = None,
         timeScale: str = "1ms",
     ) -> None:
@@ -263,7 +263,7 @@ class LEMSSimulation:
         :param quantity: name of quantity being represented
         :type quantitiy: str
         :param scale: scale of line
-        :type scale: float
+        :type scale: str
         :param color: color of line, randomly chosen if None
         :type color: str
         :param timeScale: scale of time axis
