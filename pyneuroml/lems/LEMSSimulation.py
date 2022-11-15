@@ -32,8 +32,8 @@ class LEMSSimulation:
     def __init__(
         self,
         sim_id: str,
-        duration: str,
-        dt: str,
+        duration: float,
+        dt: float,
         target: str = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
@@ -44,10 +44,10 @@ class LEMSSimulation:
 
         :param sim_id: id for simulation
         :type sim_id: str
-        :param duration: duration of simulation (eg: "50ms")
-        :type duration: str
-        :param dt: simulation time step (eg: "0.1ms")
-        :type dt: str
+        :param duration: duration of simulation in ms
+        :type duration: float
+        :param dt: simulation time step in ms
+        :type dt: float
         :param target: id of target component (usually the network)
         :type target: str
         :param comment: comment to add to simulation file
@@ -250,7 +250,7 @@ class LEMSSimulation:
         display_id: str,
         line_id: str,
         quantity: str,
-        scale: float = 1.0,
+        scale: str = "1",
         color: str = None,
         timeScale: str = "1ms",
     ) -> None:
@@ -263,7 +263,7 @@ class LEMSSimulation:
         :param quantity: name of quantity being represented
         :type quantitiy: str
         :param scale: scale of line
-        :type scale: float
+        :type scale: str
         :param color: color of line, randomly chosen if None
         :type color: str
         :param timeScale: scale of time axis

@@ -1,9 +1,6 @@
 <neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.2.xsd" id="k_channel">
-    <notes>k channel for HH neuron</notes>
     <ionChannelHH id="k_channel" species="k" conductance="10pS">
-        <notes>Potassium channel for HH cell</notes>
         <gateHHrates id="k_n" instances="4">
-            <notes>n gate for k channel</notes>
             <forwardRate type="HHExpLinearRate" rate="0.1per_ms" midpoint="-55mV" scale="10mV"/>
             <reverseRate type="HHExpRate" rate="0.125per_ms" midpoint="-65mV" scale="-80mV"/>
         </gateHHrates>

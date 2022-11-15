@@ -1,85 +1,178 @@
 import math
 import os
 import logging
+import typing
+import numpy as np
 
 from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.lems import generate_lems_file_for_neuroml
 import neuroml as nml
+from pyelectro.analysis import max_min
+from pyelectro.analysis import mean_spike_frequency
 
 
 logger = logging.getLogger(__name__)
 
 
 def generate_current_vs_frequency_curve(
-    nml2_file,
-    cell_id,
-    start_amp_nA=-0.1,
-    end_amp_nA=0.1,
-    step_nA=0.01,
-    custom_amps_nA=[],
-    analysis_duration=1000,
-    analysis_delay=0,
-    pre_zero_pulse=0,
-    post_zero_pulse=0,
-    dt=0.05,
-    temperature="32degC",
-    spike_threshold_mV=0.0,
-    plot_voltage_traces=False,
-    plot_if=True,
-    plot_iv=False,
-    xlim_if=None,
-    ylim_if=None,
-    xlim_iv=None,
-    ylim_iv=None,
-    label_xaxis=True,
-    label_yaxis=True,
-    show_volts_label=True,
-    grid=True,
-    font_size=12,
-    if_iv_color="k",
-    linewidth=1,
-    bottom_left_spines_only=False,
-    show_plot_already=True,
-    save_voltage_traces_to=None,
-    save_if_figure_to=None,
-    save_iv_figure_to=None,
-    save_if_data_to=None,
-    save_iv_data_to=None,
-    simulator="jNeuroML",
-    num_processors=1,
-    include_included=True,
-    title_above_plot=False,
-    return_axes=False,
-    verbose=False,
+    nml2_file: str,
+    cell_id: str,
+    start_amp_nA: float = -0.1,
+    end_amp_nA: float = 0.1,
+    step_nA: float = 0.01,
+    custom_amps_nA: typing.List[float] = [],
+    analysis_duration: float = 1000,
+    analysis_delay: float = 0,
+    pre_zero_pulse: float = 0,
+    post_zero_pulse: float = 0,
+    dt: float = 0.05,
+    temperature: str = "32degC",
+    spike_threshold_mV: float = 0.0,
+    plot_voltage_traces: bool = False,
+    plot_if: bool = True,
+    plot_iv: bool = False,
+    xlim_if: typing.List[float] = None,
+    ylim_if: typing.List[float] = None,
+    xlim_iv: typing.List[float] = None,
+    ylim_iv: typing.List[float] = None,
+    label_xaxis: bool = True,
+    label_yaxis: bool = True,
+    show_volts_label: bool = True,
+    grid: bool = True,
+    font_size: int = 12,
+    if_iv_color: str = "k",
+    linewidth: str = "1",
+    bottom_left_spines_only: bool = False,
+    show_plot_already: bool = True,
+    save_voltage_traces_to: str = None,
+    save_if_figure_to: str = None,
+    save_iv_figure_to: str = None,
+    save_if_data_to: str = None,
+    save_iv_data_to: str = None,
+    simulator: str = "jNeuroML",
+    num_processors: int = 1,
+    include_included: bool = True,
+    title_above_plot: bool = False,
+    return_axes: bool = False,
+    verbose: bool = False,
 ):
+    """Generate current vs firing rate frequency curve for provided cell.
+
+    :param nml2_file: name of NeuroML file containing cell definition
+    :type nml2_file: str
+    :param cell_id: id of cell to analyse
+    :type cell_id: str
+    :param start_amp_nA: min current to use for analysis
+    :type start_amp_nA: float
+    :param end_amp_nA: max current to use for analysis
+    :type end_amp_nA: float
+    :param step_nA: step value to use to generate analysis currents between
+        `start_amp_nA` and `end_amp_nA`
+    :type step_nA: float
+    :param custom_amps_nA: list of currents in nA to use. Note that this
+        overrides the list created using `start_amp_nA`, `end_amp_nA`, and
+        `step_nA`) :type custom_amps_nA: list(float)
+    :param analysis_duration: duration of analysis
+    :type analysis_duration: float
+    :param analysis_delay: delay period before analysis begins
+    :type analysis_delay: float
+    :param pre_zero_pulse: duration of pre-zero pulse
+    :type pre_zero_pulse: float
+    :param post_zero_pulse: duration of post-zero pulse
+    :type post_zero_pulse: float
+    :param dt: integration time step
+    :type dt: float
+    :param temperature: temperature to use for analysis
+    :type temperature: str
+    :param spike_threshold_mV: spike threshold potential
+    :type spike_threshold_mV: float
+    :param plot_voltage_traces:
+    :type plot_voltage_traces:
+    :param plot_if: toggle whether to plot I-F graphs
+    :type plot_if: bool
+    :param plot_iv: toggle whether to plot I-V graphs
+    :type plot_iv: bool
+    :param xlim_if: x-limits of I-F curve
+    :type xlim_if: [min, max]
+    :param ylim_if: y limits of I-F curve
+    :type ylim_if: [min, max]
+    :param xlim_iv: x limits of I-V curve
+    :type xlim_iv: [min, max]
+    :param ylim_iv: y limits of I-V curve
+    :type ylim_iv: [min, max]
+    :param label_xaxis: label for x axis
+    :type label_xaxis: str
+    :param label_yaxis: label for y axis
+    :type label_yaxis: str
+    :param show_volts_label: toggle whether voltage traces should have
+        corresponding current values labelled in the plot
+    :type show_volts_label: bool
+    :param grid: toggle whether grid should be shown in plot
+    :type grid: bool
+    :param font_size: font size for plot
+    :type font_size: int
+    :param if_iv_color: color to use for I-F and I-V plots
+    :type if_iv_color: str
+    :param linewidth: line width for plotting
+    :type linewidth: str
+    :param bottom_left_spines_only:
+    :type bottom_left_spines_only:
+    :param show_plot_already: toggle whether generated plots should be shown
+    :type show_plot_already: bool
+    :param save_voltage_traces_to: file to save membrane potential traces to
+    :type save_voltage_traces_to: str
+    :param save_if_figure_to: file to save I-F plot figure to
+    :type save_if_figure_to: str
+    :param save_iv_figure_to: file to save I-V plot figure to
+    :type save_iv_figure_to: str
+    :param save_if_data_to: file to save I-F plot data to
+    :type save_if_data_to: str
+    :param save_iv_data_to: file to save I-V plot data to
+    :type save_iv_data_to: str
+    :param simulator: simulator to use
+    :type simulator: str
+    :param num_processors: number of processors to use for analysis
+    :type num_processors: int
+    :param include_included:
+    :type include_included:
+    :param title_above_plot:
+    :type title_above_plot:
+    :param return_axes: toggle whether plotting axis should be returned.
+        This is useful if one wants to overlay more graphs in the same plot.
+    :type return_axes: bool
+    :param verbose:
+    :type verbose:
+
+    """
 
     logger.info(
         "Running generate_current_vs_frequency_curve() on %s (%s)"
         % (nml2_file, os.path.abspath(nml2_file))
     )
-    from pyelectro.analysis import max_min
-    from pyelectro.analysis import mean_spike_frequency
-    import numpy as np
-
     traces_ax = None
     if_ax = None
     iv_ax = None
 
     sim_id = "iv_%s" % cell_id
+    # total duration of simulation
     total_duration = (
         pre_zero_pulse + analysis_duration + analysis_delay + post_zero_pulse
     )
+    # end time of pulse
     pulse_duration = analysis_duration + analysis_delay
+    # end time of stimulation
     end_stim = pre_zero_pulse + analysis_duration + analysis_delay
     ls = LEMSSimulation(sim_id, total_duration, dt)
     ls.include_neuroml2_file(nml2_file, include_included=include_included)
 
+    # use custom list of currents if provided
     stims = []
     if len(custom_amps_nA) > 0:
         stims = [float(a) for a in custom_amps_nA]
-        stim_info = ["%snA" % float(a) for a in custom_amps_nA]
+        stim_info = ["%snA" % float(a) for a in custom_amps_nA]  # type: typing.Union[str, typing.List[str]]
     else:
+        # else generate a list using the provided arguments
         amp = start_amp_nA
         while amp <= end_amp_nA:
             stims.append(amp)
@@ -98,6 +191,7 @@ def generate_current_vs_frequency_curve(
         % (cell_id, nml2_file, simulator, stim_info)
     )
 
+    # create a population of cells, one for each stimulus
     number_cells = len(stims)
     pop = nml.Population(
         id="population_of_%s" % cell_id, component=cell_id, size=number_cells
@@ -112,6 +206,7 @@ def generate_current_vs_frequency_curve(
     net_doc.includes.append(nml.IncludeType(nml2_file))
     net.populations.append(pop)
 
+    # create stimulus for each cell
     for i in range(number_cells):
         stim_amp = "%snA" % stims[i]
         input_id = ("input_%s" % stim_amp).replace(".", "_").replace("-", "min")
@@ -152,6 +247,7 @@ def generate_current_vs_frequency_curve(
         "Written LEMS file %s (%s)" % (lems_file_name, os.path.abspath(lems_file_name))
     )
 
+    # run simulation
     if simulator == "jNeuroML":
         results = pynml.run_lems_with_jneuroml(
             lems_file_name,
@@ -207,7 +303,7 @@ def generate_current_vs_frequency_curve(
 
         mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
         spike_times = mm["maxima_times"]
-        freq = 0
+        freq = 0.0
         if len(spike_times) > 2:
             count = 0
             for s in spike_times:
@@ -297,8 +393,8 @@ def generate_current_vs_frequency_curve(
         stims_pA = [ii * 1000 for ii in sorted(iv_results.keys())]
         vs = [iv_results[s] for s in stims]
 
-        xs = []
-        ys = []
+        xs = []  # type: typing.List[typing.List[float]]
+        ys = []  # type: typing.List[typing.List[float]]
         xs.append([])
         ys.append([])
 

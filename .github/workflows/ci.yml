@@ -40,20 +40,18 @@ jobs:
       if: ${{ github.ref == 'refs/heads/development' || github.base_ref == 'development' }}
       run: |
         echo "Using deps from development for our repos"
-        sed -E -i 's/((libNeuroML|NeuroMLlite|pylems|pyelectro|neurotune).git)@master/\1@development/' requirements-dev.txt
-        sed -E -i 's/((modelspec).git)@main/\1@development/' requirements-dev.txt
+        cp -v requirements-development.txt requirements.txt
 
     - name: Install deps from experimental
       if: ${{ github.ref == 'refs/heads/experimental' || github.base_ref == 'experimental' }}
       run: |
         echo "Using deps from experimental - assuming development in others"
-        sed -E -i 's/((libNeuroML|NeuroMLlite|pylems|pyelectro|neurotune).git)@master/\1@development/' requirements-dev.txt
-        sed -E -i 's/((modelspec).git)@main/\1@development/' requirements-dev.txt
+        cp -v requirements-experimental.txt requirements.txt
 
     - name: Install package
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+        pip install -r requirements.txt
         pip install .
 
     - name: List packages so far
