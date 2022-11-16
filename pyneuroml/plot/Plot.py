@@ -19,8 +19,8 @@ logger.setLevel(logging.INFO)
 
 
 def generate_plot(
-    xvalues: typing.List[float],
-    yvalues: typing.List[float],
+    xvalues: typing.List[typing.List[float]],
+    yvalues: typing.List[typing.List[float]],
     title: str,
     labels: typing.Optional[typing.List[str]] = None,
     colors: typing.Optional[typing.List[str]] = None,
@@ -30,8 +30,8 @@ def generate_plot(
     markersizes: typing.Optional[typing.List[str]] = None,
     xaxis: str = None,
     yaxis: str = None,
-    xlim: str = None,
-    ylim: str = None,
+    xlim: typing.List[float] = None,
+    ylim: typing.List[float] = None,
     show_xticklabels: bool = True,
     show_yticklabels: bool = True,
     grid: bool = False,
@@ -40,7 +40,7 @@ def generate_plot(
     font_size: int = 12,
     bottom_left_spines_only: bool = False,
     cols_in_legend_box: int = 3,
-    legend_position: typing.Optional[str] = None,
+    legend_position: typing.Optional[str] = "best",
     show_plot_already: bool = True,
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
@@ -110,8 +110,14 @@ def generate_plot(
     :type bottom_left_spines_only: boolean
     :param cols_in_legend_box: number of columns to use in legend box (default: 3)
     :type cols_in_legend_box: float
-    :param legend_position: position of legend: (default: None)
+    :param legend_position: position of legend:
                 See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
+                Extra options:
+
+                - "outer right" places the legend on the right, but outside the axes box
+                - "bottom center" places the legend on the bottom, below the
+                  figure
+
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean
@@ -195,16 +201,24 @@ def generate_plot(
             )
 
     if labels:
-        if legend_position == "right":
+        if legend_position == "outer right":
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
             # Put a legend to the right of the current axis
             ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-        else:
+        elif legend_position == "bottom center":
             plt.legend(
                 loc="upper center",
-                bbox_to_anchor=(0.5, -0.05),
+                # to ensure it does not cover the lower axis label
+                bbox_to_anchor=(0.5, -0.15),
+                fancybox=True,
+                shadow=True,
+                ncol=cols_in_legend_box,
+            )
+        else:
+            plt.legend(
+                loc=legend_position,
                 fancybox=True,
                 shadow=True,
                 ncol=cols_in_legend_box,
