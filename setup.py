@@ -60,7 +60,10 @@ setup(
                 "man/man1/pynml-povray.1",
                 "man/man1/pynml-tune.1",
                 "man/man1/pynml-channelanalysis.1",
+                "man/man1/pynml-channelml2nml.1",
                 "man/man1/pynml-plotspikes.1",
+                "man/man1/pynml-plotmorph.1",
+                "man/man1/pynml-summary.1",
                 "man/man1/pynml-sonata.1",
             ],
         )
