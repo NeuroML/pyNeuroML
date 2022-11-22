@@ -29,11 +29,5 @@ pyneuroml.plot.PlotMorphology module
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members:  set, add_line, plot_from_console, main, process_args, LineDataUnits
 
-pyneuroml.plot.generate\_test\_data module
-------------------------------------------
-
-.. automodule:: pyneuroml.plot.generate_test_data
-   :members:
-   :undoc-members:
-   :show-inheritance:

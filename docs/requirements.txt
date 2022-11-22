@@ -5,6 +5,7 @@ opencv-python
 libneuroml
 pyelectro
 matplotlib
+matplotlib_scalebar
 plotly
 scipy
 pylems
