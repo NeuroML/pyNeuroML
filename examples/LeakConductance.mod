@@ -14,7 +14,8 @@ NEURON {
     NONSPECIFIC_CURRENT i
     RANGE e
     
-    RANGE gion                           
+    RANGE gion
+    RANGE i__LeakConductance : a copy of the variable for current which makes it easier to access from outside the mod file
     RANGE gmax                              : Will be changed when ion channel mechanism placed on cell!
     RANGE conductance                       : parameter
     
@@ -59,6 +60,7 @@ ASSIGNED {
     temperature (K)
     e (mV)
     i (mA/cm2)
+    i__LeakConductance (mA/cm2)
     
     
     conductanceScale                       : derived variable
@@ -101,6 +103,7 @@ BREAKPOINT {
     gion = gmax * fopen 
     
     i = gion * (v - e)
+    i__LeakConductance = -1 * i  : set this variable to the current also - note -1 as channel current convention for LEMS used!
     
 }
 
