@@ -65,6 +65,10 @@ version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(
     __version__, neuroml.__version__, JNEUROML_VERSION
 )
 
+FILE_NOT_FOUND_ERR = 13
+ARGUMENT_ERR = 14
+UNKNOWN_ERR = 15
+
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -412,7 +416,7 @@ def extract_lems_definition_files(
             )
         except OSError as err:
             logger.critical(err)
-            sys.exit(-1)
+            sys.exit(UNKNOWN_ERR)
     else:
         path = tempfile.mkdtemp()
 
@@ -769,7 +773,7 @@ def read_neuroml2_file(
 
     if not os.path.isfile(nml2_file_name):
         logger.critical("Unable to find file: %s!" % nml2_file_name)
-        sys.exit()
+        sys.exit(FILE_NOT_FOUND_ERR)
 
     if nml2_file_name.endswith(".h5") or nml2_file_name.endswith(".hdf5"):
         nml2_doc = loaders.NeuroMLHdf5Loader.load(nml2_file_name, optimized=optimized)
@@ -778,7 +782,7 @@ def read_neuroml2_file(
 
     base_path = os.path.dirname(os.path.realpath(nml2_file_name))
 
-    if include_includes:
+    if include_includes and verbose:
         logger.info(
             "Including included files (included already: {})".format(already_included)
         )
@@ -1114,7 +1118,7 @@ def read_lems_file(
     """
     if not os.path.isfile(lems_file_name):
         logger.critical("Unable to find file: %s!" % lems_file_name)
-        sys.exit()
+        sys.exit(FILE_NOT_FOUND_ERR)
 
     model = lems_model.Model(
         include_includes=include_includes,
@@ -1944,7 +1948,7 @@ def confirm_file_exists(filename: str) -> None:
     """
     if not os.path.isfile(filename):
         logger.critical("Unable to find file: %s!" % filename)
-        sys.exit()
+        sys.exit(FILE_NOT_FOUND_ERR)
 
 
 def confirm_neuroml_file(filename: str) -> None:
@@ -2064,7 +2068,7 @@ def evaluate_arguments(args):
                     "The '-neuron' option was given an invalid "
                     "number of arguments: %d given, 0-4 required" % num_neuron_args
                 )
-                sys.exit(-1)
+                sys.exit(ARGUMENT_ERR)
 
             other_args = [(a if a != "-neuron" else "") for a in args.neuron]
             post_args = "-neuron %s" % " ".join(other_args)
@@ -2080,7 +2084,7 @@ def evaluate_arguments(args):
                     "The '-netpyne' option was given an invalid "
                     "number of arguments: %d given, 0-4 required" % num_netpyne_args
                 )
-                sys.exit(-1)
+                sys.exit(ARGUMENT_ERR)
 
             other_args = [(a if a != "-netpyne" else "") for a in args.netpyne]
             post_args = "-netpyne %s" % " ".join(other_args)
@@ -2095,7 +2099,7 @@ def evaluate_arguments(args):
                     "The '-eden' option was given an invalid "
                     "number of arguments: %d given, 0-4 required" % num_eden_args
                 )
-                sys.exit(-1)
+                sys.exit(ARGUMENT_ERR)
 
             other_args = [(a if a != "-eden" else "") for a in args.eden]
             post_args = "-eden %s" % " ".join(other_args)
@@ -2167,7 +2171,7 @@ def evaluate_arguments(args):
                             e, engines
                         )
                     )
-                    sys.exit(-1)
+                    sys.exit(ARGUMENT_ERR)
 
                 # if a valid engine was provided, we try the level again
                 try:
@@ -2175,7 +2179,7 @@ def evaluate_arguments(args):
                     logger.info("Level selected: {}".format(level))
                 except ValueError:
                     logger.info("Incorrect value for level: {}.".format(level[:-1]))
-                    sys.exit(-1)
+                    sys.exit(ARGUMENT_ERR)
 
             generate_nmlgraph(f, level, engine)
             sys.exit(0)
@@ -2204,7 +2208,7 @@ def evaluate_arguments(args):
 
             logger.info("Done with MatrixHandler...")
 
-            exit()
+            exit(0)
         elif args.validate:
             confirm_neuroml_file(f)
             pre_args = "-validate"
@@ -2328,7 +2332,7 @@ def run_jneuroml(
         logger.error("*** Command: %s ***" % command)
         logger.error("Output: %s" % output)
         if exit_on_fail:
-            sys.exit(-1)
+            sys.exit(UNKNOWN_ERR)
         else:
             if return_string:
                 return (False, output)
@@ -2396,7 +2400,7 @@ def run_jneuroml_with_realtime_output(
         logger.error("*** Execution of jnml has failed! ***")
         logger.error("*** Command: %s ***" % command)
         if exit_on_fail:
-            sys.exit(-1)
+            sys.exit(UNKNOWN_ERR)
         else:
             return False
 
