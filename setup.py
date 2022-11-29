@@ -47,6 +47,7 @@ setup(
             "neuron/utils.hoc",
             "neuron/mview_neuroml1.hoc",
             "neuron/mview_neuroml2.hoc",
+            "neuron/TEMPLATE.channel.nml",
             "channelml/ChannelML2NeuroML2.xsl",
             "channelml/ChannelML2NeuroML2beta.xsl",
         ]
