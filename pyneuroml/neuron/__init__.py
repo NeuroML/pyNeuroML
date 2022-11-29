@@ -747,7 +747,7 @@ def export_mod_to_neuroml2(mod_file: str):
     """
     logger.info("Generating NeuroML2 representation for mod file: " + mod_file)
 
-    blocks = {}
+    blocks = {}  # type: typing.Dict[typing.Any, typing.Any]
     info = {}
     lines = [(str(ll.strip())).replace("\t", " ") for ll in open(mod_file)]
     line_num = 0
