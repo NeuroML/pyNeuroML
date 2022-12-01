@@ -2523,7 +2523,11 @@ def execute_command_in_dir(
         return_string = return_string.decode("utf-8")  # For Python 3
 
         logger.info(
-            "Command completed. Output: \n %s%s"
+            "Command completed successfully!"
+        )
+        if verbose:
+            logger.info(
+            "Output: \n %s%s"
             % (prefix, return_string.replace("\n", "\n " + prefix))
         )
         return (0, return_string)
