@@ -325,7 +325,9 @@ def get_state_color(s: str) -> str:
     return col
 
 
-def merge_with_template(model: typing.Dict[typing.Any, typing.Any], templfile: str) -> str:
+def merge_with_template(
+    model: typing.Dict[typing.Any, typing.Any], templfile: str
+) -> str:
     """Merge model information with airspeed template.
 
     :param model: model information
@@ -353,7 +355,7 @@ def generate_lems_channel_analyser(
     clamp_base_voltage: float,
     duration: float,
     erev: float,
-    gates: list[str],
+    gates: typing.List[str],
     temperature: float,
     ca_conc: float,
     iv_curve: bool,
@@ -452,7 +454,7 @@ def generate_lems_channel_analyser(
 
 def get_channels_from_channel_file(
     channel_file: str,
-) -> list[typing.Union[neuroml.IonChannelHH, neuroml.IonChannel]]:
+) -> typing.List[typing.Union[neuroml.IonChannelHH, neuroml.IonChannel]]:
     """Get IonChannelHH and IonChannel instances from a NeuroML channel file.
 
     :param channel_file: complete path to a channel file
@@ -471,7 +473,9 @@ def get_channels_from_channel_file(
     return channels
 
 
-def get_includes_from_channel_file(channel_file: str) -> list[neuroml.IncludeType]:
+def get_includes_from_channel_file(
+    channel_file: str,
+) -> typing.List[neuroml.IncludeType]:
     """Get includes from a NeuroML channel file
 
     :param channel_file: complete path to a channel file
@@ -486,7 +490,7 @@ def get_includes_from_channel_file(channel_file: str) -> list[neuroml.IncludeTyp
     return includes
 
 
-def process_channel_file(channel_file: str, a) -> list[typing.Any]:
+def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
     """Process the channel file.
 
     :param channel_file: complete path to channel file
@@ -539,7 +543,7 @@ def process_channel_file(channel_file: str, a) -> list[typing.Any]:
 
 def get_channel_gates(
     channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
-) -> list[
+) -> typing.List[
     typing.Union[
         neuroml.GateHHUndetermined,
         neuroml.GateHHRates,
