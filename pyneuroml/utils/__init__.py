@@ -6,9 +6,9 @@ PyNeuroML
 Copyright 2021 NeuroML Contributors
 """
 
-import typing
 import neuroml
 import logging
+import re
 
 
 logger = logging.getLogger(__name__)
@@ -126,3 +126,9 @@ def extract_position_info(
         positions[name] = pop_positions
 
     return cell_id_vs_cell, pop_id_vs_cell, positions, pop_id_vs_color, pop_id_vs_radii
+
+
+def convert_case(name):
+    """Converts from camelCase to under_score"""
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()

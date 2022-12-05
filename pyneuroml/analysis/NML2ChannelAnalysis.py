@@ -9,13 +9,15 @@ import os
 import os.path
 import argparse
 import pprint
-import re
 import logging
+import typing
 
 import airspeed
 import matplotlib.pyplot as plt
 
+import neuroml
 from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
+from pyneuroml.utils import convert_case
 
 
 logger = logging.getLogger(__name__)
@@ -29,8 +31,8 @@ MD_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.md" % (os.path.dirname(__file__))
 
 V = "rampCellPop0[0]/v"  # Key for voltage trace in results dictionary.
 
-MAX_COLOUR = (255, 0, 0)
-MIN_COLOUR = (255, 255, 0)
+MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
+MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
 
 DEFAULTS = {
     "v": False,
@@ -55,8 +57,9 @@ DEFAULTS = {
 
 
 def process_args():
-    """
-    Parse command-line arguments.
+    """Parse command-line arguments.
+
+    :returns: None
     """
     parser = argparse.ArgumentParser(
         description=(
@@ -229,8 +232,23 @@ def process_args():
     return parser.parse_args()
 
 
-def get_colour_hex(fract, min_colour=MIN_COLOUR, max_color=MAX_COLOUR):
-    rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_color)]
+def get_colour_hex(
+    fract: float,
+    min_colour: typing.Tuple[int, int, int] = MIN_COLOUR,
+    max_colour: typing.Tuple[int, int, int] = MAX_COLOUR,
+) -> str:
+    """Get colour hex at fraction between `min_colour` and `max_colour`.
+
+    :param fract: fraction between `min_colour` and `max_colour`
+    :type fract: float between (0, 1)
+    :param min_colour: lower colour tuple (R, G, B)
+    :type min_colour: tuple
+    :param max_colour upper colour tuple (R, G, B)
+    :type max_colour: tuple
+    :returns: colour in hex representation
+    :rtype: string
+    """
+    rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_colour)]
     col = "#"
     for c in rgb:
         col += c[2:4] if len(c) == 4 else "00"
@@ -238,7 +256,16 @@ def get_colour_hex(fract, min_colour=MIN_COLOUR, max_color=MAX_COLOUR):
 
 
 # Better off elsewhere..?
-def get_ion_color(ion):
+def get_ion_color(ion: str) -> str:
+    """Get colours for ions in hex format.
+
+    Hard codes for na, k, ca, h. All others get a grey.
+
+    :param ion: name of ion
+    :type ion: str
+    :returns: colour in hex
+    :rtype: str
+    """
     if ion.lower() == "na":
         col = "#1E90FF"
     elif ion.lower() == "k":
@@ -253,7 +280,16 @@ def get_ion_color(ion):
     return col
 
 
-def get_state_color(s):
+def get_state_color(s: str) -> str:
+    """Get colours for state variables.
+
+    Hard codes for m, k, r, h, l, n, a, b, c, q, e, f, p, s, u.
+
+    :param state: name of state
+    :type state: str
+    :returns: colour in hex format
+    :rtype: str
+    """
     col = "#000000"
     if s.startswith("m"):
         col = "#FF0000"
@@ -289,7 +325,18 @@ def get_state_color(s):
     return col
 
 
-def merge_with_template(model, templfile):
+def merge_with_template(
+    model: typing.Dict[typing.Any, typing.Any], templfile: str
+) -> str:
+    """Merge model information with airspeed template.
+
+    :param model: model information
+    :type model: dict
+    :param templfile: name of airspeed template file
+    :type templfile: string
+    :returns: merged template string
+    :rtype: str
+    """
     if not os.path.isfile(templfile):
         templfile = os.path.join(os.path.dirname(sys.argv[0]), templfile)
     with open(templfile) as f:
@@ -298,24 +345,59 @@ def merge_with_template(model, templfile):
 
 
 def generate_lems_channel_analyser(
-    channel_file,
-    channel,
-    min_target_voltage,
-    step_target_voltage,
-    max_target_voltage,
-    clamp_delay,
-    clamp_duration,
-    clamp_base_voltage,
-    duration,
-    erev,
-    gates,
-    temperature,
-    ca_conc,
-    iv_curve,
-    scale_dt=1,
-    dat_suffix="",
-    verbose=True,
+    channel_file: str,
+    channel: str,
+    min_target_voltage: float,
+    step_target_voltage: float,
+    max_target_voltage: float,
+    clamp_delay: float,
+    clamp_duration: float,
+    clamp_base_voltage: float,
+    duration: float,
+    erev: float,
+    gates: typing.List[str],
+    temperature: float,
+    ca_conc: float,
+    iv_curve: bool,
+    scale_dt: float = 1,
+    dat_suffix: str = "",
+    verbose: bool = True,
 ):
+    """Generate analysis simulation LEMS file.
+
+    :param channel_file: path to channel file
+    :type channel_file: str
+    :param channel: name of channel
+    :type channel: string
+    :param min_target_voltage: magnitude of minimum target voltage in mV
+    :type min_target_voltage: float
+    :param max_target_voltage: magnitude of maximum target voltage in mV
+    :type max_target_voltage: float
+    :param clamp_delay: magnitude of delay for clamp in ms
+    :type clamp_delay: float
+    :param clamp_duration: magnitude of duration of clamp in ms
+    :type clamp_delay: float
+    :param clamp_base_voltage: magnitude of base voltage of clamp in mV
+    :type clamp_base_voltage: float
+    :param duration: magnitude of duration of simulation in ms
+    :type duration: float
+    :param erev: magnitude of reversal potential in mV
+    :type erev: float
+    :param gates: list of gates
+    :type gates: list of str
+    :param temperature: magnitude of temperature in degC
+    :type temperature: float
+    :param ca_conc: magnitude of calcium concentration in mM
+    :type ca_conc: float
+    :param iv_curve: toggle whether to plot iv curve
+    :type iv_curve: bool
+    :param scale_dt: magnitude to scale dt by in ms
+    :type scale_dt: float
+    :param dat_suffix: suffix of data file
+    :type dat_suffix: str
+    :param verbose: toggle verbosity
+    :type verbose: bool
+    """
 
     logger.info(
         ("Generating LEMS file to investigate %s in %s, %smV->%smV, " "%sdegC")
@@ -331,7 +413,7 @@ def generate_lems_channel_analyser(
     target_voltages_map = []
     for t in target_voltages:
         fract = float(target_voltages.index(t)) / (len(target_voltages) - 1)
-        info = {}
+        info = {}  # type: typing.Dict[typing.Any, typing.Any]
         info["v"] = t
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
@@ -370,13 +452,16 @@ def generate_lems_channel_analyser(
     return merged
 
 
-def convert_case(name):
-    """Converts from camelCase to under_score"""
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+def get_channels_from_channel_file(
+    channel_file: str,
+) -> typing.List[typing.Union[neuroml.IonChannelHH, neuroml.IonChannel]]:
+    """Get IonChannelHH and IonChannel instances from a NeuroML channel file.
 
-
-def get_channels_from_channel_file(channel_file):
+    :param channel_file: complete path to a channel file
+    :type channel_file: str
+    :returns: list of channels
+    :rtype: list
+    """
     doc = read_neuroml2_file(
         channel_file, include_includes=True, verbose=False, already_included=[]
     )
@@ -388,7 +473,16 @@ def get_channels_from_channel_file(channel_file):
     return channels
 
 
-def get_includes_from_channel_file(channel_file):
+def get_includes_from_channel_file(
+    channel_file: str,
+) -> typing.List[neuroml.IncludeType]:
+    """Get includes from a NeuroML channel file
+
+    :param channel_file: complete path to a channel file
+    :type channel_file: str
+    :returns: list of includes
+    :rtype: list
+    """
     doc = read_neuroml2_file(channel_file)
     includes = []
     for incl in doc.includes:
@@ -396,7 +490,17 @@ def get_includes_from_channel_file(channel_file):
     return includes
 
 
-def process_channel_file(channel_file, a):
+def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
+    """Process the channel file.
+
+    :param channel_file: complete path to channel file
+    :type channel_file: str
+    :param a: argparse.Namespace instance holding all arguments
+    :type a: argparse.Namsepace
+    :returns: list of channel information
+    :rtype: list
+    :raises IOError: if channel file could not be found
+    """
     # Get name of channel mechanism to test
     if a.v:
         logger.info("Going to test channel from file: " + channel_file)
@@ -437,7 +541,23 @@ def process_channel_file(channel_file, a):
     return channels_info
 
 
-def get_channel_gates(channel):
+def get_channel_gates(
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+) -> typing.List[
+    typing.Union[
+        neuroml.GateHHUndetermined,
+        neuroml.GateHHRates,
+        neuroml.GateHHTauInf,
+        neuroml.GateHHInstantaneous,
+    ]
+]:
+    """Get gates in a channel
+
+    :param channel: channel object
+    :type channel: neuroml.IonChannel, neuroml.IonChannelHH
+    :returns: list of gates
+    :rtype: list
+    """
     channel_gates = []
     for gates in [
         "gates",
@@ -450,7 +570,16 @@ def get_channel_gates(channel):
     return channel_gates
 
 
-def get_conductance_expression(channel):
+def get_conductance_expression(
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+) -> str:
+    """Get expression of conductance in channel.
+
+    :param channel: channel object
+    :type channel: neuroml.IonChannel, neuroml.IonChannelHH
+    :returns: expression for conductance of channel.
+    :rtype: str
+    """
     expr = "g = gmax "
     for gates in [
         "gates",

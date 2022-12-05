@@ -9,13 +9,7 @@ Copyright 2022 NeuroML contributors
 
 
 import argparse
-import re
-
-
-def convert_case(name):
-    """Converts from camelCase to under_score"""
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+from . import convert_case
 
 
 def build_namespace(DEFAULTS={}, a=None, **kwargs):
