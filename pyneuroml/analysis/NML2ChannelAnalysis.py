@@ -9,7 +9,6 @@ import os
 import os.path
 import argparse
 import pprint
-import re
 import logging
 import typing
 
@@ -32,8 +31,8 @@ MD_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.md" % (os.path.dirname(__file__))
 
 V = "rampCellPop0[0]/v"  # Key for voltage trace in results dictionary.
 
-MAX_COLOUR = (255, 0, 0)  # type: tuple[int, int, int]
-MIN_COLOUR = (255, 255, 0)  # type: tuple[int, int, int]
+MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
+MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
 
 DEFAULTS = {
     "v": False,
@@ -235,8 +234,8 @@ def process_args():
 
 def get_colour_hex(
     fract: float,
-    min_colour: tuple[int, int, int] = MIN_COLOUR,
-    max_colour: tuple[int, int, int] = MAX_COLOUR,
+    min_colour: typing.Tuple[int, int, int] = MIN_COLOUR,
+    max_colour: typing.Tuple[int, int, int] = MAX_COLOUR,
 ) -> str:
     """Get colour hex at fraction between `min_colour` and `max_colour`.
 
