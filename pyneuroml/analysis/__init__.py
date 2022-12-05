@@ -170,7 +170,9 @@ def generate_current_vs_frequency_curve(
     stims = []
     if len(custom_amps_nA) > 0:
         stims = [float(a) for a in custom_amps_nA]
-        stim_info = ["%snA" % float(a) for a in custom_amps_nA]  # type: typing.Union[str, typing.List[str]]
+        stim_info = [
+            "%snA" % float(a) for a in custom_amps_nA
+        ]  # type: typing.Union[str, typing.List[str]]
     else:
         # else generate a list using the provided arguments
         amp = start_amp_nA
