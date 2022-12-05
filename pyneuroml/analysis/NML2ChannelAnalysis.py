@@ -325,7 +325,7 @@ def get_state_color(s: str) -> str:
     return col
 
 
-def merge_with_template(model: dict[typing.Any, typing.Any], templfile: str) -> str:
+def merge_with_template(model: typing.Dict[typing.Any, typing.Any], templfile: str) -> str:
     """Merge model information with airspeed template.
 
     :param model: model information
@@ -411,7 +411,7 @@ def generate_lems_channel_analyser(
     target_voltages_map = []
     for t in target_voltages:
         fract = float(target_voltages.index(t)) / (len(target_voltages) - 1)
-        info = {}  # type: dict[typing.Any, typing.Any]
+        info = {}  # type: typing.Dict[typing.Any, typing.Any]
         info["v"] = t
         info["v_str"] = str(t).replace("-", "min")
         info["col"] = get_colour_hex(fract)
