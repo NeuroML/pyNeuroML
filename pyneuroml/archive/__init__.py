@@ -4,7 +4,6 @@ Utilities for exporting NeuroML models into archives
 File: pyneuroml/archive/__init__.py
 
 Copyright 2022 NeuroML contributors
-Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 
