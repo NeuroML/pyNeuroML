@@ -108,8 +108,9 @@ def get_model_file_list(
         raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
 
 
-def create_combine_archive(zipfile_name: str, rootfile: str, rootdir: str =
-                           ".", zipfile_extension=".neux"):
+def create_combine_archive(
+    zipfile_name: str, rootfile: str, rootdir: str = ".", zipfile_extension=".neux"
+):
     """Create a combine archive that includes all files referred to by the
     provided rootfile.
 
@@ -140,7 +141,7 @@ def create_combine_archive(zipfile_name: str, rootfile: str, rootdir: str =
     thispath = os.getcwd()
     os.chdir(rootdir)
 
-    with ZipFile(zipfile_name + zipfile_extension, 'w') as archive:
+    with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
         for f in filelist:
             archive.write(f)
     os.chdir(thispath)
@@ -148,8 +149,9 @@ def create_combine_archive(zipfile_name: str, rootfile: str, rootdir: str =
     print(f"{zipfile_name}{zipfile_extension} created in {rootdir}.")
 
 
-def create_combine_archive_manifest(rootfile: str, filelist: typing.List[str],
-                                    rootdir: str = "."):
+def create_combine_archive_manifest(
+    rootfile: str, filelist: typing.List[str], rootdir: str = "."
+):
     """Create a combine archive manifest file called manifest.xml
 
     :param rootfile: the root file for this archive; marked as "master"
@@ -160,28 +162,46 @@ def create_combine_archive_manifest(rootfile: str, filelist: typing.List[str],
     :type rootdir: str
     """
     manifest = rootdir + "/manifest.xml"
-    with open(manifest, 'w') as mf:
+    with open(manifest, "w") as mf:
         print('<?xml version="1.0" encoding="utf-8"?>', file=mf)
         print(
             """
             <omexManifest
             xmlns="http://identifiers.org/combine.specifications/omex-manifest">
-            """, file=mf)
+            """,
+            file=mf,
+        )
 
         print(
             """
             <content location="."
                 format="http://identifiers.org/combine.specifications/omex"/>
-            """, file=mf)
+            """,
+            file=mf,
+        )
 
         for f in filelist:
-            print(
-                f"""
-                <content location="{f}"
-                    format="http://identifiers.org/combine.specifications/neuroml"/>
-                """, file=mf)
+            if f == rootfile:
+                print(
+                    f"""
+                    <content location="{f}" master="true"
+                        format="http://identifiers.org/combine.specifications/neuroml"/>
+                    """,
+                    file=mf,
+                )
+            else:
+                print(
+                    f"""
+                    <content location="{f}"
+                        format="http://identifiers.org/combine.specifications/neuroml"/>
+                    """,
+                    file=mf,
+                )
 
         print(
             """
             </omexManifest>
-            """, file=mf, flush=True)
+            """,
+            file=mf,
+            flush=True,
+        )
