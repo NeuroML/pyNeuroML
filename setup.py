@@ -13,6 +13,7 @@ setup(
     packages=[
         "pyneuroml",
         "pyneuroml.analysis",
+        "pyneuroml.archive",
         "pyneuroml.channelml",
         "pyneuroml.lems",
         "pyneuroml.tune",
