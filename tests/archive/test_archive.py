@@ -12,7 +12,11 @@ import unittest
 import logging
 import pathlib
 
-from pyneuroml.archive import get_model_file_list, create_combine_archive
+from pyneuroml.archive import (
+    get_model_file_list,
+    create_combine_archive,
+    create_combine_archive_manifest,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +43,6 @@ class TestArchiveModule(unittest.TestCase):
             "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
         )
         self.assertEqual(5, len(filelist))
-        print(filelist)
 
         # NeuroML file in examples directory
         dirname = str(thispath.parent.parent.parent)
@@ -49,19 +52,57 @@ class TestArchiveModule(unittest.TestCase):
         )
         self.assertEqual(4, len(filelist))
 
+    def test_create_combine_archive_manifest(self):
+        """Test create_combine_archive_manifest function."""
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent)
+        filelist = []
+        get_model_file_list("HH_example_cell.nml", filelist, dirname)
+        create_combine_archive_manifest("HH_example_cell.nml", filelist, dirname)
+        self.assertTrue(pathlib.Path(dirname + "/manifest.xml").exists())
+
+        # a LEMS file in the examples directory
+        dirname = str(thispath.parent.parent.parent)
+        filelist = []
+        get_model_file_list(
+            "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
+        )
+        create_combine_archive_manifest(
+            "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
+        )
+        self.assertTrue(pathlib.Path(dirname + "/examples/manifest.xml").exists())
+
+        # NeuroML file in examples directory
+        dirname = str(thispath.parent.parent.parent)
+        filelist = []
+        get_model_file_list(
+            "NML2_SingleCompHHCell.nml", filelist, dirname + "/examples"
+        )
+        create_combine_archive_manifest(
+            "NML2_SingleCompHHCell.nml", filelist, dirname + "/examples"
+        )
+        self.assertTrue(pathlib.Path(dirname + "/examples/manifest.xml").exists())
+
     def test_create_combine_archive(self):
         """Test create_combine_archive."""
 
         thispath = pathlib.Path(__file__)
         dirname = str(thispath.parent.parent)
         create_combine_archive("HH_example", "HH_example_cell.nml", dirname)
+        self.assertTrue(pathlib.Path(dirname + "/HH_example.neux").exists())
 
         dirname = str(thispath.parent.parent.parent)
         create_combine_archive(
             "LEMS_NML2_Ex5_DetCell", "LEMS_NML2_Ex5_DetCell.xml", dirname + "/examples"
         )
+        self.assertTrue(
+            pathlib.Path(dirname + "/examples/LEMS_NML2_Ex5_DetCell.neux").exists()
+        )
 
         dirname = str(thispath.parent.parent.parent)
         create_combine_archive(
             "NML2_SingleCompHHCell", "NML2_SingleCompHHCell.nml", dirname + "/examples"
+        )
+        self.assertTrue(
+            pathlib.Path(dirname + "/examples/NML2_SingleCompHHCell.neux").exists()
         )
