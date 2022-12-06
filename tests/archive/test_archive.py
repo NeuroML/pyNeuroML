@@ -12,7 +12,7 @@ import unittest
 import logging
 import pathlib
 
-from pyneuroml.archive import get_model_file_list
+from pyneuroml.archive import get_model_file_list, create_combine_archive
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,6 @@ class TestArchiveModule(unittest.TestCase):
         self.assertEqual(4, len(filelist))
 
         # a LEMS file in the examples directory
-        thispath = pathlib.Path(__file__)
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         get_model_file_list(
@@ -43,10 +42,26 @@ class TestArchiveModule(unittest.TestCase):
         print(filelist)
 
         # NeuroML file in examples directory
-        thispath = pathlib.Path(__file__)
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         get_model_file_list(
             "NML2_SingleCompHHCell.nml", filelist, dirname + "/examples"
         )
         self.assertEqual(4, len(filelist))
+
+    def test_create_combine_archive(self):
+        """Test create_combine_archive."""
+
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent)
+        create_combine_archive("HH_example", "HH_example_cell.nml", dirname)
+
+        dirname = str(thispath.parent.parent.parent)
+        create_combine_archive(
+            "LEMS_NML2_Ex5_DetCell", "LEMS_NML2_Ex5_DetCell.xml", dirname + "/examples"
+        )
+
+        dirname = str(thispath.parent.parent.parent)
+        create_combine_archive(
+            "NML2_SingleCompHHCell", "NML2_SingleCompHHCell.nml", dirname + "/examples"
+        )
