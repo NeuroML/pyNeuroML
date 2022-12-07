@@ -11,13 +11,16 @@ import os
 import typing
 import logging
 import pathlib
+import argparse
+import shutil
 from zipfile import ZipFile
 from neuroml.loaders import read_neuroml2_file
 from pyneuroml.pynml import extract_lems_definition_files
+from pyneuroml.utils.cli import build_namespace
 from lems.model.model import Model
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 STANDARD_LEMS_FILES = [
@@ -34,12 +37,75 @@ STANDARD_LEMS_FILES = [
 ]
 
 
+DEFAULTS = {
+    "zipfileName": None,
+    "zipfileExtension": ".neux",
+    "filelist": []
+}  # type: typing.Dict[str, typing.Any]
+
+
+def process_args():
+    """
+    Parse command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=("A script to create a COMBINE archive ")
+    )
+
+    parser.add_argument(
+        "rootfile",
+        type=str,
+        metavar="<NeuroML 2/LEMS file>",
+        help="Name of the NeuroML 2/LEMS main file",
+    )
+
+    parser.add_argument(
+        "-zipfileName",
+        type=str,
+        metavar="<zip file name>",
+        default=DEFAULTS["zipfileName"],
+        help="Extension to use for archive.",
+    )
+    parser.add_argument(
+        "-zipfileExtension",
+        type=str,
+        metavar="<zip file extension>",
+        default=DEFAULTS["zipfileExtension"],
+        help="Extension to use for archive.",
+    )
+    parser.add_argument(
+        "-filelist",
+        nargs="*",
+        metavar="<explicit list of files to create archive of>",
+        default=DEFAULTS["filelist"],
+        help="Explicit list of files to create archive of.",
+    )
+
+    return parser.parse_args()
+
+
+def main(args=None):
+    """Main runner method"""
+    if args is None:
+        args = process_args()
+
+    cli(a=args)
+
+
+def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
+    """Main cli caller method"""
+    a = build_namespace(DEFAULTS, a, **kwargs)
+    create_combine_archive(zipfile_name=a.zipfile_name, rootfile=a.rootfile,
+                           zipfile_extension=a.zipfile_extension,
+                           filelist=a.filelist)
+
+
 def get_model_file_list(
     rootfile: str,
     filelist: typing.List[str],
     rootdir: str = ".",
     lems_def_dir: str = None,
-) -> None:
+) -> typing.Optional[str]:
     """Get the list of files to archive.
 
     This method will take the rootfile, and recursively resolve all the files
