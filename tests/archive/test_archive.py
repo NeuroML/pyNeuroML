@@ -89,14 +89,17 @@ class TestArchiveModule(unittest.TestCase):
         thispath = pathlib.Path(__file__)
         filelist = []
         dirname = str(thispath.parent.parent)
-        create_combine_archive("HH_example", dirname + "/HH_example_cell.nml",
-                               filelist=filelist)
+        create_combine_archive(
+            "HH_example", dirname + "/HH_example_cell.nml", filelist=filelist
+        )
         self.assertTrue(pathlib.Path(dirname + "/HH_example.neux").exists())
 
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         create_combine_archive(
-            "LEMS_NML2_Ex5_DetCell", dirname + "/examples/LEMS_NML2_Ex5_DetCell.xml", filelist=filelist
+            "LEMS_NML2_Ex5_DetCell",
+            dirname + "/examples/LEMS_NML2_Ex5_DetCell.xml",
+            filelist=filelist,
         )
         self.assertTrue(
             pathlib.Path(dirname + "/examples/LEMS_NML2_Ex5_DetCell.neux").exists()
@@ -105,8 +108,9 @@ class TestArchiveModule(unittest.TestCase):
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         create_combine_archive(
-            "NML2_SingleCompHHCell", dirname + "/examples/NML2_SingleCompHHCell.nml",
-            filelist=filelist
+            "NML2_SingleCompHHCell",
+            dirname + "/examples/NML2_SingleCompHHCell.nml",
+            filelist=filelist,
         )
         self.assertTrue(
             pathlib.Path(dirname + "/examples/NML2_SingleCompHHCell.neux").exists()

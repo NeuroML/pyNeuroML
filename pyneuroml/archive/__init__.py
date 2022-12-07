@@ -40,7 +40,7 @@ STANDARD_LEMS_FILES = [
 DEFAULTS = {
     "zipfileName": None,
     "zipfileExtension": ".neux",
-    "filelist": []
+    "filelist": [],
 }  # type: typing.Dict[str, typing.Any]
 
 
@@ -95,9 +95,12 @@ def main(args=None):
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
     a = build_namespace(DEFAULTS, a, **kwargs)
-    create_combine_archive(zipfile_name=a.zipfile_name, rootfile=a.rootfile,
-                           zipfile_extension=a.zipfile_extension,
-                           filelist=a.filelist)
+    create_combine_archive(
+        zipfile_name=a.zipfile_name,
+        rootfile=a.rootfile,
+        zipfile_extension=a.zipfile_extension,
+        filelist=a.filelist,
+    )
 
 
 def get_model_file_list(
@@ -151,7 +154,9 @@ def get_model_file_list(
             rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
         logger.debug(f"Has includes: {rootdoc.includes}")
         for inc in rootdoc.includes:
-            lems_def_dir = get_model_file_list(inc.href, filelist, rootdir, lems_def_dir)
+            lems_def_dir = get_model_file_list(
+                inc.href, filelist, rootdir, lems_def_dir
+            )
 
     elif rootfile.endswith(".xml"):
         # extract the standard NeuroML2 LEMS definitions into a directory
@@ -174,8 +179,7 @@ def get_model_file_list(
             if incfile in STANDARD_LEMS_FILES:
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
-            lems_def_dir = get_model_file_list(incfile, filelist, rootdir,
-                                               lems_def_dir)
+            lems_def_dir = get_model_file_list(incfile, filelist, rootdir, lems_def_dir)
 
     else:
         raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
@@ -184,7 +188,10 @@ def get_model_file_list(
 
 
 def create_combine_archive(
-    zipfile_name: str, rootfile: str, zipfile_extension=".neux", filelist: typing.List[str] = []
+    zipfile_name: str,
+    rootfile: str,
+    zipfile_extension=".neux",
+    filelist: typing.List[str] = [],
 ):
     """Create a combine archive that includes all files referred to (included
     recursively) by the provided rootfile.  If a file list is provided, it will
@@ -222,7 +229,7 @@ def create_combine_archive(
         rootfile = pathlib.Path(rootfile).name
     else:
         logger.debug("rootdir is '.'")
-        rootdir = '.'
+        rootdir = "."
 
     # compute zipfile name from rootfile
     if not zipfile_name:
@@ -231,8 +238,7 @@ def create_combine_archive(
 
     lems_def_dir = None
     if len(filelist) == 0:
-        lems_def_dir = get_model_file_list(rootfile, filelist, rootdir,
-                                           lems_def_dir)
+        lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
 
     create_combine_archive_manifest(rootfile, filelist, rootdir)
     filelist.append("manifest.xml")
@@ -250,7 +256,9 @@ def create_combine_archive(
         logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
         shutil.rmtree(lems_def_dir)
 
-    logger.info(f"Archive {rootdir}/{zipfile_name}{zipfile_extension} created with manifest file {rootdir}/manifest.xml.")
+    logger.info(
+        f"Archive {rootdir}/{zipfile_name}{zipfile_extension} created with manifest file {rootdir}/manifest.xml."
+    )
 
 
 def create_combine_archive_manifest(
