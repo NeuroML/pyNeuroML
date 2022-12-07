@@ -99,20 +99,25 @@ def get_model_file_list(
 
         for inc in model.included_files:
             incfile = pathlib.Path(inc).name
+            logger.debug(f"Processing include file {incfile}")
             if incfile in STANDARD_LEMS_FILES:
                 logger.info(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
-            get_model_file_list(inc, filelist, rootdir, lems_def_dir)
+            get_model_file_list(incfile, filelist, rootdir, lems_def_dir)
 
     else:
         raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
 
 
 def create_combine_archive(
-    zipfile_name: str, rootfile: str, rootdir: str = ".", zipfile_extension=".neux"
+    zipfile_name: str, rootfile: str, zipfile_extension=".neux", filelist: typing.List[str] = []
 ):
-    """Create a combine archive that includes all files referred to by the
-    provided rootfile.
+    """Create a combine archive that includes all files referred to (included
+    recursively) by the provided rootfile.  If a file list is provided, it will
+    attempt to create an archive of the provided files. Note that it is for the
+    user to ensure that the paths in the provided file list are correct.
+
+    All file paths must be relative to the provided rootfile.
 
     For more information, see:
 
