@@ -4,7 +4,7 @@ Utilities to plot NeuroML2 cell morphologies.
 
 File: pyneuroml/plot/PlotMorphology.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 

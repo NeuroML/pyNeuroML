@@ -4,7 +4,7 @@ Test morphology plotters
 
 File: tests/plot/test_morphology_plot.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 
