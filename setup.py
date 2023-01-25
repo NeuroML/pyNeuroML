@@ -13,6 +13,7 @@ setup(
     packages=[
         "pyneuroml",
         "pyneuroml.analysis",
+        "pyneuroml.archive",
         "pyneuroml.channelml",
         "pyneuroml.lems",
         "pyneuroml.tune",
@@ -26,6 +27,7 @@ setup(
     entry_points={
         "console_scripts": [
             "pynml                 = pyneuroml.pynml:main",
+            "pynml-archive         = pyneuroml.archive:main",
             "pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main",
             "pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main",
             "pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main",
