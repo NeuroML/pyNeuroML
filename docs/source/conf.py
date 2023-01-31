@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 # -- Project information -----------------------------------------------------
 
 project = "PyNeuroML"
-copyright = "2021, NeuroML contributors"
+copyright = "2023, NeuroML contributors"
 author = "NeuroML contributors"
 
 

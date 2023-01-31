@@ -3,7 +3,7 @@
 The utils package contains various utility functions to aid users working with
 PyNeuroML
 
-Copyright 2021 NeuroML Contributors
+Copyright 2023 NeuroML Contributors
 """
 
 import neuroml
