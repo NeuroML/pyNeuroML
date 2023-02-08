@@ -34,8 +34,9 @@ DEFAULTS = {
     "saveToFile": None,
     "interactive3d": False,
     "plane2d": "xy",
-    "minwidth": 0,
+    "minwidth": 0.8,
     "square": False,
+    "plotType": "Detailed"
 }
 
 
@@ -73,6 +74,13 @@ def process_args():
         help="Plane to plot on for 2D plot",
     )
 
+    parser.add_argument(
+        "-plotType",
+        type=str,
+        metavar="<type: Detailed, Constant, or Schematic>",
+        default=DEFAULTS["plotType"],
+        help="Plane to plot on for 2D plot",
+    )
     parser.add_argument(
         "-minWidth",
         action="store_true",
@@ -125,7 +133,8 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
         plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.nogui, a.save_to_file)
     else:
         plot_2D(
-            a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file, a.square
+            a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file,
+            a.square, a.plot_type
         )
 
 
@@ -165,6 +174,7 @@ def plot_2D(
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
     square: bool = False,
+    plot_type: str = "Detailed",
 ):
     """Plot cell morphology in 2D.
 
@@ -185,7 +195,17 @@ def plot_2D(
     :type save_to_file: str
     :param square: scale axes so that image is approximately square
     :type square: bool
+    :param plot_type: type of plot, one of:
+        - Detailed: show detailed morphology taking into account each segment's
+          width
+        - Constant: show morphology, but use constant line widths
+        - Schematic: only plot each unbranched segment group as a straight
+          line, not following each segment
+    :type plot_type: str
     """
+
+    if plot_type not in ["Detailed", "Constant", "Schematic"]:
+        raise ValueError("plot_type must be one of 'Detailed', 'Constant', or 'Schematic'")
 
     if verbose:
         print("Plotting %s" % nml_file)
@@ -348,6 +368,9 @@ def plot_2D(
                     width = (p.diameter + d.diameter) / 2
 
                     if width < min_width:
+                        width = min_width
+
+                    if plot_type == "Constant":
                         width = min_width
 
                     color = "b"
@@ -534,6 +557,7 @@ def plot_interactive_3D(
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
+    plot_type: str = "Detailed"
 ):
     """Plot NeuroML2 cell morphology interactively using Plot.ly
 
@@ -555,7 +579,17 @@ def plot_interactive_3D(
     :type nogui: bool
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
+    :param plot_type: type of plot, one of:
+        - Detailed: show detailed morphology taking into account each segment's
+          width
+        - Constant: show morphology, but use constant line widths
+        - Schematic: only plot each unbranched segment group as a straight
+          line, not following each segment
+    :type plot_type: str
     """
+    if plot_type not in ["Detailed", "Constant", "Schematic"]:
+        raise ValueError("plot_type must be one of 'Detailed', 'Constant', or 'Schematic'")
+
     nml_model = read_neuroml2_file(nml_file)
 
     fig = go.Figure()
@@ -571,6 +605,8 @@ def plot_interactive_3D(
                 )
             width = max(p.diameter, d.diameter)
             if width < min_width:
+                width = min_width
+            if plot_type == "Constant":
                 width = min_width
             fig.add_trace(
                 go.Scatter3d(
