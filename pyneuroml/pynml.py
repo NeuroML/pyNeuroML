@@ -798,12 +798,12 @@ def read_neuroml2_file(
                 if check_validity_pre_include:
                     inc = validate_neuroml2(incl_loc, verbose_validate=False)
 
-                logger.debug(
-                    "Loading included NeuroML2 file: {} (base: {}, resolved: {}, checking {})".format(
-                        include.href, base_path, incl_loc, check_validity_pre_include
-                    )
-                )
                 if inc:
+                    logger.debug(
+                        "Loading included NeuroML2 file: {} (base: {}, resolved: {}, checking {})".format(
+                            include.href, base_path, incl_loc, check_validity_pre_include
+                        )
+                    )
                     nml2_sub_doc = read_neuroml2_file(
                         incl_loc,
                         True,
