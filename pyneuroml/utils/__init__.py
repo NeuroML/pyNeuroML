@@ -6,9 +6,10 @@ PyNeuroML
 Copyright 2023 NeuroML Contributors
 """
 
-import neuroml
+import typing
 import logging
 import re
+import neuroml
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ def extract_position_info(
                 )
 
                 pop_id_vs_color[pop.id] = color
-                # print("Colour determined to be: %s"%str(color))
+                logger.debug(f"Colour determined to be: {color}")
             if prop.tag == "radius":
                 substitute_radius = float(prop.value)
                 pop_id_vs_radii[pop.id] = substitute_radius
