@@ -782,10 +782,12 @@ def read_neuroml2_file(
 
     base_path = os.path.dirname(os.path.realpath(nml2_file_name))
 
-    if include_includes and verbose:
-        logger.info(
-            "Including included files (included already: {})".format(already_included)
-        )
+    if include_includes:
+
+        if verbose:
+            logger.info(
+                "Including included files (included already: {})".format(already_included)
+            )
 
         incl_to_remove = []
         for include in nml2_doc.includes:
