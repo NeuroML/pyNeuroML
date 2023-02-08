@@ -209,11 +209,11 @@ def plot_2D(
     title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
 
     if verbose:
-        print("positions: %s" % positions)
-        print("pop_id_vs_cell: %s" % pop_id_vs_cell)
-        print("cell_id_vs_cell: %s" % cell_id_vs_cell)
-        print("pop_id_vs_color: %s" % pop_id_vs_color)
-        print("pop_id_vs_radii: %s" % pop_id_vs_radii)
+        logger.debug(f"positions: {positions}")
+        logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
+        logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
+        logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
+        logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
     fig, ax = plt.subplots(1, 1)  # noqa
     plt.get_current_fig_manager().set_window_title(title)
