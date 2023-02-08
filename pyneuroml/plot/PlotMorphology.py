@@ -21,8 +21,7 @@ import plotly.graph_objects as go
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
-
-import neuroml
+from pyneuroml.utils import extract_position_info
 
 
 logger = logging.getLogger(__name__)
@@ -198,8 +197,6 @@ def plot_2D(
         verbose=False,
         optimized=True,
     )
-
-    from pyneuroml.utils import extract_position_info
 
     (
         cell_id_vs_cell,
