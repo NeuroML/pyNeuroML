@@ -176,7 +176,10 @@ def plot_2D(
     square: bool = False,
     plot_type: str = "Detailed",
 ):
-    """Plot cell morphology in 2D.
+    """Plot cell morphologies in 2D.
+
+    If a file with a network containing multiple cells is provided, it will
+    plot all the cells.
 
     This uses matplotlib to plot the morphology in 2D.
 
