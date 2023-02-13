@@ -19,10 +19,10 @@ from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 import plotly.graph_objects as go
 
-from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color
+from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
-from pyneuroml.utils.plot import add_text_to_2D_plot
+from pyneuroml.utils.plot import add_text_to_2D_plot, get_next_hex_color
 from neuroml import (SegmentGroup, Cell)
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
