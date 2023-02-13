@@ -100,7 +100,7 @@ class TestMorphologyPlot(BaseTestCase):
 
             plot_2D_schematic(
                 olm_cell, segment_groups=["soma_0", "dendrite_0", "axon_0"],
-                nogui=False, plane2d=plane, save_to_file=filename
+                nogui=True, plane2d=plane, save_to_file=filename
             )
 
             # more complex cell
@@ -116,7 +116,7 @@ class TestMorphologyPlot(BaseTestCase):
             sgs_ids = list(sgs.keys()) + list(sgs_1.keys())
             plot_2D_schematic(
                 cell, segment_groups=sgs_ids,
-                nogui=False, plane2d=plane, save_to_file=filename, labels=True
+                nogui=True, plane2d=plane, save_to_file=filename, labels=True
             )
 
             self.assertIsFile(filename)
