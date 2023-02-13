@@ -932,5 +932,38 @@ def plot_2D_schematic(
         plt.show()
 
 
+def plot_segment_groups_curtain_plots(
+    cell: Cell,
+    segment_groups: typing.List[SegmentGroup],
+    labels: bool = False,
+    plane2d: str = "xy",
+    verbose: bool = False,
+    nogui: bool = False,
+    save_to_file: typing.Optional[str] = None,
+) -> None:
+    """Plot curtain plots of provided segment groups.
+
+
+    :param cell: cell to plot
+    :type cell: neuroml.Cell
+    :param segment_groups: list of unbranched segment groups to plot
+    :type segment_groups: list(SegmentGroup)
+    :param labels: toggle labelling of segment groups
+    :type labels: bool
+    :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
+    :type plane2d: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param square: scale axes so that image is approximately square
+    :type square: bool
+    :param nogui: do not show matplotlib GUI (default: false)
+    :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    :returns: None
+    """
+    pass
+
+
 if __name__ == "__main__":
     main()
