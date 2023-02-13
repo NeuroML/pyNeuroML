@@ -116,7 +116,7 @@ class TestMorphologyPlot(BaseTestCase):
             sgs_ids = list(sgs.keys()) + list(sgs_1.keys())
             plot_2D_schematic(
                 cell, segment_groups=sgs_ids,
-                nogui=False, plane2d=plane, save_to_file=filename
+                nogui=False, plane2d=plane, save_to_file=filename, labels=True
             )
 
             self.assertIsFile(filename)

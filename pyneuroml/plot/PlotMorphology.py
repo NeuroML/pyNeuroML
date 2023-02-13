@@ -22,7 +22,8 @@ import plotly.graph_objects as go
 from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
-from neuroml import (Segment, SegmentGroup, Cell)
+from pyneuroml.utils.plot import add_text_to_2D_plot
+from neuroml import (SegmentGroup, Cell)
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
@@ -669,6 +670,7 @@ def plot_interactive_3D(
 def plot_2D_schematic(
     cell: Cell,
     segment_groups: list[SegmentGroup],
+    labels: bool = False,
     plane2d: str = "xy",
     min_width: float = DEFAULTS["minwidth"],
     verbose: bool = False,
@@ -682,9 +684,11 @@ def plot_2D_schematic(
     segment.
 
     :param cell: cell to plot
-    :type cell: Cell
+    :type cell: neuroml.Cell
     :param segment_groups: list of unbranched segment groups to plot
     :type segment_groups: list(SegmentGroup)
+    :param labels: toggle labelling of segment groups
+    :type labels: bool
     :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
     :type plane2d: str
     :param min_width: minimum width for segments (useful for visualising very
@@ -742,9 +746,9 @@ def plot_2D_schematic(
     min_xaxis = float("inf")
     width = 1
 
-    for sg, segs in ord_segs.items():
+    for sgid, segs in ord_segs.items():
 
-        sgobj = cell.get_segment_group(sg)
+        sgobj = cell.get_segment_group(sgid)
         if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
             raise ValueError(f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment")
 
@@ -765,6 +769,15 @@ def plot_2D_schematic(
                 min_xaxis,
                 max_xaxis,
             )
+            if labels:
+                add_text_to_2D_plot(
+                    ax,
+                    [first_seg.proximal.x, last_seg.distal.x],
+                    [first_seg.proximal.y, last_seg.distal.y],
+                    color=color,
+                    text=sgid
+                )
+
         elif plane2d == "yx":
             min_xaxis, max_xaxis = add_line(
                 ax,
@@ -775,6 +788,14 @@ def plot_2D_schematic(
                 min_xaxis,
                 max_xaxis,
             )
+            if labels:
+                add_text_to_2D_plot(
+                    ax,
+                    [first_seg.proximal.y, last_seg.distal.y],
+                    [first_seg.proximal.x, last_seg.distal.x],
+                    color=color,
+                    text=sgid
+                )
         elif plane2d == "xz":
             min_xaxis, max_xaxis = add_line(
                 ax,
@@ -785,6 +806,14 @@ def plot_2D_schematic(
                 min_xaxis,
                 max_xaxis,
             )
+            if labels:
+                add_text_to_2D_plot(
+                    ax,
+                    [first_seg.proximal.x, last_seg.distal.x],
+                    [first_seg.proximal.z, last_seg.distal.z],
+                    color=color,
+                    text=sgid
+                )
         elif plane2d == "zx":
             min_xaxis, max_xaxis = add_line(
                 ax,
@@ -795,6 +824,14 @@ def plot_2D_schematic(
                 min_xaxis,
                 max_xaxis,
             )
+            if labels:
+                add_text_to_2D_plot(
+                    ax,
+                    [first_seg.proximal.z, last_seg.distal.z],
+                    [first_seg.proximal.x, last_seg.distal.x],
+                    color=color,
+                    text=sgid
+                )
         elif plane2d == "yz":
             min_xaxis, max_xaxis = add_line(
                 ax,
@@ -805,6 +842,14 @@ def plot_2D_schematic(
                 min_xaxis,
                 max_xaxis,
             )
+            if labels:
+                add_text_to_2D_plot(
+                    ax,
+                    [first_seg.proximal.y, last_seg.distal.y],
+                    [first_seg.proximal.z, last_seg.distal.z],
+                    color=color,
+                    text=sgid
+                )
         elif plane2d == "zy":
             min_xaxis, max_xaxis = add_line(
                 ax,
@@ -815,6 +860,14 @@ def plot_2D_schematic(
                 min_xaxis,
                 max_xaxis,
             )
+            if labels:
+                add_text_to_2D_plot(
+                    ax,
+                    [first_seg.proximal.z, last_seg.distal.z],
+                    [first_seg.proximal.y, last_seg.distal.y],
+                    color=color,
+                    text=sgid
+                )
         else:
             raise Exception(f"Invalid value for plane: {plane2d}")
 
