@@ -19,9 +19,11 @@ from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 import plotly.graph_objects as go
 
-from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.pynml import read_neuroml2_file, get_next_hex_color
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
+from neuroml import (Segment, SegmentGroup, Cell)
+from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
 logger = logging.getLogger(__name__)
@@ -662,6 +664,219 @@ def plot_interactive_3D(
             )
             fig.write_image(save_to_file, scale=2, width=1024, height=768)
             logger.info("Saved image to %s of plot: %s" % (save_to_file, title))
+
+
+def plot_2D_schematic(
+    cell: Cell,
+    segment_groups: list[SegmentGroup],
+    plane2d: str = "xy",
+    min_width: float = DEFAULTS["minwidth"],
+    verbose: bool = False,
+    square: bool = False,
+    nogui: bool = False,
+    save_to_file: typing.Optional[str] = None,
+) -> None:
+    """Plot a 2D schematic of the provided segment groups.
+
+    This plots each segment group as a straight line between its first and last
+    segment.
+
+    :param cell: cell to plot
+    :type cell: Cell
+    :param segment_groups: list of unbranched segment groups to plot
+    :type segment_groups: list(SegmentGroup)
+    :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
+    :type plane2d: str
+    :param min_width: minimum width for segments (useful for visualising very
+        thin segments): default 0.8um
+    :type min_width: float
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param square: scale axes so that image is approximately square
+    :type square: bool
+    :param nogui: do not show matplotlib GUI (default: false)
+    :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    :returns: None
+
+    """
+    title = f"2D schematic of segment groups from {cell.id}"
+    ord_segs = cell.get_ordered_segments_in_groups(
+        segment_groups, check_parentage=False
+    )
+
+    fig, ax = plt.subplots(1, 1)  # noqa
+    plt.get_current_fig_manager().set_window_title(title)
+
+    ax.set_aspect("equal")
+
+    ax.spines["right"].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.yaxis.set_ticks_position("left")
+    ax.xaxis.set_ticks_position("bottom")
+
+    if plane2d == "xy":
+        ax.set_xlabel("x (μm)")
+        ax.set_ylabel("y (μm)")
+    elif plane2d == "yx":
+        ax.set_xlabel("y (μm)")
+        ax.set_ylabel("x (μm)")
+    elif plane2d == "xz":
+        ax.set_xlabel("x (μm)")
+        ax.set_ylabel("z (μm)")
+    elif plane2d == "zx":
+        ax.set_xlabel("z (μm)")
+        ax.set_ylabel("x (μm)")
+    elif plane2d == "yz":
+        ax.set_xlabel("y (μm)")
+        ax.set_ylabel("z (μm)")
+    elif plane2d == "zy":
+        ax.set_xlabel("z (μm)")
+        ax.set_ylabel("y (μm)")
+    else:
+        logger.error(f"Invalid value for plane: {plane2d}")
+        sys.exit(-1)
+
+    max_xaxis = -1 * float("inf")
+    min_xaxis = float("inf")
+    width = 1
+
+    for sg, segs in ord_segs.items():
+
+        sgobj = cell.get_segment_group(sg)
+        if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
+            raise ValueError(f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment")
+
+        # get proximal and distal points
+        first_seg = (segs[0])  # type: Segment
+        last_seg = (segs[-1])  # type: Segment
+
+        # unique color for each segment group
+        color = get_next_hex_color()
+
+        if plane2d == "xy":
+            min_xaxis, max_xaxis = add_line(
+                ax,
+                [first_seg.proximal.x, last_seg.distal.x],
+                [first_seg.proximal.y, last_seg.distal.y],
+                width,
+                color,
+                min_xaxis,
+                max_xaxis,
+            )
+        elif plane2d == "yx":
+            min_xaxis, max_xaxis = add_line(
+                ax,
+                [first_seg.proximal.y, last_seg.distal.y],
+                [first_seg.proximal.x, last_seg.distal.x],
+                width,
+                color,
+                min_xaxis,
+                max_xaxis,
+            )
+        elif plane2d == "xz":
+            min_xaxis, max_xaxis = add_line(
+                ax,
+                [first_seg.proximal.x, last_seg.distal.x],
+                [first_seg.proximal.z, last_seg.distal.z],
+                width,
+                color,
+                min_xaxis,
+                max_xaxis,
+            )
+        elif plane2d == "zx":
+            min_xaxis, max_xaxis = add_line(
+                ax,
+                [first_seg.proximal.z, last_seg.distal.z],
+                [first_seg.proximal.x, last_seg.distal.x],
+                width,
+                color,
+                min_xaxis,
+                max_xaxis,
+            )
+        elif plane2d == "yz":
+            min_xaxis, max_xaxis = add_line(
+                ax,
+                [first_seg.proximal.y, last_seg.distal.y],
+                [first_seg.proximal.z, last_seg.distal.z],
+                width,
+                color,
+                min_xaxis,
+                max_xaxis,
+            )
+        elif plane2d == "zy":
+            min_xaxis, max_xaxis = add_line(
+                ax,
+                [first_seg.proximal.z, last_seg.distal.z],
+                [first_seg.proximal.y, last_seg.distal.y],
+                width,
+                color,
+                min_xaxis,
+                max_xaxis,
+            )
+        else:
+            raise Exception(f"Invalid value for plane: {plane2d}")
+
+        if verbose:
+            print("Extent x: %s -> %s" % (min_xaxis, max_xaxis))
+
+        # add a scalebar
+        # ax = fig.add_axes([0, 0, 1, 1])
+        sc_val = 50
+        if max_xaxis - min_xaxis < 100:
+            sc_val = 5
+        if max_xaxis - min_xaxis < 10:
+            sc_val = 1
+        scalebar1 = ScaleBar(
+            0.001,
+            units="mm",
+            dimension="si-length",
+            scale_loc="top",
+            location="lower right",
+            fixed_value=sc_val,
+            fixed_units="um",
+            box_alpha=0.8,
+        )
+        ax.add_artist(scalebar1)
+
+        plt.autoscale()
+        xl = plt.xlim()
+        yl = plt.ylim()
+        if verbose:
+            print("Auto limits - x: %s , y: %s" % (xl, yl))
+
+        small = 0.1
+        if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
+            plt.xlim([-100, 100])
+            plt.ylim([-100, 100])
+        elif xl[1] - xl[0] < small:
+            d_10 = (yl[1] - yl[0]) / 10
+            m = xl[0] + (xl[1] - xl[0]) / 2.0
+            plt.xlim([m - d_10, m + d_10])
+        elif yl[1] - yl[0] < small:
+            d_10 = (xl[1] - xl[0]) / 10
+            m = yl[0] + (yl[1] - yl[0]) / 2.0
+            plt.ylim([m - d_10, m + d_10])
+
+        if square:
+            if xl[1] - xl[0] > yl[1] - yl[0]:
+                d2 = (xl[1] - xl[0]) / 2
+                m = yl[0] + (yl[1] - yl[0]) / 2.0
+                plt.ylim([m - d2, m + d2])
+
+            if xl[1] - xl[0] < yl[1] - yl[0]:
+                d2 = (yl[1] - yl[0]) / 2
+                m = xl[0] + (xl[1] - xl[0]) / 2.0
+                plt.xlim([m - d2, m + d2])
+
+    if save_to_file:
+        abs_file = os.path.abspath(save_to_file)
+        plt.savefig(abs_file, dpi=200, bbox_inches="tight")
+        print(f"Saved image on plane {plane2d} to {abs_file} of plot: {title}")
+
+    if not nogui:
+        plt.show()
 
 
 if __name__ == "__main__":
