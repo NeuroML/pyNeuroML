@@ -669,7 +669,7 @@ def plot_interactive_3D(
 
 def plot_2D_schematic(
     cell: Cell,
-    segment_groups: list[SegmentGroup],
+    segment_groups: typing.List[SegmentGroup],
     labels: bool = False,
     plane2d: str = "xy",
     min_width: float = DEFAULTS["minwidth"],
