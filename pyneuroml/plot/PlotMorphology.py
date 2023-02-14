@@ -11,6 +11,7 @@ Copyright 2023 NeuroML contributors
 import argparse
 import os
 import sys
+import random
 
 import typing
 import logging
@@ -22,7 +23,8 @@ import plotly.graph_objects as go
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
-from pyneuroml.utils.plot import add_text_to_2D_plot, get_next_hex_color
+from pyneuroml.utils.plot import (add_text_to_2D_plot, get_next_hex_color,
+                                  add_box_to_plot)
 from neuroml import (SegmentGroup, Cell)
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
@@ -936,10 +938,11 @@ def plot_segment_groups_curtain_plots(
     cell: Cell,
     segment_groups: typing.List[SegmentGroup],
     labels: bool = False,
-    plane2d: str = "xy",
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
+    overlay_data: typing.Dict[str, typing.List[typing.Any]] = None,
+    width: typing.Union[float, int] = 5
 ) -> None:
     """Plot curtain plots of provided segment groups.
 
@@ -950,8 +953,6 @@ def plot_segment_groups_curtain_plots(
     :type segment_groups: list(SegmentGroup)
     :param labels: toggle labelling of segment groups
     :type labels: bool
-    :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
-    :type plane2d: str
     :param verbose: show extra information (default: False)
     :type verbose: bool
     :param square: scale axes so that image is approximately square
@@ -960,9 +961,99 @@ def plot_segment_groups_curtain_plots(
     :type nogui: bool
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
+    :param overlay_data: data to overlay over the curtain plots; 
+        this must be a dictionary with segment group ids as keys, and lists of
+        values to overlay as values. Each list should have a value for every
+        segment in the segment group.
+    :type overlay_data: dict, keys are segment group ids, values are lists of
+        magnitudes to overlay on curtain plots
+    :param width: width of each segment group
+    :type width: float/int
     :returns: None
     """
-    pass
+    # use a random number generator so that the colours are always the same
+    myrandom = random.Random()
+    myrandom.seed(122436)
+
+    title = f"Curtain plots of segment groups from {cell.id}"
+    (ord_segs, cumulative_lengths) = cell.get_ordered_segments_in_groups(
+        segment_groups, check_parentage=False, include_cumulative_lengths=True
+    )
+    # plot setup
+    fig, ax = plt.subplots(1, 1)  # noqa
+    plt.get_current_fig_manager().set_window_title(title)
+
+    # ax.set_aspect("equal")
+
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.yaxis.set_ticks_position("left")
+    ax.xaxis.set_ticks_position("none")
+    ax.xaxis.set_ticks([])
+
+    ax.set_xlabel("Segment group")
+    ax.set_ylabel("length (μm)")
+
+    # column counter
+    column = 0
+    for sgid, segs in ord_segs.items():
+        column += 1
+        length = 0
+
+        cumulative_lengths_sg = cumulative_lengths[sgid]
+
+        sgobj = cell.get_segment_group(sgid)
+        if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
+            raise ValueError(f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment")
+
+        for seg_num in range(0, len(segs)):
+            seg = segs[seg_num]
+            cumulative_len = cumulative_lengths_sg[seg_num]
+
+            add_box_to_plot(
+                ax,
+                [column * width - width * 0.25, -1 * length],
+                height=cumulative_len,
+                width=width * .5,
+                color=get_next_hex_color(myrandom),
+            )
+
+            length += cumulative_len
+
+        add_text_to_2D_plot(
+            ax,
+            [column * width - width / 2, column * width + width / 2],
+            [10, 10],
+            color="black",
+            text=sgid
+        )
+
+    plt.autoscale()
+    xl = plt.xlim()
+    yl = plt.ylim()
+    if verbose:
+        print("Auto limits - x: %s , y: %s" % (xl, yl))
+
+    small = width
+    if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
+        plt.xlim([-100, 100])
+        plt.ylim([-100, 100])
+    elif xl[1] - xl[0] < small:
+        d_10 = (yl[1] - yl[0]) / 10
+        m = xl[0] + (xl[1] - xl[0]) / 2.0
+        plt.xlim([m - d_10, m + d_10])
+    elif yl[1] - yl[0] < small:
+        d_10 = (xl[1] - xl[0]) / 10
+        m = yl[0] + (yl[1] - yl[0]) / 2.0
+        plt.ylim([m - d_10, m + d_10])
+
+    if save_to_file:
+        abs_file = os.path.abspath(save_to_file)
+        plt.savefig(abs_file, dpi=200, bbox_inches="tight")
+        print(f"Saved image to {abs_file} of plot: {title}")
+
+    if not nogui:
+        plt.show()
 
 
 if __name__ == "__main__":

@@ -7,10 +7,11 @@ File: pyneuroml/utils/plot.py
 Copyright 2023 NeuroML contributors
 """
 
-from matplotlib.axes import Axes
 import numpy
 import typing
 import random
+from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
 
 
 def add_text_to_2D_plot(ax: Axes, xv, yv, color, text: str):
@@ -54,3 +55,19 @@ def get_next_hex_color(my_random: typing.Optional[random.Random] = None) -> str:
         return "#%06x" % my_random.randint(0, 0xFFFFFF)
     else:
         return "#%06x" % random.randint(0, 0xFFFFFF)
+
+
+def add_box_to_plot(ax, xy, height, width, color):
+    """Add a box to a matplotlib plot, between points `xv[0], yv[0]` and
+    `xv[1], yv[1]`, of `width` and `color`
+
+    :param ax: TODO
+    :param xv: TODO
+    :param height: TODO
+    :param width: TODO
+    :param color: TODO
+    :returns: TODO
+
+    """
+    ax.add_patch(Rectangle(xy, width, height, edgecolor=color, facecolor=color,
+                           fill=True))
