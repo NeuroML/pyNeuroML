@@ -11,6 +11,7 @@ Copyright 2023 NeuroML contributors
 import logging
 import pathlib as pl
 
+import numpy
 import neuroml
 from pyneuroml.plot.PlotMorphology import (plot_2D, plot_interactive_3D,
                                            plot_2D_schematic,
@@ -143,8 +144,44 @@ class TestMorphologyPlot(BaseTestCase):
         # sgs_1 = cell.get_segment_groups_by_substring("dend_")
         sgs_ids = list(sgs.keys())  # + list(sgs_1.keys())
         plot_segment_groups_curtain_plots(
-            cell, segment_groups=sgs_ids[0:20],
-            nogui=True, save_to_file=filename, labels=True
+            cell, segment_groups=sgs_ids[0:50],
+            nogui=False, save_to_file=filename, labels=True
+        )
+
+        self.assertIsFile(filename)
+        pl.Path(filename).unlink()
+
+    def test_plot_segment_groups_curtain_plots_with_data(self):
+        """Test plot_segment_groups_curtain_plots function with data overlay."""
+        nml_file = "tests/plot/Cell_497232312.cell.nml"
+
+        nml_doc = read_neuroml2_file(nml_file)
+        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        ofile = pl.Path(nml_file).name
+
+        # more complex cell
+        filename = f"test_curtain_plot_2d_{ofile.replace('.', '_', 100)}_withdata.png"
+        # remove the file first
+        try:
+            pl.Path(filename).unlink()
+        except FileNotFoundError:
+            pass
+
+        sgs = cell.get_segment_groups_by_substring("apic_")
+        sgs_1 = cell.get_segment_groups_by_substring("dend_")
+        sgs_ids = list(sgs.keys()) + list(sgs_1.keys())
+        data_dict = {}
+
+        nsgs = 50
+
+        for sg_id in sgs_ids[0:nsgs]:
+            lensgs = len(cell.get_all_segments_in_group(sg_id))
+            data_dict[sg_id] = numpy.random.random_integers(0, 100, lensgs)
+
+        plot_segment_groups_curtain_plots(
+            cell, segment_groups=sgs_ids[0:nsgs],
+            nogui=False, save_to_file=filename, labels=True,
+            overlay_data=data_dict, overlay_data_label="Random values (0, 100)", width=4
         )
 
         self.assertIsFile(filename)
