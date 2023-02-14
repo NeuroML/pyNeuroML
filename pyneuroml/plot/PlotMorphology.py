@@ -476,54 +476,54 @@ def plot_2D(
                     if verbose:
                         print("Extent x: %s -> %s" % (min_xaxis, max_xaxis))
 
-        # add a scalebar
-        # ax = fig.add_axes([0, 0, 1, 1])
-        sc_val = 50
-        if max_xaxis - min_xaxis < 100:
-            sc_val = 5
-        if max_xaxis - min_xaxis < 10:
-            sc_val = 1
-        scalebar1 = ScaleBar(
-            0.001,
-            units="mm",
-            dimension="si-length",
-            scale_loc="top",
-            location="lower right",
-            fixed_value=sc_val,
-            fixed_units="um",
-            box_alpha=0.8,
-        )
-        ax.add_artist(scalebar1)
+    # add a scalebar
+    # ax = fig.add_axes([0, 0, 1, 1])
+    sc_val = 50
+    if max_xaxis - min_xaxis < 100:
+        sc_val = 5
+    if max_xaxis - min_xaxis < 10:
+        sc_val = 1
+    scalebar1 = ScaleBar(
+        0.001,
+        units="mm",
+        dimension="si-length",
+        scale_loc="top",
+        location="lower right",
+        fixed_value=sc_val,
+        fixed_units="um",
+        box_alpha=0.8,
+    )
+    ax.add_artist(scalebar1)
 
-        plt.autoscale()
-        xl = plt.xlim()
-        yl = plt.ylim()
-        if verbose:
-            print("Auto limits - x: %s , y: %s" % (xl, yl))
+    plt.autoscale()
+    xl = plt.xlim()
+    yl = plt.ylim()
+    if verbose:
+        print("Auto limits - x: %s , y: %s" % (xl, yl))
 
-        small = 0.1
-        if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
-            plt.xlim([-100, 100])
-            plt.ylim([-100, 100])
-        elif xl[1] - xl[0] < small:
-            d_10 = (yl[1] - yl[0]) / 10
-            m = xl[0] + (xl[1] - xl[0]) / 2.0
-            plt.xlim([m - d_10, m + d_10])
-        elif yl[1] - yl[0] < small:
-            d_10 = (xl[1] - xl[0]) / 10
+    small = 0.1
+    if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
+        plt.xlim([-100, 100])
+        plt.ylim([-100, 100])
+    elif xl[1] - xl[0] < small:
+        d_10 = (yl[1] - yl[0]) / 10
+        m = xl[0] + (xl[1] - xl[0]) / 2.0
+        plt.xlim([m - d_10, m + d_10])
+    elif yl[1] - yl[0] < small:
+        d_10 = (xl[1] - xl[0]) / 10
+        m = yl[0] + (yl[1] - yl[0]) / 2.0
+        plt.ylim([m - d_10, m + d_10])
+
+    if square:
+        if xl[1] - xl[0] > yl[1] - yl[0]:
+            d2 = (xl[1] - xl[0]) / 2
             m = yl[0] + (yl[1] - yl[0]) / 2.0
-            plt.ylim([m - d_10, m + d_10])
+            plt.ylim([m - d2, m + d2])
 
-        if square:
-            if xl[1] - xl[0] > yl[1] - yl[0]:
-                d2 = (xl[1] - xl[0]) / 2
-                m = yl[0] + (yl[1] - yl[0]) / 2.0
-                plt.ylim([m - d2, m + d2])
-
-            if xl[1] - xl[0] < yl[1] - yl[0]:
-                d2 = (yl[1] - yl[0]) / 2
-                m = xl[0] + (xl[1] - xl[0]) / 2.0
-                plt.xlim([m - d2, m + d2])
+        if xl[1] - xl[0] < yl[1] - yl[0]:
+            d2 = (yl[1] - yl[0]) / 2
+            m = xl[0] + (xl[1] - xl[0]) / 2.0
+            plt.xlim([m - d2, m + d2])
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
