@@ -14,9 +14,9 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 
 
-def add_text_to_2D_plot(ax: Axes, xv, yv, color, text: str):
-    """Add text to a matplotlib plot between two points, center aligned
-    horizontally, and bottom aligned vertically
+def add_text_to_2D_plot(ax: Axes, xv, yv, color, text: str,
+                        horizontal="center", vertical="bottom"):
+    """Add text to a matplotlib plot between two points
 
     :param ax: matplotlib axis object
     :type ax: Axes
@@ -37,7 +37,7 @@ def add_text_to_2D_plot(ax: Axes, xv, yv, color, text: str):
         angle += 180
 
     ax.text((xv[0] + xv[1]) / 2, (yv[0] + yv[1]) / 2, text, color=color,
-            horizontalalignment="center", verticalalignment="bottom",
+            horizontalalignment=horizontal, verticalalignment=vertical,
             rotation_mode="default", rotation=angle)
 
 
