@@ -16,6 +16,8 @@ import random
 import typing
 import logging
 
+import numpy
+import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 import plotly.graph_objects as go
@@ -942,7 +944,9 @@ def plot_segment_groups_curtain_plots(
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
     overlay_data: typing.Dict[str, typing.List[typing.Any]] = None,
-    width: typing.Union[float, int] = 5
+    overlay_data_label: str = "",
+    width: typing.Union[float, int] = 4,
+    colormap_name:str = 'viridis'
 ) -> None:
     """Plot curtain plots of provided segment groups.
 
@@ -961,15 +965,27 @@ def plot_segment_groups_curtain_plots(
     :type nogui: bool
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
-    :param overlay_data: data to overlay over the curtain plots; 
+    :param overlay_data: data to overlay over the curtain plots;
         this must be a dictionary with segment group ids as keys, and lists of
         values to overlay as values. Each list should have a value for every
         segment in the segment group.
     :type overlay_data: dict, keys are segment group ids, values are lists of
         magnitudes to overlay on curtain plots
+    :param overlay_data_label: label of data being overlaid
+    :type overlay_data_label: str
     :param width: width of each segment group
     :type width: float/int
+    :param colormap_name: name of matplotlib colourmap to use for data overlay
+        See:
+        https://matplotlib.org/stable/api/matplotlib_configuration_api.html#matplotlib.colormaps
+        Note: random colours are used for each segment if no data is to be overlaid
+    :type colormap_name: str
     :returns: None
+
+    :raises ValueError: if keys in `overlay_data` do not match
+        ids of segment groups of `segment_groups`
+    :raises ValueError: if number of items for each key in `overlay_data` does
+        not match the number of segments in the corresponding segment group
     """
     # use a random number generator so that the colours are always the same
     myrandom = random.Random()
@@ -979,11 +995,40 @@ def plot_segment_groups_curtain_plots(
     (ord_segs, cumulative_lengths) = cell.get_ordered_segments_in_groups(
         segment_groups, check_parentage=False, include_cumulative_lengths=True
     )
+
     # plot setup
     fig, ax = plt.subplots(1, 1)  # noqa
     plt.get_current_fig_manager().set_window_title(title)
 
-    # ax.set_aspect("equal")
+    # overlaying data related checks
+    data_max = -1 * float("inf")
+    data_min = float("inf")
+    acolormap = None
+    norm = None
+    if overlay_data:
+        if (set(overlay_data.keys()) != set(ord_segs.keys())):
+            raise ValueError(
+                "Keys of overlay_data and ord_segs must match."
+            )
+        for key in overlay_data.keys():
+            if len(overlay_data[key]) != len(ord_segs[key]):
+                raise ValueError(
+                    f"Number of values for key {key} does not match in overlay_data({len(overlay_data[key])}) and the segment group ({len(ord_segs[key])})"
+                )
+
+            # since lists are of different lengths, one cannot use `numpy.max`
+            # on all the values directly
+            this_max = numpy.max(list(overlay_data[key]))
+            this_min = numpy.min(list(overlay_data[key]))
+            if this_max > data_max:
+                data_max = this_max
+            if this_min < data_min:
+                data_min = this_min
+
+        acolormap = matplotlib.colormaps[colormap_name]
+        norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
+        fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+                     label=overlay_data_label)
 
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
@@ -1010,22 +1055,31 @@ def plot_segment_groups_curtain_plots(
             seg = segs[seg_num]
             cumulative_len = cumulative_lengths_sg[seg_num]
 
+            if overlay_data and acolormap and norm:
+                color = acolormap(norm(overlay_data[sgid][seg_num]))
+            else:
+                color = get_next_hex_color(myrandom)
+
+            logger.debug(f"color is {color}")
+
             add_box_to_plot(
                 ax,
-                [column * width - width * 0.25, -1 * length],
+                [column * width - width * 0.10, -1 * length],
                 height=cumulative_len,
-                width=width * .5,
-                color=get_next_hex_color(myrandom),
+                width=width * .8,
+                color=color
             )
 
             length += cumulative_len
 
         add_text_to_2D_plot(
             ax,
-            [column * width - width / 2, column * width + width / 2],
-            [10, 10],
+            [column * width + width / 2, column * width + width / 2],
+            [50, 100],
             color="black",
-            text=sgid
+            text=sgid,
+            vertical="bottom",
+            horizontal="center"
         )
 
     plt.autoscale()
@@ -1034,18 +1088,8 @@ def plot_segment_groups_curtain_plots(
     if verbose:
         print("Auto limits - x: %s , y: %s" % (xl, yl))
 
-    small = width
-    if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
-        plt.xlim([-100, 100])
-        plt.ylim([-100, 100])
-    elif xl[1] - xl[0] < small:
-        d_10 = (yl[1] - yl[0]) / 10
-        m = xl[0] + (xl[1] - xl[0]) / 2.0
-        plt.xlim([m - d_10, m + d_10])
-    elif yl[1] - yl[0] < small:
-        d_10 = (xl[1] - xl[0]) / 10
-        m = yl[0] + (yl[1] - yl[0]) / 2.0
-        plt.ylim([m - d_10, m + d_10])
+    plt.ylim(top=0)
+    ax.set_yticklabels(abs(ax.get_yticks()))
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
