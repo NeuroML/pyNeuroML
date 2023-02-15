@@ -1009,6 +1009,11 @@ def plot_segment_groups_curtain_plots(
             if this_min < data_min:
                 data_min = this_min
 
+        if datamin is not None:
+            data_min = datamin
+        if datamax is not None:
+            data_max = datamax
+
         acolormap = matplotlib.colormaps[colormap_name]
         norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
         fig.colorbar(
