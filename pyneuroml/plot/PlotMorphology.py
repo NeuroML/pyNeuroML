@@ -35,7 +35,7 @@ from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 DEFAULTS = {
