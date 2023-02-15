@@ -19,20 +19,23 @@ import logging
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
-from matplotlib_scalebar.scalebar import ScaleBar
 import plotly.graph_objects as go
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
-from pyneuroml.utils.plot import (add_text_to_2D_plot, get_next_hex_color,
-                                  add_box_to_plot)
+from pyneuroml.utils.plot import (add_text_to_matplotlib_2D_plot, get_next_hex_color,
+                                  add_box_to_matplotlib_2D_plot,
+                                  get_new_matplotlib_morph_plot,
+                                  autoscale_matplotlib_plot,
+                                  add_scalebar_to_matplotlib_plot,
+                                  add_line_to_matplotlib_2D_plot)
 from neuroml import (SegmentGroup, Cell)
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 DEFAULTS = {
@@ -145,34 +148,6 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
         )
 
 
-##########################################################################################
-# Taken from https://stackoverflow.com/questions/19394505/expand-the-line-with-specified-width-in-data-unit
-from matplotlib.lines import Line2D
-
-
-class LineDataUnits(Line2D):
-    def __init__(self, *args, **kwargs):
-        _lw_data = kwargs.pop("linewidth", 1)
-        super().__init__(*args, **kwargs)
-        self._lw_data = _lw_data
-
-    def _get_lw(self):
-        if self.axes is not None:
-            ppd = 72.0 / self.axes.figure.dpi
-            trans = self.axes.transData.transform
-            return ((trans((1, self._lw_data)) - trans((0, 0))) * ppd)[1]
-        else:
-            return 1
-
-    def _set_lw(self, lw):
-        self._lw_data = lw
-
-    _linewidth = property(_get_lw, _set_lw)
-
-
-##########################################################################################
-
-
 def plot_2D(
     nml_file: str,
     plane2d: str = "xy",
@@ -182,6 +157,7 @@ def plot_2D(
     save_to_file: typing.Optional[str] = None,
     square: bool = False,
     plot_type: str = "Detailed",
+    title: typing.Optional[str] = None
 ):
     """Plot cell morphologies in 2D.
 
@@ -212,6 +188,8 @@ def plot_2D(
         - Schematic: only plot each unbranched segment group as a straight
           line, not following each segment
     :type plot_type: str
+    :param title: title of plot
+    :type title: str
     """
 
     if plot_type not in ["Detailed", "Constant", "Schematic"]:
@@ -236,7 +214,8 @@ def plot_2D(
         pop_id_vs_radii,
     ) = extract_position_info(nml_model, verbose)
 
-    title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
+    if title is None:
+        title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
 
     if verbose:
         logger.debug(f"positions: {positions}")
@@ -245,40 +224,8 @@ def plot_2D(
         logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
         logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
-    fig, ax = plt.subplots(1, 1)  # noqa
-    plt.get_current_fig_manager().set_window_title(title)
-
-    ax.set_aspect("equal")
-
-    ax.spines["right"].set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.yaxis.set_ticks_position("left")
-    ax.xaxis.set_ticks_position("bottom")
-
-    if plane2d == "xy":
-        ax.set_xlabel("x (μm)")
-        ax.set_ylabel("y (μm)")
-    elif plane2d == "yx":
-        ax.set_xlabel("y (μm)")
-        ax.set_ylabel("x (μm)")
-    elif plane2d == "xz":
-        ax.set_xlabel("x (μm)")
-        ax.set_ylabel("z (μm)")
-    elif plane2d == "zx":
-        ax.set_xlabel("z (μm)")
-        ax.set_ylabel("x (μm)")
-    elif plane2d == "yz":
-        ax.set_xlabel("y (μm)")
-        ax.set_ylabel("z (μm)")
-    elif plane2d == "zy":
-        ax.set_xlabel("z (μm)")
-        ax.set_ylabel("y (μm)")
-    else:
-        logger.error(f"Invalid value for plane: {plane2d}")
-        sys.exit(-1)
-
-    max_xaxis = -1 * float("inf")
-    min_xaxis = float("inf")
+    fig, ax = get_new_matplotlib_morph_plot(title, plane2d)
+    axis_min_max = [float("inf"), -1 * float("inf")]
 
     for pop_id in pop_id_vs_cell:
         cell = pop_id_vs_cell[pop_id]
@@ -286,248 +233,27 @@ def plot_2D(
 
         for cell_index in pos_pop:
             pos = pos_pop[cell_index]
+            radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
+            color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
-            try:
-                soma_segs = cell.get_all_segments_in_group("soma_group")
-            except:
-                soma_segs = []
-            try:
-                dend_segs = cell.get_all_segments_in_group("dendrite_group")
-            except:
-                dend_segs = []
-            try:
-                axon_segs = cell.get_all_segments_in_group("axon_group")
-            except:
-                axon_segs = []
-
-            if cell is None:
-
-                radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
-                color = "b"
-                if pop_id in pop_id_vs_color:
-                    color = pop_id_vs_color[pop_id]
-
-                if plane2d == "xy":
-                    min_xaxis, max_xaxis = add_line(
-                        ax,
-                        [pos[0], pos[0]],
-                        [pos[1], pos[1]],
-                        radius,
-                        color,
-                        min_xaxis,
-                        max_xaxis,
-                    )
-                elif plane2d == "yx":
-                    min_xaxis, max_xaxis = add_line(
-                        ax,
-                        [pos[1], pos[1]],
-                        [pos[0], pos[0]],
-                        radius,
-                        color,
-                        min_xaxis,
-                        max_xaxis,
-                    )
-                elif plane2d == "xz":
-                    min_xaxis, max_xaxis = add_line(
-                        ax,
-                        [pos[0], pos[0]],
-                        [pos[2], pos[2]],
-                        radius,
-                        color,
-                        min_xaxis,
-                        max_xaxis,
-                    )
-                elif plane2d == "zx":
-                    min_xaxis, max_xaxis = add_line(
-                        ax,
-                        [pos[2], pos[2]],
-                        [pos[0], pos[0]],
-                        radius,
-                        color,
-                        min_xaxis,
-                        max_xaxis,
-                    )
-                elif plane2d == "yz":
-                    min_xaxis, max_xaxis = add_line(
-                        ax,
-                        [pos[1], pos[1]],
-                        [pos[2], pos[2]],
-                        radius,
-                        color,
-                        min_xaxis,
-                        max_xaxis,
-                    )
-                elif plane2d == "zy":
-                    min_xaxis, max_xaxis = add_line(
-                        ax,
-                        [pos[2], pos[2]],
-                        [pos[1], pos[1]],
-                        radius,
-                        color,
-                        min_xaxis,
-                        max_xaxis,
-                    )
-                else:
-                    raise Exception(f"Invalid value for plane: {plane2d}")
-
+            if plot_type == "Schematic":
+                plot_2D_schematic(offset=pos, cell=cell, segment_groups=None, labels=True,
+                                  plane2d=plane2d, min_width=min_width,
+                                  verbose=verbose, fig=fig, ax=ax, scalebar=False,
+                                  nogui=True, autoscale=False, square=False)
             else:
+                plot_2D_cell_morphology(offset=pos, cell=cell, plane2d=plane2d,
+                                        color=color, soma_radius=radius,
+                                        plot_type=plot_type, verbose=verbose,
+                                        fig=fig,
+                                        ax=ax, min_width=min_width,
+                                        axis_min_max=axis_min_max,
+                                        scalebar=False,
+                                        nogui=True, autoscale=False,
+                                        square=False)
 
-                for seg in cell.morphology.segments:
-                    p = cell.get_actual_proximal(seg.id)
-                    d = seg.distal
-                    width = (p.diameter + d.diameter) / 2
-
-                    if width < min_width:
-                        width = min_width
-
-                    if plot_type == "Constant":
-                        width = min_width
-
-                    color = "b"
-                    if pop_id in pop_id_vs_color:
-                        color = pop_id_vs_color[pop_id]
-                    else:
-                        if seg.id in soma_segs:
-                            color = "g"
-                        if seg.id in axon_segs:
-                            color = "r"
-
-                    spherical = (
-                        p.x == d.x
-                        and p.y == d.y
-                        and p.z == d.z
-                        and p.diameter == d.diameter
-                    )
-
-                    if verbose:
-                        print(
-                            "\nSeg %s, id: %s%s has proximal: %s, distal: %s (width: %s, min_width: %s), color: %s"
-                            % (
-                                seg.name,
-                                seg.id,
-                                " (spherical)" if spherical else "",
-                                p,
-                                d,
-                                width,
-                                min_width,
-                                str(color),
-                            )
-                        )
-
-                    if plane2d == "xy":
-                        min_xaxis, max_xaxis = add_line(
-                            ax,
-                            [pos[0] + p.x, pos[0] + d.x],
-                            [pos[1] + p.y, pos[1] + d.y],
-                            width,
-                            color,
-                            min_xaxis,
-                            max_xaxis,
-                        )
-                    elif plane2d == "yx":
-                        min_xaxis, max_xaxis = add_line(
-                            ax,
-                            [pos[1] + p.y, pos[1] + d.y],
-                            [pos[0] + p.x, pos[0] + d.x],
-                            width,
-                            color,
-                            min_xaxis,
-                            max_xaxis,
-                        )
-                    elif plane2d == "xz":
-                        min_xaxis, max_xaxis = add_line(
-                            ax,
-                            [pos[0] + p.x, pos[0] + d.x],
-                            [pos[2] + p.z, pos[2] + d.z],
-                            width,
-                            color,
-                            min_xaxis,
-                            max_xaxis,
-                        )
-                    elif plane2d == "zx":
-                        min_xaxis, max_xaxis = add_line(
-                            ax,
-                            [pos[2] + p.z, pos[2] + d.z],
-                            [pos[0] + p.x, pos[0] + d.x],
-                            width,
-                            color,
-                            min_xaxis,
-                            max_xaxis,
-                        )
-                    elif plane2d == "yz":
-                        min_xaxis, max_xaxis = add_line(
-                            ax,
-                            [pos[1] + p.y, pos[1] + d.y],
-                            [pos[2] + p.z, pos[2] + d.z],
-                            width,
-                            color,
-                            min_xaxis,
-                            max_xaxis,
-                        )
-                    elif plane2d == "zy":
-                        min_xaxis, max_xaxis = add_line(
-                            ax,
-                            [pos[2] + p.z, pos[2] + d.z],
-                            [pos[1] + p.y, pos[1] + d.y],
-                            width,
-                            color,
-                            min_xaxis,
-                            max_xaxis,
-                        )
-                    else:
-                        raise Exception(f"Invalid value for plane: {plane2d}")
-
-                    if verbose:
-                        print("Extent x: %s -> %s" % (min_xaxis, max_xaxis))
-
-    # add a scalebar
-    # ax = fig.add_axes([0, 0, 1, 1])
-    sc_val = 50
-    if max_xaxis - min_xaxis < 100:
-        sc_val = 5
-    if max_xaxis - min_xaxis < 10:
-        sc_val = 1
-    scalebar1 = ScaleBar(
-        0.001,
-        units="mm",
-        dimension="si-length",
-        scale_loc="top",
-        location="lower right",
-        fixed_value=sc_val,
-        fixed_units="um",
-        box_alpha=0.8,
-    )
-    ax.add_artist(scalebar1)
-
-    plt.autoscale()
-    xl = plt.xlim()
-    yl = plt.ylim()
-    if verbose:
-        print("Auto limits - x: %s , y: %s" % (xl, yl))
-
-    small = 0.1
-    if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
-        plt.xlim([-100, 100])
-        plt.ylim([-100, 100])
-    elif xl[1] - xl[0] < small:
-        d_10 = (yl[1] - yl[0]) / 10
-        m = xl[0] + (xl[1] - xl[0]) / 2.0
-        plt.xlim([m - d_10, m + d_10])
-    elif yl[1] - yl[0] < small:
-        d_10 = (xl[1] - xl[0]) / 10
-        m = yl[0] + (yl[1] - yl[0]) / 2.0
-        plt.ylim([m - d_10, m + d_10])
-
-    if square:
-        if xl[1] - xl[0] > yl[1] - yl[0]:
-            d2 = (xl[1] - xl[0]) / 2
-            m = yl[0] + (yl[1] - yl[0]) / 2.0
-            plt.ylim([m - d2, m + d2])
-
-        if xl[1] - xl[0] < yl[1] - yl[0]:
-            d2 = (yl[1] - yl[0]) / 2
-            m = xl[0] + (xl[1] - xl[0]) / 2.0
-            plt.xlim([m - d2, m + d2])
+    add_scalebar_to_matplotlib_plot(axis_min_max, ax)
+    autoscale_matplotlib_plot(verbose, square)
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
@@ -536,29 +262,8 @@ def plot_2D(
 
     if not nogui:
         plt.show()
-
-
-def add_line(ax, xv, yv, width, color, min_xaxis, max_xaxis):
-
-    if (
-        abs(xv[0] - xv[1]) < 0.01 and abs(yv[0] - yv[1]) < 0.01
-    ):  # looking at the cylinder from the top, OR a sphere, so draw a circle
-        xv[1] = xv[1] + width / 1000.0
-        yv[1] = yv[1] + width / 1000.0
-
-        ax.add_line(
-            LineDataUnits(xv, yv, linewidth=width, solid_capstyle="round", color=color)
-        )
-
-    ax.add_line(
-        LineDataUnits(xv, yv, linewidth=width, solid_capstyle="butt", color=color)
-    )
-
-    min_xaxis = min(min_xaxis, xv[0])
-    min_xaxis = min(min_xaxis, xv[1])
-    max_xaxis = max(max_xaxis, xv[0])
-    max_xaxis = max(max_xaxis, xv[1])
-    return min_xaxis, max_xaxis
+    else:
+        plt.close()
 
 
 def plot_interactive_3D(
@@ -671,9 +376,276 @@ def plot_interactive_3D(
             logger.info("Saved image to %s of plot: %s" % (save_to_file, title))
 
 
+def plot_2D_cell_morphology(
+    offset: typing.List[float] = [0, 0],
+    cell: Cell = None,
+    plane2d: str = "xy",
+    color: typing.Optional[str] = None,
+    soma_radius: float = 0.,
+    title: str = "",
+    verbose: bool = False,
+    fig: matplotlib.figure.Figure = None,
+    ax: matplotlib.axes.Axes = None,
+    min_width: float = DEFAULTS['minwidth'],
+    axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    scalebar: bool = False,
+    nogui: bool = True,
+    autoscale: bool = True,
+    square: bool = True,
+    plot_type: str = "Detailed",
+    save_to_file: typing.Optional[str] = None,
+):
+    """Plot the detailed 2D morphology of a cell in provided plane
+
+    :param offset: offset for cell
+    :type offset: [float, float]
+    :param cell: cell to plot
+    :type cell: neuroml.Cell
+    :param plane2d: plane to plot on
+    :type plane2d: str
+    :param color: color to use for all segments
+    :type color: str
+    :param soma_radius: radius of soma (uses min_width if provided)
+    :type soma_radius: float
+    :param fig: a matplotlib.figure.Figure object to use
+    :type fig: matplotlib.figure.Figure
+    :param ax: a matplotlib.axes.Axes object to use
+    :type ax: matplotlib.axes.Axes
+    :param min_width: minimum width for segments (useful for visualising very
+        thin segments): default 0.8um
+    :type min_width: float
+    :param axis_min_max: min, max value of axes
+    :type axis_min_max: [float, float]
+    :param title: title of plot
+    :type title: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param nogui: do not show matplotlib GUI (default: false)
+    :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
+    :param square: scale axes so that image is approximately square
+    :type square: bool
+    :param autoscale: toggle autoscaling
+    :type autoscale: bool
+    :param scalebar: toggle scalebar
+    :type scalebar: bool
+
+    :raises: ValueError if `cell` is None
+
+    """
+    if cell is None:
+        raise ValueError("No cell provided")
+
+    try:
+        soma_segs = cell.get_all_segments_in_group("soma_group")
+    except Exception:
+        soma_segs = []
+    try:
+        dend_segs = cell.get_all_segments_in_group("dendrite_group")
+    except Exception:
+        dend_segs = []
+    try:
+        axon_segs = cell.get_all_segments_in_group("axon_group")
+    except Exception:
+        axon_segs = []
+
+    new_fig = False
+    if fig is None:
+        fig, ax = get_new_matplotlib_morph_plot(title)
+        new_fig = True
+
+    # random default color
+    cell_color = get_next_hex_color()
+    if cell is None:
+
+        if soma_radius is None:
+            soma_radius = 10
+
+        if plot_type == "Constant":
+            soma_radius = min_width
+
+        if plane2d == "xy":
+            add_line_to_matplotlib_2D_plot(
+                ax,
+                [offset[0], offset[0]],
+                [offset[1], offset[1]],
+                soma_radius,
+                cell_color if color is None else color,
+                axis_min_max
+            )
+        elif plane2d == "yx":
+            add_line_to_matplotlib_2D_plot(
+                ax,
+                [offset[1], offset[1]],
+                [offset[0], offset[0]],
+                soma_radius,
+                cell_color if color is None else color,
+                axis_min_max
+            )
+        elif plane2d == "xz":
+            add_line_to_matplotlib_2D_plot(
+                ax,
+                [offset[0], offset[0]],
+                [offset[2], offset[2]],
+                soma_radius,
+                cell_color if color is None else color,
+                axis_min_max
+            )
+        elif plane2d == "zx":
+            add_line_to_matplotlib_2D_plot(
+                ax,
+                [offset[2], offset[2]],
+                [offset[0], offset[0]],
+                soma_radius,
+                cell_color if color is None else color,
+                axis_min_max
+            )
+        elif plane2d == "yz":
+            add_line_to_matplotlib_2D_plot(
+                ax,
+                [offset[1], offset[1]],
+                [offset[2], offset[2]],
+                soma_radius,
+                cell_color if color is None else color,
+                axis_min_max
+            )
+        elif plane2d == "zy":
+            add_line_to_matplotlib_2D_plot(
+                ax,
+                [offset[2], offset[2]],
+                [offset[1], offset[1]],
+                soma_radius,
+                cell_color if color is None else color,
+                axis_min_max
+            )
+        else:
+            raise Exception(f"Invalid value for plane: {plane2d}")
+
+    else:
+
+        for seg in cell.morphology.segments:
+            p = cell.get_actual_proximal(seg.id)
+            d = seg.distal
+            width = (p.diameter + d.diameter) / 2
+
+            if width < min_width:
+                width = min_width
+
+            if plot_type == "Constant":
+                width = min_width
+
+            seg_color = "b"
+            if seg.id in soma_segs:
+                seg_color = "g"
+            elif seg.id in axon_segs:
+                seg_color = "r"
+
+            spherical = (
+                p.x == d.x
+                and p.y == d.y
+                and p.z == d.z
+                and p.diameter == d.diameter
+            )
+
+            if verbose:
+                print(
+                    "\nSeg %s, id: %s%s has proximal: %s, distal: %s (width: %s, min_width: %s), color: %s"
+                    % (
+                        seg.name,
+                        seg.id,
+                        " (spherical)" if spherical else "",
+                        p,
+                        d,
+                        width,
+                        min_width,
+                        str(seg_color),
+                    )
+                )
+
+            if plane2d == "xy":
+                add_line_to_matplotlib_2D_plot(
+                    ax,
+                    [offset[0] + p.x, offset[0] + d.x],
+                    [offset[1] + p.y, offset[1] + d.y],
+                    width,
+                    seg_color if color is None else color,
+                    axis_min_max
+                )
+            elif plane2d == "yx":
+                add_line_to_matplotlib_2D_plot(
+                    ax,
+                    [offset[1] + p.y, offset[1] + d.y],
+                    [offset[0] + p.x, offset[0] + d.x],
+                    width,
+                    seg_color if color is None else color,
+                    axis_min_max
+                )
+            elif plane2d == "xz":
+                add_line_to_matplotlib_2D_plot(
+                    ax,
+                    [offset[0] + p.x, offset[0] + d.x],
+                    [offset[2] + p.z, offset[2] + d.z],
+                    width,
+                    seg_color if color is None else color,
+                    axis_min_max
+                )
+            elif plane2d == "zx":
+                add_line_to_matplotlib_2D_plot(
+                    ax,
+                    [offset[2] + p.z, offset[2] + d.z],
+                    [offset[0] + p.x, offset[0] + d.x],
+                    width,
+                    seg_color if color is None else color,
+                    axis_min_max
+                )
+            elif plane2d == "yz":
+                add_line_to_matplotlib_2D_plot(
+                    ax,
+                    [offset[1] + p.y, offset[1] + d.y],
+                    [offset[2] + p.z, offset[2] + d.z],
+                    width,
+                    seg_color if color is None else color,
+                    axis_min_max
+                )
+            elif plane2d == "zy":
+                add_line_to_matplotlib_2D_plot(
+                    ax,
+                    [offset[2] + p.z, offset[2] + d.z],
+                    [offset[1] + p.y, offset[1] + d.y],
+                    width,
+                    seg_color if color is None else color,
+                    axis_min_max
+                )
+            else:
+                raise Exception(f"Invalid value for plane: {plane2d}")
+
+            if verbose:
+                print("Extent x: %s -> %s" % (axis_min_max[0], axis_min_max[1]))
+
+    if scalebar:
+        add_scalebar_to_matplotlib_plot(axis_min_max, ax)
+    if autoscale:
+        autoscale_matplotlib_plot(verbose, square)
+
+    if save_to_file:
+        abs_file = os.path.abspath(save_to_file)
+        plt.savefig(abs_file, dpi=200, bbox_inches="tight")
+        print(f"Saved image on plane {plane2d} to {abs_file} of plot: {title}")
+
+    if not nogui:
+        plt.show()
+    else:
+        # only close if a new fig was created
+        # if a figure was passed in, the caller needs to close it.
+        if new_fig:
+            plt.close()
+
+
 def plot_2D_schematic(
     cell: Cell,
-    segment_groups: typing.List[SegmentGroup],
+    segment_groups: typing.Optional[typing.List[SegmentGroup]],
+    offset: typing.List[float] = [0, 0],
     labels: bool = False,
     plane2d: str = "xy",
     min_width: float = DEFAULTS["minwidth"],
@@ -681,12 +653,19 @@ def plot_2D_schematic(
     square: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
+    scalebar: bool = True,
+    autoscale: bool = True,
+    fig: matplotlib.figure.Figure = None,
+    ax: matplotlib.axes.Axes = None,
+    title: str = ""
 ) -> None:
     """Plot a 2D schematic of the provided segment groups.
 
     This plots each segment group as a straight line between its first and last
     segment.
 
+    :param offset: offset for cell
+    :type offset: [float, float]
     :param cell: cell to plot
     :type cell: neuroml.Cell
     :param segment_groups: list of unbranched segment groups to plot
@@ -706,23 +685,39 @@ def plot_2D_schematic(
     :type nogui: bool
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
-    :returns: None
+    :param fig: a matplotlib.figure.Figure object to use
+    :type fig: matplotlib.figure.Figure
+    :param ax: a matplotlib.axes.Axes object to use
+    :type ax: matplotlib.axes.Axes
+    :param title: title of plot
+    :type title: str
+    :param square: scale axes so that image is approximately square
+    :type square: bool
+    :param autoscale: toggle autoscaling
+    :type autoscale: bool
+    :param scalebar: toggle scalebar
+    :type scalebar: bool
 
     """
-    title = f"2D schematic of segment groups from {cell.id}"
+    if title == "":
+        title = f"2D schematic of segment groups from {cell.id}"
+
+    # if no segment groups are given, do them all
+    if segment_groups is None:
+        segment_groups = []
+        for sg in cell.morphology.segment_groups:
+            if sg.neuro_lex_id == neuro_lex_ids["section"]:
+                segment_groups.append(sg.id)
+
     ord_segs = cell.get_ordered_segments_in_groups(
         segment_groups, check_parentage=False
     )
 
-    fig, ax = plt.subplots(1, 1)  # noqa
-    plt.get_current_fig_manager().set_window_title(title)
-
-    ax.set_aspect("equal")
-
-    ax.spines["right"].set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.yaxis.set_ticks_position("left")
-    ax.xaxis.set_ticks_position("bottom")
+    new_fig = False
+    if fig is None:
+        logger.debug("No figure provided, creating new fig and ax")
+        fig, ax = get_new_matplotlib_morph_plot(title, plane2d)
+        new_fig = True
 
     if plane2d == "xy":
         ax.set_xlabel("x (μm)")
@@ -746,8 +741,9 @@ def plot_2D_schematic(
         logger.error(f"Invalid value for plane: {plane2d}")
         sys.exit(-1)
 
-    max_xaxis = -1 * float("inf")
-    min_xaxis = float("inf")
+    # use a mutable object so it can be passed as an argument to methods, using
+    # float (immuatable) variables requires us to return these from all methods
+    axis_min_max = [float("inf"), -1 * float("inf")]
     width = 1
 
     for sgid, segs in ord_segs.items():
@@ -764,111 +760,105 @@ def plot_2D_schematic(
         color = get_next_hex_color()
 
         if plane2d == "xy":
-            min_xaxis, max_xaxis = add_line(
+            add_line_to_matplotlib_2D_plot(
                 ax,
-                [first_seg.proximal.x, last_seg.distal.x],
-                [first_seg.proximal.y, last_seg.distal.y],
+                [offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
+                [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                 width,
                 color,
-                min_xaxis,
-                max_xaxis,
+                axis_min_max
             )
             if labels:
-                add_text_to_2D_plot(
+                add_text_to_matplotlib_2D_plot(
                     ax,
-                    [first_seg.proximal.x, last_seg.distal.x],
-                    [first_seg.proximal.y, last_seg.distal.y],
+                    [offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
+                    [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                     color=color,
                     text=sgid
                 )
 
         elif plane2d == "yx":
-            min_xaxis, max_xaxis = add_line(
+            add_line_to_matplotlib_2D_plot(
                 ax,
-                [first_seg.proximal.y, last_seg.distal.y],
-                [first_seg.proximal.x, last_seg.distal.x],
+                [offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
+                [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                 width,
                 color,
-                min_xaxis,
-                max_xaxis,
+                axis_min_max
             )
             if labels:
-                add_text_to_2D_plot(
+                add_text_to_matplotlib_2D_plot(
                     ax,
-                    [first_seg.proximal.y, last_seg.distal.y],
-                    [first_seg.proximal.x, last_seg.distal.x],
+                    [offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
+                    [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                     color=color,
                     text=sgid
                 )
         elif plane2d == "xz":
-            min_xaxis, max_xaxis = add_line(
+            add_line_to_matplotlib_2D_plot(
                 ax,
-                [first_seg.proximal.x, last_seg.distal.x],
-                [first_seg.proximal.z, last_seg.distal.z],
+                [offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
+                [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                 width,
                 color,
-                min_xaxis,
-                max_xaxis,
+                axis_min_max
             )
             if labels:
-                add_text_to_2D_plot(
+                add_text_to_matplotlib_2D_plot(
                     ax,
-                    [first_seg.proximal.x, last_seg.distal.x],
-                    [first_seg.proximal.z, last_seg.distal.z],
+                    [offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
+                    [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                     color=color,
                     text=sgid
                 )
         elif plane2d == "zx":
-            min_xaxis, max_xaxis = add_line(
+            add_line_to_matplotlib_2D_plot(
                 ax,
-                [first_seg.proximal.z, last_seg.distal.z],
-                [first_seg.proximal.x, last_seg.distal.x],
+                [offset[0] + first_seg.proximal.z, offset[0] + last_seg.distal.z],
+                [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                 width,
                 color,
-                min_xaxis,
-                max_xaxis,
+                axis_min_max
             )
             if labels:
-                add_text_to_2D_plot(
+                add_text_to_matplotlib_2D_plot(
                     ax,
-                    [first_seg.proximal.z, last_seg.distal.z],
-                    [first_seg.proximal.x, last_seg.distal.x],
+                    [offset[0] + first_seg.proximal.z, offset[0] + last_seg.distal.z],
+                    [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                     color=color,
                     text=sgid
                 )
         elif plane2d == "yz":
-            min_xaxis, max_xaxis = add_line(
+            add_line_to_matplotlib_2D_plot(
                 ax,
-                [first_seg.proximal.y, last_seg.distal.y],
-                [first_seg.proximal.z, last_seg.distal.z],
+                [offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
+                [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                 width,
                 color,
-                min_xaxis,
-                max_xaxis,
+                axis_min_max
             )
             if labels:
-                add_text_to_2D_plot(
+                add_text_to_matplotlib_2D_plot(
                     ax,
-                    [first_seg.proximal.y, last_seg.distal.y],
-                    [first_seg.proximal.z, last_seg.distal.z],
+                    [offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
+                    [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                     color=color,
                     text=sgid
                 )
         elif plane2d == "zy":
-            min_xaxis, max_xaxis = add_line(
+            add_line_to_matplotlib_2D_plot(
                 ax,
-                [first_seg.proximal.z, last_seg.distal.z],
-                [first_seg.proximal.y, last_seg.distal.y],
+                [offset[0] + first_seg.proximal.z, offset[0] + last_seg.distal.z],
+                [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                 width,
                 color,
-                min_xaxis,
-                max_xaxis,
+                axis_min_max
             )
             if labels:
-                add_text_to_2D_plot(
+                add_text_to_matplotlib_2D_plot(
                     ax,
-                    [first_seg.proximal.z, last_seg.distal.z],
-                    [first_seg.proximal.y, last_seg.distal.y],
+                    [offset[0] + first_seg.proximal.z, offset[0] + last_seg.distal.z],
+                    [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                     color=color,
                     text=sgid
                 )
@@ -876,56 +866,12 @@ def plot_2D_schematic(
             raise Exception(f"Invalid value for plane: {plane2d}")
 
         if verbose:
-            print("Extent x: %s -> %s" % (min_xaxis, max_xaxis))
+            print("Extent x: %s -> %s" % (axis_min_max[0], axis_min_max[1]))
 
-    # add a scalebar
-    # ax = fig.add_axes([0, 0, 1, 1])
-    sc_val = 50
-    if max_xaxis - min_xaxis < 100:
-        sc_val = 5
-    if max_xaxis - min_xaxis < 10:
-        sc_val = 1
-    scalebar1 = ScaleBar(
-        0.001,
-        units="mm",
-        dimension="si-length",
-        scale_loc="top",
-        location="lower right",
-        fixed_value=sc_val,
-        fixed_units="um",
-        box_alpha=0.8,
-    )
-    ax.add_artist(scalebar1)
-
-    plt.autoscale()
-    xl = plt.xlim()
-    yl = plt.ylim()
-    if verbose:
-        print("Auto limits - x: %s , y: %s" % (xl, yl))
-
-    small = 0.1
-    if xl[1] - xl[0] < small and yl[1] - yl[0] < small:  # i.e. only a point
-        plt.xlim([-100, 100])
-        plt.ylim([-100, 100])
-    elif xl[1] - xl[0] < small:
-        d_10 = (yl[1] - yl[0]) / 10
-        m = xl[0] + (xl[1] - xl[0]) / 2.0
-        plt.xlim([m - d_10, m + d_10])
-    elif yl[1] - yl[0] < small:
-        d_10 = (xl[1] - xl[0]) / 10
-        m = yl[0] + (yl[1] - yl[0]) / 2.0
-        plt.ylim([m - d_10, m + d_10])
-
-    if square:
-        if xl[1] - xl[0] > yl[1] - yl[0]:
-            d2 = (xl[1] - xl[0]) / 2
-            m = yl[0] + (yl[1] - yl[0]) / 2.0
-            plt.ylim([m - d2, m + d2])
-
-        if xl[1] - xl[0] < yl[1] - yl[0]:
-            d2 = (yl[1] - yl[0]) / 2
-            m = xl[0] + (xl[1] - xl[0]) / 2.0
-            plt.xlim([m - d2, m + d2])
+    if scalebar:
+        add_scalebar_to_matplotlib_plot(axis_min_max, ax)
+    if autoscale:
+        autoscale_matplotlib_plot(verbose, square)
 
     if save_to_file:
         abs_file = os.path.abspath(save_to_file)
@@ -934,6 +880,11 @@ def plot_2D_schematic(
 
     if not nogui:
         plt.show()
+        # only close if a new fig was created
+        # if a figure was passed in, the caller needs to close it.
+    else:
+        if new_fig:
+            plt.close()
 
 
 def plot_segment_groups_curtain_plots(
@@ -946,10 +897,9 @@ def plot_segment_groups_curtain_plots(
     overlay_data: typing.Dict[str, typing.List[typing.Any]] = None,
     overlay_data_label: str = "",
     width: typing.Union[float, int] = 4,
-    colormap_name:str = 'viridis'
+    colormap_name: str = 'viridis'
 ) -> None:
     """Plot curtain plots of provided segment groups.
-
 
     :param cell: cell to plot
     :type cell: neuroml.Cell
@@ -1062,7 +1012,7 @@ def plot_segment_groups_curtain_plots(
 
             logger.debug(f"color is {color}")
 
-            add_box_to_plot(
+            add_box_to_matplotlib_2D_plot(
                 ax,
                 [column * width - width * 0.10, -1 * length],
                 height=cumulative_len,
@@ -1072,7 +1022,7 @@ def plot_segment_groups_curtain_plots(
 
             length += cumulative_len
 
-        add_text_to_2D_plot(
+        add_text_to_matplotlib_2D_plot(
             ax,
             [column * width + width / 2, column * width + width / 2],
             [50, 100],
@@ -1098,6 +1048,7 @@ def plot_segment_groups_curtain_plots(
 
     if not nogui:
         plt.show()
+        plt.close()
 
 
 if __name__ == "__main__":

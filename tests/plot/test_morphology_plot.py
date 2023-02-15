@@ -62,6 +62,42 @@ class TestMorphologyPlot(BaseTestCase):
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
 
+    def test_2d_constant_plotter_network(self):
+        """Test plot_2D_schematic function with a network of a few cells."""
+        nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
+        ofile = pl.Path(nml_file).name
+        for plane in ["xy", "yz", "xz"]:
+            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_constant.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            plot_2D(nml_file, nogui=True, plane2d=plane,
+                    save_to_file=filename, plot_type="Constant")
+
+            self.assertIsFile(filename)
+            pl.Path(filename).unlink()
+
+    def test_2d_schematic_plotter_network(self):
+        """Test plot_2D_schematic function with a network of a few cells."""
+        nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
+        ofile = pl.Path(nml_file).name
+        for plane in ["xy", "yz", "xz"]:
+            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_schematic.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            plot_2D(nml_file, nogui=True, plane2d=plane,
+                    save_to_file=filename, plot_type="Schematic")
+
+            self.assertIsFile(filename)
+            pl.Path(filename).unlink()
+
     def test_3d_plotter(self):
         """Test plot_interactive_3D function."""
         nml_files = ["tests/plot/Cell_497232312.cell.nml", "tests/plot/test.cell.nml"]
@@ -113,11 +149,8 @@ class TestMorphologyPlot(BaseTestCase):
             except FileNotFoundError:
                 pass
 
-            sgs = cell.get_segment_groups_by_substring("apic_")
-            sgs_1 = cell.get_segment_groups_by_substring("dend_")
-            sgs_ids = list(sgs.keys()) + list(sgs_1.keys())
             plot_2D_schematic(
-                cell, segment_groups=sgs_ids,
+                cell, segment_groups=None,
                 nogui=True, plane2d=plane, save_to_file=filename, labels=True
             )
 
@@ -176,7 +209,7 @@ class TestMorphologyPlot(BaseTestCase):
 
         for sg_id in sgs_ids[0:nsgs]:
             lensgs = len(cell.get_all_segments_in_group(sg_id))
-            data_dict[sg_id] = numpy.random.random_integers(0, 100, lensgs)
+            data_dict[sg_id] = numpy.random.randint(0, 101, lensgs)
 
         plot_segment_groups_curtain_plots(
             cell, segment_groups=sgs_ids[0:nsgs],
