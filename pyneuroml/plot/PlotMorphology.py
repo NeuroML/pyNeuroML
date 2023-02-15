@@ -927,6 +927,8 @@ def plot_segment_groups_curtain_plots(
     width: typing.Union[float, int] = 4,
     colormap_name: str = "viridis",
     title: str = "SegmentGroup",
+    datamin: typing.Optional[float] = None,
+    datamax: typing.Optional[float] = None
 ) -> None:
     """Plot curtain plots of provided segment groups.
 
@@ -961,6 +963,10 @@ def plot_segment_groups_curtain_plots(
     :type colormap_name: str
     :param title: plot title, displayed at bottom
     :type title: str
+    :param datamin: min limits of data (useful to compare different plots)
+    :type datamin: float
+    :param datamax: max limits of data (useful to compare different plots)
+    :type datamax: float
     :returns: None
 
     :raises ValueError: if keys in `overlay_data` do not match
