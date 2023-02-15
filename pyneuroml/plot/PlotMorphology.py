@@ -926,6 +926,7 @@ def plot_segment_groups_curtain_plots(
     overlay_data_label: str = "",
     width: typing.Union[float, int] = 4,
     colormap_name: str = "viridis",
+    title: str = "SegmentGroup",
 ) -> None:
     """Plot curtain plots of provided segment groups.
 
@@ -958,6 +959,8 @@ def plot_segment_groups_curtain_plots(
         https://matplotlib.org/stable/api/matplotlib_configuration_api.html#matplotlib.colormaps
         Note: random colours are used for each segment if no data is to be overlaid
     :type colormap_name: str
+    :param title: plot title, displayed at bottom
+    :type title: str
     :returns: None
 
     :raises ValueError: if keys in `overlay_data` do not match
@@ -969,7 +972,6 @@ def plot_segment_groups_curtain_plots(
     myrandom = random.Random()
     myrandom.seed(122436)
 
-    title = f"Curtain plots of segment groups from {cell.id}"
     (ord_segs, cumulative_lengths) = cell.get_ordered_segments_in_groups(
         segment_groups, check_parentage=False, include_cumulative_lengths=True
     )
@@ -1014,7 +1016,7 @@ def plot_segment_groups_curtain_plots(
     ax.xaxis.set_ticks_position("none")
     ax.xaxis.set_ticks([])
 
-    ax.set_xlabel("Segment group")
+    ax.set_xlabel(title)
     ax.set_ylabel("length (μm)")
 
     # column counter
@@ -1052,15 +1054,17 @@ def plot_segment_groups_curtain_plots(
 
             length += cumulative_len
 
-        add_text_to_matplotlib_2D_plot(
-            ax,
-            [column * width + width / 2, column * width + width / 2],
-            [50, 100],
-            color="black",
-            text=sgid,
-            vertical="bottom",
-            horizontal="center",
-        )
+        if labels:
+            add_text_to_matplotlib_2D_plot(
+                ax,
+                [column * width + width / 2, column * width + width / 2],
+                [50, 100],
+                color="black",
+                text=sgid,
+                vertical="bottom",
+                horizontal="center",
+                clip_on=False,
+            )
 
     plt.autoscale()
     xl = plt.xlim()

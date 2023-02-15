@@ -24,7 +24,14 @@ logger.setLevel(logging.DEBUG)
 
 
 def add_text_to_matplotlib_2D_plot(
-    ax: Axes, xv, yv, color, text: str, horizontal="center", vertical="bottom"
+    ax: matplotlib.axes.Axes,
+    xv: typing.List[float],
+    yv: typing.List[float],
+    color: str,
+    text: str,
+    horizontal: str = "center",
+    vertical: str = "bottom",
+    clip_on: bool = True,
 ):
     """Add text to a matplotlib plot between two points
 
@@ -42,6 +49,8 @@ def add_text_to_matplotlib_2D_plot(
     :type color: str
     :param text: text to write
     :type text: str
+    :param clip_on: toggle clip_on (if False, text will also be shown outside plot)
+    :type clip_on: bool
 
     """
     angle = int(numpy.rad2deg(numpy.arctan2((yv[1] - yv[0]), (xv[1] - xv[0]))))
@@ -59,7 +68,7 @@ def add_text_to_matplotlib_2D_plot(
         verticalalignment=vertical,
         rotation_mode="default",
         rotation=angle,
-        clip_on=True,
+        clip_on=clip_on,
     )
 
 
