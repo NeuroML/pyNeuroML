@@ -24,13 +24,16 @@ import plotly.graph_objects as go
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
-from pyneuroml.utils.plot import (add_text_to_matplotlib_2D_plot, get_next_hex_color,
-                                  add_box_to_matplotlib_2D_plot,
-                                  get_new_matplotlib_morph_plot,
-                                  autoscale_matplotlib_plot,
-                                  add_scalebar_to_matplotlib_plot,
-                                  add_line_to_matplotlib_2D_plot)
-from neuroml import (SegmentGroup, Cell)
+from pyneuroml.utils.plot import (
+    add_text_to_matplotlib_2D_plot,
+    get_next_hex_color,
+    add_box_to_matplotlib_2D_plot,
+    get_new_matplotlib_morph_plot,
+    autoscale_matplotlib_plot,
+    add_scalebar_to_matplotlib_plot,
+    add_line_to_matplotlib_2D_plot,
+)
+from neuroml import SegmentGroup, Cell
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
@@ -46,7 +49,7 @@ DEFAULTS = {
     "plane2d": "xy",
     "minwidth": 0.8,
     "square": False,
-    "plotType": "Detailed"
+    "plotType": "Detailed",
 }
 
 
@@ -143,8 +146,14 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
         plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.nogui, a.save_to_file)
     else:
         plot_2D(
-            a.nml_file, a.plane2d, a.minwidth, a.v, a.nogui, a.save_to_file,
-            a.square, a.plot_type
+            a.nml_file,
+            a.plane2d,
+            a.minwidth,
+            a.v,
+            a.nogui,
+            a.save_to_file,
+            a.square,
+            a.plot_type,
         )
 
 
@@ -157,7 +166,7 @@ def plot_2D(
     save_to_file: typing.Optional[str] = None,
     square: bool = False,
     plot_type: str = "Detailed",
-    title: typing.Optional[str] = None
+    title: typing.Optional[str] = None,
 ):
     """Plot cell morphologies in 2D.
 
@@ -193,7 +202,9 @@ def plot_2D(
     """
 
     if plot_type not in ["Detailed", "Constant", "Schematic"]:
-        raise ValueError("plot_type must be one of 'Detailed', 'Constant', or 'Schematic'")
+        raise ValueError(
+            "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
+        )
 
     if verbose:
         print("Plotting %s" % nml_file)
@@ -237,20 +248,39 @@ def plot_2D(
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
             if plot_type == "Schematic":
-                plot_2D_schematic(offset=pos, cell=cell, segment_groups=None, labels=True,
-                                  plane2d=plane2d, min_width=min_width,
-                                  verbose=verbose, fig=fig, ax=ax, scalebar=False,
-                                  nogui=True, autoscale=False, square=False)
+                plot_2D_schematic(
+                    offset=pos,
+                    cell=cell,
+                    segment_groups=None,
+                    labels=True,
+                    plane2d=plane2d,
+                    min_width=min_width,
+                    verbose=verbose,
+                    fig=fig,
+                    ax=ax,
+                    scalebar=False,
+                    nogui=True,
+                    autoscale=False,
+                    square=False,
+                )
             else:
-                plot_2D_cell_morphology(offset=pos, cell=cell, plane2d=plane2d,
-                                        color=color, soma_radius=radius,
-                                        plot_type=plot_type, verbose=verbose,
-                                        fig=fig,
-                                        ax=ax, min_width=min_width,
-                                        axis_min_max=axis_min_max,
-                                        scalebar=False,
-                                        nogui=True, autoscale=False,
-                                        square=False)
+                plot_2D_cell_morphology(
+                    offset=pos,
+                    cell=cell,
+                    plane2d=plane2d,
+                    color=color,
+                    soma_radius=radius,
+                    plot_type=plot_type,
+                    verbose=verbose,
+                    fig=fig,
+                    ax=ax,
+                    min_width=min_width,
+                    axis_min_max=axis_min_max,
+                    scalebar=False,
+                    nogui=True,
+                    autoscale=False,
+                    square=False,
+                )
 
     add_scalebar_to_matplotlib_plot(axis_min_max, ax)
     autoscale_matplotlib_plot(verbose, square)
@@ -272,7 +302,7 @@ def plot_interactive_3D(
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
-    plot_type: str = "Detailed"
+    plot_type: str = "Detailed",
 ):
     """Plot NeuroML2 cell morphology interactively using Plot.ly
 
@@ -303,7 +333,9 @@ def plot_interactive_3D(
     :type plot_type: str
     """
     if plot_type not in ["Detailed", "Constant", "Schematic"]:
-        raise ValueError("plot_type must be one of 'Detailed', 'Constant', or 'Schematic'")
+        raise ValueError(
+            "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
+        )
 
     nml_model = read_neuroml2_file(nml_file)
 
@@ -381,12 +413,12 @@ def plot_2D_cell_morphology(
     cell: Cell = None,
     plane2d: str = "xy",
     color: typing.Optional[str] = None,
-    soma_radius: float = 0.,
+    soma_radius: float = 0.0,
     title: str = "",
     verbose: bool = False,
     fig: matplotlib.figure.Figure = None,
     ax: matplotlib.axes.Axes = None,
-    min_width: float = DEFAULTS['minwidth'],
+    min_width: float = DEFAULTS["minwidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     scalebar: bool = False,
     nogui: bool = True,
@@ -458,7 +490,6 @@ def plot_2D_cell_morphology(
     # random default color
     cell_color = get_next_hex_color()
     if cell is None:
-
         if soma_radius is None:
             soma_radius = 10
 
@@ -472,7 +503,7 @@ def plot_2D_cell_morphology(
                 [offset[1], offset[1]],
                 soma_radius,
                 cell_color if color is None else color,
-                axis_min_max
+                axis_min_max,
             )
         elif plane2d == "yx":
             add_line_to_matplotlib_2D_plot(
@@ -481,7 +512,7 @@ def plot_2D_cell_morphology(
                 [offset[0], offset[0]],
                 soma_radius,
                 cell_color if color is None else color,
-                axis_min_max
+                axis_min_max,
             )
         elif plane2d == "xz":
             add_line_to_matplotlib_2D_plot(
@@ -490,7 +521,7 @@ def plot_2D_cell_morphology(
                 [offset[2], offset[2]],
                 soma_radius,
                 cell_color if color is None else color,
-                axis_min_max
+                axis_min_max,
             )
         elif plane2d == "zx":
             add_line_to_matplotlib_2D_plot(
@@ -499,7 +530,7 @@ def plot_2D_cell_morphology(
                 [offset[0], offset[0]],
                 soma_radius,
                 cell_color if color is None else color,
-                axis_min_max
+                axis_min_max,
             )
         elif plane2d == "yz":
             add_line_to_matplotlib_2D_plot(
@@ -508,7 +539,7 @@ def plot_2D_cell_morphology(
                 [offset[2], offset[2]],
                 soma_radius,
                 cell_color if color is None else color,
-                axis_min_max
+                axis_min_max,
             )
         elif plane2d == "zy":
             add_line_to_matplotlib_2D_plot(
@@ -517,13 +548,12 @@ def plot_2D_cell_morphology(
                 [offset[1], offset[1]],
                 soma_radius,
                 cell_color if color is None else color,
-                axis_min_max
+                axis_min_max,
             )
         else:
             raise Exception(f"Invalid value for plane: {plane2d}")
 
     else:
-
         for seg in cell.morphology.segments:
             p = cell.get_actual_proximal(seg.id)
             d = seg.distal
@@ -542,10 +572,7 @@ def plot_2D_cell_morphology(
                 seg_color = "r"
 
             spherical = (
-                p.x == d.x
-                and p.y == d.y
-                and p.z == d.z
-                and p.diameter == d.diameter
+                p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
             )
 
             if verbose:
@@ -570,7 +597,7 @@ def plot_2D_cell_morphology(
                     [offset[1] + p.y, offset[1] + d.y],
                     width,
                     seg_color if color is None else color,
-                    axis_min_max
+                    axis_min_max,
                 )
             elif plane2d == "yx":
                 add_line_to_matplotlib_2D_plot(
@@ -579,7 +606,7 @@ def plot_2D_cell_morphology(
                     [offset[0] + p.x, offset[0] + d.x],
                     width,
                     seg_color if color is None else color,
-                    axis_min_max
+                    axis_min_max,
                 )
             elif plane2d == "xz":
                 add_line_to_matplotlib_2D_plot(
@@ -588,7 +615,7 @@ def plot_2D_cell_morphology(
                     [offset[2] + p.z, offset[2] + d.z],
                     width,
                     seg_color if color is None else color,
-                    axis_min_max
+                    axis_min_max,
                 )
             elif plane2d == "zx":
                 add_line_to_matplotlib_2D_plot(
@@ -597,7 +624,7 @@ def plot_2D_cell_morphology(
                     [offset[0] + p.x, offset[0] + d.x],
                     width,
                     seg_color if color is None else color,
-                    axis_min_max
+                    axis_min_max,
                 )
             elif plane2d == "yz":
                 add_line_to_matplotlib_2D_plot(
@@ -606,7 +633,7 @@ def plot_2D_cell_morphology(
                     [offset[2] + p.z, offset[2] + d.z],
                     width,
                     seg_color if color is None else color,
-                    axis_min_max
+                    axis_min_max,
                 )
             elif plane2d == "zy":
                 add_line_to_matplotlib_2D_plot(
@@ -615,7 +642,7 @@ def plot_2D_cell_morphology(
                     [offset[1] + p.y, offset[1] + d.y],
                     width,
                     seg_color if color is None else color,
-                    axis_min_max
+                    axis_min_max,
                 )
             else:
                 raise Exception(f"Invalid value for plane: {plane2d}")
@@ -657,7 +684,7 @@ def plot_2D_schematic(
     autoscale: bool = True,
     fig: matplotlib.figure.Figure = None,
     ax: matplotlib.axes.Axes = None,
-    title: str = ""
+    title: str = "",
 ) -> None:
     """Plot a 2D schematic of the provided segment groups.
 
@@ -747,14 +774,15 @@ def plot_2D_schematic(
     width = 1
 
     for sgid, segs in ord_segs.items():
-
         sgobj = cell.get_segment_group(sgid)
         if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
-            raise ValueError(f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment")
+            raise ValueError(
+                f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment"
+            )
 
         # get proximal and distal points
-        first_seg = (segs[0])  # type: Segment
-        last_seg = (segs[-1])  # type: Segment
+        first_seg = segs[0]  # type: Segment
+        last_seg = segs[-1]  # type: Segment
 
         # unique color for each segment group
         color = get_next_hex_color()
@@ -766,7 +794,7 @@ def plot_2D_schematic(
                 [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                 width,
                 color,
-                axis_min_max
+                axis_min_max,
             )
             if labels:
                 add_text_to_matplotlib_2D_plot(
@@ -774,7 +802,7 @@ def plot_2D_schematic(
                     [offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
                     [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                     color=color,
-                    text=sgid
+                    text=sgid,
                 )
 
         elif plane2d == "yx":
@@ -784,7 +812,7 @@ def plot_2D_schematic(
                 [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                 width,
                 color,
-                axis_min_max
+                axis_min_max,
             )
             if labels:
                 add_text_to_matplotlib_2D_plot(
@@ -792,7 +820,7 @@ def plot_2D_schematic(
                     [offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
                     [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                     color=color,
-                    text=sgid
+                    text=sgid,
                 )
         elif plane2d == "xz":
             add_line_to_matplotlib_2D_plot(
@@ -801,7 +829,7 @@ def plot_2D_schematic(
                 [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                 width,
                 color,
-                axis_min_max
+                axis_min_max,
             )
             if labels:
                 add_text_to_matplotlib_2D_plot(
@@ -809,7 +837,7 @@ def plot_2D_schematic(
                     [offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
                     [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                     color=color,
-                    text=sgid
+                    text=sgid,
                 )
         elif plane2d == "zx":
             add_line_to_matplotlib_2D_plot(
@@ -818,7 +846,7 @@ def plot_2D_schematic(
                 [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                 width,
                 color,
-                axis_min_max
+                axis_min_max,
             )
             if labels:
                 add_text_to_matplotlib_2D_plot(
@@ -826,7 +854,7 @@ def plot_2D_schematic(
                     [offset[0] + first_seg.proximal.z, offset[0] + last_seg.distal.z],
                     [offset[1] + first_seg.proximal.x, offset[1] + last_seg.distal.x],
                     color=color,
-                    text=sgid
+                    text=sgid,
                 )
         elif plane2d == "yz":
             add_line_to_matplotlib_2D_plot(
@@ -835,7 +863,7 @@ def plot_2D_schematic(
                 [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                 width,
                 color,
-                axis_min_max
+                axis_min_max,
             )
             if labels:
                 add_text_to_matplotlib_2D_plot(
@@ -843,7 +871,7 @@ def plot_2D_schematic(
                     [offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
                     [offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                     color=color,
-                    text=sgid
+                    text=sgid,
                 )
         elif plane2d == "zy":
             add_line_to_matplotlib_2D_plot(
@@ -852,7 +880,7 @@ def plot_2D_schematic(
                 [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                 width,
                 color,
-                axis_min_max
+                axis_min_max,
             )
             if labels:
                 add_text_to_matplotlib_2D_plot(
@@ -860,7 +888,7 @@ def plot_2D_schematic(
                     [offset[0] + first_seg.proximal.z, offset[0] + last_seg.distal.z],
                     [offset[1] + first_seg.proximal.y, offset[1] + last_seg.distal.y],
                     color=color,
-                    text=sgid
+                    text=sgid,
                 )
         else:
             raise Exception(f"Invalid value for plane: {plane2d}")
@@ -897,7 +925,7 @@ def plot_segment_groups_curtain_plots(
     overlay_data: typing.Dict[str, typing.List[typing.Any]] = None,
     overlay_data_label: str = "",
     width: typing.Union[float, int] = 4,
-    colormap_name: str = 'viridis'
+    colormap_name: str = "viridis",
 ) -> None:
     """Plot curtain plots of provided segment groups.
 
@@ -956,10 +984,8 @@ def plot_segment_groups_curtain_plots(
     acolormap = None
     norm = None
     if overlay_data:
-        if (set(overlay_data.keys()) != set(ord_segs.keys())):
-            raise ValueError(
-                "Keys of overlay_data and ord_segs must match."
-            )
+        if set(overlay_data.keys()) != set(ord_segs.keys()):
+            raise ValueError("Keys of overlay_data and ord_segs must match.")
         for key in overlay_data.keys():
             if len(overlay_data[key]) != len(ord_segs[key]):
                 raise ValueError(
@@ -977,8 +1003,10 @@ def plot_segment_groups_curtain_plots(
 
         acolormap = matplotlib.colormaps[colormap_name]
         norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
-        fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
-                     label=overlay_data_label)
+        fig.colorbar(
+            matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+            label=overlay_data_label,
+        )
 
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
@@ -999,7 +1027,9 @@ def plot_segment_groups_curtain_plots(
 
         sgobj = cell.get_segment_group(sgid)
         if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
-            raise ValueError(f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment")
+            raise ValueError(
+                f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment"
+            )
 
         for seg_num in range(0, len(segs)):
             seg = segs[seg_num]
@@ -1016,8 +1046,8 @@ def plot_segment_groups_curtain_plots(
                 ax,
                 [column * width - width * 0.10, -1 * length],
                 height=cumulative_len,
-                width=width * .8,
-                color=color
+                width=width * 0.8,
+                color=color,
             )
 
             length += cumulative_len
@@ -1029,7 +1059,7 @@ def plot_segment_groups_curtain_plots(
             color="black",
             text=sgid,
             vertical="bottom",
-            horizontal="center"
+            horizontal="center",
         )
 
     plt.autoscale()

@@ -13,9 +13,12 @@ import pathlib as pl
 
 import numpy
 import neuroml
-from pyneuroml.plot.PlotMorphology import (plot_2D, plot_interactive_3D,
-                                           plot_2D_schematic,
-                                           plot_segment_groups_curtain_plots)
+from pyneuroml.plot.PlotMorphology import (
+    plot_2D,
+    plot_interactive_3D,
+    plot_2D_schematic,
+    plot_segment_groups_curtain_plots,
+)
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
 
@@ -50,7 +53,9 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
         for plane in ["xy", "yz", "xz"]:
-            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+            filename = (
+                f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+            )
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -74,8 +79,13 @@ class TestMorphologyPlot(BaseTestCase):
             except FileNotFoundError:
                 pass
 
-            plot_2D(nml_file, nogui=True, plane2d=plane,
-                    save_to_file=filename, plot_type="Constant")
+            plot_2D(
+                nml_file,
+                nogui=True,
+                plane2d=plane,
+                save_to_file=filename,
+                plot_type="Constant",
+            )
 
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
@@ -92,8 +102,13 @@ class TestMorphologyPlot(BaseTestCase):
             except FileNotFoundError:
                 pass
 
-            plot_2D(nml_file, nogui=True, plane2d=plane,
-                    save_to_file=filename, plot_type="Schematic")
+            plot_2D(
+                nml_file,
+                nogui=True,
+                plane2d=plane,
+                save_to_file=filename,
+                plot_type="Schematic",
+            )
 
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
@@ -130,19 +145,26 @@ class TestMorphologyPlot(BaseTestCase):
 
         for plane in ["xy", "yz", "xz"]:
             # olm cell
-            filename = f"test_schematic_plot_2d_{olm_ofile.replace('.', '_', 100)}_{plane}.png"
+            filename = (
+                f"test_schematic_plot_2d_{olm_ofile.replace('.', '_', 100)}_{plane}.png"
+            )
             try:
                 pl.Path(filename).unlink()
             except FileNotFoundError:
                 pass
 
             plot_2D_schematic(
-                olm_cell, segment_groups=["soma_0", "dendrite_0", "axon_0"],
-                nogui=True, plane2d=plane, save_to_file=filename
+                olm_cell,
+                segment_groups=["soma_0", "dendrite_0", "axon_0"],
+                nogui=True,
+                plane2d=plane,
+                save_to_file=filename,
             )
 
             # more complex cell
-            filename = f"test_schematic_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+            filename = (
+                f"test_schematic_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+            )
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -150,8 +172,12 @@ class TestMorphologyPlot(BaseTestCase):
                 pass
 
             plot_2D_schematic(
-                cell, segment_groups=None,
-                nogui=True, plane2d=plane, save_to_file=filename, labels=True
+                cell,
+                segment_groups=None,
+                nogui=True,
+                plane2d=plane,
+                save_to_file=filename,
+                labels=True,
             )
 
             self.assertIsFile(filename)
@@ -177,8 +203,11 @@ class TestMorphologyPlot(BaseTestCase):
         # sgs_1 = cell.get_segment_groups_by_substring("dend_")
         sgs_ids = list(sgs.keys())  # + list(sgs_1.keys())
         plot_segment_groups_curtain_plots(
-            cell, segment_groups=sgs_ids[0:50],
-            nogui=True, save_to_file=filename, labels=True
+            cell,
+            segment_groups=sgs_ids[0:50],
+            nogui=True,
+            save_to_file=filename,
+            labels=True,
         )
 
         self.assertIsFile(filename)
@@ -212,9 +241,14 @@ class TestMorphologyPlot(BaseTestCase):
             data_dict[sg_id] = numpy.random.randint(0, 101, lensgs)
 
         plot_segment_groups_curtain_plots(
-            cell, segment_groups=sgs_ids[0:nsgs],
-            nogui=True, save_to_file=filename, labels=True,
-            overlay_data=data_dict, overlay_data_label="Random values (0, 100)", width=4
+            cell,
+            segment_groups=sgs_ids[0:nsgs],
+            nogui=True,
+            save_to_file=filename,
+            labels=True,
+            overlay_data=data_dict,
+            overlay_data_label="Random values (0, 100)",
+            width=4,
         )
 
         self.assertIsFile(filename)
