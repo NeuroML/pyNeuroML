@@ -423,7 +423,7 @@ def plot_2D_cell_morphology(
     scalebar: bool = False,
     nogui: bool = True,
     autoscale: bool = True,
-    square: bool = True,
+    square: bool = False,
     plot_type: str = "Detailed",
     save_to_file: typing.Optional[str] = None,
 ):
