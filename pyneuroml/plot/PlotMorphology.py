@@ -993,7 +993,7 @@ def plot_segment_groups_curtain_plots(
     norm = None
     if overlay_data:
         if set(overlay_data.keys()) != set(ord_segs.keys()):
-            raise ValueError("Keys of overlay_data and ord_segs must match.")
+            raise ValueError(f"Keys of overlay_data ({overlay_data.keys()}) and ord_segs ({ord_segs.keys()})must match.")
         for key in overlay_data.keys():
             if len(overlay_data[key]) != len(ord_segs[key]):
                 raise ValueError(
