@@ -296,6 +296,7 @@ def plot_2D(
     if not nogui:
         plt.show()
     if close_plot:
+        logger.info("Closing plot")
         plt.close()
 
 
@@ -429,7 +430,7 @@ def plot_2D_cell_morphology(
     square: bool = False,
     plot_type: str = "Detailed",
     save_to_file: typing.Optional[str] = None,
-    close_plot: bool = True
+    close_plot: bool = False
 ):
     """Plot the detailed 2D morphology of a cell in provided plane
 
@@ -667,6 +668,7 @@ def plot_2D_cell_morphology(
     if not nogui:
         plt.show()
     if close_plot:
+        logger.info("closing plot")
         plt.close()
 
 
@@ -911,6 +913,7 @@ def plot_2D_schematic(
     if not nogui:
         plt.show()
     if close_plot:
+        logger.info("closing plot")
         plt.close()
 
 
@@ -1096,6 +1099,7 @@ def plot_segment_groups_curtain_plots(
     if not nogui:
         plt.show()
     if close_plot:
+        logger.info("Closing plot")
         plt.close()
 
 

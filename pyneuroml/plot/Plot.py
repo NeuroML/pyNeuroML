@@ -243,6 +243,7 @@ def generate_plot(
         plt.show()
 
     if close_plot:
+        logger.info("Closing plot")
         plt.close()
     else:
         return ax
