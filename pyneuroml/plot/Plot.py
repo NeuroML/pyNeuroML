@@ -45,7 +45,8 @@ def generate_plot(
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
-) -> matplotlib.axes.Axes:
+    close_plot: bool = False,
+) -> typing.Optional[matplotlib.axes.Axes]:
     """Utility function to generate plots using the Matplotlib library.
 
     This function can be used to generate graphs with multiple plot lines.
@@ -127,7 +128,9 @@ def generate_plot(
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
-    :returns: matplotlib.axes.Axes object
+    :param close_plot: call pyplot.close() to close plot after plotting
+    :type close_plot: bool
+    :returns: matplotlib.axes.Axes object if plot is not closed, else None
     """
 
     logger.info("Generating plot: %s" % (title))
@@ -239,7 +242,12 @@ def generate_plot(
     if show_plot_already:
         plt.show()
 
-    return ax
+    if close_plot:
+        plt.close()
+    else:
+        return ax
+
+    return None
 
 
 def generate_interactive_plot(

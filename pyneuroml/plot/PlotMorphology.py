@@ -167,6 +167,7 @@ def plot_2D(
     square: bool = False,
     plot_type: str = "Detailed",
     title: typing.Optional[str] = None,
+    close_plot: bool = False
 ):
     """Plot cell morphologies in 2D.
 
@@ -199,6 +200,8 @@ def plot_2D(
     :type plot_type: str
     :param title: title of plot
     :type title: str
+    :param close_plot: call pyplot.close() to close plot after plotting
+    :type close_plot: bool
     """
 
     if plot_type not in ["Detailed", "Constant", "Schematic"]:
@@ -292,7 +295,7 @@ def plot_2D(
 
     if not nogui:
         plt.show()
-    else:
+    if close_plot:
         plt.close()
 
 
@@ -426,6 +429,7 @@ def plot_2D_cell_morphology(
     square: bool = False,
     plot_type: str = "Detailed",
     save_to_file: typing.Optional[str] = None,
+    close_plot: bool = True
 ):
     """Plot the detailed 2D morphology of a cell in provided plane
 
@@ -462,6 +466,8 @@ def plot_2D_cell_morphology(
     :type autoscale: bool
     :param scalebar: toggle scalebar
     :type scalebar: bool
+    :param close_plot: call pyplot.close() to close plot after plotting
+    :type close_plot: bool
 
     :raises: ValueError if `cell` is None
 
@@ -482,10 +488,8 @@ def plot_2D_cell_morphology(
     except Exception:
         axon_segs = []
 
-    new_fig = False
     if fig is None:
         fig, ax = get_new_matplotlib_morph_plot(title)
-        new_fig = True
 
     # random default color
     cell_color = get_next_hex_color()
@@ -662,11 +666,8 @@ def plot_2D_cell_morphology(
 
     if not nogui:
         plt.show()
-    else:
-        # only close if a new fig was created
-        # if a figure was passed in, the caller needs to close it.
-        if new_fig:
-            plt.close()
+    if close_plot:
+        plt.close()
 
 
 def plot_2D_schematic(
@@ -685,6 +686,7 @@ def plot_2D_schematic(
     fig: matplotlib.figure.Figure = None,
     ax: matplotlib.axes.Axes = None,
     title: str = "",
+    close_plot: bool = False,
 ) -> None:
     """Plot a 2D schematic of the provided segment groups.
 
@@ -724,6 +726,8 @@ def plot_2D_schematic(
     :type autoscale: bool
     :param scalebar: toggle scalebar
     :type scalebar: bool
+    :param close_plot: call pyplot.close() to close plot after plotting
+    :type close_plot: bool
 
     """
     if title == "":
@@ -740,11 +744,9 @@ def plot_2D_schematic(
         segment_groups, check_parentage=False
     )
 
-    new_fig = False
     if fig is None:
         logger.debug("No figure provided, creating new fig and ax")
         fig, ax = get_new_matplotlib_morph_plot(title, plane2d)
-        new_fig = True
 
     if plane2d == "xy":
         ax.set_xlabel("x (μm)")
@@ -908,11 +910,8 @@ def plot_2D_schematic(
 
     if not nogui:
         plt.show()
-        # only close if a new fig was created
-        # if a figure was passed in, the caller needs to close it.
-    else:
-        if new_fig:
-            plt.close()
+    if close_plot:
+        plt.close()
 
 
 def plot_segment_groups_curtain_plots(
@@ -928,7 +927,8 @@ def plot_segment_groups_curtain_plots(
     colormap_name: str = "viridis",
     title: str = "SegmentGroup",
     datamin: typing.Optional[float] = None,
-    datamax: typing.Optional[float] = None
+    datamax: typing.Optional[float] = None,
+    close_plot: bool = False
 ) -> None:
     """Plot curtain plots of provided segment groups.
 
@@ -967,6 +967,8 @@ def plot_segment_groups_curtain_plots(
     :type datamin: float
     :param datamax: max limits of data (useful to compare different plots)
     :type datamax: float
+    :param close_plot: call pyplot.close() to close plot after plotting
+    :type close_plot: bool
     :returns: None
 
     :raises ValueError: if keys in `overlay_data` do not match
@@ -1093,7 +1095,7 @@ def plot_segment_groups_curtain_plots(
 
     if not nogui:
         plt.show()
-    else:
+    if close_plot:
         plt.close()
 
 
