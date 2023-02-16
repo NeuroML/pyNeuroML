@@ -1093,6 +1093,7 @@ def plot_segment_groups_curtain_plots(
 
     if not nogui:
         plt.show()
+    else:
         plt.close()
 
 
