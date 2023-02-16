@@ -430,7 +430,12 @@ def plot_2D_cell_morphology(
     square: bool = False,
     plot_type: str = "Detailed",
     save_to_file: typing.Optional[str] = None,
-    close_plot: bool = False
+    close_plot: bool = False,
+    overlay_data: typing.Dict[int, float] = None,
+    overlay_data_label: typing.Optional[str] = None,
+    datamin: typing.Optional[float] = None,
+    datamax: typing.Optional[float] = None,
+    colormap_name: str = 'viridis'
 ):
     """Plot the detailed 2D morphology of a cell in provided plane
 
@@ -469,6 +474,22 @@ def plot_2D_cell_morphology(
     :type scalebar: bool
     :param close_plot: call pyplot.close() to close plot after plotting
     :type close_plot: bool
+    :param overlay_data: data to overlay over the morphology
+        this must be a dictionary with segment ids as keys, the single value to
+        overlay as values
+    :type overlay_data: dict, keys are segment ids, values are magnitudes to
+        overlay on curtain plots
+    :param overlay_data_label: label of data being overlaid
+    :type overlay_data_label: str
+    :param colormap_name: name of matplotlib colourmap to use for data overlay
+        See:
+        https://matplotlib.org/stable/api/matplotlib_configuration_api.html#matplotlib.colormaps
+        Note: random colours are used for each segment if no data is to be overlaid
+    :type colormap_name: str
+    :param datamin: min limits of data (useful to compare different plots)
+    :type datamin: float
+    :param datamax: max limits of data (useful to compare different plots)
+    :type datamax: float
 
     :raises: ValueError if `cell` is None
 
@@ -491,6 +512,31 @@ def plot_2D_cell_morphology(
 
     if fig is None:
         fig, ax = get_new_matplotlib_morph_plot(title)
+
+    # overlaying data
+    data_max = -1 * float("inf")
+    data_min = float("inf")
+    acolormap = None
+    norm = None
+    if overlay_data:
+        this_max = numpy.max(list(overlay_data.values()))
+        this_min = numpy.min(list(overlay_data.values()))
+        if this_max > data_max:
+            data_max = this_max
+        if this_min < data_min:
+            data_min = this_min
+
+        if datamin is not None:
+            data_min = datamin
+        if datamax is not None:
+            data_max = datamax
+
+        acolormap = matplotlib.colormaps[colormap_name]
+        norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
+        fig.colorbar(
+            matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+            label=overlay_data_label,
+        )
 
     # random default color
     cell_color = get_next_hex_color()
@@ -570,12 +616,19 @@ def plot_2D_cell_morphology(
             if plot_type == "Constant":
                 width = min_width
 
-            seg_color = "b"
-            if seg.id in soma_segs:
-                seg_color = "g"
-            elif seg.id in axon_segs:
-                seg_color = "r"
+            if overlay_data and acolormap and norm:
+                try:
+                    seg_color = acolormap(norm(overlay_data[seg.id]))
+                except KeyError:
+                    seg_color = "black"
+            else:
+                seg_color = "b"
+                if seg.id in soma_segs:
+                    seg_color = "g"
+                elif seg.id in axon_segs:
+                    seg_color = "r"
 
+            logger.debug(f"color is {color}")
             spherical = (
                 p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
             )
