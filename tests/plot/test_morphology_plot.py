@@ -15,6 +15,7 @@ import numpy
 import neuroml
 from pyneuroml.plot.PlotMorphology import (
     plot_2D,
+    plot_2D_cell_morphology,
     plot_interactive_3D,
     plot_2D_schematic,
     plot_segment_groups_curtain_plots,
@@ -47,6 +48,33 @@ class TestMorphologyPlot(BaseTestCase):
 
                 self.assertIsFile(filename)
                 pl.Path(filename).unlink()
+
+    def test_2d_morphology_plotter_data_overlay(self):
+        """Test plot_2D_cell_morphology method with data."""
+        nml_files = ["tests/plot/Cell_497232312.cell.nml"]
+        for nml_file in nml_files:
+            nml_doc = read_neuroml2_file(nml_file)
+            cell = nml_doc.cells[0]  # type: neuroml.Cell
+            ofile = pl.Path(nml_file).name
+            plane = "xy"
+            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_with_data.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            segs = cell.get_all_segments_in_group("all")
+            values = (list(numpy.random.randint(50, 101, 1800)) + list(numpy.random.randint(0, 51, len(segs) - 1800)))
+            data_dict = dict(zip(segs, values))
+
+            plot_2D_cell_morphology(cell=cell, nogui=False, plane2d=plane,
+                                    save_to_file=filename,
+                                    overlay_data=data_dict,
+                                    overlay_data_label="Test")
+
+            self.assertIsFile(filename)
+            pl.Path(filename).unlink()
 
     def test_2d_plotter_network(self):
         """Test plot_2D function with a network of a few cells."""
