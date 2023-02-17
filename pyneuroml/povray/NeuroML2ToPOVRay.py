@@ -1,11 +1,12 @@
-#
-#   A file for converting NeuroML 2 files (including cells & network structure)
-#   into POVRay files for 3D rendering
-#
-#   Author: Padraig Gleeson & Matteo Farinella
-#
-#   This file has been developed as part of the neuroConstruct project
-#   This work has been funded by the Medical Research Council and Wellcome Trust
+"""
+A file for converting NeuroML 2 files (including cells & network structure)
+into POVRay files for 3D rendering
+
+Author: Padraig Gleeson & Matteo Farinella
+
+This file has been developed as part of the neuroConstruct project
+This work has been funded by the Medical Research Council and Wellcome Trust
+"""
 
 
 import typing
@@ -735,7 +736,6 @@ union {
             net_file.write("}\n")
 
     if conns or conn_points:
-
         projections = (
             nml_doc.networks[0].projections
             + nml_doc.networks[0].electrical_projections
