@@ -19,6 +19,7 @@ from pyneuroml.plot.PlotMorphology import (
     plot_interactive_3D,
     plot_2D_schematic,
     plot_segment_groups_curtain_plots,
+    plot_2D_point_cells
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -30,6 +31,24 @@ logger.setLevel(logging.DEBUG)
 class TestMorphologyPlot(BaseTestCase):
 
     """Test Plot module"""
+
+    def test_2d_point_plotter(self):
+        """Test plot_2D_point_cells function."""
+        nml_files = ["tests/plot/Izh2007Cells.net.nml"]
+        for nml_file in nml_files:
+            ofile = pl.Path(nml_file).name
+            for plane in ["xy", "yz", "xz"]:
+                filename = f"test_morphology_plot_2d_point_{ofile.replace('.', '_', 100)}_{plane}.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
+
+                plot_2D(nml_file, nogui=False, plane2d=plane, save_to_file=filename)
+
+                self.assertIsFile(filename)
+                pl.Path(filename).unlink()
 
     def test_2d_plotter(self):
         """Test plot_2D function."""
