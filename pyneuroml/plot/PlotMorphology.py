@@ -167,12 +167,12 @@ def plot_2D(
     square: bool = False,
     plot_type: str = "Detailed",
     title: typing.Optional[str] = None,
-    close_plot: bool = False
+    close_plot: bool = False,
 ):
     """Plot cells in a 2D plane.
 
     If a file with a network containing multiple cells is provided, it will
-    plot all the cells. For detailed neuroml.Cell* types, it will plot their
+    plot all the cells. For detailed neuroml.Cell types, it will plot their
     complete morphology. For point neurons, we only plot the points (locations)
     where they are.
 
@@ -203,6 +203,7 @@ def plot_2D(
 
         This is only applicable for neuroml.Cell cells (ones with some
         morphology)
+
     :type plot_type: str
     :param title: title of plot
     :type title: str
@@ -257,15 +258,18 @@ def plot_2D(
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
             if cell is None:
-                plot_2D_point_cells(offset=pos, plane2d=plane2d,
-                                    color=color,
-                                    soma_radius=radius,
-                                    verbose=verbose,
-                                    ax=ax,
-                                    fig=fig,
-                                    autoscale=False,
-                                    scalebar=False,
-                                    nogui=True,)
+                plot_2D_point_cells(
+                    offset=pos,
+                    plane2d=plane2d,
+                    color=color,
+                    soma_radius=radius,
+                    verbose=verbose,
+                    ax=ax,
+                    fig=fig,
+                    autoscale=False,
+                    scalebar=False,
+                    nogui=True,
+                )
             else:
                 if plot_type == "Schematic":
                     plot_2D_schematic(
@@ -345,14 +349,14 @@ def plot_interactive_3D(
     :param save_to_file: optional filename to save generated morphology to
     :type save_to_file: str
     :param plot_type: type of plot, one of:
+
         - Detailed: show detailed morphology taking into account each segment's
           width
         - Constant: show morphology, but use constant line widths
-        - Schematic: only plot each unbranched segment group as a straight
-          line, not following each segment
+
     :type plot_type: str
     """
-    if plot_type not in ["Detailed", "Constant", "Schematic"]:
+    if plot_type not in ["Detailed", "Constant"]:
         raise ValueError(
             "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
         )
@@ -450,9 +454,24 @@ def plot_2D_cell_morphology(
     overlay_data_label: typing.Optional[str] = None,
     datamin: typing.Optional[float] = None,
     datamax: typing.Optional[float] = None,
-    colormap_name: str = 'viridis'
+    colormap_name: str = "viridis",
 ):
-    """Plot the detailed 2D morphology of a cell in provided plane
+    """Plot the detailed 2D morphology of a cell in provided plane.
+
+    The method can also overlay data onto the morphology.
+
+    .. versionadded:: 1.0.0
+
+    .. seealso::
+
+        :py:func:`plot_2D`
+            general function for plotting
+
+        :py:func:`plot_2D_schematic`
+            for plotting only segmeng groups with their labels
+
+        :py:func:`plot_2D_point_cells`
+            for plotting point cells
 
     :param offset: offset for cell
     :type offset: [float, float]
@@ -508,7 +527,9 @@ def plot_2D_cell_morphology(
 
     """
     if cell is None:
-        raise ValueError("No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead")
+        raise ValueError(
+            "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
+        )
 
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
@@ -691,6 +712,19 @@ def plot_2D_point_cells(
 ):
     """Plot point cells.
 
+    .. versionadded:: 1.0.0
+
+    .. seealso::
+
+        :py:func:`plot_2D`
+            general function for plotting
+
+        :py:func:`plot_2D_schematic`
+            for plotting only segmeng groups with their labels
+
+        :py:func:`plot_2D_cell_morphology`
+            for plotting cells with detailed morphologies
+
     :param offset: location of cell
     :type offset: [float, float]
     :param plane2d: plane to plot on
@@ -828,6 +862,19 @@ def plot_2D_schematic(
 
     This plots each segment group as a straight line between its first and last
     segment.
+
+    .. versionadded:: 1.0.0
+
+    .. seealso::
+
+        :py:func:`plot_2D`
+            general function for plotting
+
+        :py:func:`plot_2D_point_cells`
+            for plotting point cells
+
+        :py:func:`plot_2D_cell_morphology`
+            for plotting cells with detailed morphologies
 
     :param offset: offset for cell
     :type offset: [float, float]
@@ -1065,9 +1112,11 @@ def plot_segment_groups_curtain_plots(
     title: str = "SegmentGroup",
     datamin: typing.Optional[float] = None,
     datamax: typing.Optional[float] = None,
-    close_plot: bool = False
+    close_plot: bool = False,
 ) -> None:
     """Plot curtain plots of provided segment groups.
+
+    .. versionadded:: 1.0.0
 
     :param cell: cell to plot
     :type cell: neuroml.Cell
@@ -1132,7 +1181,9 @@ def plot_segment_groups_curtain_plots(
     norm = None
     if overlay_data:
         if set(overlay_data.keys()) != set(ord_segs.keys()):
-            raise ValueError(f"Keys of overlay_data ({overlay_data.keys()}) and ord_segs ({ord_segs.keys()})must match.")
+            raise ValueError(
+                f"Keys of overlay_data ({overlay_data.keys()}) and ord_segs ({ord_segs.keys()})must match."
+            )
         for key in overlay_data.keys():
             if len(overlay_data[key]) != len(ord_segs[key]):
                 raise ValueError(
