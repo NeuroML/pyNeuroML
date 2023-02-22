@@ -320,7 +320,7 @@ def plot_2D(
         plt.close()
 
 
-def plot_interactive_3D(
+def plot_interactive_3D_plotly(
     nml_file: str,
     min_width: float = 0.8,
     verbose: bool = False,
