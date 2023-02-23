@@ -35,6 +35,7 @@ from pyneuroml.utils.plot import (
     autoscale_matplotlib_plot,
     add_scalebar_to_matplotlib_plot,
     add_line_to_matplotlib_2D_plot,
+    create_new_vispy_canvas,
 )
 from neuroml import SegmentGroup, Cell, Segment
 from neuroml.neuro_lex_ids import neuro_lex_ids
@@ -1154,7 +1155,7 @@ def plot_3D_schematic(
 
     """
     if title == "":
-        title = f"2D schematic of segment groups from {cell.id}"
+        title = f"3D schematic of segment groups from {cell.id}"
 
     # if no segment groups are given, do them all
     if segment_groups is None:
@@ -1169,68 +1170,11 @@ def plot_3D_schematic(
 
     # if no canvas is defined, define a new one
     if canvas is None:
-        # get approximate view extents
         seg0 = cell.morphology.segments[0]  # type: Segment
         view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
         seg1 = cell.morphology.segments[-1]  # type: Segment
         view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
-        view_extent = numpy.array(view_max) - numpy.array(view_min)
-        view_center = view_extent / 2
-
-        print(f"view maxmin is {view_min} - {view_max}")
-
-        # https://vispy.org/gallery/scene/axes_plot.html
-        canvas = scene.SceneCanvas(keys='interactive', show=True,
-                                   bgcolor="black", size=(800, 600))
-        grid = canvas.central_widget.add_grid(margin=10)
-        grid.spacing = 0
-
-        title_widget = scene.Label(title)
-        title_widget.height_max = 40
-        grid.add_widget(title_widget, row=0, col=0, col_span=2)
-
-        yaxis = scene.AxisWidget(orientation='left',
-                                 axis_label='Extent (Y)',
-                                 axis_font_size=12,
-                                 axis_label_margin=50,
-                                 tick_label_margin=5)
-        yaxis.width_max = 80
-        grid.add_widget(yaxis, row=1, col=0)
-
-        xaxis = scene.AxisWidget(orientation='bottom',
-                                 axis_label='Extent (X)',
-                                 axis_font_size=12,
-                                 axis_label_margin=50,
-                                 tick_label_margin=5)
-
-        xaxis.height_max = 80
-        grid.add_widget(xaxis, row=2, col=1)
-
-        right_padding = grid.add_widget(row=1, col=2, row_span=1)
-        right_padding.width_max = 50
-
-        view = grid.add_view(row=1, col=1, border_color='white',
-                             camera="arcball")
-        view.camera.set_range(
-            x=(view_min[0], view_max[0]),
-            y=(view_min[1], view_max[1]),
-            z=(view_min[2], view_max[2])
-        )
-
-        xaxis.link_view(view)
-        yaxis.link_view(view)
-
-        # xyz axis for orientation
-        # TODO improve placement
-        plot = scene.Line([view_center, [view_center[0] + 500, view_center[1], view_center[2]]],
-                          parent=view.scene, color="white",
-                          width=width)
-        plot = scene.Line([view_center, [view_center[1], view_center[1] + 500, view_center[2]]],
-                          parent=view.scene, color="white",
-                          width=width)
-        plot = scene.Line([view_center, [view_center[1], view_center[1], view_center[2] + 500]],
-                          parent=view.scene, color="white",
-                          width=2)
+        scene, view = create_new_vispy_canvas(view_min, view_max, title)
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)

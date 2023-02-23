@@ -17,6 +17,7 @@ from matplotlib.lines import Line2D
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
+from vispy import scene
 from vispy.scene import SceneCanvas
 
 
@@ -332,3 +333,81 @@ def add_line_to_matplotlib_2D_plot(ax, xv, yv, width, color, axis_min_max):
     axis_min_max[0] = min(axis_min_max[0], xv[1])
     axis_min_max[1] = max(axis_min_max[1], xv[0])
     axis_min_max[1] = max(axis_min_max[1], xv[1])
+
+
+def create_new_vispy_canvas(view_min: typing.List[float], view_max:
+                            typing.List[float], title: str = "", axes_pos:
+                            typing.Optional[typing.List] = None, axes_length: float = 100,
+                            axes_width: int = 2):
+    """Create a new vispy scene canvas with a view and optional axes lines
+
+    Reference: https://vispy.org/gallery/scene/axes_plot.html
+
+    :param view_min: min view co-ordinates
+    :type view_min: [float, float, float]
+    :param view_max: max view co-ordinates
+    :type view_max: [float, float, float]
+    :param title: title of canvas
+    :type title: str
+    :param axes_pos: position to draw axes at
+    :type axes_pos: [float, float, float]
+    :param axes_length: length of axes
+    :type axes_length: float
+    :param axes_width: width of axes lines
+    :type axes_width: float
+    :returns: scene, view
+    """
+    canvas = scene.SceneCanvas(keys='interactive', show=True,
+                               bgcolor="black", size=(800, 600))
+    grid = canvas.central_widget.add_grid(margin=10)
+    grid.spacing = 0
+
+    title_widget = scene.Label(title, color="white")
+    title_widget.height_max = 80
+    grid.add_widget(title_widget, row=0, col=0, col_span=2)
+
+    yaxis = scene.AxisWidget(orientation='left',
+                             axis_label='Extent (Y)',
+                             axis_font_size=12,
+                             axis_label_margin=50,
+                             tick_label_margin=5)
+    yaxis.width_max = 80
+    grid.add_widget(yaxis, row=1, col=0)
+
+    xaxis = scene.AxisWidget(orientation='bottom',
+                             axis_label='Extent (X)',
+                             axis_font_size=12,
+                             axis_label_margin=50,
+                             tick_label_margin=5)
+
+    xaxis.height_max = 80
+    grid.add_widget(xaxis, row=2, col=1)
+
+    right_padding = grid.add_widget(row=1, col=2, row_span=1)
+    right_padding.width_max = 50
+
+    view = grid.add_view(row=1, col=1, border_color='white',
+                         camera="arcball")
+    view.camera.set_range(
+        x=(view_min[0], view_max[0]),
+        y=(view_min[1], view_max[1]),
+        z=(view_min[2], view_max[2])
+    )
+
+    xaxis.link_view(view)
+    yaxis.link_view(view)
+
+    # xyz axis for orientation
+    # TODO improve placement
+    if axes_pos:
+        scene.Line([axes_pos, [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]]],
+                   parent=view.scene, color="white",
+                   width=axes_width)
+        scene.Line([axes_pos, [axes_pos[1], axes_pos[1] + axes_length, axes_pos[2]]],
+                   parent=view.scene, color="white",
+                   width=axes_width)
+        scene.Line([axes_pos, [axes_pos[1], axes_pos[1], axes_pos[2] + axes_length]],
+                   parent=view.scene, color="white",
+                   width=axes_width)
+
+    return scene, view
