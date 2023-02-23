@@ -161,6 +161,117 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
         )
 
 
+def plot_interactive_3D(
+    nml_file: str,
+    min_width: float = DEFAULTS["minwidth"],
+    verbose: bool = False,
+    plot_type: str = "Constant",
+    title: typing.Optional[str] = None,
+):
+    """Plot interactive plots in 3D using Vispy
+
+    https://vispy.org
+
+    :param nml_file: path to NeuroML cell file
+    :type nml_file: str
+    :param min_width: minimum width for segments (useful for visualising very
+        thin segments): default 0.8um
+    :type min_width: float
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param plot_type: type of plot, one of:
+
+        - "Detailed": show detailed morphology taking into account each segment's
+          width
+        - "Constant": show morphology, but use constant line widths
+        - "Schematic": only plot each unbranched segment group as a straight
+          line, not following each segment
+
+        This is only applicable for neuroml.Cell cells (ones with some
+        morphology)
+
+    :type plot_type: str
+    :param title: title of plot
+    :type title: str
+    """
+    if plot_type not in ["Detailed", "Constant", "Schematic"]:
+        raise ValueError(
+            "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
+        )
+
+    if verbose:
+        print("Plotting %s" % nml_file)
+
+    nml_model = read_neuroml2_file(
+        nml_file,
+        include_includes=True,
+        check_validity_pre_include=False,
+        verbose=False,
+        optimized=True,
+    )
+
+    (
+        cell_id_vs_cell,
+        pop_id_vs_cell,
+        positions,
+        pop_id_vs_color,
+        pop_id_vs_radii,
+    ) = extract_position_info(nml_model, verbose)
+
+    if title is None:
+        title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
+
+    if verbose:
+        logger.debug(f"positions: {positions}")
+        logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
+        logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
+        logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
+        logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
+
+    current_scene, current_view = create_new_vispy_canvas([0, 0, 0], [1000, 1000, 1000], title)
+
+    for pop_id in pop_id_vs_cell:
+        cell = pop_id_vs_cell[pop_id]
+        pos_pop = positions[pop_id]
+
+        for cell_index in pos_pop:
+            pos = pos_pop[cell_index]
+            radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
+            color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
+
+            print(f"Plotting {cell}")
+
+            if cell is None:
+                # TODO: implement 3D for point cells
+                pass
+            else:
+                if plot_type == "Schematic":
+                    plot_3D_schematic(
+                        offset=pos,
+                        cell=cell,
+                        segment_groups=None,
+                        labels=True,
+                        verbose=verbose,
+                        current_scene=current_scene,
+                        current_view=current_view,
+                        nogui=True,
+                    )
+                else:
+                    plot_3D_cell_morphology(
+                        offset=pos,
+                        cell=cell,
+                        color=color,
+                        plot_type=plot_type,
+                        verbose=verbose,
+                        current_scene=current_scene,
+                        current_view=current_view,
+                        min_width=min_width,
+                        nogui=True,
+                    )
+
+    app.run()
+
+
 def plot_2D(
     nml_file: str,
     plane2d: str = "xy",
