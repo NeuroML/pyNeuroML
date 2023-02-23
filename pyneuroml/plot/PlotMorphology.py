@@ -16,6 +16,8 @@ import random
 import typing
 import logging
 
+import napari
+from vispy import app, scene
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
@@ -26,6 +28,7 @@ from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.plot import (
     add_text_to_matplotlib_2D_plot,
+    add_text_to_vispy_3D_plot,
     get_next_hex_color,
     add_box_to_matplotlib_2D_plot,
     get_new_matplotlib_morph_plot,
@@ -33,7 +36,7 @@ from pyneuroml.utils.plot import (
     add_scalebar_to_matplotlib_plot,
     add_line_to_matplotlib_2D_plot,
 )
-from neuroml import SegmentGroup, Cell
+from neuroml import SegmentGroup, Cell, Segment
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
@@ -320,7 +323,7 @@ def plot_2D(
         plt.close()
 
 
-def plot_interactive_3D_plotly(
+def plot_3D_cell_morphology_plotly(
     nml_file: str,
     min_width: float = 0.8,
     verbose: bool = False,
@@ -846,7 +849,7 @@ def plot_2D_schematic(
     offset: typing.List[float] = [0, 0],
     labels: bool = False,
     plane2d: str = "xy",
-    min_width: float = DEFAULTS["minwidth"],
+    width: float = 2.0,
     verbose: bool = False,
     square: bool = False,
     nogui: bool = False,
@@ -886,9 +889,8 @@ def plot_2D_schematic(
     :type labels: bool
     :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
     :type plane2d: str
-    :param min_width: minimum width for segments (useful for visualising very
-        thin segments): default 0.8um
-    :type min_width: float
+    :param width: width for lines
+    :type width: float
     :param verbose: show extra information (default: False)
     :type verbose: bool
     :param square: scale axes so that image is approximately square
@@ -1096,6 +1098,172 @@ def plot_2D_schematic(
     if close_plot:
         logger.info("closing plot")
         plt.close()
+
+
+def plot_3D_schematic(
+    cell: Cell,
+    segment_groups: typing.Optional[typing.List[SegmentGroup]],
+    offset: typing.List[float] = [0, 0, 0],
+    labels: bool = False,
+    width: float = 5.,
+    verbose: bool = False,
+    square: bool = False,
+    nogui: bool = False,
+    viewer: napari.Viewer = None,
+    title: str = "",
+    canvas: scene.SceneCanvas = None
+) -> None:
+    """Plot a 3D schematic of the provided segment groups in Napari as a new
+    layer..
+
+    This plots each segment group as a straight line between its first and last
+    segment.
+
+    .. versionadded:: 1.0.0
+
+    .. seealso::
+
+        :py:func:`plot_2D_schematic`
+            general function for plotting
+
+        :py:func:`plot_2D`
+            general function for plotting
+
+        :py:func:`plot_2D_point_cells`
+            for plotting point cells
+
+        :py:func:`plot_2D_cell_morphology`
+            for plotting cells with detailed morphologies
+
+    :param offset: offset for cell
+    :type offset: [float, float, float]
+    :param cell: cell to plot
+    :type cell: neuroml.Cell
+    :param segment_groups: list of unbranched segment groups to plot
+    :type segment_groups: list(SegmentGroup)
+    :param labels: toggle labelling of segment groups
+    :type labels: bool
+    :param width: width for lines for segment groups
+    :type width: float
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param viewer: a napari.Viewer object
+    :type viewer: napari.Viewer
+    :param title: title of plot
+    :type title: str
+
+    """
+    if title == "":
+        title = f"2D schematic of segment groups from {cell.id}"
+
+    # if no segment groups are given, do them all
+    if segment_groups is None:
+        segment_groups = []
+        for sg in cell.morphology.segment_groups:
+            if sg.neuro_lex_id == neuro_lex_ids["section"]:
+                segment_groups.append(sg.id)
+
+    ord_segs = cell.get_ordered_segments_in_groups(
+        segment_groups, check_parentage=False
+    )
+
+    # if no canvas is defined, define a new one
+    if canvas is None:
+        # get approximate view extents
+        seg0 = cell.morphology.segments[0]  # type: Segment
+        view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
+        seg1 = cell.morphology.segments[-1]  # type: Segment
+        view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
+        view_extent = numpy.array(view_max) - numpy.array(view_min)
+        view_center = view_extent / 2
+
+        print(f"view maxmin is {view_min} - {view_max}")
+
+        # https://vispy.org/gallery/scene/axes_plot.html
+        canvas = scene.SceneCanvas(keys='interactive', show=True,
+                                   bgcolor="black", size=(800, 600))
+        grid = canvas.central_widget.add_grid(margin=10)
+        grid.spacing = 0
+
+        title_widget = scene.Label(title)
+        title_widget.height_max = 40
+        grid.add_widget(title_widget, row=0, col=0, col_span=2)
+
+        yaxis = scene.AxisWidget(orientation='left',
+                                 axis_label='Extent (Y)',
+                                 axis_font_size=12,
+                                 axis_label_margin=50,
+                                 tick_label_margin=5)
+        yaxis.width_max = 80
+        grid.add_widget(yaxis, row=1, col=0)
+
+        xaxis = scene.AxisWidget(orientation='bottom',
+                                 axis_label='Extent (X)',
+                                 axis_font_size=12,
+                                 axis_label_margin=50,
+                                 tick_label_margin=5)
+
+        xaxis.height_max = 80
+        grid.add_widget(xaxis, row=2, col=1)
+
+        right_padding = grid.add_widget(row=1, col=2, row_span=1)
+        right_padding.width_max = 50
+
+        view = grid.add_view(row=1, col=1, border_color='white',
+                             camera="arcball")
+        view.camera.set_range(
+            x=(view_min[0], view_max[0]),
+            y=(view_min[1], view_max[1]),
+            z=(view_min[2], view_max[2])
+        )
+
+        xaxis.link_view(view)
+        yaxis.link_view(view)
+
+        # xyz axis for orientation
+        # TODO improve placement
+        plot = scene.Line([view_center, [view_center[0] + 500, view_center[1], view_center[2]]],
+                          parent=view.scene, color="white",
+                          width=width)
+        plot = scene.Line([view_center, [view_center[1], view_center[1] + 500, view_center[2]]],
+                          parent=view.scene, color="white",
+                          width=width)
+        plot = scene.Line([view_center, [view_center[1], view_center[1], view_center[2] + 500]],
+                          parent=view.scene, color="white",
+                          width=2)
+
+    for sgid, segs in ord_segs.items():
+        sgobj = cell.get_segment_group(sgid)
+        if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
+            raise ValueError(
+                f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment"
+            )
+
+        # get proximal and distal points
+        first_seg = segs[0]  # type: Segment
+        last_seg = segs[-1]  # type: Segment
+        first_prox = cell.get_actual_proximal(first_seg.id)
+
+        data = numpy.array([
+            [offset[0] + first_prox.x, offset[1] + first_prox.y, offset[2] + first_prox.z],
+            [offset[0] + last_seg.distal.x, offset[1] + last_seg.distal.y, offset[2] + last_seg.distal.z]
+        ])
+
+        color = get_next_hex_color()
+        plot = scene.Line(data, parent=view.scene, color=color,
+                          width=width)
+
+        # TODO: needs fixing to show labels
+        labels = False
+        if labels:
+            alabel = add_text_to_vispy_3D_plot(scene, text=f"{sgid}",
+                                               xv=[offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
+                                               yv=[offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
+                                               zv=[offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
+                                               color=color)
+            alabel.font_size = 30
+
+    app.run()
 
 
 def plot_segment_groups_curtain_plots(

@@ -17,10 +17,52 @@ from matplotlib.lines import Line2D
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
+from vispy.scene import SceneCanvas
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+def add_text_to_vispy_3D_plot(
+    scene: SceneCanvas,
+    xv: typing.List[float],
+    yv: typing.List[float],
+    zv: typing.List[float],
+    color: str,
+    text: str,
+):
+    """Add text to a vispy plot between two points.
+
+    Wrapper around vispy.scene.visuals.Text
+
+    Rotates the text label to ensure it is at the same angle as the line.
+
+    :param scene: vispy scene object
+    :type scene: SceneCanvas
+    :param xv: start and end coordinates in one axis
+    :type xv: list[x1, x2]
+    :param yv: start and end coordinates in second axis
+    :type yv: list[y1, y2]
+    :param zv: start and end coordinates in third axix
+    :type zv: list[z1, z2]
+    :param color: color of text
+    :type color: str
+    :param text: text to write
+    :type text: str
+    """
+    angle = int(numpy.rad2deg(numpy.arctan2((yv[1] - yv[0]), (xv[1] - xv[0]))))
+    if angle > 90:
+        angle -= 180
+    elif angle < -90:
+        angle += 180
+
+    return scene.Text(
+        pos=((xv[0] + xv[1]) / 2, (yv[0] + yv[1]) / 2, (zv[0] + zv[1]) / 2),
+        text=text,
+        color=color,
+        rotation=angle,
+    )
 
 
 def add_text_to_matplotlib_2D_plot(

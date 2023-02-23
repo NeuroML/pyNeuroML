@@ -16,10 +16,11 @@ import neuroml
 from pyneuroml.plot.PlotMorphology import (
     plot_2D,
     plot_2D_cell_morphology,
-    plot_interactive_3D,
+    plot_3D_cell_morphology_plotly,
     plot_2D_schematic,
     plot_segment_groups_curtain_plots,
-    plot_2D_point_cells
+    plot_2D_point_cells,
+    plot_3D_schematic
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -160,8 +161,21 @@ class TestMorphologyPlot(BaseTestCase):
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
 
-    def test_3d_plotter(self):
-        """Test plot_interactive_3D function."""
+    def test_3d_schematic_plotter(self):
+        """Test plot_3D_schematic plotter function."""
+        nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
+        nml_doc = read_neuroml2_file(nml_file)
+        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        # remove the file first
+
+        plot_3D_schematic(
+            cell,
+            segment_groups=None,
+            nogui=False,
+        )
+
+    def test_3d_plotter_plotly(self):
+        """Test plot_3D_cell_morphology_plotly function."""
         nml_files = ["tests/plot/Cell_497232312.cell.nml", "tests/plot/test.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
@@ -172,7 +186,7 @@ class TestMorphologyPlot(BaseTestCase):
             except FileNotFoundError:
                 pass
 
-            plot_interactive_3D(nml_file, nogui=True, save_to_file=filename)
+            plot_3D_cell_morphology_plotly(nml_file, nogui=True, save_to_file=filename)
 
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
