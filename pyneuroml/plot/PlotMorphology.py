@@ -21,6 +21,7 @@ from vispy import app, scene
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
+from matplotlib.colors import to_rgba
 import plotly.graph_objects as go
 
 from pyneuroml.pynml import read_neuroml2_file
@@ -117,14 +118,14 @@ def process_args():
         type=str,
         metavar="<Image file name>",
         default=None,
-        help="Name of the image file",
+        help="Name of the image file, for 2D plot",
     )
 
     parser.add_argument(
         "-square",
         action="store_true",
         default=DEFAULTS["square"],
-        help="Scale axes so that image is approximately square",
+        help="Scale axes so that image is approximately square, for 2D plot",
     )
 
     return parser.parse_args()
@@ -147,7 +148,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
-        plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.nogui, a.save_to_file)
+        plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.plot_type)
     else:
         plot_2D(
             a.nml_file,
@@ -1409,9 +1410,7 @@ def plot_3D_schematic(
     labels: bool = False,
     width: float = 5.,
     verbose: bool = False,
-    square: bool = False,
     nogui: bool = False,
-    viewer: napari.Viewer = None,
     title: str = "",
     current_scene: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
@@ -1450,8 +1449,6 @@ def plot_3D_schematic(
     :type width: float
     :param verbose: show extra information (default: False)
     :type verbose: bool
-    :param viewer: a napari.Viewer object
-    :type viewer: napari.Viewer
     :param title: title of plot
     :type title: str
     :param nogui: toggle if plot should be shown or not
@@ -1547,8 +1544,6 @@ def plot_segment_groups_curtain_plots(
     :type labels: bool
     :param verbose: show extra information (default: False)
     :type verbose: bool
-    :param square: scale axes so that image is approximately square
-    :type square: bool
     :param nogui: do not show matplotlib GUI (default: false)
     :type nogui: bool
     :param save_to_file: optional filename to save generated morphology to
