@@ -1112,7 +1112,8 @@ def plot_3D_schematic(
     nogui: bool = False,
     viewer: napari.Viewer = None,
     title: str = "",
-    canvas: scene.SceneCanvas = None
+    current_scene: scene.SceneCanvas = None,
+    current_view: scene.ViewBox = None,
 ) -> None:
     """Plot a 3D schematic of the provided segment groups in Napari as a new
     layer..
@@ -1152,7 +1153,13 @@ def plot_3D_schematic(
     :type viewer: napari.Viewer
     :param title: title of plot
     :type title: str
-
+    :param nogui: toggle if plot should be shown or not
+    :type nogui: bool
+    :param current_scene: vispy SceneCanvas to use (a new one is created if it is not
+        provided)
+    :type current_scene: SceneCanvas
+    :param current_view: vispy viewbox to use
+    :type current_view: ViewBox
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
@@ -1169,12 +1176,12 @@ def plot_3D_schematic(
     )
 
     # if no canvas is defined, define a new one
-    if canvas is None:
+    if current_scene is None:
         seg0 = cell.morphology.segments[0]  # type: Segment
         view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
         seg1 = cell.morphology.segments[-1]  # type: Segment
         view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
-        scene, view = create_new_vispy_canvas(view_min, view_max, title)
+        current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)
@@ -1194,7 +1201,7 @@ def plot_3D_schematic(
         ])
 
         color = get_next_hex_color()
-        plot = scene.Line(data, parent=view.scene, color=color,
+        plot = scene.Line(data, parent=current_view.scene, color=color,
                           width=width)
 
         # TODO: needs fixing to show labels
