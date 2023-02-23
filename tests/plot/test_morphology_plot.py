@@ -22,6 +22,7 @@ from pyneuroml.plot.PlotMorphology import (
     plot_2D_point_cells,
     plot_3D_schematic,
     plot_3D_cell_morphology,
+    plot_interactive_3D
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -172,6 +173,11 @@ class TestMorphologyPlot(BaseTestCase):
             segment_groups=None,
             nogui=False,
         )
+
+    def test_3d_morphology_plotter_vispy_network(self):
+        """Test plot_3D_cell_morphology_vispy function."""
+        nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
+        plot_interactive_3D(nml_file)
 
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
