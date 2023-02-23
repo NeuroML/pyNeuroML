@@ -1214,7 +1214,8 @@ def plot_3D_schematic(
                                                color=color)
             alabel.font_size = 30
 
-    app.run()
+    if not nogui:
+        app.run()
 
 
 def plot_segment_groups_curtain_plots(
