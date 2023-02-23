@@ -696,6 +696,196 @@ def plot_2D_cell_morphology(
         plt.close()
 
 
+def plot_3D_cell_morphology(
+    offset: typing.List[float] = [0, 0, 0],
+    cell: Cell = None,
+    color: typing.Optional[str] = None,
+    title: str = "",
+    verbose: bool = False,
+    current_scene: scene.SceneCanvas = None,
+    current_view: scene.ViewBox = None,
+    min_width: float = DEFAULTS["minwidth"],
+    axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    nogui: bool = True,
+    plot_type: str = "Constant",
+):
+    """Plot the detailed 3D morphology of a cell using vispy.
+    https://vispy.org/
+
+    .. versionadded:: 1.0.0
+
+    .. seealso::
+
+        :py:func:`plot_2D`
+            general function for plotting
+
+        :py:func:`plot_2D_schematic`
+            for plotting only segmeng groups with their labels
+
+        :py:func:`plot_2D_point_cells`
+            for plotting point cells
+
+    :param offset: offset for cell
+    :type offset: [float, float]
+    :param cell: cell to plot
+    :type cell: neuroml.Cell
+    :param color: color to use for segments:
+
+        - if None, each segment is given a new unique color
+        - if "Groups", each unbranched segment group is given a unique color,
+          and segments that do not belong to an unbranched segment group are in
+          white
+        - if "Default Groups", axonal segments are in red, dendritic in blue,
+          somatic in green, and others in white
+
+    :type color: str
+    :param min_width: minimum width for segments (useful for visualising very
+    :type min_width: float
+    :param axis_min_max: min, max value of axes
+    :type axis_min_max: [float, float]
+    :param title: title of plot
+    :type title: str
+    :param verbose: show extra information (default: False)
+    :type verbose: bool
+    :param nogui: do not show image immediately
+    :type nogui: bool
+    :param current_scene: vispy SceneCanvas to use (a new one is created if it is not
+        provided)
+    :type current_scene: SceneCanvas
+    :param current_view: vispy viewbox to use
+    :type current_view: ViewBox
+    :param plot_type: type of plot, one of:
+
+        - "Detailed": show detailed morphology taking into account each segment's
+          width. This is not performant, because a new line is required for
+          each segment. To only be used for cells with small numbers of
+          segments
+        - "Constant": show morphology, but use constant line widths
+
+        This is only applicable for neuroml.Cell cells (ones with some
+        morphology)
+
+    :type plot_type: str
+    :raises: ValueError if `cell` is None
+
+    """
+    if cell is None:
+        raise ValueError(
+            "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
+        )
+
+    try:
+        soma_segs = cell.get_all_segments_in_group("soma_group")
+    except Exception:
+        soma_segs = []
+    try:
+        dend_segs = cell.get_all_segments_in_group("dendrite_group")
+    except Exception:
+        dend_segs = []
+    try:
+        axon_segs = cell.get_all_segments_in_group("axon_group")
+    except Exception:
+        axon_segs = []
+
+    if current_scene is None or current_view is None:
+        seg0 = cell.morphology.segments[0]  # type: Segment
+        view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
+        seg1 = cell.morphology.segments[-1]  # type: Segment
+        view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
+        current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
+
+    if color == "Groups":
+        color_dict = {}
+        # if no segment groups are given, do them all
+        segment_groups = []
+        for sg in cell.morphology.segment_groups:
+            if sg.neuro_lex_id == neuro_lex_ids["section"]:
+                segment_groups.append(sg.id)
+
+        ord_segs = cell.get_ordered_segments_in_groups(
+            segment_groups, check_parentage=False
+        )
+
+        for sgs, segs in ord_segs.items():
+            c = get_next_hex_color()
+            for s in segs:
+                color_dict[s.id] = c
+
+    # for lines/segments
+    points = []
+    toconnect = []
+    colors = []
+
+    for seg in cell.morphology.segments:
+        p = cell.get_actual_proximal(seg.id)
+        d = seg.distal
+        width = (p.diameter + d.diameter) / 2
+
+        if width < min_width:
+            width = min_width
+
+        if plot_type == "Constant":
+            width = min_width
+
+        seg_color = "white"
+        if color is None:
+            seg_color = get_next_hex_color()
+        elif color == "Groups":
+            try:
+                seg_color = color_dict[seg.id]
+            except KeyError:
+                print(f"Unbranched segment found: {seg.id}")
+                if seg.id in soma_segs:
+                    seg_color = "green"
+                elif seg.id in axon_segs:
+                    seg_color = "red"
+                elif seg.id in dend_segs:
+                    seg_color = "blue"
+        elif color == "Default Groups":
+            if seg.id in soma_segs:
+                seg_color = "green"
+            elif seg.id in axon_segs:
+                seg_color = "red"
+            elif seg.id in dend_segs:
+                seg_color = "blue"
+        else:
+            seg_color = color
+
+        # check if for a spherical segment
+        if (
+            p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
+        ):
+            scene.visuals.Markers(pos=(p.x, p.y, p.z), size=p.diameter,
+                                  spherical=True, edge_color=seg_color,
+                                  face_color=seg_color)
+        else:
+            if plot_type == "Constant":
+                points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
+                colors.append(seg_color)
+                points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
+                colors.append(seg_color)
+                toconnect.append([len(points) - 2, len(points) - 1])
+            # every segment plotted individually
+            elif plot_type == "Detailed":
+                points = []
+                points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
+                colors.append(seg_color)
+                points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
+                colors.append(seg_color)
+                toconnect.append([len(points) - 2, len(points) - 1])
+                scene.Line(pos=points, color=colors,
+                           connect=numpy.array(toconnect), parent=current_view.scene,
+                           width=width)
+
+    if plot_type == "Constant":
+        scene.Line(pos=points, color=colors,
+                   connect=numpy.array(toconnect), parent=current_view.scene,
+                   width=width)
+
+    if not nogui:
+        app.run()
+
+
 def plot_2D_point_cells(
     offset: typing.List[float] = [0, 0],
     plane2d: str = "xy",

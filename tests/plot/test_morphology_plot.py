@@ -20,7 +20,8 @@ from pyneuroml.plot.PlotMorphology import (
     plot_2D_schematic,
     plot_segment_groups_curtain_plots,
     plot_2D_point_cells,
-    plot_3D_schematic
+    plot_3D_schematic,
+    plot_3D_cell_morphology,
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -166,13 +167,19 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
-        # remove the file first
-
         plot_3D_schematic(
             cell,
             segment_groups=None,
             nogui=False,
         )
+
+    def test_3d_plotter_vispy(self):
+        """Test plot_3D_cell_morphology_vispy function."""
+        nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
+        nml_doc = read_neuroml2_file(nml_file)
+        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        plot_3D_cell_morphology(cell=cell, nogui=False, min_width=4,
+                                color="Groups")
 
     def test_3d_plotter_plotly(self):
         """Test plot_3D_cell_morphology_plotly function."""
