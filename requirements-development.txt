@@ -2,6 +2,7 @@ argparse
 airspeed>=0.5.5
 matplotlib
 graphviz
+vispy
 NEURON
 ppft
 

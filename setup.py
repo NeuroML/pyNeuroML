@@ -98,6 +98,7 @@ setup(
         "hdf5": ["tables"],
         "analysis": ["pyelectro"],
         "tune": ["neurotune", "ppft"],
+        "vispy": ["vispy"],
     },
     classifiers=[
         "Intended Audience :: Science/Research",
