@@ -8,6 +8,7 @@ Copyright 2023 NeuroML contributors
 """
 
 import logging
+import textwrap
 import numpy
 import typing
 import random
@@ -358,56 +359,152 @@ def create_new_vispy_canvas(view_min: typing.List[float], view_max:
     :returns: scene, view
     """
     canvas = scene.SceneCanvas(keys='interactive', show=True,
-                               bgcolor="black", size=(800, 600))
+                               bgcolor="white", size=(800, 600))
     grid = canvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
 
-    title_widget = scene.Label(title, color="white")
-    title_widget.height_max = 80
+    view_center = (numpy.array(view_max) - numpy.array(view_min)) / 2
+
+    title_widget = scene.Label(title, color="black")
+    title_widget.height_max = 40
     grid.add_widget(title_widget, row=0, col=0, col_span=2)
+
+    console_widget = scene.Console(text_color="black", font_size=8)
+    console_widget.height_max = 40
+    grid.add_widget(console_widget, row=3, col=1, col_span=1)
+    console_text = "\tKeys: 0 reset, 5 changes camera"
 
     yaxis = scene.AxisWidget(orientation='left',
                              axis_label='Extent (Y)',
                              axis_font_size=12,
-                             axis_label_margin=50,
-                             tick_label_margin=5)
+                             axis_label_margin=60,
+                             axis_color='black',
+                             tick_color='black',
+                             tick_label_margin=5,
+                             text_color='black')
     yaxis.width_max = 80
     grid.add_widget(yaxis, row=1, col=0)
 
     xaxis = scene.AxisWidget(orientation='bottom',
                              axis_label='Extent (X)',
                              axis_font_size=12,
-                             axis_label_margin=50,
+                             axis_label_margin=40,
+                             axis_color='black',
+                             tick_color='black',
+                             text_color='black',
                              tick_label_margin=5)
 
-    xaxis.height_max = 80
+    xaxis.height_max = 60
     grid.add_widget(xaxis, row=2, col=1)
 
-    right_padding = grid.add_widget(row=1, col=2, row_span=1)
+    right_padding = grid.add_widget(row=0, col=2, row_span=4)
     right_padding.width_max = 50
 
-    view = grid.add_view(row=1, col=1, border_color='white',
-                         camera="arcball")
-    view.camera.set_range(
-        x=(view_min[0], view_max[0]),
-        y=(view_min[1], view_max[1]),
-        z=(view_min[2], view_max[2])
-    )
+    bottom_padding = grid.add_widget(row=4, col=0, col_span=3)
+    bottom_padding.height_max = 40
 
+    view = grid.add_view(row=1, col=1, border_color='black')
+    # create cameras
+    # https://vispy.org/gallery/scene/flipped_axis.html
+    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, aspect=1,
+                                       name='PanZoom')
+    cam1.center = [view_center[0], view_center[1]]
+    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name='Turntable')
+    cam2.center = view_center
+    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name='Arcball')
+    cam3.center = view_center
+    cam4 = scene.cameras.FlyCamera(parent=view.scene, name='Fly')
+    cam4.center = view_center
+    cam4.autoroll = False
+
+    cams = {
+        cam1: cam2,
+        cam2: cam3,
+        cam3: cam4,
+        cam4: cam1,
+    }
+
+    cam_text = {
+        cam1: """
+        Left mouse button: pans view; right mouse button or scroll:
+        zooms""",
+        cam2: """
+        Left mouse button: orbits view around center point; right
+        mouse button or scroll: change zoom level; Shift + left mouse button:
+        translate center point; Shift + right mouse button: change field of
+        view""",
+        cam3: """
+        Left mouse button: orbits view around center point; right
+        mouse button or scroll: change zoom level; Shift + left mouse button:
+        translate center point; Shift + right mouse button: change field of
+        view""",
+        cam4: """
+        Arrow keys/WASD to move forward/backwards/left/right; F/C to
+        move up and down; Space to brake; Left mouse button/I/K/J/L to
+        control pitch and yaw; Q/E for rolling"""
+    }
+
+    for acam in cams.values():
+        acam.set_range(
+            x=(view_min[0], view_max[0]),
+            y=(view_min[1], view_max[1]),
+            z=(view_min[2], view_max[2])
+        )
+
+    # Fly is default
+
+    view.camera = cam4
     xaxis.link_view(view)
     yaxis.link_view(view)
+
+    console_widget.write(console_text + f" ({view.camera.name})")
+
+    @canvas.events.key_press.connect
+    def vispy_on_key_press(event):
+        if event.text == '5':
+            state = view.camera.get_state()
+            view.camera = cams[view.camera]
+            console_widget.clear()
+            console_widget.write(console_text + f"({view.camera.name})")
+            try:
+                console_widget.write(textwrap.dedent(cam_text[view.camera]).replace("\n", " "))
+            except KeyError:
+                pass
+            # PanZoom doesn't like it
+            if view.camera.name != "PanZoom":
+                try:
+                    view.camera.center = state['center']
+                    view.camera.scale_factor = state['scale_factor']
+                    view.camera.fov = state['fov']
+                except KeyError:
+                    pass
+            else:
+                view.camera.set_range(
+                    x=(view_min[0], view_max[0]),
+                    y=(view_min[1], view_max[1]),
+                    z=(view_min[2], view_max[2])
+                )
+        elif event.text == '0':
+            for acam in cams.values():
+                acam.set_range(
+                    x=(view_min[0], view_max[0]),
+                    y=(view_min[1], view_max[1]),
+                    z=(view_min[2], view_max[2])
+                )
 
     # xyz axis for orientation
     # TODO improve placement
     if axes_pos:
         scene.Line([axes_pos, [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]]],
-                   parent=view.scene, color="white",
+                   parent=view.scene, color="black",
                    width=axes_width)
         scene.Line([axes_pos, [axes_pos[1], axes_pos[1] + axes_length, axes_pos[2]]],
-                   parent=view.scene, color="white",
+                   parent=view.scene, color="black",
                    width=axes_width)
         scene.Line([axes_pos, [axes_pos[1], axes_pos[1], axes_pos[2] + axes_length]],
-                   parent=view.scene, color="white",
+                   parent=view.scene, color="black",
                    width=axes_width)
 
     return scene, view
+
+
