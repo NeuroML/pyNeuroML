@@ -50,9 +50,9 @@ DEFAULTS = {
     "saveToFile": None,
     "interactive3d": False,
     "plane2d": "xy",
-    "minwidth": 0.8,
+    "minWidth": 0.8,
     "square": False,
-    "plotType": "Detailed",
+    "plotType": "Constant",
 }
 
 
@@ -95,12 +95,13 @@ def process_args():
         type=str,
         metavar="<type: Detailed, Constant, or Schematic>",
         default=DEFAULTS["plotType"],
-        help="Plane to plot on for 2D plot",
+        help="Level of detail to plot in",
     )
     parser.add_argument(
         "-minWidth",
-        action="store_true",
-        default=DEFAULTS["minwidth"],
+        type=float,
+        metavar="<min width of lines>",
+        default=DEFAULTS["minWidth"],
         help="Minimum width of lines to use",
     )
 
@@ -146,12 +147,14 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
-        plot_interactive_3D(a.nml_file, a.minwidth, a.v, a.plot_type)
+        plot_interactive_3D(nml_file=a.nml_file,
+                            min_width=a.min_width,
+                            verbose=a.v, plot_type=a.plot_type)
     else:
         plot_2D(
             a.nml_file,
             a.plane2d,
-            a.minwidth,
+            a.min_width,
             a.v,
             a.nogui,
             a.save_to_file,
@@ -162,7 +165,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
 
 def plot_interactive_3D(
     nml_file: str,
-    min_width: float = DEFAULTS["minwidth"],
+    min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "Constant",
     title: typing.Optional[str] = None,
@@ -274,7 +277,7 @@ def plot_interactive_3D(
 def plot_2D(
     nml_file: str,
     plane2d: str = "xy",
-    min_width: float = DEFAULTS["minwidth"],
+    min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
@@ -555,7 +558,7 @@ def plot_2D_cell_morphology(
     verbose: bool = False,
     fig: matplotlib.figure.Figure = None,
     ax: matplotlib.axes.Axes = None,
-    min_width: float = DEFAULTS["minwidth"],
+    min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     scalebar: bool = False,
     nogui: bool = True,
@@ -814,7 +817,7 @@ def plot_3D_cell_morphology(
     verbose: bool = False,
     current_scene: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
-    min_width: float = DEFAULTS["minwidth"],
+    min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
     plot_type: str = "Constant",
@@ -984,7 +987,8 @@ def plot_3D_cell_morphology(
                 colors.append(seg_color)
                 toconnect.append([len(points) - 2, len(points) - 1])
                 scene.Line(pos=points, color=colors,
-                           connect=numpy.array(toconnect), parent=current_view.scene,
+                           connect=numpy.array(toconnect),
+                           parent=current_view.scene,
                            width=width)
 
     if plot_type == "Constant":
@@ -1005,7 +1009,7 @@ def plot_2D_point_cells(
     verbose: bool = False,
     fig: matplotlib.figure.Figure = None,
     ax: matplotlib.axes.Axes = None,
-    min_width: float = DEFAULTS["minwidth"],
+    min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     scalebar: bool = False,
     nogui: bool = True,
