@@ -15,7 +15,6 @@ import random
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
 from vispy import scene
@@ -370,7 +369,8 @@ def create_new_vispy_canvas(
     grid = canvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
 
-    view_center = (numpy.array(view_max) - numpy.array(view_min)) / 2
+    view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
+    logger.debug(f"Center is {view_center}")
 
     title_widget = scene.Label(title, color="black")
     title_widget.height_max = 40
@@ -382,7 +382,8 @@ def create_new_vispy_canvas(
     )
     console_widget.height_max = 80
     grid.add_widget(console_widget, row=3, col=1, col_span=1)
-    console_text = "Controls: reset view: 0; cycle camera: 5; quit: 9"
+    # console_text = "Controls: reset view: 0; cycle camera: 1, 2 (fwd/bwd); quit: 9"
+    console_text = "Controls: reset view: 0; quit: 9"
 
     yaxis = scene.AxisWidget(
         orientation="left",
@@ -420,22 +421,21 @@ def create_new_vispy_canvas(
     view = grid.add_view(row=1, col=1, border_color="black")
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
-    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, aspect=1, name="PanZoom")
+    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
     cam1.center = [view_center[0], view_center[1]]
+
     cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
     cam2.center = view_center
+
     cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
     cam3.center = view_center
+
     cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
     cam4.center = view_center
-    cam4.autoroll = False
+    # keep z up
+    cam4.autoroll = True
 
-    cams = {
-        cam1: cam2,
-        cam2: cam3,
-        cam3: cam4,
-        cam4: cam1,
-    }
+    cams = [cam4]
 
     cam_text = {
         cam1: textwrap.dedent(
@@ -465,80 +465,76 @@ def create_new_vispy_canvas(
         ),
     }
 
-    for acam in cams.values():
+    for acam in cams:
+        x_width = abs(view_min[0] - view_max[0])
+        y_width = abs(view_min[1] - view_max[1])
+        z_width = abs(view_min[2] - view_max[2])
+
         acam.set_range(
-            x=(view_min[0], view_max[0]),
-            y=(view_min[1], view_max[1]),
-            z=(view_min[2], view_max[2]),
+            x=(view_min[0] - x_width * 0.5, view_max[0] + x_width * 0.5),
+            y=(view_min[1] - y_width * 0.5, view_max[1] + y_width * 0.5),
+            z=(view_min[2] - z_width * 0.5, view_max[2] + z_width * 0.5),
         )
 
     # Fly is default
+    cam_index = 0
+    view.camera = cams[cam_index]
 
-    view.camera = cam4
     xaxis.link_view(view)
     yaxis.link_view(view)
 
+    console_widget.write(f"Center: {view.camera.center}")
     console_widget.write(console_text)
-    try:
-        console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
-    except KeyError:
-        console_widget.write(f"Current camera: {view.camera.name}")
+    console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
+
+    if axes_pos:
+        points = [
+            axes_pos,  # origin
+            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
+            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
+            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
+        ]
+        scene.Line(
+            points,
+            connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
+            parent=view.scene,
+            color="black",
+            width=axes_width,
+        )
 
     @canvas.events.key_press.connect
     def vispy_on_key_press(event):
-        if event.text == "5":
-            state = view.camera.get_state()
-            view.camera = cams[view.camera]
-            console_widget.clear()
-            console_widget.write(console_text)
-            try:
-                console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
-            except KeyError:
-                console_widget.write(f"Current camera: {view.camera.name}")
-            # PanZoom doesn't like it
-            if view.camera.name != "PanZoom":
-                try:
-                    view.camera.center = state["center"]
-                    view.camera.scale_factor = state["scale_factor"]
-                    view.camera.fov = state["fov"]
-                except KeyError:
-                    pass
-            else:
-                view.camera.set_range(
-                    x=(view_min[0], view_max[0]),
-                    y=(view_min[1], view_max[1]),
-                    z=(view_min[2], view_max[2]),
-                )
-        elif event.text == "0":
+        state = view.camera.get_state()
+        nonlocal cam_index
+
+        """
+        # Disable camera cycling. The fly camera looks sufficient.
+        # Keeping views/ranges same when switching cameras is not simple.
+        # Prev
+        if event.text == "1":
+            cam_index = (cam_index - 1) % len(cams)
+            view.camera = cams[cam_index]
+        # next
+        elif event.text == "2":
+            cam_index = (cam_index + 1) % len(cams)
+            view.camera = cams[cam_index]
+        """
+        # reset
+        if event.text == "0":
             for acam in cams.values():
                 acam.set_range(
                     x=(view_min[0], view_max[0]),
                     y=(view_min[1], view_max[1]),
                     z=(view_min[2], view_max[2]),
                 )
+        # quit
         elif event.text == "9":
             canvas.app.quit()
 
-    # xyz axis for orientation
-    # TODO improve placement
-    if axes_pos:
-        scene.Line(
-            [axes_pos, [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]]],
-            parent=view.scene,
-            color="black",
-            width=axes_width,
-        )
-        scene.Line(
-            [axes_pos, [axes_pos[1], axes_pos[1] + axes_length, axes_pos[2]]],
-            parent=view.scene,
-            color="black",
-            width=axes_width,
-        )
-        scene.Line(
-            [axes_pos, [axes_pos[1], axes_pos[1], axes_pos[2] + axes_length]],
-            parent=view.scene,
-            color="black",
-            width=axes_width,
-        )
+        view.camera.center = state["center"]
+        console_widget.clear()
+        # console_widget.write(f"Center: {view.camera.center}")
+        console_widget.write(console_text)
+        console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
 
     return scene, view
