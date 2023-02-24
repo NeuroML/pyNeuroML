@@ -48,7 +48,7 @@ class TestMorphologyPlot(BaseTestCase):
                 except FileNotFoundError:
                     pass
 
-                plot_2D(nml_file, nogui=False, plane2d=plane, save_to_file=filename)
+                plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
 
                 self.assertIsFile(filename)
                 pl.Path(filename).unlink()
@@ -90,7 +90,7 @@ class TestMorphologyPlot(BaseTestCase):
             values = (list(numpy.random.randint(50, 101, 1800)) + list(numpy.random.randint(0, 51, len(segs) - 1800)))
             data_dict = dict(zip(segs, values))
 
-            plot_2D_cell_morphology(cell=cell, nogui=False, plane2d=plane,
+            plot_2D_cell_morphology(cell=cell, nogui=True, plane2d=plane,
                                     save_to_file=filename,
                                     overlay_data=data_dict,
                                     overlay_data_label="Test")
@@ -171,20 +171,20 @@ class TestMorphologyPlot(BaseTestCase):
         plot_3D_schematic(
             cell,
             segment_groups=None,
-            nogui=False,
+            nogui=True,
         )
 
     def test_3d_morphology_plotter_vispy_network(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
-        plot_interactive_3D(nml_file)
+        plot_interactive_3D(nml_file, min_width=1)
 
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
-        plot_3D_cell_morphology(cell=cell, nogui=False, min_width=4,
+        plot_3D_cell_morphology(cell=cell, nogui=True, min_width=4,
                                 color="Groups")
 
     def test_3d_plotter_plotly(self):
