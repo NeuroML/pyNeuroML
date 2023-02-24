@@ -382,7 +382,7 @@ def create_new_vispy_canvas(
     )
     console_widget.height_max = 80
     grid.add_widget(console_widget, row=3, col=1, col_span=1)
-    console_text = "Controls: reset view: 0; cycle camera: 5"
+    console_text = "Controls: reset view: 0; cycle camera: 5; quit: q"
 
     yaxis = scene.AxisWidget(
         orientation="left",
