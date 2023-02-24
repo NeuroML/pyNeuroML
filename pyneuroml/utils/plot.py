@@ -336,8 +336,8 @@ def add_line_to_matplotlib_2D_plot(ax, xv, yv, width, color, axis_min_max):
 
 
 def create_new_vispy_canvas(
-    view_min: typing.List[float],
-    view_max: typing.List[float],
+    view_min: typing.Optional[typing.List[float]] = None,
+    view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
     console_font_size: float = 10,
     axes_pos: typing.Optional[typing.List] = None,
@@ -368,9 +368,6 @@ def create_new_vispy_canvas(
     )
     grid = canvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
-
-    view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
-    logger.debug(f"Center is {view_center}")
 
     title_widget = scene.Label(title, color="black")
     title_widget.height_max = 40
@@ -419,19 +416,16 @@ def create_new_vispy_canvas(
     bottom_padding.height_max = 10
 
     view = grid.add_view(row=1, col=1, border_color="black")
+
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
     cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
-    cam1.center = [view_center[0], view_center[1]]
 
     cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
-    cam2.center = view_center
 
     cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
-    cam3.center = view_center
 
     cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
-    cam4.center = view_center
     # keep z up
     cam4.autoroll = True
 
@@ -465,23 +459,34 @@ def create_new_vispy_canvas(
         ),
     }
 
-    for acam in cams:
-        x_width = abs(view_min[0] - view_max[0])
-        y_width = abs(view_min[1] - view_max[1])
-        z_width = abs(view_min[2] - view_max[2])
-
-        acam.set_range(
-            x=(view_min[0] - x_width * 0.5, view_max[0] + x_width * 0.5),
-            y=(view_min[1] - y_width * 0.5, view_max[1] + y_width * 0.5),
-            z=(view_min[2] - z_width * 0.5, view_max[2] + z_width * 0.5),
-        )
-
     # Fly is default
     cam_index = 0
     view.camera = cams[cam_index]
 
     xaxis.link_view(view)
     yaxis.link_view(view)
+
+    if view_min is not None and view_max is not None:
+        view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
+        logger.debug(f"Center is {view_center}")
+        cam1.center = [view_center[0], view_center[1]]
+        cam2.center = view_center
+        cam3.center = view_center
+        cam4.center = view_center
+
+        for acam in cams:
+            x_width = abs(view_min[0] - view_max[0])
+            y_width = abs(view_min[1] - view_max[1])
+            z_width = abs(view_min[2] - view_max[2])
+
+            acam.set_range(
+                x=(view_min[0] - x_width * 0.5, view_max[0] + x_width * 0.5),
+                y=(view_min[1] - y_width * 0.5, view_max[1] + y_width * 0.5),
+                z=(view_min[2] - z_width * 0.5, view_max[2] + z_width * 0.5),
+            )
+
+    for acam in cams:
+        acam.set_default_state()
 
     console_widget.write(f"Center: {view.camera.center}")
     console_widget.write(console_text)
@@ -504,10 +509,8 @@ def create_new_vispy_canvas(
 
     @canvas.events.key_press.connect
     def vispy_on_key_press(event):
-        state = view.camera.get_state()
         nonlocal cam_index
 
-        """
         # Disable camera cycling. The fly camera looks sufficient.
         # Keeping views/ranges same when switching cameras is not simple.
         # Prev
@@ -518,20 +521,13 @@ def create_new_vispy_canvas(
         elif event.text == "2":
             cam_index = (cam_index + 1) % len(cams)
             view.camera = cams[cam_index]
-        """
         # reset
         if event.text == "0":
-            for acam in cams.values():
-                acam.set_range(
-                    x=(view_min[0], view_max[0]),
-                    y=(view_min[1], view_max[1]),
-                    z=(view_min[2], view_max[2]),
-                )
+            view.camera.reset()
         # quit
         elif event.text == "9":
             canvas.app.quit()
 
-        view.camera.center = state["center"]
         console_widget.clear()
         # console_widget.write(f"Center: {view.camera.center}")
         console_widget.write(console_text)
