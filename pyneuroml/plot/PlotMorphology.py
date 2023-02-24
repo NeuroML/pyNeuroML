@@ -202,7 +202,7 @@ def plot_interactive_3D(
         )
 
     if verbose:
-        print("Plotting %s" % nml_file)
+        print(f"Plotting {nml_file}")
 
     nml_model = read_neuroml2_file(
         nml_file,
@@ -241,7 +241,7 @@ def plot_interactive_3D(
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
-            print(f"Plotting {cell.id}")
+            logging.info(f"Plotting {cell.id}")
 
             if cell is None:
                 # TODO: implement 3D for point cells
