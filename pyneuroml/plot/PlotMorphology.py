@@ -1476,12 +1476,16 @@ def plot_3D_schematic(
     )
 
     # if no canvas is defined, define a new one
-    if current_scene is None:
+    if current_scene is None or current_view is None:
         seg0 = cell.morphology.segments[0]  # type: Segment
         view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
         seg1 = cell.morphology.segments[-1]  # type: Segment
         view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
         current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
+
+    points = []
+    toconnect = []
+    colors = []
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)
@@ -1495,14 +1499,11 @@ def plot_3D_schematic(
         last_seg = segs[-1]  # type: Segment
         first_prox = cell.get_actual_proximal(first_seg.id)
 
-        data = numpy.array([
-            [offset[0] + first_prox.x, offset[1] + first_prox.y, offset[2] + first_prox.z],
-            [offset[0] + last_seg.distal.x, offset[1] + last_seg.distal.y, offset[2] + last_seg.distal.z]
-        ])
-
-        color = get_next_hex_color()
-        plot = scene.Line(data, parent=current_view.scene, color=color,
-                          width=width)
+        points.append([offset[0] + first_prox.x, offset[1] + first_prox.y, offset[2] + first_prox.z])
+        points.append([offset[0] + last_seg.distal.x, offset[1] + last_seg.distal.y, offset[2] + last_seg.distal.z])
+        colors.append(get_next_hex_color())
+        colors.append(get_next_hex_color())
+        toconnect.append([len(points) - 2, len(points) - 1])
 
         # TODO: needs fixing to show labels
         labels = False
@@ -1511,8 +1512,11 @@ def plot_3D_schematic(
                                                xv=[offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
                                                yv=[offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
                                                zv=[offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
-                                               color=color)
+                                               color=colors[-1])
             alabel.font_size = 30
+
+    scene.Line(points, parent=current_view.scene, color=colors, width=width,
+               connect=numpy.array(toconnect))
 
     if not nogui:
         app.run()
