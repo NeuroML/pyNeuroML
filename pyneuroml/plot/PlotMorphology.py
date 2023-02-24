@@ -395,7 +395,6 @@ def plot_2D(
                         segment_groups=None,
                         labels=True,
                         plane2d=plane2d,
-                        min_width=min_width,
                         verbose=verbose,
                         fig=fig,
                         ax=ax,
@@ -1004,12 +1003,11 @@ def plot_2D_point_cells(
     offset: typing.List[float] = [0, 0],
     plane2d: str = "xy",
     color: typing.Optional[str] = None,
-    soma_radius: float = 0.0,
+    soma_radius: float = 10.0,
     title: str = "",
     verbose: bool = False,
     fig: matplotlib.figure.Figure = None,
     ax: matplotlib.axes.Axes = None,
-    min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     scalebar: bool = False,
     nogui: bool = True,
@@ -1039,15 +1037,12 @@ def plot_2D_point_cells(
     :type plane2d: str
     :param color: color to use for cell
     :type color: str
-    :param soma_radius: radius of soma (uses min_width if provided)
+    :param soma_radius: radius of soma
     :type soma_radius: float
     :param fig: a matplotlib.figure.Figure object to use
     :type fig: matplotlib.figure.Figure
     :param ax: a matplotlib.axes.Axes object to use
     :type ax: matplotlib.axes.Axes
-    :param min_width: minimum width for segments (useful for visualising very
-        thin segments): default 0.8um
-    :type min_width: float
     :param axis_min_max: min, max value of axes
     :type axis_min_max: [float, float]
     :param title: title of plot
@@ -1071,8 +1066,6 @@ def plot_2D_point_cells(
         fig, ax = get_new_matplotlib_morph_plot(title)
 
     cell_color = get_next_hex_color()
-    if soma_radius is None:
-        soma_radius = 10
 
     if plane2d == "xy":
         add_line_to_matplotlib_2D_plot(
