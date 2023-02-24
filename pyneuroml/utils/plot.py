@@ -512,6 +512,8 @@ def create_new_vispy_canvas(
                     y=(view_min[1], view_max[1]),
                     z=(view_min[2], view_max[2]),
                 )
+        elif event.text == "q":
+            canvas.app.quit()
 
     # xyz axis for orientation
     # TODO improve placement
