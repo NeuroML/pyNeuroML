@@ -353,7 +353,7 @@ def create_new_vispy_canvas(
     :type view_min: [float, float, float]
     :param view_max: max view co-ordinates
     :type view_max: [float, float, float]
-    :param title: title of canvas
+    :param title: title of plot
     :type title: str
     :param axes_pos: position to draw axes at
     :type axes_pos: [float, float, float]
@@ -364,7 +364,8 @@ def create_new_vispy_canvas(
     :returns: scene, view
     """
     canvas = scene.SceneCanvas(
-        keys="interactive", show=True, bgcolor="white", size=(800, 600)
+        keys="interactive", show=True, bgcolor="white", size=(800, 600),
+        title="NeuroML viewer (VisPy)"
     )
     grid = canvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
