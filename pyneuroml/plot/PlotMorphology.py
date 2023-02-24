@@ -221,7 +221,7 @@ def plot_interactive_3D(
     ) = extract_position_info(nml_model, verbose)
 
     if title is None:
-        title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
+        title = f"{nml_model.networks[0].id} from {nml_file}"
 
     if verbose:
         logger.debug(f"positions: {positions}")
