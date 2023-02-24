@@ -230,7 +230,27 @@ def plot_interactive_3D(
         logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
         logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
-    current_scene, current_view = create_new_vispy_canvas([0, 0, 0], [1000, 1000, 1000], title)
+    only_pos = []
+    for posdict in positions.values():
+        for poss in posdict.values():
+            only_pos.append(poss)
+
+    pos_array = numpy.array(only_pos)
+    x_min = numpy.min(pos_array[:, 0])
+    y_min = numpy.min(pos_array[:, 1])
+    z_min = numpy.min(pos_array[:, 2])
+    x_max = numpy.max(pos_array[:, 0])
+    y_max = numpy.max(pos_array[:, 1])
+    z_max = numpy.max(pos_array[:, 2])
+    view_min = [x_min, y_min, z_min]
+    view_max = [x_max, y_max, z_max]
+    current_scene, current_view = create_new_vispy_canvas(
+        view_min,
+        view_max,
+        title
+    )
+
+    logger.debug(f"figure extents are: {view_min}, {view_max}")
 
     for pop_id in pop_id_vs_cell:
         cell = pop_id_vs_cell[pop_id]
@@ -241,11 +261,16 @@ def plot_interactive_3D(
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
-            logging.info(f"Plotting {cell.id}")
+            try:
+                logging.info(f"Plotting {cell.id}")
+            except AttributeError:
+                logging.info(f"Plotting a point cell at {pos}")
 
             if cell is None:
-                # TODO: implement 3D for point cells
-                pass
+                print(f"plotting a point cell at {pos}")
+                plot_3D_point_cell(offset=pos, color=color, soma_radius=radius,
+                                   current_scene=current_scene,
+                                   current_view=current_view)
             else:
                 if plot_type == "Schematic":
                     plot_3D_schematic(
