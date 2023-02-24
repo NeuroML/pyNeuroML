@@ -478,7 +478,11 @@ def create_new_vispy_canvas(
     xaxis.link_view(view)
     yaxis.link_view(view)
 
-    console_widget.write(console_text + f" ({view.camera.name})")
+    console_widget.write(console_text)
+    try:
+        console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
+    except KeyError:
+        console_widget.write(f"Current camera: {view.camera.name}")
 
     @canvas.events.key_press.connect
     def vispy_on_key_press(event):
@@ -486,11 +490,11 @@ def create_new_vispy_canvas(
             state = view.camera.get_state()
             view.camera = cams[view.camera]
             console_widget.clear()
-            console_widget.write(console_text + f" ({view.camera.name})")
+            console_widget.write(console_text)
             try:
-                console_widget.write(cam_text[view.camera].replace("\n", " "))
+                console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
             except KeyError:
-                pass
+                console_widget.write(f"Current camera: {view.camera.name}")
             # PanZoom doesn't like it
             if view.camera.name != "PanZoom":
                 try:
