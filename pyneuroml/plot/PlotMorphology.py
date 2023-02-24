@@ -241,7 +241,7 @@ def plot_interactive_3D(
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
-            print(f"Plotting {cell}")
+            print(f"Plotting {cell.id}")
 
             if cell is None:
                 # TODO: implement 3D for point cells
