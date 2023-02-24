@@ -16,12 +16,10 @@ import random
 import typing
 import logging
 
-import napari
 from vispy import app, scene
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
-from matplotlib.colors import to_rgba
 import plotly.graph_objects as go
 
 from pyneuroml.pynml import read_neuroml2_file
