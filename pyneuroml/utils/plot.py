@@ -340,6 +340,7 @@ def create_new_vispy_canvas(
     view_min: typing.List[float],
     view_max: typing.List[float],
     title: str = "",
+    console_font_size: float = 10,
     axes_pos: typing.Optional[typing.List] = None,
     axes_length: float = 100,
     axes_width: int = 2,
@@ -374,10 +375,13 @@ def create_new_vispy_canvas(
     title_widget.height_max = 40
     grid.add_widget(title_widget, row=0, col=0, col_span=2)
 
-    console_widget = scene.Console(text_color="black", font_size=8)
-    console_widget.height_max = 40
+    console_widget = scene.Console(
+        text_color="black",
+        font_size=console_font_size,
+    )
+    console_widget.height_max = 80
     grid.add_widget(console_widget, row=3, col=1, col_span=1)
-    console_text = "\tKeys: 0 reset, 5 changes camera"
+    console_text = "Controls: reset view: 0; cycle camera: 5"
 
     yaxis = scene.AxisWidget(
         orientation="left",
@@ -410,7 +414,7 @@ def create_new_vispy_canvas(
     right_padding.width_max = 50
 
     bottom_padding = grid.add_widget(row=4, col=0, col_span=3)
-    bottom_padding.height_max = 40
+    bottom_padding.height_max = 10
 
     view = grid.add_view(row=1, col=1, border_color="black")
     # create cameras
@@ -433,23 +437,31 @@ def create_new_vispy_canvas(
     }
 
     cam_text = {
-        cam1: """
-        Left mouse button: pans view; right mouse button or scroll:
-        zooms""",
-        cam2: """
-        Left mouse button: orbits view around center point; right
-        mouse button or scroll: change zoom level; Shift + left mouse button:
-        translate center point; Shift + right mouse button: change field of
-        view""",
-        cam3: """
-        Left mouse button: orbits view around center point; right
-        mouse button or scroll: change zoom level; Shift + left mouse button:
-        translate center point; Shift + right mouse button: change field of
-        view""",
-        cam4: """
-        Arrow keys/WASD to move forward/backwards/left/right; F/C to
-        move up and down; Space to brake; Left mouse button/I/K/J/L to
-        control pitch and yaw; Q/E for rolling""",
+        cam1: textwrap.dedent(
+            """
+            Left mouse button: pans view; right mouse button or scroll:
+            zooms"""
+        ),
+        cam2: textwrap.dedent(
+            """
+            Left mouse button: orbits view around center point; right mouse
+            button or scroll: change zoom level; Shift + left mouse button:
+            translate center point; Shift + right mouse button: change field of
+            view"""
+        ),
+        cam3: textwrap.dedent(
+            """
+            Left mouse button: orbits view around center point; right
+            mouse button or scroll: change zoom level; Shift + left mouse
+            button: translate center point; Shift + right mouse button: change
+            field of view"""
+        ),
+        cam4: textwrap.dedent(
+            """
+            Arrow keys/WASD to move forward/backwards/left/right; F/C to move
+            up and down; Space to brake; Left mouse button/I/K/J/L to control
+            pitch and yaw; Q/E for rolling"""
+        ),
     }
 
     for acam in cams.values():
@@ -473,11 +485,9 @@ def create_new_vispy_canvas(
             state = view.camera.get_state()
             view.camera = cams[view.camera]
             console_widget.clear()
-            console_widget.write(console_text + f"({view.camera.name})")
+            console_widget.write(console_text + f" ({view.camera.name})")
             try:
-                console_widget.write(
-                    textwrap.dedent(cam_text[view.camera]).replace("\n", " ")
-                )
+                console_widget.write(cam_text[view.camera].replace("\n", " "))
             except KeyError:
                 pass
             # PanZoom doesn't like it
