@@ -426,8 +426,8 @@ def create_new_vispy_canvas(
     cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
 
     cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
-    # keep z up
-    cam4.autoroll = True
+    # do not keep z up
+    cam4.autoroll = False
 
     cams = [cam4]
 
