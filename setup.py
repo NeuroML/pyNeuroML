@@ -5,6 +5,21 @@ import pyneuroml
 version = pyneuroml.__version__
 jnml_version = pyneuroml.JNEUROML_VERSION
 
+# generate extra deps
+extras = {
+    "neuron": ["NEURON", "pyyaml"],
+    "brian": ["Brian2"],
+    "netpyne": ["netpyne"],
+    "povray": ["opencv-python"],
+    "hdf5": ["tables"],
+    "analysis": ["pyelectro"],
+    "tune": ["neurotune @ git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune",
+             "inspyred @ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred",
+             "ppft"],
+    "vispy": ["vispy"],
+}
+extras["all"] = sum(extras.values(), []),
+
 setup(
     name="pyNeuroML",
     version=version,
@@ -90,16 +105,7 @@ setup(
         "pandas",
         "plotly"
     ],
-    extras_require={
-        "neuron": ["NEURON", "pyyaml"],
-        "brian": ["Brian2"],
-        "netpyne": ["netpyne"],
-        "povray": ["opencv-python"],
-        "hdf5": ["tables"],
-        "analysis": ["pyelectro"],
-        "tune": ["neurotune", "ppft"],
-        "vispy": ["vispy"],
-    },
+    extras_require=extras,
     classifiers=[
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
