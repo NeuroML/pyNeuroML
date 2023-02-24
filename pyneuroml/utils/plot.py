@@ -382,7 +382,7 @@ def create_new_vispy_canvas(
     )
     console_widget.height_max = 80
     grid.add_widget(console_widget, row=3, col=1, col_span=1)
-    console_text = "Controls: reset view: 0; cycle camera: 5; quit: q"
+    console_text = "Controls: reset view: 0; cycle camera: 5; quit: 9"
 
     yaxis = scene.AxisWidget(
         orientation="left",
@@ -516,7 +516,7 @@ def create_new_vispy_canvas(
                     y=(view_min[1], view_max[1]),
                     z=(view_min[2], view_max[2]),
                 )
-        elif event.text == "q":
+        elif event.text == "9":
             canvas.app.quit()
 
     # xyz axis for orientation
