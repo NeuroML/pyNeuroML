@@ -19,6 +19,7 @@ from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
 from vispy import scene
 from vispy.scene import SceneCanvas
+from neuroml import Cell, Segment
 
 
 logger = logging.getLogger(__name__)
@@ -534,3 +535,22 @@ def create_new_vispy_canvas(
         console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
 
     return scene, view
+
+
+def get_cell_bound_box(cell: Cell):
+    """Get a boundary box for a cell
+
+    :param cell: TODO
+    :returns: TODO
+
+    """
+    seg0 = cell.morphology.segments[0]  # type: Segment
+    ex1 = numpy.array([seg0.distal.x, seg0.distal.y, seg0.distal.z])
+    seg1 = cell.morphology.segments[-1]  # type: Segment
+    ex2 = numpy.array([seg1.distal.x, seg1.distal.y, seg1.distal.z])
+    center = (ex1 + ex2) / 2
+    diff = numpy.linalg.norm(ex2 - ex1)
+    view_min = center - diff
+    view_max = center + diff
+
+    return view_min, view_max

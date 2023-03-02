@@ -35,13 +35,14 @@ from pyneuroml.utils.plot import (
     add_scalebar_to_matplotlib_plot,
     add_line_to_matplotlib_2D_plot,
     create_new_vispy_canvas,
+    get_cell_bound_box,
 )
 from neuroml import SegmentGroup, Cell, Segment
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 DEFAULTS = {
@@ -223,27 +224,45 @@ def plot_interactive_3D(
     if title is None:
         title = f"{nml_model.networks[0].id} from {nml_file}"
 
-    if verbose:
-        logger.debug(f"positions: {positions}")
-        logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
-        logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
-        logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
-        logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
+    logger.debug(f"positions: {positions}")
+    logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
+    logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
+    logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
+    logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
-    only_pos = []
-    for posdict in positions.values():
-        for poss in posdict.values():
-            only_pos.append(poss)
+    if len(positions.keys()) > 1:
+        only_pos = []
+        for posdict in positions.values():
+            for poss in posdict.values():
+                only_pos.append(poss)
 
-    pos_array = numpy.array(only_pos)
-    x_min = numpy.min(pos_array[:, 0])
-    y_min = numpy.min(pos_array[:, 1])
-    z_min = numpy.min(pos_array[:, 2])
-    x_max = numpy.max(pos_array[:, 0])
-    y_max = numpy.max(pos_array[:, 1])
-    z_max = numpy.max(pos_array[:, 2])
-    view_min = [x_min, y_min, z_min]
-    view_max = [x_max, y_max, z_max]
+        pos_array = numpy.array(only_pos)
+        center = numpy.mean(pos_array)
+        x_min = numpy.min(pos_array[:, 0])
+        x_max = numpy.max(pos_array[:, 0])
+        x_len = abs(x_max - x_min)
+
+        y_min = numpy.min(pos_array[:, 1])
+        y_max = numpy.max(pos_array[:, 1])
+        y_len = abs(y_max - y_min)
+
+        z_min = numpy.min(pos_array[:, 2])
+        z_max = numpy.max(pos_array[:, 2])
+        z_len = abs(z_max - z_min)
+
+        view_min = center - numpy.array([x_len, y_len, z_len])
+        view_max = center + numpy.array([x_len, y_len, z_len])
+
+    else:
+        cell = list(pop_id_vs_cell.values())[0]
+        if cell is not None:
+            view_min, view_max = get_cell_bound_box(cell)
+        else:
+            logger.debug("Got a point cell")
+            pos = list((list(positions.values())[0]).values())[0]
+            view_min = list(numpy.array(pos) - 100)
+            view_min = list(numpy.array(pos) + 100)
+
     current_scene, current_view = create_new_vispy_canvas(
         view_min,
         view_max,
@@ -925,10 +944,7 @@ def plot_3D_cell_morphology(
         axon_segs = []
 
     if current_scene is None or current_view is None:
-        seg0 = cell.morphology.segments[0]  # type: Segment
-        view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
-        seg1 = cell.morphology.segments[-1]  # type: Segment
-        view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
+        view_min, view_max = get_cell_bound_box(cell)
         current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
 
     if color == "Groups":
@@ -1535,6 +1551,45 @@ def plot_3D_schematic(
 
     scene.Line(points, parent=current_view.scene, color=colors, width=width,
                connect=numpy.array(toconnect))
+
+    if not nogui:
+        app.run()
+
+
+def plot_3D_point_cell(
+    offset: typing.List[float] = [0, 0, 0],
+    color: typing.Optional[str] = None,
+    soma_radius: float = 500.0,
+    current_scene: scene.SceneCanvas = None,
+    current_view: scene.ViewBox = None,
+    title: str = "",
+    verbose: bool = False,
+    nogui: bool = True,
+):
+    """TODO: Docstring for plot_3D_point_cells.
+
+    :param cell: TODO
+    :returns: TODO
+
+    """
+    if color is None:
+        color = "black"
+
+    # if no canvas is defined, define a new one
+    view_min = list(numpy.array(offset) - 100)
+    view_min = list(numpy.array(offset) + 100)
+    if current_scene is None or current_view is None:
+        current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
+
+    scene.visuals.Markers(
+        pos=numpy.array([offset]),
+        size=soma_radius,
+        antialias=0,
+        face_color=color,
+        edge_color=color,
+        edge_width=100,
+        spherical=True,
+    )
 
     if not nogui:
         app.run()

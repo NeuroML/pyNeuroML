@@ -22,7 +22,8 @@ from pyneuroml.plot.PlotMorphology import (
     plot_2D_point_cells,
     plot_3D_schematic,
     plot_3D_cell_morphology,
-    plot_interactive_3D
+    plot_interactive_3D,
+    plot_3D_point_cell
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -52,6 +53,12 @@ class TestMorphologyPlot(BaseTestCase):
 
                 self.assertIsFile(filename)
                 pl.Path(filename).unlink()
+
+    def test_3d_point_plotter(self):
+        """Test plot_2D_point_cells function."""
+        nml_files = ["tests/plot/Izh2007Cells.net.nml"]
+        for nml_file in nml_files:
+            plot_interactive_3D(nml_file)
 
     def test_2d_plotter(self):
         """Test plot_2D function."""
@@ -184,8 +191,11 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
-        plot_3D_cell_morphology(cell=cell, nogui=True, min_width=4,
-                                color="Groups")
+        plot_3D_cell_morphology(cell=cell, nogui=False, min_width=4,
+                                color="Groups", verbose=True)
+        """
+        plot_interactive_3D(nml_file, min_width=1)
+        """
 
     def test_3d_plotter_plotly(self):
         """Test plot_3D_cell_morphology_plotly function."""
