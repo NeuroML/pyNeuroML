@@ -1004,32 +1004,36 @@ def plot_3D_cell_morphology(
         else:
             seg_color = color
 
-        # check if for a spherical segment
+        # check if for a spherical segment, add extra spherical node
         if (
             p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
         ):
-            scene.visuals.Markers(pos=(p.x, p.y, p.z), size=p.diameter,
-                                  spherical=True, edge_color=seg_color,
-                                  face_color=seg_color)
-        else:
-            if plot_type == "Constant":
-                points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-                colors.append(seg_color)
-                points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
-                colors.append(seg_color)
-                toconnect.append([len(points) - 2, len(points) - 1])
-            # every segment plotted individually
-            elif plot_type == "Detailed":
-                points = []
-                points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-                colors.append(seg_color)
-                points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
-                colors.append(seg_color)
-                toconnect.append([len(points) - 2, len(points) - 1])
-                scene.Line(pos=points, color=colors,
-                           connect=numpy.array(toconnect),
-                           parent=current_view.scene,
-                           width=width)
+            scene.Markers(pos=numpy.array([[offset[0] + p.x, offset[1] + p.y, offset[2] + p.z]]),
+                          size=numpy.array([p.diameter]),
+                          spherical=True, edge_color="white",
+                          face_color=seg_color, edge_width=0, scaling=True,
+                          parent=current_view.scene)
+
+        if plot_type == "Constant":
+            points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
+            colors.append(seg_color)
+            points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
+            colors.append(seg_color)
+            toconnect.append([len(points) - 2, len(points) - 1])
+        # every segment plotted individually
+        elif plot_type == "Detailed":
+            points = []
+            toconnect = []
+            colors = []
+            points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
+            colors.append(seg_color)
+            points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
+            colors.append(seg_color)
+            toconnect.append([len(points) - 2, len(points) - 1])
+            scene.Line(pos=points, color=colors,
+                       connect=numpy.array(toconnect),
+                       parent=current_view.scene,
+                       width=width)
 
     if plot_type == "Constant":
         scene.Line(pos=points, color=colors,

@@ -191,11 +191,17 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
-        plot_3D_cell_morphology(cell=cell, nogui=False, min_width=4,
-                                color="Groups", verbose=True)
-        """
-        plot_interactive_3D(nml_file, min_width=1)
-        """
+        plot_3D_cell_morphology(cell=cell, nogui=True,
+                                color="Groups", verbose=True,
+                                plot_type="Constant")
+
+        # test a circular soma
+        nml_file = "tests/plot/test-spherical-soma.cell.nml"
+        nml_doc = read_neuroml2_file(nml_file)
+        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        plot_3D_cell_morphology(cell=cell, nogui=True,
+                                color="Groups", verbose=True,
+                                plot_type="Constant")
 
     def test_3d_plotter_plotly(self):
         """Test plot_3D_cell_morphology_plotly function."""
