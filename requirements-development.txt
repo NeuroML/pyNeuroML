@@ -3,6 +3,7 @@ airspeed>=0.5.5
 matplotlib
 graphviz
 vispy
+pyqt5
 NEURON
 ppft
 
