@@ -26,6 +26,19 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
+VISPY_THEME = {
+    "light": {
+        "bg": "white",
+        "fg": "black"
+    },
+    "dark": {
+        "bg": "black",
+        "fg": "white"
+    }
+}
+PYNEUROML_VISPY_THEME = "light"
+
+
 def add_text_to_vispy_3D_plot(
     scene: SceneCanvas,
     xv: typing.List[float],
@@ -344,6 +357,7 @@ def create_new_vispy_canvas(
     axes_pos: typing.Optional[typing.List] = None,
     axes_length: float = 100,
     axes_width: int = 2,
+    theme=PYNEUROML_VISPY_THEME,
 ):
     """Create a new vispy scene canvas with a view and optional axes lines
 
@@ -364,18 +378,18 @@ def create_new_vispy_canvas(
     :returns: scene, view
     """
     canvas = scene.SceneCanvas(
-        keys="interactive", show=True, bgcolor="white", size=(800, 600),
+        keys="interactive", show=True, bgcolor=VISPY_THEME[theme]["bg"], size=(800, 600),
         title="NeuroML viewer (VisPy)"
     )
     grid = canvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
 
-    title_widget = scene.Label(title, color="black")
+    title_widget = scene.Label(title, color=VISPY_THEME[theme]["fg"])
     title_widget.height_max = 40
     grid.add_widget(title_widget, row=0, col=0, col_span=2)
 
     console_widget = scene.Console(
-        text_color="black",
+        text_color=VISPY_THEME[theme]["fg"],
         font_size=console_font_size,
     )
     console_widget.height_max = 80
@@ -388,10 +402,10 @@ def create_new_vispy_canvas(
         axis_label="Extent (Y)",
         axis_font_size=12,
         axis_label_margin=60,
-        axis_color="black",
-        tick_color="black",
+        axis_color=VISPY_THEME[theme]["fg"],
+        tick_color=VISPY_THEME[theme]["fg"],
         tick_label_margin=5,
-        text_color="black",
+        text_color=VISPY_THEME[theme]["fg"],
     )
     yaxis.width_max = 80
     grid.add_widget(yaxis, row=1, col=0)
@@ -401,9 +415,9 @@ def create_new_vispy_canvas(
         axis_label="Extent (X)",
         axis_font_size=12,
         axis_label_margin=40,
-        axis_color="black",
-        tick_color="black",
-        text_color="black",
+        axis_color=VISPY_THEME[theme]["fg"],
+        tick_color=VISPY_THEME[theme]["fg"],
+        text_color=VISPY_THEME[theme]["fg"],
         tick_label_margin=5,
     )
 
@@ -416,7 +430,7 @@ def create_new_vispy_canvas(
     bottom_padding = grid.add_widget(row=4, col=0, col_span=3)
     bottom_padding.height_max = 10
 
-    view = grid.add_view(row=1, col=1, border_color="black")
+    view = grid.add_view(row=1, col=1, border_color=VISPY_THEME[theme]["fg"])
 
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
@@ -504,7 +518,7 @@ def create_new_vispy_canvas(
             points,
             connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
             parent=view.scene,
-            color="black",
+            color=VISPY_THEME[theme]["fg"],
             width=axes_width,
         )
 
