@@ -40,7 +40,7 @@ PYNEUROML_VISPY_THEME = "light"
 
 
 def add_text_to_vispy_3D_plot(
-    scene: SceneCanvas,
+    current_scene: SceneCanvas,
     xv: typing.List[float],
     yv: typing.List[float],
     zv: typing.List[float],
@@ -77,6 +77,7 @@ def add_text_to_vispy_3D_plot(
         text=text,
         color=color,
         rotation=angle,
+        parent=current_scene
     )
 
 

@@ -1515,15 +1515,14 @@ def plot_3D_schematic(
 
     # if no canvas is defined, define a new one
     if current_scene is None or current_view is None:
-        seg0 = cell.morphology.segments[0]  # type: Segment
-        view_min = [seg0.distal.x, seg0.distal.y, seg0.distal.z]
-        seg1 = cell.morphology.segments[-1]  # type: Segment
-        view_max = [seg1.distal.x, seg1.distal.y, seg1.distal.z]
+        view_min, view_max = get_cell_bound_box(cell)
         current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
 
     points = []
     toconnect = []
     colors = []
+    text = []
+    textpoints = []
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)
@@ -1544,17 +1543,30 @@ def plot_3D_schematic(
         toconnect.append([len(points) - 2, len(points) - 1])
 
         # TODO: needs fixing to show labels
-        labels = False
         if labels:
-            alabel = add_text_to_vispy_3D_plot(scene, text=f"{sgid}",
+            text.append(f"{sgid}")
+            textpoints.append(
+                [offset[0] + (first_prox.x + last_seg.distal.x)/2,
+                 offset[1] + (first_prox.y + last_seg.distal.y)/2,
+                 offset[2] + (first_prox.z + last_seg.distal.z)/2,
+                 ]
+            )
+            """
+
+            alabel = add_text_to_vispy_3D_plot(current_scene=current_view.scene, text=f"{sgid}",
                                                xv=[offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
                                                yv=[offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
                                                zv=[offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
                                                color=colors[-1])
             alabel.font_size = 30
+            """
 
     scene.Line(points, parent=current_view.scene, color=colors, width=width,
                connect=numpy.array(toconnect))
+    if labels:
+        print("Text rendering")
+        scene.Text(text, pos=textpoints, font_size=30, color="black",
+                   parent=current_view.scene)
 
     if not nogui:
         app.run()
