@@ -567,7 +567,6 @@ def convert_to_units(nml2_quantity: str, unit: str) -> float:
 
     for un in model.units:
         if un.symbol == unit:
-
             new_value = si_value / (un.scale * pow(10, un.power)) - un.offset
             if not un.dimension == dim:
                 raise Exception(
@@ -786,17 +785,17 @@ def read_neuroml2_file(
     base_path = os.path.dirname(os.path.realpath(nml2_file_name))
 
     if include_includes:
-
         if verbose:
             logger.info(
-                "Including included files (included already: {})".format(already_included)
+                "Including included files (included already: {})".format(
+                    already_included
+                )
             )
 
         incl_to_remove = []
         for include in nml2_doc.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, include.href))
             if incl_loc not in already_included:
-
                 inc = True  # type: typing.Union[bool, tuple[bool, str]]
                 if check_validity_pre_include:
                     inc = validate_neuroml2(incl_loc, verbose_validate=False)
@@ -804,7 +803,10 @@ def read_neuroml2_file(
                 if inc:
                     logger.debug(
                         "Loading included NeuroML2 file: {} (base: {}, resolved: {}, checking {})".format(
-                            include.href, base_path, incl_loc, check_validity_pre_include
+                            include.href,
+                            base_path,
+                            incl_loc,
+                            check_validity_pre_include,
                         )
                     )
                     nml2_sub_doc = read_neuroml2_file(
@@ -856,7 +858,6 @@ def quick_summary(nml2_doc: NeuroMLDocument) -> str:
     membs = inspect.getmembers(nml2_doc)
 
     for memb in membs:
-
         if isinstance(memb[1], list) and len(memb[1]) > 0 and not memb[0].endswith("_"):
             info += "  {}:\n    [".format(memb[0])
             for entry in memb[1]:
@@ -2065,7 +2066,6 @@ def evaluate_arguments(args):
             confirm_lems_file(f)
             post_args = "-sedml"
         elif args.neuron is not None:
-
             # Note: either a lems file or nml2 file is allowed here...
             confirm_file_exists(f)
 
@@ -2237,13 +2237,14 @@ def evaluate_arguments(args):
                 exit_on_fail=exit_on_fail,
             )
     if run_multi:
-            run_jneuroml(
-                pre_args,
-                ' '.join(args.input_files),
-                post_args,
-                max_memory=args.java_max_memory,
-                exit_on_fail=exit_on_fail,
-            )
+        run_jneuroml(
+            pre_args,
+            " ".join(args.input_files),
+            post_args,
+            max_memory=args.java_max_memory,
+            exit_on_fail=exit_on_fail,
+        )
+
 
 def get_path_to_jnml_jar() -> str:
     """Get the path to the jNeuroML jar included with PyNeuroML.
@@ -2634,7 +2635,6 @@ def extract_annotations(nml2_file: str) -> None:
                     )
 
                     for li in _find_elements(info, "li", rdf=True):
-
                         attr = _get_attr_in_element(li, "resource", rdf=True)
                         if attr:
                             annotations[desc].append({kind: attr})
