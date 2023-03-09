@@ -2055,6 +2055,8 @@ def evaluate_arguments(args):
         logger.critical("Please specify NeuroML/LEMS files to process")
         return
 
+    run_multi = False
+
     for f in args.input_files:
         if args.nogui:
             post_args = "-nogui"
@@ -2218,19 +2220,30 @@ def evaluate_arguments(args):
             confirm_neuroml_file(f)
             pre_args = "-validate"
             exit_on_fail = True
+            run_multi = True
+
         elif args.validatev1:
             confirm_neuroml_file(f)
             pre_args = "-validatev1"
             exit_on_fail = True
+            run_multi = True
 
-        run_jneuroml(
-            pre_args,
-            f,
-            post_args,
-            max_memory=args.java_max_memory,
-            exit_on_fail=exit_on_fail,
-        )
-
+        if run_multi is False:
+            run_jneuroml(
+                pre_args,
+                f,
+                post_args,
+                max_memory=args.java_max_memory,
+                exit_on_fail=exit_on_fail,
+            )
+    if run_multi:
+            run_jneuroml(
+                pre_args,
+                ' '.join(args.input_files),
+                post_args,
+                max_memory=args.java_max_memory,
+                exit_on_fail=exit_on_fail,
+            )
 
 def get_path_to_jnml_jar() -> str:
     """Get the path to the jNeuroML jar included with PyNeuroML.
@@ -2299,14 +2312,7 @@ def run_jneuroml(
     retcode = -1
 
     try:
-        command = 'java -Xmx%s %s -jar  "%s" %s "%s" %s' % (
-            max_memory,
-            pre_jar,
-            jar_path,
-            pre_args,
-            target_file,
-            post_args,
-        )
+        command = f'java -Xmx{max_memory} {pre_jar} -jar  "{jar_path}" {pre_args} {target_file} {post_args}'
         retcode, output = execute_command_in_dir(
             command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
