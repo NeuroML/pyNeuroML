@@ -8,6 +8,7 @@ Implementation of the pynml-modchananalysis command
 
 import argparse
 import re
+import subprocess
 from math import log
 import neuron
 import matplotlib.pyplot as pylab
@@ -198,7 +199,21 @@ def main():
     states = get_states(modFileTxt)
     print("States found in mod file: " + str(states))
     assert chanToTest == get_suffix(modFileTxt), "Channel name could be wrong"
-    sec.insert(str(chanToTest))
+    try:
+        sec.insert(str(chanToTest))
+    except ValueError:
+        print(f"{chanToTest} mechanism has not been compiled yet. Trying to run `nrnivmodl`.")
+        try:
+            subprocess.run("nrnivmodl", check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Could not compile {modFileName}. nrivmodl returned {e.returncode}.")
+            #print(e.stderr.decode())
+            print("Try running nrnivmodl manually and checking its output.")
+            print("Exiting...")
+            return 1
+        h.nrn_load_dll("x86_64/.libs/libnrnmech.so")
+        sec.insert(str(chanToTest))
+
 
     for temperature in temperatures:
         h.celsius = temperature
