@@ -404,7 +404,7 @@ def main():
                         val = eval("sec(0.5)." + s + "_" + chanToTest)
 
                         if s not in foundInf:
-                            rel_dif = (lastCheckVal[s] - val) / val if val > sys.float_info.epsilon else 0.0
+                            rel_dif = (lastCheckVal[s] - val) / val if val > sys.float_info.epsilon else lastCheckVal[s]
                             if abs(rel_dif) > tolerance:
                                 if verbose:
                                     print(
