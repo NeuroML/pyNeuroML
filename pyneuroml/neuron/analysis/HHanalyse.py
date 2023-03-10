@@ -9,6 +9,7 @@ Implementation of the pynml-modchananalysis command
 import argparse
 import re
 import subprocess
+import sys
 from math import log
 import neuron
 import matplotlib.pyplot as pylab
@@ -403,7 +404,8 @@ def main():
                         val = eval("sec(0.5)." + s + "_" + chanToTest)
 
                         if s not in foundInf:
-                            if abs((lastCheckVal[s] - val) / val) > tolerance:
+                            rel_dif = (lastCheckVal[s] - val) / val if val > sys.float_info.epsilon else 0.0
+                            if abs(rel_dif) > tolerance:
                                 if verbose:
                                     print(
                                         "  State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"
@@ -411,7 +413,7 @@ def main():
                                             s,
                                             val,
                                             lastCheckVal[s],
-                                            ((lastCheckVal[s] - val) / val),
+                                            rel_dif,
                                             tolerance,
                                         )
                                     )
@@ -423,7 +425,7 @@ def main():
                                             s,
                                             val,
                                             lastCheckVal[s],
-                                            ((lastCheckVal[s] - val) / val),
+                                            rel_dif,
                                             tolerance,
                                         )
                                     )
