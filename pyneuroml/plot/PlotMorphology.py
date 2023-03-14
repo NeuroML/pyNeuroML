@@ -148,9 +148,12 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
-        plot_interactive_3D(nml_file=a.nml_file,
-                            min_width=a.min_width,
-                            verbose=a.v, plot_type=a.plot_type)
+        plot_interactive_3D(
+            nml_file=a.nml_file,
+            min_width=a.min_width,
+            verbose=a.v,
+            plot_type=a.plot_type,
+        )
     else:
         plot_2D(
             a.nml_file,
@@ -237,7 +240,13 @@ def plot_interactive_3D(
                 only_pos.append(poss)
 
         pos_array = numpy.array(only_pos)
-        center = numpy.mean(pos_array)
+        center = numpy.array(
+            [
+                numpy.mean(pos_array[:, 0]),
+                numpy.mean(pos_array[:, 1]),
+                numpy.mean(pos_array[:, 2]),
+            ]
+        )
         x_min = numpy.min(pos_array[:, 0])
         x_max = numpy.max(pos_array[:, 0])
         x_len = abs(x_max - x_min)
@@ -252,6 +261,7 @@ def plot_interactive_3D(
 
         view_min = center - numpy.array([x_len, y_len, z_len])
         view_max = center + numpy.array([x_len, y_len, z_len])
+        logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
 
     else:
         cell = list(pop_id_vs_cell.values())[0]
@@ -260,14 +270,10 @@ def plot_interactive_3D(
         else:
             logger.debug("Got a point cell")
             pos = list((list(positions.values())[0]).values())[0]
-            view_min = list(numpy.array(pos) - 100)
-            view_min = list(numpy.array(pos) + 100)
+            view_min = list(numpy.array(pos))
+            view_min = list(numpy.array(pos))
 
-    current_scene, current_view = create_new_vispy_canvas(
-        view_min,
-        view_max,
-        title
-    )
+    current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
 
@@ -287,9 +293,13 @@ def plot_interactive_3D(
 
             if cell is None:
                 print(f"plotting a point cell at {pos}")
-                plot_3D_point_cell(offset=pos, color=color, soma_radius=radius,
-                                   current_scene=current_scene,
-                                   current_view=current_view)
+                plot_3D_point_cell(
+                    offset=pos,
+                    color=color,
+                    soma_radius=radius,
+                    current_scene=current_scene,
+                    current_view=current_view,
+                )
             else:
                 if plot_type == "Schematic":
                     plot_3D_schematic(
@@ -1005,14 +1015,17 @@ def plot_3D_cell_morphology(
             seg_color = color
 
         # check if for a spherical segment, add extra spherical node
-        if (
-            p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
-        ):
-            scene.Markers(pos=numpy.array([[offset[0] + p.x, offset[1] + p.y, offset[2] + p.z]]),
-                          size=numpy.array([p.diameter]),
-                          spherical=True, edge_color="white",
-                          face_color=seg_color, edge_width=0, scaling=True,
-                          parent=current_view.scene)
+        if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
+            scene.Markers(
+                pos=numpy.array([[offset[0] + p.x, offset[1] + p.y, offset[2] + p.z]]),
+                size=numpy.array([p.diameter]),
+                spherical=True,
+                edge_color="white",
+                face_color=seg_color,
+                edge_width=0,
+                scaling=True,
+                parent=current_view.scene,
+            )
 
         if plot_type == "Constant":
             points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
@@ -1030,15 +1043,22 @@ def plot_3D_cell_morphology(
             points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
             colors.append(seg_color)
             toconnect.append([len(points) - 2, len(points) - 1])
-            scene.Line(pos=points, color=colors,
-                       connect=numpy.array(toconnect),
-                       parent=current_view.scene,
-                       width=width)
+            scene.Line(
+                pos=points,
+                color=colors,
+                connect=numpy.array(toconnect),
+                parent=current_view.scene,
+                width=width,
+            )
 
     if plot_type == "Constant":
-        scene.Line(pos=points, color=colors,
-                   connect=numpy.array(toconnect), parent=current_view.scene,
-                   width=width)
+        scene.Line(
+            pos=points,
+            color=colors,
+            connect=numpy.array(toconnect),
+            parent=current_view.scene,
+            width=width,
+        )
 
     if not nogui:
         app.run()
@@ -1448,7 +1468,7 @@ def plot_3D_schematic(
     segment_groups: typing.Optional[typing.List[SegmentGroup]],
     offset: typing.List[float] = [0, 0, 0],
     labels: bool = False,
-    width: float = 5.,
+    width: float = 5.0,
     verbose: bool = False,
     nogui: bool = False,
     title: str = "",
@@ -1536,8 +1556,20 @@ def plot_3D_schematic(
         last_seg = segs[-1]  # type: Segment
         first_prox = cell.get_actual_proximal(first_seg.id)
 
-        points.append([offset[0] + first_prox.x, offset[1] + first_prox.y, offset[2] + first_prox.z])
-        points.append([offset[0] + last_seg.distal.x, offset[1] + last_seg.distal.y, offset[2] + last_seg.distal.z])
+        points.append(
+            [
+                offset[0] + first_prox.x,
+                offset[1] + first_prox.y,
+                offset[2] + first_prox.z,
+            ]
+        )
+        points.append(
+            [
+                offset[0] + last_seg.distal.x,
+                offset[1] + last_seg.distal.y,
+                offset[2] + last_seg.distal.z,
+            ]
+        )
         colors.append(get_next_hex_color())
         colors.append(get_next_hex_color())
         toconnect.append([len(points) - 2, len(points) - 1])
@@ -1546,10 +1578,11 @@ def plot_3D_schematic(
         if labels:
             text.append(f"{sgid}")
             textpoints.append(
-                [offset[0] + (first_prox.x + last_seg.distal.x)/2,
-                 offset[1] + (first_prox.y + last_seg.distal.y)/2,
-                 offset[2] + (first_prox.z + last_seg.distal.z)/2,
-                 ]
+                [
+                    offset[0] + (first_prox.x + last_seg.distal.x) / 2,
+                    offset[1] + (first_prox.y + last_seg.distal.y) / 2,
+                    offset[2] + (first_prox.z + last_seg.distal.z) / 2,
+                ]
             )
             """
 
@@ -1561,12 +1594,18 @@ def plot_3D_schematic(
             alabel.font_size = 30
             """
 
-    scene.Line(points, parent=current_view.scene, color=colors, width=width,
-               connect=numpy.array(toconnect))
+    scene.Line(
+        points,
+        parent=current_view.scene,
+        color=colors,
+        width=width,
+        connect=numpy.array(toconnect),
+    )
     if labels:
         print("Text rendering")
-        scene.Text(text, pos=textpoints, font_size=30, color="black",
-                   parent=current_view.scene)
+        scene.Text(
+            text, pos=textpoints, font_size=30, color="black", parent=current_view.scene
+        )
 
     if not nogui:
         app.run()
@@ -1591,20 +1630,21 @@ def plot_3D_point_cell(
     if color is None:
         color = "black"
 
-    # if no canvas is defined, define a new one
-    view_min = list(numpy.array(offset) - 100)
-    view_min = list(numpy.array(offset) + 100)
     if current_scene is None or current_view is None:
+        # if no canvas is defined, define a new one
+        view_min = list(numpy.array(offset) - 100)
+        view_max = list(numpy.array(offset) + 100)
         current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
 
-    scene.visuals.Markers(
+    scene.Markers(
         pos=numpy.array([offset]),
-        size=soma_radius,
-        antialias=0,
-        face_color=color,
-        edge_color=color,
-        edge_width=100,
+        size=numpy.array([soma_radius]),
         spherical=True,
+        edge_color=color,
+        face_color=color,
+        edge_width=1,
+        scaling=True,
+        parent=current_view.scene,
     )
 
     if not nogui:
