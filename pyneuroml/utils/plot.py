@@ -27,14 +27,8 @@ logger.setLevel(logging.DEBUG)
 
 
 VISPY_THEME = {
-    "light": {
-        "bg": "white",
-        "fg": "black"
-    },
-    "dark": {
-        "bg": "black",
-        "fg": "white"
-    }
+    "light": {"bg": "white", "fg": "black"},
+    "dark": {"bg": "black", "fg": "white"},
 }
 PYNEUROML_VISPY_THEME = "light"
 
@@ -77,7 +71,7 @@ def add_text_to_vispy_3D_plot(
         text=text,
         color=color,
         rotation=angle,
-        parent=current_scene
+        parent=current_scene,
     )
 
 
@@ -379,8 +373,11 @@ def create_new_vispy_canvas(
     :returns: scene, view
     """
     canvas = scene.SceneCanvas(
-        keys="interactive", show=True, bgcolor=VISPY_THEME[theme]["bg"], size=(800, 600),
-        title="NeuroML viewer (VisPy)"
+        keys="interactive",
+        show=True,
+        bgcolor=VISPY_THEME[theme]["bg"],
+        size=(800, 600),
+        title="NeuroML viewer (VisPy)",
     )
     grid = canvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
@@ -495,9 +492,21 @@ def create_new_vispy_canvas(
             y_width = abs(view_min[1] - view_max[1])
             z_width = abs(view_min[2] - view_max[2])
 
-            xrange = ((view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02) if x_width > 0 else (-100, 100))
-            yrange = ((view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02) if y_width > 0 else (-100, 100))
-            zrange = ((view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02) if z_width > 0 else (-100, 100))
+            xrange = (
+                (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
+                if x_width > 0
+                else (-100, 100)
+            )
+            yrange = (
+                (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
+                if y_width > 0
+                else (-100, 100)
+            )
+            zrange = (
+                (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
+                if z_width > 0
+                else (-100, 100)
+            )
             logger.debug(f"{xrange}, {yrange}, {zrange}")
 
             acam.set_range(x=xrange, y=yrange, z=zrange)
@@ -507,7 +516,10 @@ def create_new_vispy_canvas(
 
     console_widget.write(f"Center: {view.camera.center}")
     console_widget.write(console_text)
-    console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
+    console_widget.write(
+        f"Current camera: {view.camera.name}: "
+        + cam_text[view.camera].replace("\n", " ").strip()
+    )
 
     if axes_pos:
         points = [
@@ -548,7 +560,10 @@ def create_new_vispy_canvas(
         console_widget.clear()
         # console_widget.write(f"Center: {view.camera.center}")
         console_widget.write(console_text)
-        console_widget.write(f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip())
+        console_widget.write(
+            f"Current camera: {view.camera.name}: "
+            + cam_text[view.camera].replace("\n", " ").strip()
+        )
 
     return scene, view
 
