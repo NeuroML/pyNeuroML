@@ -54,6 +54,7 @@ DEFAULTS = {
     "minWidth": 0.8,
     "square": False,
     "plotType": "Constant",
+    "theme": "light"
 }
 
 
@@ -97,6 +98,13 @@ def process_args():
         metavar="<type: Detailed, Constant, or Schematic>",
         default=DEFAULTS["plotType"],
         help="Level of detail to plot in",
+    )
+    parser.add_argument(
+        "-theme",
+        type=str,
+        metavar="<theme: light, dark>",
+        default=DEFAULTS["theme"],
+        help="Theme to use for interactive 3d plotting",
     )
     parser.add_argument(
         "-minWidth",
@@ -153,6 +161,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             min_width=a.min_width,
             verbose=a.v,
             plot_type=a.plot_type,
+            theme=a.theme
         )
     else:
         plot_2D(
@@ -173,6 +182,8 @@ def plot_interactive_3D(
     verbose: bool = False,
     plot_type: str = "Constant",
     title: typing.Optional[str] = None,
+    theme: str = "light",
+    nogui: bool = False
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -199,6 +210,10 @@ def plot_interactive_3D(
     :type plot_type: str
     :param title: title of plot
     :type title: str
+    :param theme: theme to use (light/dark)
+    :type theme: str
+    :param nogui: toggle showing gui (for testing only)
+    :type nogui: bool
     """
     if plot_type not in ["Detailed", "Constant", "Schematic"]:
         raise ValueError(
@@ -281,7 +296,8 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_min = list(numpy.array(pos))
 
-    current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
+    current_scene, current_view = create_new_vispy_canvas(view_min, view_max,
+                                                          title, theme=theme)
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
 
@@ -893,6 +909,7 @@ def plot_3D_cell_morphology(
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
     plot_type: str = "Constant",
+    theme="light"
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -951,6 +968,8 @@ def plot_3D_cell_morphology(
         morphology)
 
     :type plot_type: str
+    :param theme: theme to use (dark/light)
+    :type theme: str
     :raises: ValueError if `cell` is None
 
     """
@@ -974,7 +993,9 @@ def plot_3D_cell_morphology(
 
     if current_scene is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
+        current_scene, current_view = create_new_vispy_canvas(view_min,
+                                                              view_max, title,
+                                                              theme=theme)
 
     if color == "Groups":
         color_dict = {}
@@ -1503,6 +1524,7 @@ def plot_3D_schematic(
     title: str = "",
     current_scene: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
+    theme: str = "light"
 ) -> None:
     """Plot a 3D schematic of the provided segment groups in Napari as a new
     layer..
@@ -1547,6 +1569,8 @@ def plot_3D_schematic(
     :type current_scene: SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
+    :param theme: theme to use (light/dark)
+    :type theme: str
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
@@ -1565,7 +1589,9 @@ def plot_3D_schematic(
     # if no canvas is defined, define a new one
     if current_scene is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
+        current_scene, current_view = create_new_vispy_canvas(view_min,
+                                                              view_max, title,
+                                                              theme=theme)
 
     points = []
     toconnect = []
