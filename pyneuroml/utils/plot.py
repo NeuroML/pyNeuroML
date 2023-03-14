@@ -495,11 +495,12 @@ def create_new_vispy_canvas(
             y_width = abs(view_min[1] - view_max[1])
             z_width = abs(view_min[2] - view_max[2])
 
-            acam.set_range(
-                x=(view_min[0] - x_width * 0.5, view_max[0] + x_width * 0.5),
-                y=(view_min[1] - y_width * 0.5, view_max[1] + y_width * 0.5),
-                z=(view_min[2] - z_width * 0.5, view_max[2] + z_width * 0.5),
-            )
+            xrange = ((view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02) if x_width > 0 else (-100, 100))
+            yrange = ((view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02) if y_width > 0 else (-100, 100))
+            zrange = ((view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02) if z_width > 0 else (-100, 100))
+            logger.debug(f"{xrange}, {yrange}, {zrange}")
+
+            acam.set_range(x=xrange, y=yrange, z=zrange)
 
     for acam in cams:
         acam.set_default_state()
