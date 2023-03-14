@@ -54,7 +54,7 @@ DEFAULTS = {
     "minWidth": 0.8,
     "square": False,
     "plotType": "Constant",
-    "theme": "light"
+    "theme": "light",
 }
 
 
@@ -161,7 +161,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             min_width=a.min_width,
             verbose=a.v,
             plot_type=a.plot_type,
-            theme=a.theme
+            theme=a.theme,
         )
     else:
         plot_2D(
@@ -183,7 +183,7 @@ def plot_interactive_3D(
     plot_type: str = "Constant",
     title: typing.Optional[str] = None,
     theme: str = "light",
-    nogui: bool = False
+    nogui: bool = False,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -297,8 +297,9 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_min = list(numpy.array(pos))
 
-    current_scene, current_view = create_new_vispy_canvas(view_min, view_max,
-                                                          title, theme=theme)
+    current_scene, current_view = create_new_vispy_canvas(
+        view_min, view_max, title, theme=theme
+    )
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
 
@@ -358,7 +359,7 @@ def plot_interactive_3D(
             edge_color=marker_colors,
             parent=current_view.scene,
             scaling=True,
-            antialias=0
+            antialias=0,
         )
     if not nogui:
         app.run()
@@ -910,7 +911,7 @@ def plot_3D_cell_morphology(
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
     plot_type: str = "Constant",
-    theme="light"
+    theme="light",
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -994,9 +995,9 @@ def plot_3D_cell_morphology(
 
     if current_scene is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(view_min,
-                                                              view_max, title,
-                                                              theme=theme)
+        current_scene, current_view = create_new_vispy_canvas(
+            view_min, view_max, title, theme=theme
+        )
 
     if color == "Groups":
         color_dict = {}
@@ -1109,7 +1110,7 @@ def plot_3D_cell_morphology(
                 edge_color=marker_colors,
                 parent=current_view.scene,
                 scaling=True,
-                antialias=0
+                antialias=0,
             )
         app.run()
     return marker_points, marker_sizes, marker_colors
@@ -1525,7 +1526,7 @@ def plot_3D_schematic(
     title: str = "",
     current_scene: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
-    theme: str = "light"
+    theme: str = "light",
 ) -> None:
     """Plot a 3D schematic of the provided segment groups in Napari as a new
     layer..
@@ -1590,9 +1591,9 @@ def plot_3D_schematic(
     # if no canvas is defined, define a new one
     if current_scene is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(view_min,
-                                                              view_max, title,
-                                                              theme=theme)
+        current_scene, current_view = create_new_vispy_canvas(
+            view_min, view_max, title, theme=theme
+        )
 
     points = []
     toconnect = []
