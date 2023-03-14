@@ -11,6 +11,7 @@ Copyright 2023 NeuroML contributors
 import logging
 import pathlib as pl
 
+import pytest
 import numpy
 import neuroml
 from pyneuroml.plot.PlotMorphology import (
@@ -53,6 +54,7 @@ class TestMorphologyPlot(BaseTestCase):
                 self.assertIsFile(filename)
                 pl.Path(filename).unlink()
 
+    @pytest.mark.localonly
     def test_3d_point_plotter(self):
         """Test plot_2D_point_cells function."""
         nml_files = ["tests/plot/Izh2007Cells.net.nml"]
@@ -175,6 +177,7 @@ class TestMorphologyPlot(BaseTestCase):
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
 
+    @pytest.mark.localonly
     def test_3d_schematic_plotter(self):
         """Test plot_3D_schematic plotter function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
@@ -186,11 +189,13 @@ class TestMorphologyPlot(BaseTestCase):
             nogui=True,
         )
 
+    @pytest.mark.localonly
     def test_3d_morphology_plotter_vispy_network(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         plot_interactive_3D(nml_file, min_width=1, nogui=True, theme="dark")
 
+    @pytest.mark.localonly
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
