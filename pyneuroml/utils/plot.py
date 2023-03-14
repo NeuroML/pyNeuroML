@@ -23,7 +23,7 @@ from neuroml import Cell, Segment
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 VISPY_THEME = {
@@ -392,8 +392,6 @@ def create_new_vispy_canvas(
     )
     console_widget.height_max = 80
     grid.add_widget(console_widget, row=3, col=1, col_span=1)
-    # console_text = "Controls: reset view: 0; cycle camera: 1, 2 (fwd/bwd); quit: 9"
-    console_text = "Controls: reset view: 0; quit: 9"
 
     yaxis = scene.AxisWidget(
         orientation="left",
@@ -442,7 +440,11 @@ def create_new_vispy_canvas(
     # do not keep z up
     cam4.autoroll = False
 
-    cams = [cam4]
+    cams = [cam4, cam2]
+    if len(cams) > 1:
+        console_text = "Controls: reset view: 0; cycle camera: 1, 2 (fwd/bwd); quit: 9"
+    else:
+        console_text = "Controls: reset view: 0; quit: 9"
 
     cam_text = {
         cam1: textwrap.dedent(
@@ -472,8 +474,8 @@ def create_new_vispy_canvas(
         ),
     }
 
-    # Fly is default
-    cam_index = 0
+    # Turntable is default
+    cam_index = 1
     view.camera = cams[cam_index]
 
     xaxis.link_view(view)
