@@ -224,6 +224,14 @@ def plot_interactive_3D(
         pop_id_vs_radii,
     ) = extract_position_info(nml_model, verbose)
 
+    # Collect all markers and only plot one markers object
+    # this is more efficient than multiple markers, one for each point.
+    # TODO: also collect all line points and only use one object rather than a
+    # new object for each cell.
+    marker_sizes = []
+    marker_points = []
+    marker_colors = []
+
     if title is None:
         title = f"{nml_model.networks[0].id} from {nml_file}"
 
@@ -293,13 +301,9 @@ def plot_interactive_3D(
 
             if cell is None:
                 print(f"plotting a point cell at {pos}")
-                plot_3D_point_cell(
-                    offset=pos,
-                    color=color,
-                    soma_radius=radius,
-                    current_scene=current_scene,
-                    current_view=current_view,
-                )
+                marker_points.extend([pos])
+                marker_sizes.extend([radius])
+                marker_colors.extend([color])
             else:
                 if plot_type == "Schematic":
                     plot_3D_schematic(
@@ -313,7 +317,7 @@ def plot_interactive_3D(
                         nogui=True,
                     )
                 else:
-                    plot_3D_cell_morphology(
+                    pts, sizes, colors = plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
                         color=color,
@@ -324,8 +328,23 @@ def plot_interactive_3D(
                         min_width=min_width,
                         nogui=True,
                     )
+                    marker_points.extend(pts)
+                    marker_sizes.extend(sizes)
+                    marker_colors.extend(colors)
 
-    app.run()
+    if len(marker_points) > 0:
+        scene.Markers(
+            pos=numpy.array(marker_points),
+            size=numpy.array(marker_sizes),
+            spherical=True,
+            face_color=marker_colors,
+            edge_color=marker_colors,
+            parent=current_view.scene,
+            scaling=True,
+            antialias=0
+        )
+    if not nogui:
+        app.run()
 
 
 def plot_2D(
@@ -978,6 +997,10 @@ def plot_3D_cell_morphology(
     points = []
     toconnect = []
     colors = []
+    # for any spheres which we plot as markers at once
+    marker_points = []
+    marker_colors = []
+    marker_sizes = []
 
     for seg in cell.morphology.segments:
         p = cell.get_actual_proximal(seg.id)
@@ -1016,16 +1039,9 @@ def plot_3D_cell_morphology(
 
         # check if for a spherical segment, add extra spherical node
         if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
-            scene.Markers(
-                pos=numpy.array([[offset[0] + p.x, offset[1] + p.y, offset[2] + p.z]]),
-                size=numpy.array([p.diameter]),
-                spherical=True,
-                edge_color="white",
-                face_color=seg_color,
-                edge_width=0,
-                scaling=True,
-                parent=current_view.scene,
-            )
+            marker_points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
+            marker_colors.append(seg_color)
+            marker_sizes.append(p.diameter)
 
         if plot_type == "Constant":
             points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
@@ -1061,7 +1077,20 @@ def plot_3D_cell_morphology(
         )
 
     if not nogui:
+        # markers
+        if len(marker_points) > 0:
+            scene.Markers(
+                pos=numpy.array(marker_points),
+                size=numpy.array(marker_sizes),
+                spherical=True,
+                face_color=marker_colors,
+                edge_color=marker_colors,
+                parent=current_view.scene,
+                scaling=True,
+                antialias=0
+            )
         app.run()
+    return marker_points, marker_sizes, marker_colors
 
 
 def plot_2D_point_cells(
@@ -1606,46 +1635,6 @@ def plot_3D_schematic(
         scene.Text(
             text, pos=textpoints, font_size=30, color="black", parent=current_view.scene
         )
-
-    if not nogui:
-        app.run()
-
-
-def plot_3D_point_cell(
-    offset: typing.List[float] = [0, 0, 0],
-    color: typing.Optional[str] = None,
-    soma_radius: float = 500.0,
-    current_scene: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
-    title: str = "",
-    verbose: bool = False,
-    nogui: bool = True,
-):
-    """TODO: Docstring for plot_3D_point_cells.
-
-    :param cell: TODO
-    :returns: TODO
-
-    """
-    if color is None:
-        color = "black"
-
-    if current_scene is None or current_view is None:
-        # if no canvas is defined, define a new one
-        view_min = list(numpy.array(offset) - 100)
-        view_max = list(numpy.array(offset) + 100)
-        current_scene, current_view = create_new_vispy_canvas(view_min, view_max, title)
-
-    scene.Markers(
-        pos=numpy.array([offset]),
-        size=numpy.array([soma_radius]),
-        spherical=True,
-        edge_color=color,
-        face_color=color,
-        edge_width=1,
-        scaling=True,
-        parent=current_view.scene,
-    )
 
     if not nogui:
         app.run()
