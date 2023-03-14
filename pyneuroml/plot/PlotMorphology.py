@@ -242,7 +242,8 @@ def plot_interactive_3D(
     # Collect all markers and only plot one markers object
     # this is more efficient than multiple markers, one for each point.
     # TODO: also collect all line points and only use one object rather than a
-    # new object for each cell.
+    # new object for each cell: will only work for the case where all lines
+    # have the same width
     marker_sizes = []
     marker_points = []
     marker_colors = []
