@@ -19,6 +19,7 @@ from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
 from vispy import scene
 from vispy.scene import SceneCanvas
+from vispy.app import Timer
 from neuroml import Cell, Segment
 
 
@@ -428,7 +429,7 @@ def create_new_vispy_canvas(
             Left mouse button: orbits view around center point; right mouse
             button or scroll: change zoom level; Shift + left mouse button:
             translate center point; Shift + right mouse button: change field of
-            view"""
+            view; r/R: view rotation animation"""
         ),
         cam3: textwrap.dedent(
             """
@@ -506,6 +507,11 @@ def create_new_vispy_canvas(
             width=axes_width,
         )
 
+    def vispy_rotate(self):
+        view.camera.orbit(azim=1, elev=0)
+
+    rotation_timer = Timer(connect=vispy_rotate)
+
     @canvas.events.key_press.connect
     def vispy_on_key_press(event):
         nonlocal cam_index
@@ -520,8 +526,15 @@ def create_new_vispy_canvas(
         elif event.text == "2":
             cam_index = (cam_index + 1) % len(cams)
             view.camera = cams[cam_index]
+        # for turntable only: rotate animation
+        elif event.text == "R" or event.text == "r":
+            if view.camera == cam2:
+                if rotation_timer.running:
+                    rotation_timer.stop()
+                else:
+                    rotation_timer.start()
         # reset
-        if event.text == "0":
+        elif event.text == "0":
             view.camera.reset()
         # quit
         elif event.text == "9":
