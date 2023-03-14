@@ -571,8 +571,9 @@ def create_new_vispy_canvas(
 def get_cell_bound_box(cell: Cell):
     """Get a boundary box for a cell
 
-    :param cell: TODO
-    :returns: TODO
+    :param cell: cell to get boundary box for
+    :type cell: neuroml.Cell
+    :returns: tuple (min view, max view)
 
     """
     seg0 = cell.morphology.segments[0]  # type: Segment
