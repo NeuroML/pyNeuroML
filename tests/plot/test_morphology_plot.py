@@ -23,7 +23,6 @@ from pyneuroml.plot.PlotMorphology import (
     plot_3D_schematic,
     plot_3D_cell_morphology,
     plot_interactive_3D,
-    plot_3D_point_cell
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -58,7 +57,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_2D_point_cells function."""
         nml_files = ["tests/plot/Izh2007Cells.net.nml"]
         for nml_file in nml_files:
-            plot_interactive_3D(nml_file)
+            plot_interactive_3D(nml_file, theme="dark", nogui=True)
 
     def test_2d_plotter(self):
         """Test plot_2D function."""
@@ -94,13 +93,19 @@ class TestMorphologyPlot(BaseTestCase):
                 pass
 
             segs = cell.get_all_segments_in_group("all")
-            values = (list(numpy.random.randint(50, 101, 1800)) + list(numpy.random.randint(0, 51, len(segs) - 1800)))
+            values = list(numpy.random.randint(50, 101, 1800)) + list(
+                numpy.random.randint(0, 51, len(segs) - 1800)
+            )
             data_dict = dict(zip(segs, values))
 
-            plot_2D_cell_morphology(cell=cell, nogui=True, plane2d=plane,
-                                    save_to_file=filename,
-                                    overlay_data=data_dict,
-                                    overlay_data_label="Test")
+            plot_2D_cell_morphology(
+                cell=cell,
+                nogui=True,
+                plane2d=plane,
+                save_to_file=filename,
+                overlay_data=data_dict,
+                overlay_data_label="Test",
+            )
 
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
@@ -184,24 +189,24 @@ class TestMorphologyPlot(BaseTestCase):
     def test_3d_morphology_plotter_vispy_network(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
-        plot_interactive_3D(nml_file, min_width=1)
+        plot_interactive_3D(nml_file, min_width=1, nogui=True, theme="dark")
 
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
-        plot_3D_cell_morphology(cell=cell, nogui=True,
-                                color="Groups", verbose=True,
-                                plot_type="Constant")
+        plot_3D_cell_morphology(
+            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="Constant"
+        )
 
         # test a circular soma
         nml_file = "tests/plot/test-spherical-soma.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
-        plot_3D_cell_morphology(cell=cell, nogui=True,
-                                color="Groups", verbose=True,
-                                plot_type="Constant")
+        plot_3D_cell_morphology(
+            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="Constant"
+        )
 
     def test_3d_plotter_plotly(self):
         """Test plot_3D_cell_morphology_plotly function."""
