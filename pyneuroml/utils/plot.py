@@ -383,50 +383,20 @@ def create_new_vispy_canvas(
     grid.spacing = 0
 
     title_widget = scene.Label(title, color=VISPY_THEME[theme]["fg"])
-    title_widget.height_max = 40
-    grid.add_widget(title_widget, row=0, col=0, col_span=2)
+    title_widget.height_max = 80
+    grid.add_widget(title_widget, row=0, col=0, col_span=1)
 
     console_widget = scene.Console(
         text_color=VISPY_THEME[theme]["fg"],
         font_size=console_font_size,
     )
     console_widget.height_max = 80
-    grid.add_widget(console_widget, row=3, col=1, col_span=1)
+    grid.add_widget(console_widget, row=2, col=0, col_span=1)
 
-    yaxis = scene.AxisWidget(
-        orientation="left",
-        axis_label="Extent (Y)",
-        axis_font_size=12,
-        axis_label_margin=60,
-        axis_color=VISPY_THEME[theme]["fg"],
-        tick_color=VISPY_THEME[theme]["fg"],
-        tick_label_margin=5,
-        text_color=VISPY_THEME[theme]["fg"],
-    )
-    yaxis.width_max = 80
-    grid.add_widget(yaxis, row=1, col=0)
-
-    xaxis = scene.AxisWidget(
-        orientation="bottom",
-        axis_label="Extent (X)",
-        axis_font_size=12,
-        axis_label_margin=40,
-        axis_color=VISPY_THEME[theme]["fg"],
-        tick_color=VISPY_THEME[theme]["fg"],
-        text_color=VISPY_THEME[theme]["fg"],
-        tick_label_margin=5,
-    )
-
-    xaxis.height_max = 60
-    grid.add_widget(xaxis, row=2, col=1)
-
-    right_padding = grid.add_widget(row=0, col=2, row_span=4)
-    right_padding.width_max = 50
-
-    bottom_padding = grid.add_widget(row=4, col=0, col_span=3)
+    bottom_padding = grid.add_widget(row=3, col=0, col_span=1)
     bottom_padding.height_max = 10
 
-    view = grid.add_view(row=1, col=1, border_color=VISPY_THEME[theme]["fg"])
+    view = grid.add_view(row=1, col=0, border_color=None)
 
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
@@ -441,10 +411,11 @@ def create_new_vispy_canvas(
     cam4.autoroll = False
 
     cams = [cam4, cam2]
+
+    # console text
+    console_text = "Controls: reset view: 0; quit: Esc/9"
     if len(cams) > 1:
-        console_text = "Controls: reset view: 0; cycle camera: 1, 2 (fwd/bwd); quit: 9"
-    else:
-        console_text = "Controls: reset view: 0; quit: 9"
+        console_text += "; cycle camera: 1, 2 (fwd/bwd)"
 
     cam_text = {
         cam1: textwrap.dedent(
@@ -477,9 +448,6 @@ def create_new_vispy_canvas(
     # Turntable is default
     cam_index = 1
     view.camera = cams[cam_index]
-
-    xaxis.link_view(view)
-    yaxis.link_view(view)
 
     if view_min is not None and view_max is not None:
         view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
