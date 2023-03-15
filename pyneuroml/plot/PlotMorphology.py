@@ -318,7 +318,6 @@ def plot_interactive_3D(
                 logging.info(f"Plotting a point cell at {pos}")
 
             if cell is None:
-                print(f"plotting a point cell at {pos}")
                 marker_points.extend([pos])
                 marker_sizes.extend([radius])
                 marker_colors.extend([color])
