@@ -143,7 +143,7 @@ if [ "$run_neuron_examples" == true ]; then
     echo "################################################"
     echo "##   Test analysis of channel in mod file"
 
-        nrnivmodl
+        # do not run nrnivmodl, modchananalysis should run it if required
         pynml-modchananalysis -stepV 20  NaConductance  -dt 0.01 -nogui
 
 
