@@ -4,7 +4,7 @@ Unit tests for pynml.py
 
 File: test/test_pynml.py
 
-Copyright 2021 NeuroML contributors
+Copyright 2023 NeuroML contributors
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 

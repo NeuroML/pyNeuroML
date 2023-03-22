@@ -4,7 +4,7 @@ Tests for pyneuroml.archive module
 
 File: test_archive.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 
@@ -87,21 +87,30 @@ class TestArchiveModule(unittest.TestCase):
         """Test create_combine_archive."""
 
         thispath = pathlib.Path(__file__)
+        filelist = []
         dirname = str(thispath.parent.parent)
-        create_combine_archive("HH_example", "HH_example_cell.nml", dirname)
+        create_combine_archive(
+            "HH_example", dirname + "/HH_example_cell.nml", filelist=filelist
+        )
         self.assertTrue(pathlib.Path(dirname + "/HH_example.neux").exists())
 
         dirname = str(thispath.parent.parent.parent)
+        filelist = []
         create_combine_archive(
-            "LEMS_NML2_Ex5_DetCell", "LEMS_NML2_Ex5_DetCell.xml", dirname + "/examples"
+            "LEMS_NML2_Ex5_DetCell",
+            dirname + "/examples/LEMS_NML2_Ex5_DetCell.xml",
+            filelist=filelist,
         )
         self.assertTrue(
             pathlib.Path(dirname + "/examples/LEMS_NML2_Ex5_DetCell.neux").exists()
         )
 
         dirname = str(thispath.parent.parent.parent)
+        filelist = []
         create_combine_archive(
-            "NML2_SingleCompHHCell", "NML2_SingleCompHHCell.nml", dirname + "/examples"
+            "NML2_SingleCompHHCell",
+            dirname + "/examples/NML2_SingleCompHHCell.nml",
+            filelist=filelist,
         )
         self.assertTrue(
             pathlib.Path(dirname + "/examples/NML2_SingleCompHHCell.neux").exists()

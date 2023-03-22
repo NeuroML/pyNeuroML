@@ -4,7 +4,7 @@ Test morphology plotters
 
 File: tests/plot/test_morphology_plot.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 
@@ -39,6 +39,23 @@ class TestMorphologyPlot(BaseTestCase):
 
                 self.assertIsFile(filename)
                 pl.Path(filename).unlink()
+
+    def test_2d_plotter_network(self):
+        """Test plot_2D function with a network of a few cells."""
+        nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
+        ofile = pl.Path(nml_file).name
+        for plane in ["xy", "yz", "xz"]:
+            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+            # remove the file first
+            try:
+                pl.Path(filename).unlink()
+            except FileNotFoundError:
+                pass
+
+            plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
+
+            self.assertIsFile(filename)
+            pl.Path(filename).unlink()
 
     def test_3d_plotter(self):
         """Test plot_interactive_3D function."""

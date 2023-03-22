@@ -10,7 +10,7 @@ https://github.com/OpenSourceBrain/BlueBrainProjectShowcase/blob/master/Channelp
 
 File: pyneuroml/channelml/__init__.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 

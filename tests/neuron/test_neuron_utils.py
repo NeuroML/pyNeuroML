@@ -4,7 +4,7 @@ Test neuron utils.
 
 File: tests/neuron/test_neuron_utils.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 

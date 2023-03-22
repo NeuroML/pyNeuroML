@@ -5,6 +5,20 @@ import pyneuroml
 version = pyneuroml.__version__
 jnml_version = pyneuroml.JNEUROML_VERSION
 
+# generate extra deps
+extras = {
+    "neuron": ["NEURON", "pyyaml"],
+    "brian": ["Brian2"],
+    "netpyne": ["netpyne"],
+    "povray": ["opencv-python"],
+    "hdf5": ["tables"],
+    "analysis": ["pyelectro"],
+    "tune": ["neurotune @ git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune",
+             "inspyred @ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred",
+             "ppft"],
+}
+extras["all"] = sum(extras.values(), []),
+
 setup(
     name="pyNeuroML",
     version=version,
@@ -27,6 +41,7 @@ setup(
     entry_points={
         "console_scripts": [
             "pynml                 = pyneuroml.pynml:main",
+            "pynml-archive         = pyneuroml.archive:main",
             "pynml-channelanalysis = pyneuroml.analysis.NML2ChannelAnalysis:main",
             "pynml-modchananalysis = pyneuroml.neuron.analysis.HHanalyse:main",
             "pynml-povray          = pyneuroml.povray.NeuroML2ToPOVRay:main",
@@ -89,15 +104,7 @@ setup(
         "pandas",
         "plotly"
     ],
-    extras_require={
-        "neuron": ["NEURON", "pyyaml"],
-        "brian": ["Brian2"],
-        "netpyne": ["netpyne"],
-        "povray": ["opencv-python"],
-        "hdf5": ["tables"],
-        "analysis": ["pyelectro"],
-        "tune": ["neurotune", "ppft"],
-    },
+    extras_require=extras,
     classifiers=[
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
@@ -107,6 +114,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Scientific/Engineering",
     ],
 )

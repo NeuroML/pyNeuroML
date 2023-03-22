@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" id="NaTg">
+
+    <notes>NeuroML file containing a single Channel description and variants with different parameters for different parts of the cell.</notes>
+
+    <ionChannel id="NaTg" conductance="10pS" type="ionChannelHH" species="na">
+        <notes>Fast inactivating Na+ current
+Comment from original mod file:
+:Reference :Colbert and Pan 2002</notes>
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="NaTg">
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
+                Etay Hay, Sean Hill, Felix Schürmann, Henry Markram and Idan Segev, PLoS Comp Biol 2011</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/21829333"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Na channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/neurondb/channelGene2.aspx#table2"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+
+        <gate id="m" type="gateHHrates" instances="3">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="0.182" vHalf="-38" vShift="0" slope="6"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="-0.124" vHalf="-38" vShift="0" slope="-6"/>
+        </gate>
+        <gate id="h" type="gateHHrates" instances="1">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="-0.015" vHalf="-66" vShift="0" slope="-6"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="0.015" vHalf="-66" vShift="0" slope="6"/>
+        </gate>
+    </ionChannel>
+
+    <!-- same values of vshift and slope are used for both axonal and somatic sections in PV -->
+    <ionChannel id="NaTg_PV" conductance="10pS" type="ionChannelHH" species="na">
+        <notes>Fast inactivating Na+ current
+Comment from original mod file:
+:Reference :Colbert and Pan 2002</notes>
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="NaTg">
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
+                  Etay Hay, Sean Hill, Felix Schürmann, Henry Markram and Idan Segev, PLoS Comp Biol 2011</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/21829333"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Na channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/neurondb/channelGene2.aspx#table2"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+        <gate id="m" type="gateHHrates" instances="3">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="0.182" vHalf="-38" vShift="0" slope="9"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="-0.124" vHalf="-38" vShift="0" slope="-9"/>
+        </gate>
+        <gate id="h" type="gateHHrates" instances="1">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="-0.015" vHalf="-66" vShift="10" slope="-6"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="0.015" vHalf="-66" vShift="10" slope="6"/>
+        </gate>
+    </ionChannel>
+    <!-- PYR somatic -->
+    <ionChannel id="NaTg_PYR_somatic" conductance="10pS" type="ionChannelHH" species="na">
+        <notes>Fast inactivating Na+ current
+Comment from original mod file:
+:Reference :Colbert and Pan 2002</notes>
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="NaTg">
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
+                  Etay Hay, Sean Hill, Felix Schürmann, Henry Markram and Idan Segev, PLoS Comp Biol 2011</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/21829333"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Na channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/neurondb/channelGene2.aspx#table2"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+        <gate id="m" type="gateHHrates" instances="3">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="0.182" vHalf="-38" vShift="13" slope="7"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="-0.124" vHalf="-38" vShift="13" slope="-7"/>
+        </gate>
+        <gate id="h" type="gateHHrates" instances="1">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="-0.015" vHalf="-66" vShift="15" slope="-6"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="0.015" vHalf="-66" vShift="15" slope="6"/>
+        </gate>
+    </ionChannel>
+    <!-- PYR axonal -->
+    <ionChannel id="NaTg_PYR_axonal" conductance="10pS" type="ionChannelHH" species="na">
+        <notes>Fast inactivating Na+ current
+Comment from original mod file:
+:Reference :Colbert and Pan 2002</notes>
+        <annotation>
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+                <rdf:Description rdf:about="NaTg">
+                    <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
+                  Etay Hay, Sean Hill, Felix Schürmann, Henry Markram and Idan Segev, PLoS Comp Biol 2011</rdf:li>
+                            <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/21829333"/>
+                        </rdf:Bag>
+                    </bqmodel:isDescribedBy>
+                    <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
+                        <rdf:Bag>
+                            <rdf:li>Na channels</rdf:li>
+                            <rdf:li rdf:resource="http://senselab.med.yale.edu/neurondb/channelGene2.aspx#table2"/>
+                        </rdf:Bag>
+                    </bqbiol:isVersionOf>
+                </rdf:Description>
+            </rdf:RDF>
+        </annotation>
+        <gate id="m" type="gateHHrates" instances="3">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="0.182" vHalf="-38" vShift="0" slope="9"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="-0.124" vHalf="-38" vShift="0" slope="-9"/>
+        </gate>
+        <gate id="h" type="gateHHrates" instances="1">
+            <q10Settings type="q10Fixed" fixedQ10="2.95288264"/>
+            <forwardRate type="Na_shift_slope_rate" multiplier="-0.015" vHalf="-66" vShift="10" slope="-6"/>
+            <reverseRate type="Na_shift_slope_rate" multiplier="0.015" vHalf="-66" vShift="10" slope="6"/>
+        </gate>
+    </ionChannel>
+
+    <!-- customised slope component to accommodate additional parameters included in equations in NaTg.mod -->
+    <ComponentType name="Na_shift_slope_rate" extends="baseVoltageDepRate">
+        <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
+        <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
+        <Parameter name="multiplier" dimension="none"/>
+        <Parameter name="vHalf" dimension="none"/>
+        <Parameter name="vShift" dimension="none"/>
+        <Parameter name="slope" dimension="none"/>
+        <Dynamics>
+            <DerivedVariable name="V" dimension="none" value="v / VOLT_SCALE"/>
+            <DerivedVariable name="VT" dimension="none" value="vHalf + vShift"/>
+            <DerivedVariable name="r" exposure="r" dimension="per_time" value="(multiplier * (V - VT) / (1 - (exp (-1*( V - VT) / slope)))) / TIME_SCALE"/>
+        </Dynamics>
+    </ComponentType>
+</neuroml>

@@ -4,7 +4,7 @@ Test pynml.channelml
 
 File: tests/channelml/test_channelml.py
 
-Copyright 2022 NeuroML contributors
+Copyright 2023 NeuroML contributors
 """
 
 import unittest
