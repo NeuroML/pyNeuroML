@@ -10,9 +10,11 @@ Copyright 2023 NeuroML contributors
 
 import logging
 import pathlib as pl
+import math
 
+import neuroml
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, rotate_cell
 
 from .. import BaseTestCase
 
@@ -46,3 +48,15 @@ class TestUtils(BaseTestCase):
 
             for c in ["HL23PV", "HL23PYR", "HL23VIP", "HL23SST"]:
                 self.assertIn(c, cell_id_vs_cell.keys())
+
+    def test_rotate_cell(self):
+        """Test rotate_cell"""
+        acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
+        acell.add_segment(prox=[0, 0, 0, 5], dist=[1, 1, 1, 5], seg_id=0,
+                          use_convention=False, reorder_segment_groups=False,
+                          optimise_segment_groups=False)
+
+        print(acell)
+
+        rotated_cell = rotate_cell(acell, x=math.pi / 4, y=0, z=0, order="xyz")
+        print(rotated_cell)
