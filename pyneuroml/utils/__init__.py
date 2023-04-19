@@ -200,7 +200,7 @@ def rotate_cell(
     if z != 0:
         anglez = z
         rotation_z = numpy.array([[math.cos(anglez), -math.sin(anglez), 0],
-                                  [numpy.sin(anglez), numpy.cos(anglez)],
+                                  [math.sin(anglez), math.cos(anglez), 0],
                                   [0, 0, 1]
                                   ])
         logger.debug(f"z matrix is: {rotation_z}")
@@ -253,4 +253,7 @@ def rotate_cell(
         aseg.distal.y = dist[1]
         aseg.distal.z = dist[2]
 
-        return newcell
+        logger.debug(f"prox is: {aseg.proximal}")
+        logger.debug(f"distal is: {aseg.distal}")
+
+    return newcell
