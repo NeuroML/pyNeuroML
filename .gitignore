@@ -152,3 +152,4 @@ examples/results/*.dat
 /tests/leak_chan.channel.nml
 /tests/test_cell_analysis.cell.nml
 arm64
+*.neux

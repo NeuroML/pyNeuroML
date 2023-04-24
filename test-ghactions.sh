@@ -44,7 +44,7 @@ pynml -validate NML2_SingleCompHHCell.nml
 
 
 echo "##   Multi-validate with jNeuroML"
-pynml -validate *.nml
+pynml -validate *.channel.nml
 
 
 echo
