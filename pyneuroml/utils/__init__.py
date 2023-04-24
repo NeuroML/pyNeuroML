@@ -178,7 +178,7 @@ def rotate_cell(
     soma_seg = cell.get_segment(soma_seg_id)
     cell_origin = numpy.array([soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z])
     newcell = copy.deepcopy(cell)
-    print(f"Rotating {newcell.id}")
+    print(f"Rotating {newcell.id} by {x}, {y}, {z}")
 
     # calculate rotations
     if x != 0:
