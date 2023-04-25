@@ -151,5 +151,5 @@ examples/results/*.dat
 /tests/iv_izh2007RS0.net.nml
 /tests/leak_chan.channel.nml
 /tests/test_cell_analysis.cell.nml
-
+arm64
 *.neux
