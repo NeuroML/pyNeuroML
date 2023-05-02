@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.githubusercontent.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd"
+         id="Izh2007One">
+
+
+    <izhikevich2007Cell id="RS" v0 = "-60mV" C="100 pF" k = "0.7 nS_per_mV"
+                        vr = "-60 mV" vt = "-40 mV" vpeak = "35 mV" 
+                        a = "0.03 per_ms" b = "-2 nS" c = "-50 mV" d = "100 pA">
+        <notes>Regular spiking cell</notes>
+    </izhikevich2007Cell>
+
+
+    <izhikevich2007Cell id="weaklyAdapting" v0 = "-65mV" C = "300 pF" k = "1 nS_per_mV" 
+                        vr = "-61.8 mV" vt = "-57.0 mV" vpeak = "22.6 mV"
+                        a = "0.001 per_ms"  b = "3 nS" c = "-65.8 mV" d = "5 pA" >
+        <notes>Weakly adapting cell</notes>
+    </izhikevich2007Cell>
+    
+
+
+    <izhikevich2007Cell id="stronglyAdapting" v0 = "-65mV" C="115 pF" k = "0.3 nS_per_mV"
+                        vr = "-61.8 mV" vt = "-57.0 mV" vpeak = "22.6 mV" 
+                        a = "0.0012 per_ms" b = "3 nS" c = "-65.8 mV" d = "10 pA" >
+        <notes>Strongly adapting cell</notes>
+    </izhikevich2007Cell>
+
+
+    <izhikevich2007Cell id="LS" v0 = "-66mV" C="20 pF" k = ".3 nS_per_mV"
+                        vr = "-66 mV" vt = "-40 mV" vpeak = "30 mV" 
+                        a = "0.17 per_ms" b = "5 nS" c = "-45 mV" d = "100 pA">
+        <notes>Low threshold spiking cell</notes>
+    </izhikevich2007Cell>
+
+
+
+    <pulseGenerator id="RS_Iext" delay="0ms" duration="520ms" amplitude="100 pA"/>
+    <pulseGenerator id="weakIext"   delay="0ms" duration="1000ms" amplitude="100 pA"/>
+    <pulseGenerator id="weakIshift" delay="0ms" duration="1000ms" amplitude="-45 pA"/>
+    <pulseGenerator id="strongIext"   delay="0ms" duration="1000ms" amplitude="100 pA"/>
+    <pulseGenerator id="strongIshift" delay="0ms" duration="1000ms" amplitude="0 pA"/>
+    <pulseGenerator id="LSIext" delay="100ms" duration="500ms" amplitude="130 pA"/>
+
+    <network id="net1">
+        <notes>A number of different Izhikevich spiking cells</notes>
+        <property tag="recommended_dt_ms" value="0.025"/>
+        <property tag="recommended_duration_ms" value="700"/>
+
+        <population id="weakpop" component="weaklyAdapting" size="1" type="populationList">
+            <property tag="color" value="0 0.6 0"/>
+            <property tag="radius" value="5"/>
+            <instance id="0">
+                <location x="0" y="0" z="0"/>
+            </instance>
+        </population>
+        
+        <population id="strongpop" component="stronglyAdapting" size="1" type="populationList">
+            <property tag="color" value="0 0 0.6"/>
+            <property tag="radius" value="5"/>
+            <instance id="0">
+                <location x="40" y="0" z="0"/>
+            </instance>
+        </population>
+        
+        <population id="RS_pop" component="RS" size="1" type="populationList">
+            <property tag="color" value="0 0.6 0.6"/>
+            <property tag="radius" value="5"/>
+            <instance id="0">
+                <location x="80" y="0" z="0"/>
+            </instance>
+        </population>
+    
+        <population id="LSpop" component="LS" type="populationList" size="1">
+            <property tag="color" value="0.6 0.6 0"/>
+            <property tag="radius" value="5"/>
+            <instance id="0">
+                <location x="120" y="0" z="0"/>
+            </instance>
+        </population>
+    
+        <explicitInput target="weakpop/0/weaklyAdapting" input="weakIext" destination="synapses"/>
+        <explicitInput target="weakpop/0/weaklyAdapting" input="weakIshift" destination="synapses"/>
+    
+        <explicitInput target="strongpop/0/stronglyAdapting" input="strongIext" destination="synapses"/>
+        <explicitInput target="strongpop/0/stronglyAdapting" input="strongIshift" destination="synapses"/>
+    
+        <explicitInput target="RS_pop/0/RS" input="RS_Iext" destination="synapses"/>
+    
+        <inputList id="iLSIext" component="LSIext" population="LSpop">
+            <input id="0" target="../LSpop/0/LS" destination="synapses"/>
+        </inputList>
+    
+    </network>
+
+</neuroml>

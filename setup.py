@@ -16,6 +16,7 @@ extras = {
     "tune": ["neurotune @ git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune",
              "inspyred @ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred",
              "ppft"],
+    "vispy": ["vispy", "pyqt5"],
 }
 extras["all"] = sum(extras.values(), []),
 
