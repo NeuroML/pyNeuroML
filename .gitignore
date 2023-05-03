@@ -153,3 +153,5 @@ examples/results/*.dat
 /tests/test_cell_analysis.cell.nml
 arm64
 *.neux
+/test_*plot*png
+/examples/plot.py
