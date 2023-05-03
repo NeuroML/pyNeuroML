@@ -7,6 +7,7 @@ import numpy as np
 from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.lems import generate_lems_file_for_neuroml
+from pyneuroml.utils.plot import get_next_hex_color
 import neuroml as nml
 from pyelectro.analysis import max_min
 from pyelectro.analysis import mean_spike_frequency
@@ -240,7 +241,7 @@ def generate_current_vs_frequency_curve(
     for i in range(number_cells):
         ref = "v_cell%i" % i
         quantity = "%s[%i]/v" % (pop.id, i)
-        ls.add_line_to_display(disp0, ref, quantity, "1mV", pynml.get_next_hex_color())
+        ls.add_line_to_display(disp0, ref, quantity, "1mV", get_next_hex_color())
         ls.add_column_to_output_file(of0, ref, quantity)
 
     lems_file_name = ls.save_to_file()

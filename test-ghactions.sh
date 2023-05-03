@@ -135,6 +135,7 @@ if [ "$run_neuron_examples" == true ]; then
     echo "################################################"
     echo "##   Try exporting morphologies to NeuroML from NEURON"
 
+        nrnivmodl
         # Export NeuroML v1 from NEURON example
         python export_neuroml1.py
 
