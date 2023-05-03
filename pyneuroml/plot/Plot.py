@@ -177,15 +177,14 @@ def generate_plot(
         label = "" if not labels else labels[i]
         marker = None if not markers else markers[i]
         linewidth = 1 if not linewidths else linewidths[i]
-        markersize = 6 if not markersizes else markersizes[i]
+        markersize = None if not markersizes else markersizes[i]
 
         if colors:
             plt.plot(
                 xvalues[i],
                 yvalues[i],
-                "o",
-                color=colors[i],
                 marker=marker,
+                color=colors[i],
                 markersize=markersize,
                 linestyle=linestyle,
                 linewidth=linewidth,
@@ -195,7 +194,6 @@ def generate_plot(
             plt.plot(
                 xvalues[i],
                 yvalues[i],
-                "o",
                 marker=marker,
                 markersize=markersize,
                 linestyle=linestyle,
@@ -385,7 +383,7 @@ def generate_interactive_plot(
         raise ValueError("labels not provided correctly")
 
     if not markersizes:
-        markersizes = len(xvalues) * [6.0]
+        markersizes = len(xvalues) * [6]
     if not markers:
         markers = len(xvalues) * [0]
     if not linestyles:
