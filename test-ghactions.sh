@@ -1,6 +1,6 @@
 set -e
 
-python setup.py install
+pip install .
 
 echo
 echo "################################################"
