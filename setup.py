@@ -16,6 +16,7 @@ extras = {
     "tune": ["neurotune @ git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune",
              "inspyred @ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred",
              "ppft"],
+    "vispy": ["vispy", "pyqt5"],
 }
 extras["all"] = sum(extras.values(), []),
 
@@ -91,7 +92,6 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=[
-        "argparse",
         "pylems>=0.5.7",
         "airspeed>=0.5.5",
         "neuromllite>=0.4.1",  # sets dependency for libNeuroML also
