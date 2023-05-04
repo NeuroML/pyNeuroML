@@ -104,7 +104,7 @@ def process_args():
         type=str,
         metavar="<theme: light, dark>",
         default=DEFAULTS["theme"],
-        help="Theme to use for interactive 3d plotting",
+        help="Theme to use for interactive 3d plotting (not used for 2d plotting)",
     )
     parser.add_argument(
         "-minWidth",
