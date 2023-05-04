@@ -148,7 +148,7 @@ class TestMorphologyPlot(BaseTestCase):
                 nogui=True,
                 plane2d=plane,
                 save_to_file=filename,
-                plot_type="Constant",
+                plot_type="constant",
             )
 
             self.assertIsFile(filename)
@@ -171,7 +171,7 @@ class TestMorphologyPlot(BaseTestCase):
                 nogui=True,
                 plane2d=plane,
                 save_to_file=filename,
-                plot_type="Schematic",
+                plot_type="schematic",
             )
 
             self.assertIsFile(filename)
@@ -202,7 +202,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
         plot_3D_cell_morphology(
-            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="Constant"
+            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
         )
 
         # test a circular soma
@@ -210,7 +210,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_doc = read_neuroml2_file(nml_file)
         cell = nml_doc.cells[0]  # type: neuroml.Cell
         plot_3D_cell_morphology(
-            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="Constant"
+            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
         )
 
     def test_3d_plotter_plotly(self):
