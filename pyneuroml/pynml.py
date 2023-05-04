@@ -1801,10 +1801,10 @@ def reload_saved_data(
                     elif format == "ID_TIME":
                         id = int(values[0])
                         t = float(values[1])
-                logger.debug(
-                    "Found a event in cell %s (%s) at t = %s" % (id, selections[id], t)
-                )
-                events[selections[id]].append(t)
+                    logger.debug(
+                        "Found a event in cell %s (%s) at t = %s" % (id, selections[id], t)
+                    )
+                    events[selections[id]].append(t)
 
             if remove_dat_files_after_load:
                 logger.warning(
