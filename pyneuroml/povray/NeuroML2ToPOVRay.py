@@ -1,13 +1,15 @@
-#
-#   A file for converting NeuroML 2 files (including cells & network structure)
-#   into POVRay files for 3D rendering
-#
-#   Author: Padraig Gleeson & Matteo Farinella
-#
-#   This file has been developed as part of the neuroConstruct project
-#   This work has been funded by the Medical Research Council and Wellcome Trust
+"""
+A file for converting NeuroML 2 files (including cells & network structure)
+into POVRay files for 3D rendering
+
+Author: Padraig Gleeson & Matteo Farinella
+
+This file has been developed as part of the neuroConstruct project
+This work has been funded by the Medical Research Council and Wellcome Trust
+"""
 
 
+import typing
 import random
 import argparse
 import logging
@@ -17,9 +19,9 @@ from pyneuroml import pynml
 
 logger = logging.getLogger(__name__)
 
-_WHITE = "<1,1,1,0.55>"
-_BLACK = "<0,0,0,0.55>"
-_GREY = "<0.85,0.85,0.85,0.55>"
+_WHITE = "<1,1,1,0.55>"  # type: str
+_BLACK = "<0,0,0,0.55>"  # type: str
+_GREY = "<0.85,0.85,0.85,0.55>"  # type: str
 
 _DUMMY_CELL = "DUMMY_CELL"
 
@@ -49,7 +51,7 @@ defaults = {
     "mindiam": 0,
     "plane": False,
     "segids": False,
-}
+}  # type: typing.Dict[str, typing.Any]
 
 
 def process_args():
@@ -258,28 +260,80 @@ def main():
 
 
 def generate_povray(
-    neuroml_file,
-    split=defaults["split"],
-    background=defaults["background"],
-    movie=defaults["movie"],
-    inputs=defaults["inputs"],
-    conns=defaults["conns"],
-    conn_points=defaults["conn_points"],
-    v=defaults["v"],
-    frames=defaults["frames"],
-    posx=defaults["posx"],
-    posy=defaults["posy"],
-    posz=defaults["posz"],
-    viewx=defaults["viewx"],
-    viewy=defaults["viewy"],
-    viewz=defaults["viewz"],
-    scalex=defaults["scalex"],
-    scaley=defaults["scaley"],
-    scalez=defaults["scalez"],
-    mindiam=defaults["mindiam"],
-    plane=defaults["plane"],
-    segids=defaults["segids"],
+    neuroml_file: str,
+    split: bool = defaults["split"],
+    background: str = defaults["background"],
+    movie: bool = defaults["movie"],
+    inputs: bool = defaults["inputs"],
+    conns: bool = defaults["conns"],
+    conn_points: bool = defaults["conn_points"],
+    v: bool = defaults["v"],
+    frames: bool = defaults["frames"],
+    posx: float = defaults["posx"],
+    posy: float = defaults["posy"],
+    posz: float = defaults["posz"],
+    viewx: float = defaults["viewx"],
+    viewy: float = defaults["viewy"],
+    viewz: float = defaults["viewz"],
+    scalex: float = defaults["scalex"],
+    scaley: float = defaults["scaley"],
+    scalez: float = defaults["scalez"],
+    mindiam: float = defaults["mindiam"],
+    plane: bool = defaults["plane"],
+    segids: bool = defaults["segids"],
 ):
+    """Generate a POVRAY image or movie file.
+
+    Please see http://www.povray.org/documentation/ and
+    https://wiki.povray.org/content/Main_Page for information on installing and
+    using POVRAY.
+
+    This function will generate POVRAY files that you can then run using
+    POVRAY.
+
+    :param neuroml_file: path to NeuroML file containing cell/network
+    :type neuroml_file: str
+    :param split: generate separate files for cells and network
+    :type split: bool
+    :param background: background for POVRAY rendering
+    :type background: str
+    :param movie: toggle between image and movie rendering
+    :type movie: bool
+    :param inputs: show locations of inputs also
+    :type inputs: bool
+    :param conns: show connections in networks with lines
+    :type conns: bool
+    :param conn_points: show end points of connections in network
+    :type conn_points: bool
+    :param v: toggle verbose output
+    :type v: bool
+    :param frames: number of frames to use in movie
+    :type frames: int
+    :param posx: offset position in x dir (0 is centre, 1 is top)
+    :type posx: float
+    :param posy: offset position in y dir (0 is centre, 1 is top)
+    :type posy: float
+    :param posz: offset position in z dir (0 is centre, 1 is top)
+    :type posz: float
+    :param viewx: offset viewing point in x dir (0 is centre, 1 is top)
+    :type viewx: float
+    :param viewy: offset viewing point in y dir (0 is centre, 1 is top)
+    :type viewy: float
+    :param viewz: offset viewing point in z dir (0 is centre, 1 is top)
+    :type viewz: float
+    :param scalex: scale position from network in x dir
+    :type scalex: float
+    :param scaley: scale position from network in y dir
+    :type scaley: float
+    :param scalez: scale position from network in z dir
+    :type scalez: float
+    :param mindiam: minimum diameter for dendrites/axons (to improve visualisations)
+    :type mindiam: float
+    :param plane: add a 2D plane below cell/network
+    :type plane: bool
+    :param segids: toggle showing segment ids
+    :type segids: bool
+    """
 
     xmlfile = neuroml_file
     pov_file_name = xmlfile
@@ -682,7 +736,6 @@ union {
             net_file.write("}\n")
 
     if conns or conn_points:
-
         projections = (
             nml_doc.networks[0].projections
             + nml_doc.networks[0].electrical_projections

@@ -45,7 +45,8 @@ def generate_plot(
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
-) -> matplotlib.axes.Axes:
+    close_plot: bool = False,
+) -> typing.Optional[matplotlib.axes.Axes]:
     """Utility function to generate plots using the Matplotlib library.
 
     This function can be used to generate graphs with multiple plot lines.
@@ -127,7 +128,9 @@ def generate_plot(
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
-    :returns: matplotlib.axes.Axes object
+    :param close_plot: call pyplot.close() to close plot after plotting
+    :type close_plot: bool
+    :returns: matplotlib.axes.Axes object if plot is not closed, else None
     """
 
     logger.info("Generating plot: %s" % (title))
@@ -174,15 +177,14 @@ def generate_plot(
         label = "" if not labels else labels[i]
         marker = None if not markers else markers[i]
         linewidth = 1 if not linewidths else linewidths[i]
-        markersize = 6 if not markersizes else markersizes[i]
+        markersize = None if not markersizes else markersizes[i]
 
         if colors:
             plt.plot(
                 xvalues[i],
                 yvalues[i],
-                "o",
-                color=colors[i],
                 marker=marker,
+                color=colors[i],
                 markersize=markersize,
                 linestyle=linestyle,
                 linewidth=linewidth,
@@ -192,7 +194,6 @@ def generate_plot(
             plt.plot(
                 xvalues[i],
                 yvalues[i],
-                "o",
                 marker=marker,
                 markersize=markersize,
                 linestyle=linestyle,
@@ -239,7 +240,13 @@ def generate_plot(
     if show_plot_already:
         plt.show()
 
-    return ax
+    if close_plot:
+        logger.info("Closing plot")
+        plt.close()
+    else:
+        return ax
+
+    return None
 
 
 def generate_interactive_plot(
@@ -376,7 +383,7 @@ def generate_interactive_plot(
         raise ValueError("labels not provided correctly")
 
     if not markersizes:
-        markersizes = len(xvalues) * [6.0]
+        markersizes = len(xvalues) * [6]
     if not markers:
         markers = len(xvalues) * [0]
     if not linestyles:

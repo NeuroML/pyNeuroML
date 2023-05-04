@@ -12,9 +12,13 @@ from pyneuroml.plot import generate_plot
 
 logger = logging.getLogger(__name__)
 
+FORMAT_ID_T = "id_t"
+FORMAT_ID_TIME_NEST_DAT = "id_t_nest_dat"
+FORMAT_T_ID = "t_id"
+
 
 DEFAULTS = {
-    "format": "id_t",
+    "format": FORMAT_ID_T,
     "rates": False,
     "save_spike_plot_to": None,
     "rate_window": 50,
@@ -74,8 +78,9 @@ def process_args():
         metavar="<format>",
         default=DEFAULTS["format"],
         help="How the spiketimes are represented on each line of file: \n"
-        + "id_t: id of cell, space(s) / tab(s), time of spike (default);\n"
-        + "t_id: time of spike, space(s) / tab(s), id of cell;\n"
+        + "%s: id of cell, space(s) / tab(s), time of spike (default);\n"%FORMAT_ID_T
+        + "%s: id of cell, space(s) / tab(s), time of spike, allowing NEST dat file comments/metadata;\n"%FORMAT_ID_TIME_NEST_DAT
+        + "%s: time of spike, space(s) / tab(s), id of cell;\n"%FORMAT_T_ID
         + "sonata: SONATA format HDF5 file containing spike times",
     )
 
@@ -288,10 +293,10 @@ def run(a=None, **kwargs):
             ids_in_file[name] = []
 
             for line in spikes_file:
-                if not line.startswith("#"):
-                    if a.format == "id_t":
+                if not line.startswith("#") and not (line.startswith("sender") and a.format == FORMAT_ID_TIME_NEST_DAT):
+                    if a.format == FORMAT_ID_T or a.format == FORMAT_ID_TIME_NEST_DAT:
                         [id, t] = line.split()
-                    elif a.format == "t_id":
+                    elif a.format == FORMAT_T_ID:
                         [t, id] = line.split()
                     id_shifted = offset_id + int(float(id))
                     max_id = max(max_id, id_shifted)
