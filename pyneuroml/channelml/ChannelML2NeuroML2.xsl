@@ -107,7 +107,7 @@
   <xsl:template match="/cml:channelml">
     <xsl:element name="neuroml" namespace="http://www.neuroml.org/schema/neuroml2">
       <!--<xsl:attribute name="schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://www.neuroml.org/schema/neuroml2 ../../../Schemas/NeuroML2/NeuroML_v2alpha.xsd</xsl:attribute>-->
-      <xsl:attribute name="schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://www.neuroml.org/schema/neuroml2 https://github.com/NeuroML/NeuroML2/raw/master/Schemas/NeuroML2/NeuroML_v2.2.xsd</xsl:attribute>
+      <xsl:attribute name="schemaLocation" namespace="http://www.w3.org/2001/XMLSchema-instance">http://www.neuroml.org/schema/neuroml2 https://github.com/NeuroML/NeuroML2/raw/master/Schemas/NeuroML2/NeuroML_v2.3.xsd</xsl:attribute>
       <xsl:attribute name="id">
         <xsl:choose>
           <xsl:when test="count(cml:channel_type) &gt; 0">
