@@ -13,8 +13,8 @@ extras = {
     "povray": ["opencv-python"],
     "hdf5": ["tables"],
     "analysis": ["pyelectro"],
-    "tune": ["neurotune @ git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune",
-             "inspyred @ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred",
+    "tune": ["neurotune @ git+ssh://git@github.com/NeuralEnsemble/neurotune.git",
+             "inspyred @ git+ssh://git@github.com/aarongarrett/inspyred.git",
              "ppft"],
     "vispy": ["vispy", "pyqt5"],
 }
