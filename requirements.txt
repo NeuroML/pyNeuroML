@@ -11,8 +11,8 @@ ppft
 git+https://github.com/NeuralEnsemble/libNeuroML.git@master#egg=libNeuroML
 git+https://github.com/LEMS/pylems.git@master#egg=pylems
 
-git+https://github.com/NeuralEnsemble/pyelectro.git@master#egg=pyelectro
-git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune
+pyelectro
+neurotune
 
 git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
 
