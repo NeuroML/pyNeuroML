@@ -1,6 +1,6 @@
 import logging
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 JNEUROML_VERSION = "0.12.2"
 
