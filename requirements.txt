@@ -4,7 +4,6 @@ matplotlib
 graphviz
 vispy
 pyqt5
-modelspec>=0.1.3
 NEURON
 ppft
 
