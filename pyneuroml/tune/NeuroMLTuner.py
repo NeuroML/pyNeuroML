@@ -4,7 +4,7 @@ A Neurotune based model optimizer for NeuroML models.
 This module provides the `run_optimisation` function that pyNeuroML users can
 use to optimise their NeuroML models. It uses the evolutionary computation
 framework provided by Neurotune, which is based on the Inspyred optimisation
-library's Evolutionary Computation class `inpsyred.ec.EvolutionaryComputation`:
+library's Evolutionary Computation class `inspyred.ec.EvolutionaryComputation`:
 
 - https://neurotune.readthedocs.io/en/latest/index.html
 - https://github.com/aarongarrett/inspyred/

@@ -12,9 +12,7 @@ git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML
 git+https://github.com/LEMS/pylems.git@development#egg=pylems
 
 pyelectro
-neurotune
-
-git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
+neurotune>=0.2.6 # now manages the version of inspyred
 
 pytest
 pytest-cov
