@@ -12,8 +12,7 @@ pylems
 graphviz
 argparse
 neuromllite
-neurotune
-git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
+neurotune>=0.2.6 # now manages the version of inspyred
 neuron
 pydata-sphinx-theme
 vispy
