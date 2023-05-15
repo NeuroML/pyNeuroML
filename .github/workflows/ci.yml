@@ -54,6 +54,9 @@ jobs:
         pip install -r requirements.txt
         pip install .
 
+        # Ensure very latest neurotune (not on pypi) is installed
+        pip install git+https://github.com/aarongarrett/inspyred.git@master
+
     - name: List packages so far
       run: |
         pip list
