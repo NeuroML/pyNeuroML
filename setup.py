@@ -14,7 +14,6 @@ extras = {
     "hdf5": ["tables"],
     "analysis": ["pyelectro"],
     "tune": ["neurotune",
-             "inspyred @ git+ssh://git@github.com/aarongarrett/inspyred.git",
              "ppft"],
     "vispy": ["vispy", "pyqt5"],
 }
