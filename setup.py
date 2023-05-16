@@ -13,8 +13,7 @@ extras = {
     "povray": ["opencv-python"],
     "hdf5": ["tables"],
     "analysis": ["pyelectro"],
-    "tune": ["neurotune @ git+https://github.com/NeuralEnsemble/neurotune.git@master#egg=neurotune",
-             "inspyred @ git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred",
+    "tune": ["neurotune",
              "ppft"],
     "vispy": ["vispy", "pyqt5"],
 }
@@ -94,8 +93,8 @@ setup(
     install_requires=[
         "pylems>=0.5.7",
         "airspeed>=0.5.5",
-        "neuromllite>=0.4.1",  # sets dependency for libNeuroML also
-        "libNeuroML>=0.3.1",
+        "neuromllite>=0.5.4", 
+        "libNeuroML>=0.5.1",
         "matplotlib",
         "matplotlib-scalebar",
         "graphviz",

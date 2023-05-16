@@ -11,10 +11,9 @@ git+https://github.com/ModECI/modelspec.git@development#egg=modelspec
 git+https://github.com/NeuralEnsemble/libNeuroML.git@development#egg=libNeuroML
 git+https://github.com/LEMS/pylems.git@development#egg=pylems
 
-git+https://github.com/NeuralEnsemble/pyelectro.git@development#egg=pyelectro
-git+https://github.com/NeuralEnsemble/neurotune.git@development#egg=neurotune
+pyelectro
+neurotune>=0.2.6 # now manages the version of inspyred
 
-git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
 
 pytest
 pytest-cov

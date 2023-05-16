@@ -53,7 +53,7 @@ DEFAULTS = {
     "plane2d": "xy",
     "minWidth": 0.8,
     "square": False,
-    "plotType": "Constant",
+    "plotType": "constant",
     "theme": "light",
 }
 
@@ -95,7 +95,7 @@ def process_args():
     parser.add_argument(
         "-plotType",
         type=str,
-        metavar="<type: Detailed, Constant, or Schematic>",
+        metavar="<type: detailed, constant, or schematic>",
         default=DEFAULTS["plotType"],
         help="Level of detail to plot in",
     )
@@ -104,7 +104,7 @@ def process_args():
         type=str,
         metavar="<theme: light, dark>",
         default=DEFAULTS["theme"],
-        help="Theme to use for interactive 3d plotting",
+        help="Theme to use for interactive 3d plotting (not used for 2d plotting)",
     )
     parser.add_argument(
         "-minWidth",
@@ -180,7 +180,7 @@ def plot_interactive_3D(
     nml_file: str,
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
-    plot_type: str = "Constant",
+    plot_type: str = "constant",
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
@@ -198,10 +198,10 @@ def plot_interactive_3D(
     :type verbose: bool
     :param plot_type: type of plot, one of:
 
-        - "Detailed": show detailed morphology taking into account each segment's
+        - "detailed": show detailed morphology taking into account each segment's
           width
-        - "Constant": show morphology, but use constant line widths
-        - "Schematic": only plot each unbranched segment group as a straight
+        - "constant": show morphology, but use constant line widths
+        - "schematic": only plot each unbranched segment group as a straight
           line, not following each segment
 
         This is only applicable for neuroml.Cell cells (ones with some
@@ -215,9 +215,9 @@ def plot_interactive_3D(
     :param nogui: toggle showing gui (for testing only)
     :type nogui: bool
     """
-    if plot_type not in ["Detailed", "Constant", "Schematic"]:
+    if plot_type not in ["detailed", "constant", "schematic"]:
         raise ValueError(
-            "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
+            "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
 
     if verbose:
@@ -322,7 +322,7 @@ def plot_interactive_3D(
                 marker_sizes.extend([radius])
                 marker_colors.extend([color])
             else:
-                if plot_type == "Schematic":
+                if plot_type == "schematic":
                     plot_3D_schematic(
                         offset=pos,
                         cell=cell,
@@ -373,7 +373,7 @@ def plot_2D(
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
     square: bool = False,
-    plot_type: str = "Detailed",
+    plot_type: str = "detailed",
     title: typing.Optional[str] = None,
     close_plot: bool = False,
 ):
@@ -403,10 +403,10 @@ def plot_2D(
     :type square: bool
     :param plot_type: type of plot, one of:
 
-        - "Detailed": show detailed morphology taking into account each segment's
+        - "detailed": show detailed morphology taking into account each segment's
           width
-        - "Constant": show morphology, but use constant line widths
-        - "Schematic": only plot each unbranched segment group as a straight
+        - "constant": show morphology, but use constant line widths
+        - "schematic": only plot each unbranched segment group as a straight
           line, not following each segment
 
         This is only applicable for neuroml.Cell cells (ones with some
@@ -419,9 +419,9 @@ def plot_2D(
     :type close_plot: bool
     """
 
-    if plot_type not in ["Detailed", "Constant", "Schematic"]:
+    if plot_type not in ["detailed", "constant", "schematic"]:
         raise ValueError(
-            "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
+            "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
 
     if verbose:
@@ -479,7 +479,7 @@ def plot_2D(
                     nogui=True,
                 )
             else:
-                if plot_type == "Schematic":
+                if plot_type == "schematic":
                     plot_2D_schematic(
                         offset=pos,
                         cell=cell,
@@ -533,7 +533,7 @@ def plot_3D_cell_morphology_plotly(
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
-    plot_type: str = "Detailed",
+    plot_type: str = "detailed",
 ):
     """Plot NeuroML2 cell morphology interactively using Plot.ly
 
@@ -557,15 +557,15 @@ def plot_3D_cell_morphology_plotly(
     :type save_to_file: str
     :param plot_type: type of plot, one of:
 
-        - Detailed: show detailed morphology taking into account each segment's
+        - detailed: show detailed morphology taking into account each segment's
           width
-        - Constant: show morphology, but use constant line widths
+        - constant: show morphology, but use constant line widths
 
     :type plot_type: str
     """
-    if plot_type not in ["Detailed", "Constant"]:
+    if plot_type not in ["detailed", "constant"]:
         raise ValueError(
-            "plot_type must be one of 'Detailed', 'Constant', or 'Schematic'"
+            "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
 
     nml_model = read_neuroml2_file(nml_file)
@@ -584,7 +584,7 @@ def plot_3D_cell_morphology_plotly(
             width = max(p.diameter, d.diameter)
             if width < min_width:
                 width = min_width
-            if plot_type == "Constant":
+            if plot_type == "constant":
                 width = min_width
             fig.add_trace(
                 go.Scatter3d(
@@ -654,7 +654,7 @@ def plot_2D_cell_morphology(
     nogui: bool = True,
     autoscale: bool = True,
     square: bool = False,
-    plot_type: str = "Detailed",
+    plot_type: str = "detailed",
     save_to_file: typing.Optional[str] = None,
     close_plot: bool = False,
     overlay_data: typing.Dict[int, float] = None,
@@ -788,7 +788,7 @@ def plot_2D_cell_morphology(
         if width < min_width:
             width = min_width
 
-        if plot_type == "Constant":
+        if plot_type == "constant":
             width = min_width
 
         if overlay_data and acolormap and norm:
@@ -910,7 +910,7 @@ def plot_3D_cell_morphology(
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
-    plot_type: str = "Constant",
+    plot_type: str = "constant",
     theme="light",
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
@@ -960,11 +960,11 @@ def plot_3D_cell_morphology(
     :type current_view: ViewBox
     :param plot_type: type of plot, one of:
 
-        - "Detailed": show detailed morphology taking into account each segment's
+        - "detailed": show detailed morphology taking into account each segment's
           width. This is not performant, because a new line is required for
           each segment. To only be used for cells with small numbers of
           segments
-        - "Constant": show morphology, but use constant line widths
+        - "constant": show morphology, but use constant line widths
 
         This is only applicable for neuroml.Cell cells (ones with some
         morphology)
@@ -1033,7 +1033,7 @@ def plot_3D_cell_morphology(
         if width < min_width:
             width = min_width
 
-        if plot_type == "Constant":
+        if plot_type == "constant":
             width = min_width
 
         seg_color = "white"
@@ -1066,14 +1066,14 @@ def plot_3D_cell_morphology(
             marker_colors.append(seg_color)
             marker_sizes.append(p.diameter)
 
-        if plot_type == "Constant":
+        if plot_type == "constant":
             points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
             colors.append(seg_color)
             points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
             colors.append(seg_color)
             toconnect.append([len(points) - 2, len(points) - 1])
         # every segment plotted individually
-        elif plot_type == "Detailed":
+        elif plot_type == "detailed":
             points = []
             toconnect = []
             colors = []
@@ -1090,7 +1090,7 @@ def plot_3D_cell_morphology(
                 width=width,
             )
 
-    if plot_type == "Constant":
+    if plot_type == "constant":
         scene.Line(
             pos=points,
             color=colors,
