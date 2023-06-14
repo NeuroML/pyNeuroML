@@ -39,23 +39,22 @@ jobs:
     - name: Install deps from development
       if: ${{ github.ref == 'refs/heads/development' || github.base_ref == 'development' }}
       run: |
+        python -m pip install --upgrade pip
         echo "Using deps from development for our repos"
-        cp -v requirements-development.txt requirements.txt
+        pip install .[dev]
 
     - name: Install deps from experimental
       if: ${{ github.ref == 'refs/heads/experimental' || github.base_ref == 'experimental' }}
       run: |
+        python -m pip install --upgrade pip
         echo "Using deps from experimental - assuming development in others"
-        cp -v requirements-experimental.txt requirements.txt
+        pip install .[experimental]
 
     - name: Install package
       run: |
-        python -m pip install --upgrade pip
-
         # Ensure very latest inspyred (not on pypi) is installed
         pip install git+https://github.com/aarongarrett/inspyred.git@master#egg=inspyred
 
-        pip install -r requirements.txt
         pip install .
 
     - name: List packages so far
