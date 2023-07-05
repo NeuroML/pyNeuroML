@@ -57,6 +57,8 @@ def generate_current_vs_frequency_curve(
     title_above_plot: bool = False,
     return_axes: bool = False,
     verbose: bool = False,
+    segment_id: typing.Optional[str] = None,
+    fraction_along: typing.Optional[float] = None
 ):
     """Generate current vs firing rate frequency curve for provided cell.
 
@@ -142,6 +144,10 @@ def generate_current_vs_frequency_curve(
     :param return_axes: toggle whether plotting axis should be returned.
         This is useful if one wants to overlay more graphs in the same plot.
     :type return_axes: bool
+    :param segment_id: segment id to attach input to
+    :type segment_id: str
+    :param fraction_along: fraction along on segment to attach to
+    :type fraction_along: float
     :param verbose:
     :type verbose:
 
@@ -223,10 +229,12 @@ def generate_current_vs_frequency_curve(
 
         # Add these to cells
         input_list = nml.InputList(id=input_id, component=pg.id, populations=pop.id)
-        input = nml.Input(
-            id="0", target="../%s[%i]" % (pop.id, i), destination="synapses"
+        aninput = nml.Input(
+            id="0", target="../%s[%i]" % (pop.id, i), destination="synapses",
+            segment_id=segment_id, fraction_along=fraction_along
         )
-        input_list.input.append(input)
+        input_list.input.append(aninput)
+
         net.input_lists.append(input_list)
 
     net_file_name = "%s.net.nml" % sim_id
