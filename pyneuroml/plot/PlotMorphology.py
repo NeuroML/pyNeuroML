@@ -177,7 +177,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
 
 
 def plot_interactive_3D(
-    nml_file: str,
+    nml_file: typing.Union[str, Cell, NeuroMLDocument],
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
@@ -189,8 +189,9 @@ def plot_interactive_3D(
 
     https://vispy.org
 
-    :param nml_file: path to NeuroML cell file
-    :type nml_file: str
+    :param nml_file: path to NeuroML cell file or
+        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
+    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell
     :param min_width: minimum width for segments (useful for visualising very
         thin segments): default 0.8um
     :type min_width: float
@@ -223,13 +224,21 @@ def plot_interactive_3D(
     if verbose:
         print(f"Plotting {nml_file}")
 
-    nml_model = read_neuroml2_file(
-        nml_file,
-        include_includes=True,
-        check_validity_pre_include=False,
-        verbose=False,
-        optimized=True,
-    )
+    if type(nml_file) == str:
+        nml_model = read_neuroml2_file(
+            nml_file,
+            include_includes=True,
+            check_validity_pre_include=False,
+            verbose=False,
+            optimized=True,
+        )
+    elif isinstance(nml_file, Cell):
+        nml_model = NeuroMLDocument(id="newdoc")
+        nml_model.add(nml_file)
+    elif isinstance(nml_file, NeuroMLDocument):
+        nml_model = nml_file
+    else:
+        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
 
     (
         cell_id_vs_cell,
@@ -540,7 +549,7 @@ def plot_2D(
 
 
 def plot_3D_cell_morphology_plotly(
-    nml_file: str,
+    nml_file: typing.Union[str, Cell, NeuroMLDocument],
     min_width: float = 0.8,
     verbose: bool = False,
     nogui: bool = False,
@@ -556,8 +565,9 @@ def plot_3D_cell_morphology_plotly(
     https://plotly.com/python/webgl-vs-svg/
     https://en.wikipedia.org/wiki/WebGL
 
-    :param nml_file: path to NeuroML cell file
-    :type nml_file: str
+    :param nml_file: path to NeuroML cell file, or a
+        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
+    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell
     :param min_width: minimum width for segments (useful for visualising very
         thin segments): default 0.8um
     :type min_width: float
@@ -580,7 +590,21 @@ def plot_3D_cell_morphology_plotly(
             "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
 
-    nml_model = read_neuroml2_file(nml_file)
+    if type(nml_file) == str:
+        nml_model = read_neuroml2_file(
+            nml_file,
+            include_includes=True,
+            check_validity_pre_include=False,
+            verbose=False,
+            optimized=True,
+        )
+    elif isinstance(nml_file, Cell):
+        nml_model = NeuroMLDocument(id="newdoc")
+        nml_model.add(nml_file)
+    elif isinstance(nml_file, NeuroMLDocument):
+        nml_model = nml_file
+    else:
+        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
 
     fig = go.Figure()
     for cell in nml_model.cells:
