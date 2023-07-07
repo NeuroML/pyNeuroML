@@ -8,7 +8,6 @@ Copyright 2023 NeuroML contributors
 """
 
 import logging
-import textwrap
 import numpy
 import typing
 import random
@@ -24,66 +23,18 @@ from neuroml import Cell, Segment
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-VISPY_THEME = {
-    "light": {"bg": "white", "fg": "black"},
-    "dark": {"bg": "black", "fg": "white"},
-}
-PYNEUROML_VISPY_THEME = "light"
 
-try: 
-    from vispy import scene
-    from vispy.scene import SceneCanvas
-    from vispy.app import Timer
-
-
-    def add_text_to_vispy_3D_plot(
-        current_scene: SceneCanvas,
-        xv: typing.List[float],
-        yv: typing.List[float],
-        zv: typing.List[float],
-        color: str,
-        text: str,
-    ):
-        """Add text to a vispy plot between two points.
-
-        Wrapper around vispy.scene.visuals.Text
-
-        Rotates the text label to ensure it is at the same angle as the line.
-
-        :param scene: vispy scene object
-        :type scene: SceneCanvas
-        :param xv: start and end coordinates in one axis
-        :type xv: list[x1, x2]
-        :param yv: start and end coordinates in second axis
-        :type yv: list[y1, y2]
-        :param zv: start and end coordinates in third axix
-        :type zv: list[z1, z2]
-        :param color: color of text
-        :type color: str
-        :param text: text to write
-        :type text: str
-        """
-
-        angle = int(numpy.rad2deg(numpy.arctan2((yv[1] - yv[0]), (xv[1] - xv[0]))))
-        if angle > 90:
-            angle -= 180
-        elif angle < -90:
-            angle += 180
-
-        return scene.Text(
-            pos=((xv[0] + xv[1]) / 2, (yv[0] + yv[1]) / 2, (zv[0] + zv[1]) / 2),
-            text=text,
-            color=color,
-            rotation=angle,
-            parent=current_scene,
-        )
-
-except:
-    print("\n**************************\n  Please install vispy to use 3D plotting features!\n**************************")
-    
-
-
-
+DEFAULTS = {
+    "v": False,
+    "nogui": False,
+    "saveToFile": None,
+    "interactive3d": False,
+    "plane2d": "xy",
+    "minWidth": 0.8,
+    "square": False,
+    "plotType": "constant",
+    "theme": "light",
+}  # type: dict[str, typing.Any]
 
 
 def add_text_to_matplotlib_2D_plot(
@@ -353,212 +304,6 @@ def add_line_to_matplotlib_2D_plot(ax, xv, yv, width, color, axis_min_max):
     axis_min_max[0] = min(axis_min_max[0], xv[1])
     axis_min_max[1] = max(axis_min_max[1], xv[0])
     axis_min_max[1] = max(axis_min_max[1], xv[1])
-
-
-def create_new_vispy_canvas(
-    view_min: typing.Optional[typing.List[float]] = None,
-    view_max: typing.Optional[typing.List[float]] = None,
-    title: str = "",
-    console_font_size: float = 10,
-    axes_pos: typing.Optional[typing.List] = None,
-    axes_length: float = 100,
-    axes_width: int = 2,
-    theme=PYNEUROML_VISPY_THEME,
-):
-    """Create a new vispy scene canvas with a view and optional axes lines
-
-    Reference: https://vispy.org/gallery/scene/axes_plot.html
-
-    :param view_min: min view co-ordinates
-    :type view_min: [float, float, float]
-    :param view_max: max view co-ordinates
-    :type view_max: [float, float, float]
-    :param title: title of plot
-    :type title: str
-    :param axes_pos: position to draw axes at
-    :type axes_pos: [float, float, float]
-    :param axes_length: length of axes
-    :type axes_length: float
-    :param axes_width: width of axes lines
-    :type axes_width: float
-    :returns: scene, view
-    """
-    canvas = scene.SceneCanvas(
-        keys="interactive",
-        show=True,
-        bgcolor=VISPY_THEME[theme]["bg"],
-        size=(800, 600),
-        title="NeuroML viewer (VisPy)",
-    )
-    grid = canvas.central_widget.add_grid(margin=10)
-    grid.spacing = 0
-
-    title_widget = scene.Label(title, color=VISPY_THEME[theme]["fg"])
-    title_widget.height_max = 80
-    grid.add_widget(title_widget, row=0, col=0, col_span=1)
-
-    console_widget = scene.Console(
-        text_color=VISPY_THEME[theme]["fg"],
-        font_size=console_font_size,
-    )
-    console_widget.height_max = 80
-    grid.add_widget(console_widget, row=2, col=0, col_span=1)
-
-    bottom_padding = grid.add_widget(row=3, col=0, col_span=1)
-    bottom_padding.height_max = 10
-
-    view = grid.add_view(row=1, col=0, border_color=None)
-
-    # create cameras
-    # https://vispy.org/gallery/scene/flipped_axis.html
-    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
-
-    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
-
-    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
-
-    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
-    # do not keep z up
-    cam4.autoroll = False
-
-    cams = [cam4, cam2]
-
-    # console text
-    console_text = "Controls: reset view: 0; quit: Esc/9"
-    if len(cams) > 1:
-        console_text += "; cycle camera: 1, 2 (fwd/bwd)"
-
-    cam_text = {
-        cam1: textwrap.dedent(
-            """
-            Left mouse button: pans view; right mouse button or scroll:
-            zooms"""
-        ),
-        cam2: textwrap.dedent(
-            """
-            Left mouse button: orbits view around center point; right mouse
-            button or scroll: change zoom level; Shift + left mouse button:
-            translate center point; Shift + right mouse button: change field of
-            view; r/R: view rotation animation"""
-        ),
-        cam3: textwrap.dedent(
-            """
-            Left mouse button: orbits view around center point; right
-            mouse button or scroll: change zoom level; Shift + left mouse
-            button: translate center point; Shift + right mouse button: change
-            field of view"""
-        ),
-        cam4: textwrap.dedent(
-            """
-            Arrow keys/WASD to move forward/backwards/left/right; F/C to move
-            up and down; Space to brake; Left mouse button/I/K/J/L to control
-            pitch and yaw; Q/E for rolling"""
-        ),
-    }
-
-    # Turntable is default
-    cam_index = 1
-    view.camera = cams[cam_index]
-
-    if view_min is not None and view_max is not None:
-        view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
-        logger.debug(f"Center is {view_center}")
-        cam1.center = [view_center[0], view_center[1]]
-        cam2.center = view_center
-        cam3.center = view_center
-        cam4.center = view_center
-
-        for acam in cams:
-            x_width = abs(view_min[0] - view_max[0])
-            y_width = abs(view_min[1] - view_max[1])
-            z_width = abs(view_min[2] - view_max[2])
-
-            xrange = (
-                (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
-                if x_width > 0
-                else (-100, 100)
-            )
-            yrange = (
-                (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
-                if y_width > 0
-                else (-100, 100)
-            )
-            zrange = (
-                (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
-                if z_width > 0
-                else (-100, 100)
-            )
-            logger.debug(f"{xrange}, {yrange}, {zrange}")
-
-            acam.set_range(x=xrange, y=yrange, z=zrange)
-
-    for acam in cams:
-        acam.set_default_state()
-
-    console_widget.write(f"Center: {view.camera.center}")
-    console_widget.write(console_text)
-    console_widget.write(
-        f"Current camera: {view.camera.name}: "
-        + cam_text[view.camera].replace("\n", " ").strip()
-    )
-
-    if axes_pos:
-        points = [
-            axes_pos,  # origin
-            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
-            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
-            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
-        ]
-        scene.Line(
-            points,
-            connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
-            parent=view.scene,
-            color=VISPY_THEME[theme]["fg"],
-            width=axes_width,
-        )
-
-    def vispy_rotate(self):
-        view.camera.orbit(azim=1, elev=0)
-
-    rotation_timer = Timer(connect=vispy_rotate)
-
-    @canvas.events.key_press.connect
-    def vispy_on_key_press(event):
-        nonlocal cam_index
-
-        # Disable camera cycling. The fly camera looks sufficient.
-        # Keeping views/ranges same when switching cameras is not simple.
-        # Prev
-        if event.text == "1":
-            cam_index = (cam_index - 1) % len(cams)
-            view.camera = cams[cam_index]
-        # next
-        elif event.text == "2":
-            cam_index = (cam_index + 1) % len(cams)
-            view.camera = cams[cam_index]
-        # for turntable only: rotate animation
-        elif event.text == "R" or event.text == "r":
-            if view.camera == cam2:
-                if rotation_timer.running:
-                    rotation_timer.stop()
-                else:
-                    rotation_timer.start()
-        # reset
-        elif event.text == "0":
-            view.camera.reset()
-        # quit
-        elif event.text == "9":
-            canvas.app.quit()
-
-        console_widget.clear()
-        # console_widget.write(f"Center: {view.camera.center}")
-        console_widget.write(console_text)
-        console_widget.write(
-            f"Current camera: {view.camera.name}: "
-            + cam_text[view.camera].replace("\n", " ").strip()
-        )
-
-    return scene, view
 
 
 def get_cell_bound_box(cell: Cell):

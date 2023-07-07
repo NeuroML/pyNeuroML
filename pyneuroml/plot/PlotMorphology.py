@@ -16,7 +16,6 @@ import random
 import typing
 import logging
 
-from vispy import app, scene
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
@@ -27,15 +26,13 @@ from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.plot import (
     add_text_to_matplotlib_2D_plot,
-    add_text_to_vispy_3D_plot,
     get_next_hex_color,
     add_box_to_matplotlib_2D_plot,
     get_new_matplotlib_morph_plot,
     autoscale_matplotlib_plot,
     add_scalebar_to_matplotlib_plot,
     add_line_to_matplotlib_2D_plot,
-    create_new_vispy_canvas,
-    get_cell_bound_box,
+    DEFAULTS
 )
 from neuroml import SegmentGroup, Cell, Segment, NeuroMLDocument
 from neuroml.neuro_lex_ids import neuro_lex_ids
@@ -43,19 +40,6 @@ from neuroml.neuro_lex_ids import neuro_lex_ids
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-DEFAULTS = {
-    "v": False,
-    "nogui": False,
-    "saveToFile": None,
-    "interactive3d": False,
-    "plane2d": "xy",
-    "minWidth": 0.8,
-    "square": False,
-    "plotType": "constant",
-    "theme": "light",
-}
 
 
 def process_args():
@@ -156,6 +140,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
     print(a)
     if a.interactive3d:
+        from pyneuroml.plot.PlotMorphologyVispy import plot_interactive_3D
         plot_interactive_3D(
             nml_file=a.nml_file,
             min_width=a.min_width,
@@ -176,208 +161,10 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
         )
 
 
-def plot_interactive_3D(
-    nml_file: typing.Union[str, Cell, NeuroMLDocument],
-    min_width: float = DEFAULTS["minWidth"],
-    verbose: bool = False,
-    plot_type: str = "constant",
-    title: typing.Optional[str] = None,
-    theme: str = "light",
-    nogui: bool = False,
-):
-    """Plot interactive plots in 3D using Vispy
-
-    https://vispy.org
-
-    :param nml_file: path to NeuroML cell file or
-        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
-    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell
-    :param min_width: minimum width for segments (useful for visualising very
-        thin segments): default 0.8um
-    :type min_width: float
-    :param verbose: show extra information (default: False)
-    :type verbose: bool
-    :param plot_type: type of plot, one of:
-
-        - "detailed": show detailed morphology taking into account each segment's
-          width
-        - "constant": show morphology, but use constant line widths
-        - "schematic": only plot each unbranched segment group as a straight
-          line, not following each segment
-
-        This is only applicable for neuroml.Cell cells (ones with some
-        morphology)
-
-    :type plot_type: str
-    :param title: title of plot
-    :type title: str
-    :param theme: theme to use (light/dark)
-    :type theme: str
-    :param nogui: toggle showing gui (for testing only)
-    :type nogui: bool
-    """
-    if plot_type not in ["detailed", "constant", "schematic"]:
-        raise ValueError(
-            "plot_type must be one of 'detailed', 'constant', or 'schematic'"
-        )
-
-    if verbose:
-        print(f"Plotting {nml_file}")
-
-    if type(nml_file) == str:
-        nml_model = read_neuroml2_file(
-            nml_file,
-            include_includes=True,
-            check_validity_pre_include=False,
-            verbose=False,
-            optimized=True,
-        )
-    elif isinstance(nml_file, Cell):
-        nml_model = NeuroMLDocument(id="newdoc")
-        nml_model.add(nml_file)
-    elif isinstance(nml_file, NeuroMLDocument):
-        nml_model = nml_file
-    else:
-        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
-
-    (
-        cell_id_vs_cell,
-        pop_id_vs_cell,
-        positions,
-        pop_id_vs_color,
-        pop_id_vs_radii,
-    ) = extract_position_info(nml_model, verbose)
-
-    # Collect all markers and only plot one markers object
-    # this is more efficient than multiple markers, one for each point.
-    # TODO: also collect all line points and only use one object rather than a
-    # new object for each cell: will only work for the case where all lines
-    # have the same width
-    marker_sizes = []
-    marker_points = []
-    marker_colors = []
-
-    if title is None:
-        title = f"{nml_model.networks[0].id} from {nml_file}"
-
-    logger.debug(f"positions: {positions}")
-    logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
-    logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
-    logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
-    logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
-
-    if len(positions.keys()) > 1:
-        only_pos = []
-        for posdict in positions.values():
-            for poss in posdict.values():
-                only_pos.append(poss)
-
-        pos_array = numpy.array(only_pos)
-        center = numpy.array(
-            [
-                numpy.mean(pos_array[:, 0]),
-                numpy.mean(pos_array[:, 1]),
-                numpy.mean(pos_array[:, 2]),
-            ]
-        )
-        x_min = numpy.min(pos_array[:, 0])
-        x_max = numpy.max(pos_array[:, 0])
-        x_len = abs(x_max - x_min)
-
-        y_min = numpy.min(pos_array[:, 1])
-        y_max = numpy.max(pos_array[:, 1])
-        y_len = abs(y_max - y_min)
-
-        z_min = numpy.min(pos_array[:, 2])
-        z_max = numpy.max(pos_array[:, 2])
-        z_len = abs(z_max - z_min)
-
-        view_min = center - numpy.array([x_len, y_len, z_len])
-        view_max = center + numpy.array([x_len, y_len, z_len])
-        logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
-
-    else:
-        cell = list(pop_id_vs_cell.values())[0]
-        if cell is not None:
-            view_min, view_max = get_cell_bound_box(cell)
-        else:
-            logger.debug("Got a point cell")
-            pos = list((list(positions.values())[0]).values())[0]
-            view_min = list(numpy.array(pos))
-            view_min = list(numpy.array(pos))
-
-    current_scene, current_view = create_new_vispy_canvas(
-        view_min, view_max, title, theme=theme
-    )
-
-    logger.debug(f"figure extents are: {view_min}, {view_max}")
-
-    for pop_id in pop_id_vs_cell:
-        cell = pop_id_vs_cell[pop_id]
-        pos_pop = positions[pop_id]
-
-        for cell_index in pos_pop:
-            pos = pos_pop[cell_index]
-            radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
-            color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
-
-            try:
-                logging.info(f"Plotting {cell.id}")
-            except AttributeError:
-                logging.info(f"Plotting a point cell at {pos}")
-
-            if cell is None:
-                marker_points.extend([pos])
-                marker_sizes.extend([radius])
-                marker_colors.extend([color])
-            else:
-                if plot_type == "schematic":
-                    plot_3D_schematic(
-                        offset=pos,
-                        cell=cell,
-                        segment_groups=None,
-                        labels=True,
-                        verbose=verbose,
-                        current_scene=current_scene,
-                        current_view=current_view,
-                        nogui=True,
-                    )
-                else:
-                    pts, sizes, colors = plot_3D_cell_morphology(
-                        offset=pos,
-                        cell=cell,
-                        color=color,
-                        plot_type=plot_type,
-                        verbose=verbose,
-                        current_scene=current_scene,
-                        current_view=current_view,
-                        min_width=min_width,
-                        nogui=True,
-                    )
-                    marker_points.extend(pts)
-                    marker_sizes.extend(sizes)
-                    marker_colors.extend(colors)
-
-    if len(marker_points) > 0:
-        scene.Markers(
-            pos=numpy.array(marker_points),
-            size=numpy.array(marker_sizes),
-            spherical=True,
-            face_color=marker_colors,
-            edge_color=marker_colors,
-            edge_width=0,
-            parent=current_view.scene,
-            scaling=True,
-            antialias=0,
-        )
-    if not nogui:
-        app.run()
-
-
 def plot_2D(
     nml_file: typing.Union[str, NeuroMLDocument, Cell],
     plane2d: str = "xy",
-    min_width: float = DEFAULTS["minWidth"],
+    min_width: float = DEFAULTS["minWidth"],  # noqa
     verbose: bool = False,
     nogui: bool = False,
     save_to_file: typing.Optional[str] = None,
@@ -454,7 +241,6 @@ def plot_2D(
         nml_model = nml_file
     else:
         raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
-
 
     (
         cell_id_vs_cell,
@@ -693,7 +479,7 @@ def plot_2D_cell_morphology(
     plot_type: str = "detailed",
     save_to_file: typing.Optional[str] = None,
     close_plot: bool = False,
-    overlay_data: typing.Dict[int, float] = None,
+    overlay_data: typing.Optional[typing.Dict[int, float]] = None,
     overlay_data_label: typing.Optional[str] = None,
     datamin: typing.Optional[float] = None,
     datamax: typing.Optional[float] = None,
@@ -933,224 +719,6 @@ def plot_2D_cell_morphology(
     if close_plot:
         logger.info("closing plot")
         plt.close()
-
-
-def plot_3D_cell_morphology(
-    offset: typing.List[float] = [0, 0, 0],
-    cell: Cell = None,
-    color: typing.Optional[str] = None,
-    title: str = "",
-    verbose: bool = False,
-    current_scene: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
-    min_width: float = DEFAULTS["minWidth"],
-    axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
-    nogui: bool = True,
-    plot_type: str = "constant",
-    theme="light",
-):
-    """Plot the detailed 3D morphology of a cell using vispy.
-    https://vispy.org/
-
-    .. versionadded:: 1.0.0
-
-    .. seealso::
-
-        :py:func:`plot_2D`
-            general function for plotting
-
-        :py:func:`plot_2D_schematic`
-            for plotting only segmeng groups with their labels
-
-        :py:func:`plot_2D_point_cells`
-            for plotting point cells
-
-    :param offset: offset for cell
-    :type offset: [float, float]
-    :param cell: cell to plot
-    :type cell: neuroml.Cell
-    :param color: color to use for segments:
-
-        - if None, each segment is given a new unique color
-        - if "Groups", each unbranched segment group is given a unique color,
-          and segments that do not belong to an unbranched segment group are in
-          white
-        - if "Default Groups", axonal segments are in red, dendritic in blue,
-          somatic in green, and others in white
-
-    :type color: str
-    :param min_width: minimum width for segments (useful for visualising very
-    :type min_width: float
-    :param axis_min_max: min, max value of axes
-    :type axis_min_max: [float, float]
-    :param title: title of plot
-    :type title: str
-    :param verbose: show extra information (default: False)
-    :type verbose: bool
-    :param nogui: do not show image immediately
-    :type nogui: bool
-    :param current_scene: vispy SceneCanvas to use (a new one is created if it is not
-        provided)
-    :type current_scene: SceneCanvas
-    :param current_view: vispy viewbox to use
-    :type current_view: ViewBox
-    :param plot_type: type of plot, one of:
-
-        - "detailed": show detailed morphology taking into account each segment's
-          width. This is not performant, because a new line is required for
-          each segment. To only be used for cells with small numbers of
-          segments
-        - "constant": show morphology, but use constant line widths
-
-        This is only applicable for neuroml.Cell cells (ones with some
-        morphology)
-
-    :type plot_type: str
-    :param theme: theme to use (dark/light)
-    :type theme: str
-    :raises: ValueError if `cell` is None
-
-    """
-    if cell is None:
-        raise ValueError(
-            "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
-        )
-
-    try:
-        soma_segs = cell.get_all_segments_in_group("soma_group")
-    except Exception:
-        soma_segs = []
-    try:
-        dend_segs = cell.get_all_segments_in_group("dendrite_group")
-    except Exception:
-        dend_segs = []
-    try:
-        axon_segs = cell.get_all_segments_in_group("axon_group")
-    except Exception:
-        axon_segs = []
-
-    if current_scene is None or current_view is None:
-        view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme
-        )
-
-    if color == "Groups":
-        color_dict = {}
-        # if no segment groups are given, do them all
-        segment_groups = []
-        for sg in cell.morphology.segment_groups:
-            if sg.neuro_lex_id == neuro_lex_ids["section"]:
-                segment_groups.append(sg.id)
-
-        ord_segs = cell.get_ordered_segments_in_groups(
-            segment_groups, check_parentage=False
-        )
-
-        for sgs, segs in ord_segs.items():
-            c = get_next_hex_color()
-            for s in segs:
-                color_dict[s.id] = c
-
-    # for lines/segments
-    points = []
-    toconnect = []
-    colors = []
-    # for any spheres which we plot as markers at once
-    marker_points = []
-    marker_colors = []
-    marker_sizes = []
-
-    for seg in cell.morphology.segments:
-        p = cell.get_actual_proximal(seg.id)
-        d = seg.distal
-        width = (p.diameter + d.diameter) / 2
-
-        if width < min_width:
-            width = min_width
-
-        if plot_type == "constant":
-            width = min_width
-
-        seg_color = "white"
-        if color is None:
-            seg_color = get_next_hex_color()
-        elif color == "Groups":
-            try:
-                seg_color = color_dict[seg.id]
-            except KeyError:
-                print(f"Unbranched segment found: {seg.id}")
-                if seg.id in soma_segs:
-                    seg_color = "green"
-                elif seg.id in axon_segs:
-                    seg_color = "red"
-                elif seg.id in dend_segs:
-                    seg_color = "blue"
-        elif color == "Default Groups":
-            if seg.id in soma_segs:
-                seg_color = "green"
-            elif seg.id in axon_segs:
-                seg_color = "red"
-            elif seg.id in dend_segs:
-                seg_color = "blue"
-        else:
-            seg_color = color
-
-        # check if for a spherical segment, add extra spherical node
-        if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
-            marker_points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-            marker_colors.append(seg_color)
-            marker_sizes.append(p.diameter)
-
-        if plot_type == "constant":
-            points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-            colors.append(seg_color)
-            points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
-            colors.append(seg_color)
-            toconnect.append([len(points) - 2, len(points) - 1])
-        # every segment plotted individually
-        elif plot_type == "detailed":
-            points = []
-            toconnect = []
-            colors = []
-            points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-            colors.append(seg_color)
-            points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
-            colors.append(seg_color)
-            toconnect.append([len(points) - 2, len(points) - 1])
-            scene.Line(
-                pos=points,
-                color=colors,
-                connect=numpy.array(toconnect),
-                parent=current_view.scene,
-                width=width,
-            )
-
-    if plot_type == "constant":
-        scene.Line(
-            pos=points,
-            color=colors,
-            connect=numpy.array(toconnect),
-            parent=current_view.scene,
-            width=width,
-        )
-
-    if not nogui:
-        # markers
-        if len(marker_points) > 0:
-            scene.Markers(
-                pos=numpy.array(marker_points),
-                size=numpy.array(marker_sizes),
-                spherical=True,
-                face_color=marker_colors,
-                edge_color=marker_colors,
-                edge_width=0,
-                parent=current_view.scene,
-                scaling=True,
-                antialias=0,
-            )
-        app.run()
-    return marker_points, marker_sizes, marker_colors
 
 
 def plot_2D_point_cells(
@@ -1550,159 +1118,6 @@ def plot_2D_schematic(
     if close_plot:
         logger.info("closing plot")
         plt.close()
-
-
-def plot_3D_schematic(
-    cell: Cell,
-    segment_groups: typing.Optional[typing.List[SegmentGroup]],
-    offset: typing.List[float] = [0, 0, 0],
-    labels: bool = False,
-    width: float = 5.0,
-    verbose: bool = False,
-    nogui: bool = False,
-    title: str = "",
-    current_scene: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
-    theme: str = "light",
-) -> None:
-    """Plot a 3D schematic of the provided segment groups in Napari as a new
-    layer..
-
-    This plots each segment group as a straight line between its first and last
-    segment.
-
-    .. versionadded:: 1.0.0
-
-    .. seealso::
-
-        :py:func:`plot_2D_schematic`
-            general function for plotting
-
-        :py:func:`plot_2D`
-            general function for plotting
-
-        :py:func:`plot_2D_point_cells`
-            for plotting point cells
-
-        :py:func:`plot_2D_cell_morphology`
-            for plotting cells with detailed morphologies
-
-    :param offset: offset for cell
-    :type offset: [float, float, float]
-    :param cell: cell to plot
-    :type cell: neuroml.Cell
-    :param segment_groups: list of unbranched segment groups to plot
-    :type segment_groups: list(SegmentGroup)
-    :param labels: toggle labelling of segment groups
-    :type labels: bool
-    :param width: width for lines for segment groups
-    :type width: float
-    :param verbose: show extra information (default: False)
-    :type verbose: bool
-    :param title: title of plot
-    :type title: str
-    :param nogui: toggle if plot should be shown or not
-    :type nogui: bool
-    :param current_scene: vispy SceneCanvas to use (a new one is created if it is not
-        provided)
-    :type current_scene: SceneCanvas
-    :param current_view: vispy viewbox to use
-    :type current_view: ViewBox
-    :param theme: theme to use (light/dark)
-    :type theme: str
-    """
-    if title == "":
-        title = f"3D schematic of segment groups from {cell.id}"
-
-    # if no segment groups are given, do them all
-    if segment_groups is None:
-        segment_groups = []
-        for sg in cell.morphology.segment_groups:
-            if sg.neuro_lex_id == neuro_lex_ids["section"]:
-                segment_groups.append(sg.id)
-
-    ord_segs = cell.get_ordered_segments_in_groups(
-        segment_groups, check_parentage=False
-    )
-
-    # if no canvas is defined, define a new one
-    if current_scene is None or current_view is None:
-        view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme
-        )
-
-    points = []
-    toconnect = []
-    colors = []
-    text = []
-    textpoints = []
-
-    for sgid, segs in ord_segs.items():
-        sgobj = cell.get_segment_group(sgid)
-        if sgobj.neuro_lex_id != neuro_lex_ids["section"]:
-            raise ValueError(
-                f"{sgobj} does not have neuro_lex_id set to indicate it is an unbranched segment"
-            )
-
-        # get proximal and distal points
-        first_seg = segs[0]  # type: Segment
-        last_seg = segs[-1]  # type: Segment
-        first_prox = cell.get_actual_proximal(first_seg.id)
-
-        points.append(
-            [
-                offset[0] + first_prox.x,
-                offset[1] + first_prox.y,
-                offset[2] + first_prox.z,
-            ]
-        )
-        points.append(
-            [
-                offset[0] + last_seg.distal.x,
-                offset[1] + last_seg.distal.y,
-                offset[2] + last_seg.distal.z,
-            ]
-        )
-        colors.append(get_next_hex_color())
-        colors.append(get_next_hex_color())
-        toconnect.append([len(points) - 2, len(points) - 1])
-
-        # TODO: needs fixing to show labels
-        if labels:
-            text.append(f"{sgid}")
-            textpoints.append(
-                [
-                    offset[0] + (first_prox.x + last_seg.distal.x) / 2,
-                    offset[1] + (first_prox.y + last_seg.distal.y) / 2,
-                    offset[2] + (first_prox.z + last_seg.distal.z) / 2,
-                ]
-            )
-            """
-
-            alabel = add_text_to_vispy_3D_plot(current_scene=current_view.scene, text=f"{sgid}",
-                                               xv=[offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
-                                               yv=[offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
-                                               zv=[offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
-                                               color=colors[-1])
-            alabel.font_size = 30
-            """
-
-    scene.Line(
-        points,
-        parent=current_view.scene,
-        color=colors,
-        width=width,
-        connect=numpy.array(toconnect),
-    )
-    if labels:
-        print("Text rendering")
-        scene.Text(
-            text, pos=textpoints, font_size=30, color="black", parent=current_view.scene
-        )
-
-    if not nogui:
-        app.run()
 
 
 def plot_segment_groups_curtain_plots(
