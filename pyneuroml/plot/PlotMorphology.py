@@ -37,7 +37,7 @@ from pyneuroml.utils.plot import (
     create_new_vispy_canvas,
     get_cell_bound_box,
 )
-from neuroml import SegmentGroup, Cell, Segment
+from neuroml import SegmentGroup, Cell, Segment, NeuroMLDocument
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 
@@ -366,7 +366,7 @@ def plot_interactive_3D(
 
 
 def plot_2D(
-    nml_file: str,
+    nml_file: typing.Union[str, NeuroMLDocument, Cell],
     plane2d: str = "xy",
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
@@ -386,8 +386,9 @@ def plot_2D(
 
     This method uses matplotlib.
 
-    :param nml_file: path to NeuroML cell file
-    :type nml_file: str
+    :param nml_file: path to NeuroML cell file, or a NeuroMLDocument object
+    :type nml_file: str or :py:class:`neuroml.NeuroMLDocument` or
+        :py:class:`neuroml.Cell`
     :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
     :type plane2d: str
     :param min_width: minimum width for segments (useful for visualising very
@@ -427,13 +428,24 @@ def plot_2D(
     if verbose:
         print("Plotting %s" % nml_file)
 
-    nml_model = read_neuroml2_file(
-        nml_file,
-        include_includes=True,
-        check_validity_pre_include=False,
-        verbose=False,
-        optimized=True,
-    )
+    if type(nml_file) == str:
+        nml_model = read_neuroml2_file(
+            nml_file,
+            include_includes=True,
+            check_validity_pre_include=False,
+            verbose=False,
+            optimized=True,
+        )
+
+    elif isinstance(nml_file, Cell):
+        nml_model = NeuroMLDocument(id="newdoc")
+        nml_model.add(nml_file)
+
+    elif isinstance(nml_file, NeuroMLDocument):
+        nml_model = nml_file
+    else:
+        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
+
 
     (
         cell_id_vs_cell,
