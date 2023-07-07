@@ -17,9 +17,11 @@ import neuroml
 from pyneuroml.plot.PlotMorphology import (
     plot_2D,
     plot_2D_cell_morphology,
-    plot_3D_cell_morphology_plotly,
     plot_2D_schematic,
     plot_segment_groups_curtain_plots,
+)
+from pyneuroml.plot.PlotMorphologyPlotly import (
+    plot_3D_cell_morphology_plotly,
 )
 from pyneuroml.plot.PlotMorphologyVispy import (
     plot_3D_schematic,
