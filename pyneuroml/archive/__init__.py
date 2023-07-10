@@ -175,11 +175,11 @@ def get_model_file_list(
 
         for inc in model.included_files:
             incfile = pathlib.Path(inc).name
-            logger.debug(f"Processing include file {incfile}")
+            logger.debug(f"Processing include file {incfile} ({inc})")
             if incfile in STANDARD_LEMS_FILES:
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
-            lems_def_dir = get_model_file_list(incfile, filelist, rootdir, lems_def_dir)
+            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     else:
         raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
