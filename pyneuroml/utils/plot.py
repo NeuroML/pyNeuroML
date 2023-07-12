@@ -186,6 +186,7 @@ def get_new_matplotlib_morph_plot(
     """
     fig, ax = plt.subplots(1, 1)  # noqa
     plt.get_current_fig_manager().set_window_title(title)
+    plt.title(title)
 
     ax.set_aspect("equal")
 
