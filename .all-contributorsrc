@@ -37,6 +37,15 @@
       "contributions": [
         "bug"
       ]
+    },
+    {
+      "login": "rgerkin",
+      "name": "Richard C Gerkin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/549787?v=4",
+      "profile": "http://rick.gerk.in/",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
