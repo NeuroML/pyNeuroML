@@ -1,3 +1,8 @@
 include README.md
+include CONTRIBUTING.md
 include LICENSE*
-include requirements.txt
+include *.sh
+recursive-include tests *
+recursive-include man *
+recursive-include examples *
+recursive-include docs *

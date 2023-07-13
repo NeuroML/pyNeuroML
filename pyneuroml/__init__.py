@@ -1,6 +1,12 @@
 import logging
 
-__version__ = "1.0.8"
+try:
+    import importlib.metadata
+    __version__ = importlib.metadata.version("pyNeuroML")
+except ImportError:
+    import importlib_metadata
+    __version__ = importlib_metadata.version("pyNeuroML")
+
 
 JNEUROML_VERSION = "0.12.2"
 
