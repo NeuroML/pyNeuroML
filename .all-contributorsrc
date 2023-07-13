@@ -64,7 +64,22 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/3452783?v=4",
       "profile": "https://github.com/borismarin",
       "contributions": [
-        "bug"
+        "bug",
+        "code",
+        "content",
+        "data",
+        "doc",
+        "design",
+        "eventOrganizing",
+        "ideas",
+        "infra",
+        "maintenance",
+        "platform",
+        "question",
+        "research",
+        "review",
+        "tool",
+        "userTesting"
       ]
     },
     {
