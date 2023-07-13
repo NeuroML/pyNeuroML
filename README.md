@@ -2,7 +2,7 @@ pyNeuroML
 =========
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 
@@ -164,6 +164,7 @@ More closely tied to PyNN?
       <td align="center" valign="top" width="14.28%"><a href="http://rick.gerk.in/"><img src="https://avatars.githubusercontent.com/u/549787?v=4?s=100" width="100px;" alt="Richard C Gerkin"/><br /><sub><b>Richard C Gerkin</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Argerkin" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/lungd"><img src="https://avatars.githubusercontent.com/u/5890526?v=4?s=100" width="100px;" alt="David Lung"/><br /><sub><b>David Lung</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Alungd" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://www.thispersondoesnotexist.com/"><img src="https://avatars.githubusercontent.com/u/1487560?v=4?s=100" width="100px;" alt="Mark Watts"/><br /><sub><b>Mark Watts</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Amwatts15" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://chchaitanya.wordpress.com/"><img src="https://avatars.githubusercontent.com/u/546703?v=4?s=100" width="100px;" alt="Chaitanya Chintaluri "/><br /><sub><b>Chaitanya Chintaluri </b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Accluri" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
   <tfoot>
