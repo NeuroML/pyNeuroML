@@ -17,7 +17,25 @@
       "profile": "http://www.opensourcebrain.org/",
       "contributions": [
         "bug",
-        "code"
+        "code",
+        "content",
+        "data",
+        "doc",
+        "design",
+        "eventOrganizing",
+        "ideas",
+        "infra",
+        "maintenance",
+        "mentoring",
+        "platform",
+        "projectManagement",
+        "question",
+        "research",
+        "review",
+        "tool",
+        "tutorial",
+        "talk",
+        "userTesting"
       ]
     },
     {
