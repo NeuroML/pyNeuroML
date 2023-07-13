@@ -88,7 +88,15 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/549787?v=4",
       "profile": "http://rick.gerk.in/",
       "contributions": [
-        "bug"
+        "bug",
+        "code",
+        "ideas",
+        "maintenance",
+        "platform",
+        "research",
+        "review",
+        "tool",
+        "userTesting"
       ]
     },
     {
