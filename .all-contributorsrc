@@ -46,6 +46,15 @@
       "contributions": [
         "bug"
       ]
+    },
+    {
+      "login": "lungd",
+      "name": "David Lung",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5890526?v=4",
+      "profile": "https://github.com/lungd",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
