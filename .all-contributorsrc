@@ -28,6 +28,15 @@
       "contributions": [
         "bug"
       ]
+    },
+    {
+      "login": "borismarin",
+      "name": "Boris Marin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3452783?v=4",
+      "profile": "https://github.com/borismarin",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
