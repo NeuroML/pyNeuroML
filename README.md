@@ -1,11 +1,6 @@
 pyNeuroML
 =========
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-
-
 [![GitHub CI](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml/badge.svg)](https://github.com/NeuroML/pyNeuroML/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyNeuroML)](https://pypi.org/project/pyNeuroML/)
@@ -16,6 +11,9 @@ pyNeuroML
 [![GitHub Org's stars](https://img.shields.io/github/stars/NeuroML?style=social)](https://github.com/NeuroML)
 [![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
 [![Gitter](https://badges.gitter.im/NeuroML/community.svg)](https://gitter.im/NeuroML/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
 
