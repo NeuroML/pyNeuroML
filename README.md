@@ -2,7 +2,7 @@ pyNeuroML
 =========
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 
@@ -169,6 +169,7 @@ More closely tied to PyNN?
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/34383c"><img src="https://avatars.githubusercontent.com/u/17238193?v=4?s=100" width="100px;" alt="34383c"/><br /><sub><b>34383c</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3A34383c" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/jrieke"><img src="https://avatars.githubusercontent.com/u/5103165?v=4?s=100" width="100px;" alt="Johannes Rieke"/><br /><sub><b>Johannes Rieke</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Ajrieke" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/andrisecker"><img src="https://avatars.githubusercontent.com/u/13274870?v=4?s=100" width="100px;" alt="András Ecker"/><br /><sub><b>András Ecker</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Aandrisecker" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
   <tfoot>
