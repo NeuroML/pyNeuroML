@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 import neuroml
 from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
-from pyneuroml.utils import convert_case
+from pyneuroml.utils import convert_case, get_ion_color, get_colour_hex, get_state_color
 
 
 logger = logging.getLogger(__name__)
@@ -30,9 +30,6 @@ HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html" % (os.path.dirname(__file__)
 MD_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.md" % (os.path.dirname(__file__))
 
 V = "rampCellPop0[0]/v"  # Key for voltage trace in results dictionary.
-
-MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
-MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
 
 DEFAULTS = {
     "v": False,
@@ -230,74 +227,6 @@ def process_args():
     )
 
     return parser.parse_args()
-
-
-def get_colour_hex(
-    fract: float,
-    min_colour: typing.Tuple[int, int, int] = MIN_COLOUR,
-    max_colour: typing.Tuple[int, int, int] = MAX_COLOUR,
-) -> str:
-    """Get colour hex at fraction between `min_colour` and `max_colour`.
-
-    :param fract: fraction between `min_colour` and `max_colour`
-    :type fract: float between (0, 1)
-    :param min_colour: lower colour tuple (R, G, B)
-    :type min_colour: tuple
-    :param max_colour upper colour tuple (R, G, B)
-    :type max_colour: tuple
-    :returns: colour in hex representation
-    :rtype: string
-    """
-    rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_colour)]
-    col = "#"
-    for c in rgb:
-        col += c[2:4] if len(c) == 4 else "00"
-    return col
-
-
-def get_state_color(s: str) -> str:
-    """Get colours for state variables.
-
-    Hard codes for m, k, r, h, l, n, a, b, c, q, e, f, p, s, u.
-
-    :param state: name of state
-    :type state: str
-    :returns: colour in hex format
-    :rtype: str
-    """
-    col = "#000000"
-    if s.startswith("m"):
-        col = "#FF0000"
-    if s.startswith("k"):
-        col = "#FF0000"
-    if s.startswith("r"):
-        col = "#FF0000"
-    if s.startswith("h"):
-        col = "#00FF00"
-    if s.startswith("l"):
-        col = "#00FF00"
-    if s.startswith("n"):
-        col = "#0000FF"
-    if s.startswith("a"):
-        col = "#FF0000"
-    if s.startswith("b"):
-        col = "#00FF00"
-    if s.startswith("c"):
-        col = "#0000FF"
-    if s.startswith("q"):
-        col = "#FF00FF"
-    if s.startswith("e"):
-        col = "#00FFFF"
-    if s.startswith("f"):
-        col = "#DDDD00"
-    if s.startswith("p"):
-        col = "#880000"
-    if s.startswith("s"):
-        col = "#888800"
-    if s.startswith("u"):
-        col = "#880088"
-
-    return col
 
 
 def merge_with_template(

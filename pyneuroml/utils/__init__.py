@@ -15,6 +15,10 @@ import neuroml
 logger = logging.getLogger(__name__)
 
 
+MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
+MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
+
+
 def extract_position_info(
     nml_model: neuroml.NeuroMLDocument, verbose: bool = False
 ) -> tuple:
@@ -155,5 +159,73 @@ def get_ion_color(ion: str) -> str:
         col = "#ffd9b3"
     else:
         col = "#A9A9A9"
+
+    return col
+
+
+def get_colour_hex(
+    fract: float,
+    min_colour: typing.Tuple[int, int, int] = MIN_COLOUR,
+    max_colour: typing.Tuple[int, int, int] = MAX_COLOUR,
+) -> str:
+    """Get colour hex at fraction between `min_colour` and `max_colour`.
+
+    :param fract: fraction between `min_colour` and `max_colour`
+    :type fract: float between (0, 1)
+    :param min_colour: lower colour tuple (R, G, B)
+    :type min_colour: tuple
+    :param max_colour upper colour tuple (R, G, B)
+    :type max_colour: tuple
+    :returns: colour in hex representation
+    :rtype: string
+    """
+    rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_colour)]
+    col = "#"
+    for c in rgb:
+        col += c[2:4] if len(c) == 4 else "00"
+    return col
+
+
+def get_state_color(s: str) -> str:
+    """Get colours for state variables.
+
+    Hard codes for m, k, r, h, l, n, a, b, c, q, e, f, p, s, u.
+
+    :param state: name of state
+    :type state: str
+    :returns: colour in hex format
+    :rtype: str
+    """
+    col = "#000000"
+    if s.startswith("m"):
+        col = "#FF0000"
+    if s.startswith("k"):
+        col = "#FF0000"
+    if s.startswith("r"):
+        col = "#FF0000"
+    if s.startswith("h"):
+        col = "#00FF00"
+    if s.startswith("l"):
+        col = "#00FF00"
+    if s.startswith("n"):
+        col = "#0000FF"
+    if s.startswith("a"):
+        col = "#FF0000"
+    if s.startswith("b"):
+        col = "#00FF00"
+    if s.startswith("c"):
+        col = "#0000FF"
+    if s.startswith("q"):
+        col = "#FF00FF"
+    if s.startswith("e"):
+        col = "#00FFFF"
+    if s.startswith("f"):
+        col = "#DDDD00"
+    if s.startswith("p"):
+        col = "#880000"
+    if s.startswith("s"):
+        col = "#888800"
+    if s.startswith("u"):
+        col = "#880088"
 
     return col
