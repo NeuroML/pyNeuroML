@@ -133,3 +133,27 @@ def convert_case(name):
     """Converts from camelCase to under_score"""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def get_ion_color(ion: str) -> str:
+    """Get colours for ions in hex format.
+
+    Hard codes for na, k, ca, h. All others get a grey.
+
+    :param ion: name of ion
+    :type ion: str
+    :returns: colour in hex
+    :rtype: str
+    """
+    if ion.lower() == "na":
+        col = "#1E90FF"
+    elif ion.lower() == "k":
+        col = "#CD5C5C"
+    elif ion.lower() == "ca":
+        col = "#8FBC8F"
+    elif ion.lower() == "h":
+        col = "#ffd9b3"
+    else:
+        col = "#A9A9A9"
+
+    return col

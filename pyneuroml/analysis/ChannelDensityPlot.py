@@ -11,11 +11,12 @@ import logging
 import pprint
 
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
-from pyneuroml.analysis.NML2ChannelAnalysis import get_ion_color
+from pyneuroml.utils import get_ion_color
 from neuroml import Cell, Cell2CaPools
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 pp = pprint.PrettyPrinter(depth=6)
@@ -29,23 +30,6 @@ start = -2
 stop = start + order
 
 substitute_ion_channel_names = {"LeakConductance": "Pas"}
-
-
-# redefined: TODO Check
-def get_ion_color(ion):
-    col = []
-    if ion.lower() == "na":
-        col = [30, 144, 255]
-    elif ion.lower() == "k":
-        col = [205, 92, 92]
-    elif ion.lower() == "ca":
-        col = [143, 188, 143]
-    elif ion.lower() == "h":
-        col = [255, 217, 179]
-    else:
-        col = [169, 169, 169]
-
-    return col
 
 
 def _get_rect(ion_channel, row, max_, min_, r, g, b, extras=False):
@@ -274,7 +258,6 @@ def generate_channel_density_plots(
                 row += 1
 
         if passives_erevs:
-
             if ena:
                 sb += add_text(row, "E Na = %s " % ena)
                 row += 1

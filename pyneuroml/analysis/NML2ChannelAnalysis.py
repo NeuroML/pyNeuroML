@@ -255,31 +255,6 @@ def get_colour_hex(
     return col
 
 
-# Better off elsewhere..?
-def get_ion_color(ion: str) -> str:
-    """Get colours for ions in hex format.
-
-    Hard codes for na, k, ca, h. All others get a grey.
-
-    :param ion: name of ion
-    :type ion: str
-    :returns: colour in hex
-    :rtype: str
-    """
-    if ion.lower() == "na":
-        col = "#1E90FF"
-    elif ion.lower() == "k":
-        col = "#CD5C5C"
-    elif ion.lower() == "ca":
-        col = "#8FBC8F"
-    elif ion.lower() == "h":
-        col = "#ffd9b3"
-    else:
-        col = "#A9A9A9"
-
-    return col
-
-
 def get_state_color(s: str) -> str:
     """Get colours for state variables.
 
@@ -767,7 +742,6 @@ def compute_iv_curve(channel, a, results, grid=True):
                 times[voltage].append(t)
                 currents[voltage].append(i)
                 if t >= t_start and t <= t_steady_end:
-
                     if i > i_max:
                         i_max = i
                     if i < i_min:
@@ -942,7 +916,6 @@ def run(a=None, **kwargs):
     other_chan_files = []
 
     if len(a.channel_files) > 0:
-
         for channel_file in a.channel_files:
             channels = get_channels_from_channel_file(channel_file)
             # TODO look past 1st channel...
