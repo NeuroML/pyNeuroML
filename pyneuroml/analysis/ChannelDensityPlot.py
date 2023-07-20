@@ -7,12 +7,13 @@
 import os
 import math
 import logging
+import typing
 
 import pprint
 
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
-from neuroml import Cell, Cell2CaPools
+from neuroml import Cell, Cell2CaPools, NeuroMLDocument
 
 
 logger = logging.getLogger(__name__)
@@ -57,7 +58,7 @@ def _get_rect(ion_channel, row, max_, min_, r, g, b, extras=False):
         + str(offset)
         + '" width="'
         + str(width)
-        + '" + height="'
+        + '" height="'
         + str(height)
         + '" style="fill:rgb('
         + str(r)
@@ -318,12 +319,45 @@ def add_text(row, text):
     )
 
 
+def get_channel_densities(nml_cell: Cell) -> typing.Dict[str, typing.List[typing.Any]]:
+    """Get channel densities from a NeuroML Cell.
+
+    :param nml_src: TODO
+    :returns: list of channel densities on the cell
+
+    """
+    channel_densities = {}  # type: typing.Dict[str, typing.List[typing.Any]]
+    dens = nml_cell.biophysical_properties.membrane_properties.info(
+        show_contents=True, return_format="dict"
+    )
+    for name, obj in dens.items():
+        if "channel_density" in name:
+            for m in obj["members"]:
+                try:
+                    channel_densities[m.ion_channel].append(m)
+                except KeyError:
+                    channel_densities[m.ion_channel] = []
+                    channel_densities[m.ion_channel].append(m)
+
+    return channel_densities
+
+
 if __name__ == "__main__":
+    """
     generate_channel_density_plots(
         "../../examples/test_data/HHCellNetwork.net.nml", True, True
     )
+
     generate_channel_density_plots(
         "../../../neuroConstruct/osb/showcase/BlueBrainProjectShowcase/NMC/NeuroML2/cADpyr229_L23_PC_5ecbf9b163_0_0.cell.nml",
         True,
         True,
     )
+    """
+    nml_doc = read_neuroml2_file(
+        "../../tests/plot/Cell_497232312.cell.nml",
+        include_includes=True,
+        verbose=False,
+        optimized=True,
+    )
+    print(get_channel_densities(nml_doc.cells[0]))
