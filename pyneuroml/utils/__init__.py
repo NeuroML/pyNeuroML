@@ -142,8 +142,8 @@ def convert_case(name):
 def get_files_generated_after(
     timestamp: float = time.time(),
     directory: str = ".",
-    ignore_suffixes: list[str] = ["xml", "nml"],
-    include_suffixes: list[str] = [],
+    ignore_suffixes: typing.List[str] = ["xml", "nml"],
+    include_suffixes: typing.List[str] = [],
 ) -> typing.List[str]:
     """Get files modified after provided time stamp in directory, excluding provided suffixes.
 
