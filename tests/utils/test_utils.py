@@ -10,9 +10,10 @@ Copyright 2023 NeuroML contributors
 
 import logging
 import pathlib as pl
+import time
 
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, get_files_generated_after
 
 from .. import BaseTestCase
 
@@ -46,3 +47,23 @@ class TestUtils(BaseTestCase):
 
             for c in ["HL23PV", "HL23PYR", "HL23VIP", "HL23SST"]:
                 self.assertIn(c, cell_id_vs_cell.keys())
+
+    def test_get_files_generated_after(self):
+        """test get_files_generated_after method."""
+        # compare to epoch, should just list all files
+        files = get_files_generated_after(timestamp=0,
+                                          include_suffixes=[".sh", ".ini"])
+        logger.debug(files)
+        current_files = list(pl.Path(".").glob("*.sh"))
+        current_files.extend(list(pl.Path(".").glob("*.ini")))
+        current_files = [f for f in current_files if f.is_file()]
+        self.assertEqual(len(files), len(current_files))
+
+        files = get_files_generated_after(timestamp=0,
+                                          include_suffixes=[".sh", ".ini"],
+                                          ignore_suffixes=[".sh"])
+        logger.debug(files)
+        current_files = list(pl.Path(".").glob("*.ini"))
+        current_files = [f for f in current_files if f.is_file()]
+        self.assertEqual(len(files), len(current_files))
+

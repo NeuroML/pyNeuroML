@@ -6,13 +6,17 @@ PyNeuroML
 Copyright 2023 NeuroML Contributors
 """
 
-import typing
 import logging
+import os
 import re
+import time
+import typing
+from pathlib import Path
+
 import neuroml
 
-
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def extract_position_info(
@@ -133,3 +137,62 @@ def convert_case(name):
     """Converts from camelCase to under_score"""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def get_files_generated_after(
+    timestamp: float = time.time(),
+    directory: str = ".",
+    ignore_suffixes: list[str] = ["xml", "nml"],
+    include_suffixes: list[str] = [],
+) -> typing.List[str]:
+    """Get files modified after provided time stamp in directory, excluding provided suffixes.
+
+    Ignores directories.
+
+    :param timestamp: time stamp to compare to
+    :type timestamp: float
+    :param directory: directory to list files of
+    :type directory: str
+    :param ignore_suffixes: file suffixes to ignore (none if empty)
+    :type ignore_suffixes: str
+    :param include_suffixes: file suffixes to include (all if empty)
+    :type include_suffixes: str
+    :returns: list of file names
+    :rtype: list(str)
+
+    """
+    logger.debug(f"Timestamp is: {timestamp}")
+    current_files = list(Path(directory).glob("*"))
+    # only files, ignore directories
+    current_files = [f for f in current_files if f.is_file()]
+    files = []
+    for file in current_files:
+        excluded = False
+        for sfx in ignore_suffixes:
+            if file.name.endswith(sfx):
+                excluded = True
+                break
+
+        # no need to proceed
+        if excluded is True:
+            continue
+
+        included = False
+        # if no suffixes, ignore this
+        if len(include_suffixes) == 0:
+            included = True
+        else:
+            for sfx in include_suffixes:
+                if file.name.endswith(sfx):
+                    included = True
+                    break
+
+        # no need to proceed
+        if included is False:
+            continue
+
+        file_mtime = os.path.getmtime(file)
+        if file_mtime > timestamp:
+            files.append(file.name)
+
+    return files
