@@ -1312,6 +1312,29 @@ def gui_string(nogui: bool) -> str:
     return " -nogui" if nogui else ""
 
 
+def run_lems_with(engine: str, **kwargs):
+    """Run LEMS with specified engine.
+
+    Wrapper around the many `run_lems_with_*` methods.
+    The engine should be the suffix, for example, to use
+    `run_lems_with_jneuroml_neuron`, engine will be `jneuroml_neuron`.
+
+    All kwargs are passed as is to the function. Please see the individual
+    function documentations for information on arguments.
+
+    :param engine: engine to run with
+    :type engine: string (valid names are methods)
+    :param **kwargs: arguments to pass to run function
+    :type **kwargs: dict
+    :returns: return value of called method
+
+    """
+    function_tuple = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
+    for fname, function in function_tuple:
+        if fname.startswith("run_lems_with") and fname.endswith(engine):
+            return function(kwargs)
+
+
 def run_lems_with_jneuroml_neuron(
     lems_file_name: str,
     paths_to_include: list[str] = [],
@@ -1802,7 +1825,8 @@ def reload_saved_data(
                         id = int(values[0])
                         t = float(values[1])
                     logger.debug(
-                        "Found a event in cell %s (%s) at t = %s" % (id, selections[id], t)
+                        "Found a event in cell %s (%s) at t = %s"
+                        % (id, selections[id], t)
                     )
                     events[selections[id]].append(t)
 
