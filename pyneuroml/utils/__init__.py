@@ -147,7 +147,9 @@ def get_files_generated_after(
 ) -> typing.List[str]:
     """Get files modified after provided time stamp in directory, excluding provided suffixes.
 
-    Ignores directories.
+    Currently ignores directories.
+
+    .. versionadded:: 1.0.9
 
     :param timestamp: time stamp to compare to
     :type timestamp: float

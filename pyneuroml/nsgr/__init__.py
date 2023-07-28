@@ -59,6 +59,8 @@ def run_on_nsg(
             'nrnivmodl_o_': "1"
         }
 
+    .. versionadded:: 1.0.9
+
     :param engine: name of engine: suffixes of the run_lems_with.. functions
     :param lems_file_name: name of LEMS simulation file
     :param nsg_sim_config: dict containing params and values that will be
