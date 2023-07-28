@@ -1312,7 +1312,7 @@ def gui_string(nogui: bool) -> str:
     return " -nogui" if nogui else ""
 
 
-def run_lems_with(engine: str, **kwargs):
+def run_lems_with(engine: str, *args: typing.Any, **kwargs: typing.Any):
     """Run LEMS with specified engine.
 
     Wrapper around the many `run_lems_with_*` methods.
@@ -1324,15 +1324,15 @@ def run_lems_with(engine: str, **kwargs):
 
     :param engine: engine to run with
     :type engine: string (valid names are methods)
-    :param **kwargs: arguments to pass to run function
-    :type **kwargs: dict
+    :param *args: postional arguments to pass to run function
+    :param **kwargs: named arguments to pass to run function
     :returns: return value of called method
 
     """
     function_tuple = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
     for fname, function in function_tuple:
         if fname.startswith("run_lems_with") and fname.endswith(engine):
-            return function(kwargs)
+            return function(*args, **kwargs)
 
 
 def run_lems_with_jneuroml_neuron(
