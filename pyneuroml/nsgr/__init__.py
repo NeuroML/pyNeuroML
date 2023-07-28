@@ -27,6 +27,7 @@ def run_on_nsg(
     engine: str,
     lems_file_name: str,
     nsg_sim_config: typing.Dict[typing.Any, typing.Any] = {},
+    dry_run: bool = False,
     *engine_args: typing.Any,
     **engine_kwargs: typing.Any,
 ):
@@ -66,7 +67,8 @@ def run_on_nsg(
         function
     :param **engine_kwargs: keyword args to be be passed to the engine runner
         function
-    :returns: TODO
+    :param dry_run: do everything but do not submit
+    :type dry_run: bool
     """
     supported_engines = ["jneuroml_neuron", "jneuroml_netpyne"]
     if engine not in supported_engines:
@@ -162,6 +164,11 @@ def run_on_nsg(
     print(f"{zipfile_name} generated")
     # uses argv, where the first argument is the script itself, so we must pass
     # something as the 0th index of the list
-    if nsgr_submit(["", ".", "validate"]) == 0:
-        print("Attempting to submit to NSGR")
-        return nsgr_submit(["", ".", "run"])
+    if not dry_run:
+        if nsgr_submit(["", ".", "validate"]) == 0:
+            print("Attempting to submit to NSGR")
+            return nsgr_submit(["", ".", "run"])
+    else:
+        print("Dry run mode enabled. Not submitting to NSG.")
+
+    return True
