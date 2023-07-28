@@ -44,8 +44,8 @@ def run_on_nsg(
     - https://nsgr.sdsc.edu:8443/restusers/documentation
     - https://nsgr.sdsc.edu:8443/restusers/docs/tools
 
-    Default the nsg_sim_config is, keys provided by the user in nsg_sim_config
-    overwrite these:
+    Default for the nsg_sim_config is below, keys provided by the user in
+    nsg_sim_config overwrite these:
 
     .. code:: python
 
@@ -94,6 +94,12 @@ def run_on_nsg(
     logger.info("Generating simulator specific files")
     start_time = time.time() - 1.0
 
+    logger.debug("Removing existing mod files")
+    existing_mod_files = get_files_generated_after(0, include_suffixes=["mod"])
+    for afile in existing_mod_files:
+        fp = pathlib.Path(afile)
+        fp.unlink()
+
     if engine == "jneuroml_neuron":
         run_lems_with(
             engine,
@@ -121,7 +127,7 @@ def run_on_nsg(
     logger.info("Generating zip file")
     runner_file = ""
     # NSG requires that the top level directory exist
-    logger.info("Creating directory and moving generated files to it")
+    logger.debug("Creating directory and moving generated files to it")
     nsg_dir = pathlib.Path(zipfile_name.replace(".zip", ""))
 
     # remove it if it exists
