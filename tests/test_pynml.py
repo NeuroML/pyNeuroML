@@ -171,7 +171,7 @@ class TestHelperUtils(unittest.TestCase):
 
         retval = None
         retstring = None
-        retval, retstring = validate_neuroml2("setup.py", return_string=True)
+        retval, retstring = validate_neuroml2("setup.cfg", return_string=True)
         self.assertFalse(retval)
         self.assertIn("1 failed", retstring)
 
