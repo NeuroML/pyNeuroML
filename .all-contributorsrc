@@ -1,0 +1,178 @@
+{
+  "projectName": "pyNeuroML",
+  "projectOwner": "NeuroML",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "pgleeson",
+      "name": "Padraig Gleeson",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1556687?v=4",
+      "profile": "http://www.opensourcebrain.org/",
+      "contributions": [
+        "bug",
+        "code",
+        "content",
+        "data",
+        "doc",
+        "design",
+        "eventOrganizing",
+        "ideas",
+        "infra",
+        "maintenance",
+        "mentoring",
+        "platform",
+        "projectManagement",
+        "question",
+        "research",
+        "review",
+        "tool",
+        "tutorial",
+        "talk",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "sanjayankur31",
+      "name": "Ankur Sinha",
+      "avatar_url": "https://avatars.githubusercontent.com/u/102575?v=4",
+      "profile": "https://ankursinha.in/",
+      "contributions": [
+        "bug",
+        "code",
+        "content",
+        "data",
+        "doc",
+        "design",
+        "eventOrganizing",
+        "ideas",
+        "mentoring",
+        "platform",
+        "question",
+        "research"
+      ]
+    },
+    {
+      "login": "borismarin",
+      "name": "Boris Marin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3452783?v=4",
+      "profile": "https://github.com/borismarin",
+      "contributions": [
+        "bug",
+        "code",
+        "content",
+        "data",
+        "doc",
+        "design",
+        "eventOrganizing",
+        "ideas",
+        "infra",
+        "maintenance",
+        "platform",
+        "question",
+        "research",
+        "review",
+        "tool",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "rgerkin",
+      "name": "Richard C Gerkin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/549787?v=4",
+      "profile": "http://rick.gerk.in/",
+      "contributions": [
+        "bug",
+        "code",
+        "ideas",
+        "maintenance",
+        "platform",
+        "research",
+        "review",
+        "tool",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "lungd",
+      "name": "David Lung",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5890526?v=4",
+      "profile": "https://github.com/lungd",
+      "contributions": [
+        "bug",
+        "code",
+        "maintenance",
+        "tool",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "mwatts15",
+      "name": "Mark Watts",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1487560?v=4",
+      "profile": "https://www.thispersondoesnotexist.com/",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "ccluri",
+      "name": "Chaitanya Chintaluri ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/546703?v=4",
+      "profile": "https://chchaitanya.wordpress.com/",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "34383c",
+      "name": "34383c",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17238193?v=4",
+      "profile": "https://github.com/34383c",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "jrieke",
+      "name": "Johannes Rieke",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5103165?v=4",
+      "profile": "https://github.com/jrieke",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "andrisecker",
+      "name": "András Ecker",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13274870?v=4",
+      "profile": "https://github.com/andrisecker",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    },
+    {
+      "login": "RokasSt",
+      "name": "Rokas Stanislovas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12904422?v=4",
+      "profile": "https://github.com/RokasSt",
+      "contributions": [
+        "bug",
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "linkToUsage": true
+}
