@@ -31,7 +31,7 @@ from pyneuroml.utils.plot import (
     autoscale_matplotlib_plot,
     add_scalebar_to_matplotlib_plot,
     add_line_to_matplotlib_2D_plot,
-    DEFAULTS
+    DEFAULTS,
 )
 from neuroml import SegmentGroup, Cell, Segment, NeuroMLDocument
 from neuroml.neuro_lex_ids import neuro_lex_ids
@@ -140,6 +140,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     print(a)
     if a.interactive3d:
         from pyneuroml.plot.PlotMorphologyVispy import plot_interactive_3D
+
         plot_interactive_3D(
             nml_file=a.nml_file,
             min_width=a.min_width,
@@ -239,7 +240,9 @@ def plot_2D(
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
     else:
-        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
+        raise TypeError(
+            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        )
 
     (
         cell_id_vs_cell,
@@ -250,7 +253,10 @@ def plot_2D(
     ) = extract_position_info(nml_model, verbose)
 
     if title is None:
-        title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
+        if len(nml_model.networks) > 0:
+            title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
+        else:
+            title = "2D plot of %s" % (nml_model.cells[0].id)
 
     if verbose:
         logger.debug(f"positions: {positions}")
