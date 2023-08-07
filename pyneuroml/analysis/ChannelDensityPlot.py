@@ -13,7 +13,7 @@ import pprint
 
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
-from neuroml import Cell, Cell2CaPools, NeuroMLDocument
+from neuroml import Cell, Cell2CaPools
 
 
 logger = logging.getLogger(__name__)
@@ -331,7 +331,9 @@ def get_channel_densities(nml_cell: Cell) -> typing.Dict[str, typing.List[typing
         show_contents=True, return_format="dict"
     )
     for name, obj in dens.items():
-        if "channel_density" in name:
+        logger.debug(f"Name: {name}")
+        # channel_densities; channel_density_nernsts, etc
+        if name.startswith("channel_densit"):
             for m in obj["members"]:
                 try:
                     channel_densities[m.ion_channel].append(m)
@@ -339,11 +341,11 @@ def get_channel_densities(nml_cell: Cell) -> typing.Dict[str, typing.List[typing
                     channel_densities[m.ion_channel] = []
                     channel_densities[m.ion_channel].append(m)
 
+    logger.debug(f"Found channel densities: {channel_densities}")
     return channel_densities
 
 
 if __name__ == "__main__":
-    """
     generate_channel_density_plots(
         "../../examples/test_data/HHCellNetwork.net.nml", True, True
     )
@@ -353,11 +355,3 @@ if __name__ == "__main__":
         True,
         True,
     )
-    """
-    nml_doc = read_neuroml2_file(
-        "../../tests/plot/Cell_497232312.cell.nml",
-        include_includes=True,
-        verbose=False,
-        optimized=True,
-    )
-    print(get_channel_densities(nml_doc.cells[0]))
