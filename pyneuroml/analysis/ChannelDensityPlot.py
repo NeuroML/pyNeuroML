@@ -28,6 +28,8 @@ from neuroml import (
 )
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
+from pyneuroml.plot.PlotMorphology import plot_2D_cell_morphology
+from pyneuroml.plot.Plot import generate_plot
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -332,12 +334,30 @@ def add_text(row, text):
     )
 
 
-def get_channel_densities(nml_cell: Cell) -> typing.Dict[str, typing.List[typing.Any]]:
+def get_channel_densities(
+    nml_cell: Cell,
+) -> typing.Dict[
+    str,
+    typing.List[
+        typing.Union[
+            ChannelDensity,
+            ChannelDensityGHK,
+            ChannelDensityGHK2,
+            ChannelDensityVShift,
+            ChannelDensityNernst,
+            ChannelDensityNernstCa2,
+            ChannelDensityNonUniform,
+            ChannelDensityNonUniformGHK,
+            ChannelDensityNonUniformNernst,
+        ]
+    ],
+]:
     """Get channel densities from a NeuroML Cell.
 
-    :param nml_src: TODO
-    :returns: list of channel densities on the cell
-
+    :param nml_cell: a NeuroML cell object
+    :type nml_cell: neuroml.Cell
+    :returns: ordered dictionary of channel densities on cell with the ion
+        channel id as the key, and list of channel density objects as the value
     """
     # order matters because if two channel densities apply conductances to same
     # segments, only the latest value is applied
@@ -447,6 +467,126 @@ def get_conductance_density_for_segments(
                 data[seg.id] = 0.00
 
     return data
+
+
+def plot_channel_densities(
+    cell: Cell,
+    channel_density_ids: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ion_channels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
+    ymin: typing.Optional[float] = None,
+    plane2d: str = "xy",
+    distance_plots: bool = False,
+    show_plots_already: bool = True,
+    morph_plot_type: str = "constant",
+    morph_min_width: float = 2.0,
+):
+    """Plot channel densities on a Cell on morphology plots.
+
+    You can either provide a list of channel densities where it'll generate one
+    plot per channel density. Or, you can provide a list of ions, and it'll
+    generate one plot per ion---adding up the conductance densities of the
+    different channel densities for that ion. However, note that conductance
+    densities for non uniform channel densities will always be plotted
+    separtely since information on units of calculated conductance densities
+    are not available for them.
+
+    .. versionadded:: 1.0.8
+
+    :param cell: a NeuroML cell object
+    :type cell: neuroml.Cell
+    :param channel_density_ids: a channel density id or list of ids
+    :type channel_density_ids: str or list(str)
+    :param ion_channels: an ion channel or list of ions channels
+    :type ion_channels: str or list(str)
+    :param ymin: min y value for plots, if None, automatically calculated
+    :type ymin: float or None
+    :param plane2d: plane to plot morphology plot in, passed on to the :py:method:`plot_2D_cell_morphology` function
+    :type plane2d: str "xy" or "yz" or "zx"
+    :param morph_plot_type: plot type for morphology plot passed on to
+        plot_2D_cell_morphology
+    :type morph_plot_type: str
+    :param morph_min_width: min width for morphology plot passed on to
+        plot_2D_cell_morphology
+    :type morph_min_width: float
+    :param distance_plots: also generate plots showing conductance densities at
+        distances from the soma
+    :type distance_plots: bool
+    :returns: None
+    """
+    if channel_density_ids is not None and ion_channels is not None:
+        raise ValueError(
+            "Only one of channel_density_ids or ions channels may be provided"
+        )
+
+    # calculate distances of segments from soma for later use
+    if distance_plots:
+        distances = {}
+        for seg in cell.morphology.segments:
+            distances[seg.id] = cell.get_distance(seg.id)
+
+        # sorted by distances
+        sorted_distances = {
+            k: v for k, v in sorted(distances.items(), key=lambda item: item[1])
+        }
+
+    if channel_density_ids is not None:
+        if type(channel_density_ids) == str:
+            channel_density_ids_list = []
+            channel_density_ids_list.append(channel_density_ids)
+            channel_density_ids = channel_density_ids_list
+
+        logger.info(f"Plotting channel density plots for {channel_density_ids}")
+        channel_densities = get_channel_densities(cell)
+        logger.debug(f"Got channel densities {channel_densities}")
+
+        for ion_channel, cds in channel_densities.items():
+            logger.debug(f"Looking at {ion_channel}: {cds}")
+            for cd in cds:
+                if cd.id in channel_density_ids:
+                    print(f"Generating plots for {cd.id}")
+                    data = get_conductance_density_for_segments(cell, cd)
+                    logger.debug(f"Got data for {cd.id}")
+                    plot_2D_cell_morphology(
+                        cell=cell,
+                        title=f"{cd.id}",
+                        plot_type=morph_plot_type,
+                        min_width=morph_min_width,
+                        overlay_data=data,
+                        overlay_data_label="(S/m2)"
+                        if "NonUniform" not in cd.__class__.__name__
+                        else "",
+                        save_to_file=f"{cd.id}.png",
+                        datamin=ymin,
+                        plane2d=plane2d,
+                        nogui=not show_plots_already,
+                    )
+                    if distance_plots:
+                        xvals = []
+                        yvals = []
+                        for segid, distance in sorted_distances.items():
+                            xvals.append(distance)
+                            yvals.append(data[segid])
+                        generate_plot(
+                            xvalues=[xvals],
+                            yvalues=[yvals],
+                            title=f"{cd.id}",
+                            title_above_plot=True,
+                            xaxis="Distance from soma (um)",
+                            yaxis="g density" + "(S/m2)"
+                            if "NonUniform" not in cd.__class__.__name__
+                            else "",
+                            save_figure_to=f"{cd.id}_vs_soma.png",
+                            show_plot_already=show_plots_already,
+                            linestyles=[" "],
+                            linewidths=["0"],
+                            markers=["."],
+                        )
+    else:
+        # TODO: implement
+        if type(ion_channels) == str:
+            ion_channel_list = []
+            ion_channel_list.append(ion_channels)
+            ion_channels = ion_channel_list
 
 
 if __name__ == "__main__":
