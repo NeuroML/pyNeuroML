@@ -13,7 +13,19 @@ import pprint
 
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
-from neuroml import Cell, Cell2CaPools
+from neuroml import (
+    Cell,
+    Cell2CaPools,
+    ChannelDensity,
+    ChannelDensityGHK,
+    ChannelDensityGHK2,
+    ChannelDensityVShift,
+    ChannelDensityNernst,
+    ChannelDensityNernstCa2,
+    ChannelDensityNonUniform,
+    ChannelDensityNonUniformGHK,
+    ChannelDensityNonUniformNernst,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -343,6 +355,41 @@ def get_channel_densities(nml_cell: Cell) -> typing.Dict[str, typing.List[typing
 
     logger.debug(f"Found channel densities: {channel_densities}")
     return channel_densities
+
+
+def get_conductance_density_for_segments(
+    cell: Cell,
+    channel_density: typing.Union[
+        ChannelDensity,
+        ChannelDensityGHK,
+        ChannelDensityGHK2,
+        ChannelDensityVShift,
+        ChannelDensityNernst,
+        ChannelDensityNernstCa2,
+        ChannelDensityNonUniform,
+        ChannelDensityNonUniformGHK,
+        ChannelDensityNonUniformNernst,
+    ],
+) -> typing.Dict[int, float]:
+    """Get conductance density for each segment to be able to generate a morphology
+    plot.
+
+    :param cell: a NeuroML Cell
+    :type cell: Cell
+    :param channel_density: a channel density object
+    :type channel_density: ChannelDensityGHK or ChannelDensityGHK2 or ChannelDensityVShift or ChannelDensityNernst or ChannelDensityNernstCa2 or ChannelDensityNonUniform or ChannelDensityNonUniformGHK or ChannelDensityNonUniformNernst,
+    :returns: dictionary with keys as segment ids and the conductance density
+        for that segment as the value
+
+    """
+    segments = cell.morphology.segments
+    data = {}
+    if "NonUniform" not in channel_density.__class__.__name__:
+        logger.debug("Got a uniform channel density")
+        for seg in segments:
+            data[seg.id] = channel_density.cond_density
+
+    return data
 
 
 if __name__ == "__main__":
