@@ -10,6 +10,7 @@ Copyright 2023 NeuroML contributors
 import logging
 import unittest
 
+import neuroml
 from pyneuroml.analysis.ChannelDensityPlot import (
     get_channel_densities,
     get_conductance_density_for_segments,
@@ -38,12 +39,18 @@ class TestChannelDensityPlots(unittest.TestCase):
     def test_get_conductance_density_for_segments(self):
         """Test get_conductance_density_for_segments."""
         cell_file = "tests/plot/L23-example/HL23PYR.cell.nml"
-        cell = read_neuroml2_file(cell_file).cells[0]
+        cell = read_neuroml2_file(cell_file).cells[0]  # type: neuroml.Cell
         print(cell.id)
         channel_densities = get_channel_densities(cell)
 
-        channel_density_Im = channel_densities["Im"][0]
-        data = get_conductance_density_for_segments(cell, channel_density_Im)
-        # constant channel density, same everywhere
-        self.assertEqual(data[0], "0.000306 S_per_cm2")
-        self.assertEqual(data[2800], "0.000306 S_per_cm2")
+        channel_densities_Im = channel_densities["Im"]
+        data = get_conductance_density_for_segments(cell, channel_densities_Im[0])
+        soma_group = cell.get_all_segments_in_group("soma_group")
+        self.assertEqual(data[soma_group[0]], 3.06)
+        self.assertEqual(data[soma_group[-1]], 3.06)
+        self.assertEqual(len(data), len(cell.morphology.segments))
+
+        data = get_conductance_density_for_segments(cell, channel_densities_Im[1])
+        axon_group = cell.get_all_segments_in_group("axon_group")
+        self.assertEqual(data[axon_group[0]], 0.000000)
+        self.assertEqual(len(data), len(cell.morphology.segments))

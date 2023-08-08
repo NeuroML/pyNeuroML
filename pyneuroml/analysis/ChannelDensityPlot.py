@@ -4,29 +4,28 @@
 #   ion channel densities in NeuroML2 cells
 #
 
-import os
-import math
 import logging
-import typing
-
+import math
+import os
 import pprint
+import typing
+from collections import OrderedDict
 
-from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
-from pyneuroml.utils import get_ion_color
 from neuroml import (
     Cell,
     Cell2CaPools,
     ChannelDensity,
     ChannelDensityGHK,
     ChannelDensityGHK2,
-    ChannelDensityVShift,
     ChannelDensityNernst,
     ChannelDensityNernstCa2,
     ChannelDensityNonUniform,
     ChannelDensityNonUniformGHK,
     ChannelDensityNonUniformNernst,
+    ChannelDensityVShift,
 )
-
+from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
+from pyneuroml.utils import get_ion_color
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -338,7 +337,9 @@ def get_channel_densities(nml_cell: Cell) -> typing.Dict[str, typing.List[typing
     :returns: list of channel densities on the cell
 
     """
-    channel_densities = {}  # type: typing.Dict[str, typing.List[typing.Any]]
+    # order matters because if two channel densities apply conductances to same
+    # segments, only the latest value is applied
+    channel_densities = OrderedDict()  # type: typing.Dict[str, typing.List[typing.Any]]
     dens = nml_cell.biophysical_properties.membrane_properties.info(
         show_contents=True, return_format="dict"
     )
@@ -381,13 +382,26 @@ def get_conductance_density_for_segments(
     :returns: dictionary with keys as segment ids and the conductance density
         for that segment as the value
 
+    .. versionadded:: 1.0.8
+
     """
-    segments = cell.morphology.segments
     data = {}
     if "NonUniform" not in channel_density.__class__.__name__:
-        logger.debug("Got a uniform channel density")
-        for seg in segments:
-            data[seg.id] = channel_density.cond_density
+        logger.debug(f"Got a uniform channel density: {channel_density}")
+        segments = []
+        segments = cell.get_all_segments_in_group(channel_density.segment_groups)
+        # add any segments explicitly listed
+        try:
+            segments.extend(channel_density.segments)
+        except TypeError:
+            pass
+
+        for seg in cell.morphology.segments:
+            if seg.id in segments:
+                value = get_value_in_si(channel_density.cond_density)
+                data[seg.id] = 0.00 if value is None else value
+            else:
+                data[seg.id] = 0.00
 
     return data
 
