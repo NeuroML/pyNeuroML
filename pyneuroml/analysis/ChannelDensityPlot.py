@@ -10,6 +10,7 @@ import os
 import pprint
 import typing
 from collections import OrderedDict
+from sympy import sympify
 
 from neuroml import (
     Cell,
@@ -23,6 +24,7 @@ from neuroml import (
     ChannelDensityNonUniformGHK,
     ChannelDensityNonUniformNernst,
     ChannelDensityVShift,
+    VariableParameter,
 )
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
@@ -375,6 +377,16 @@ def get_conductance_density_for_segments(
     """Get conductance density for each segment to be able to generate a morphology
     plot.
 
+    For uniform channel densities, the value is reported in SI units, but for
+    non-uniform channel densities, for example ChannelDensityNonUniform, where
+    the conductance density can be a function of an arbitrary variable, like
+    distance from soma, the conductance density can be provided by an arbitrary
+    function. In this case, the units of the conductance are not reported since
+    the arbitrary function only provides a magnitude.
+
+    For non-uniform channel densities, we evaluate the provided expression
+    using sympy.sympify.
+
     :param cell: a NeuroML Cell
     :type cell: Cell
     :param channel_density: a channel density object
@@ -400,6 +412,37 @@ def get_conductance_density_for_segments(
             if seg.id in segments:
                 value = get_value_in_si(channel_density.cond_density)
                 data[seg.id] = 0.00 if value is None else value
+            else:
+                data[seg.id] = 0.00
+    else:
+        # get the inhomogeneous param/value from the channel density
+        param = channel_density.variable_parameters[0]  # type: VariableParameter
+        inhom_val = param.inhomogeneous_value.value
+        inhom_expr = sympify(inhom_val)
+        inhom_param_id = param.inhomogeneous_value.inhomogeneous_parameters
+        logger.debug(f"Inhom value: {inhom_val}, Inhom param id: {inhom_param_id}")
+
+        # get the definision of the inhomogeneous param from the segment group
+        seg_group = cell.get_segment_group(param.segment_groups)
+        inhom_params = seg_group.inhomogeneous_parameters
+        req_inhom_param = None
+        for p in inhom_params:
+            if p.id == inhom_param_id:
+                req_inhom_param = p
+                break
+        if req_inhom_param is None:
+            raise ValueError(
+                f"Could not find InhomogeneousValue definition for id: {inhom_param_id}"
+            )
+        logger.debug(f"InhomogeneousParameter found: {req_inhom_param}")
+        expr_variable = req_inhom_param.variable
+
+        segments = cell.get_all_segments_in_group(seg_group)
+        data = {}
+        for seg in cell.morphology.segments:
+            if seg.id in segments:
+                distance_to_seg = cell.get_distance(seg.id)
+                data[seg.id] = float(inhom_expr.subs(expr_variable, distance_to_seg))
             else:
                 data[seg.id] = 0.00
 

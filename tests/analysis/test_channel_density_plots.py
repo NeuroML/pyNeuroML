@@ -44,13 +44,20 @@ class TestChannelDensityPlots(unittest.TestCase):
         channel_densities = get_channel_densities(cell)
 
         channel_densities_Im = channel_densities["Im"]
-        data = get_conductance_density_for_segments(cell, channel_densities_Im[0])
+        data_Im = get_conductance_density_for_segments(cell, channel_densities_Im[0])
         soma_group = cell.get_all_segments_in_group("soma_group")
-        self.assertEqual(data[soma_group[0]], 3.06)
-        self.assertEqual(data[soma_group[-1]], 3.06)
-        self.assertEqual(len(data), len(cell.morphology.segments))
+        self.assertEqual(data_Im[soma_group[0]], 3.06)
+        self.assertEqual(data_Im[soma_group[-1]], 3.06)
+        self.assertEqual(len(data_Im), len(cell.morphology.segments))
 
-        data = get_conductance_density_for_segments(cell, channel_densities_Im[1])
+        data_Im = get_conductance_density_for_segments(cell, channel_densities_Im[1])
         axon_group = cell.get_all_segments_in_group("axon_group")
-        self.assertEqual(data[axon_group[0]], 0.000000)
-        self.assertEqual(len(data), len(cell.morphology.segments))
+        self.assertEqual(data_Im[axon_group[0]], 0.000000)
+        self.assertEqual(len(data_Im), len(cell.morphology.segments))
+
+        channel_densities_Ih = channel_densities["Ih"]
+        for cd in channel_densities_Ih:
+            if "NonUniform" in cd.__class__.__name__:
+                data_Ih = get_conductance_density_for_segments(cell, cd)
+                self.assertEqual(data_Ih[soma_group[0]], 0.000000)
+                self.assertEqual(len(data_Ih), len(cell.morphology.segments))
