@@ -778,12 +778,14 @@ def plot_2D_cell_morphology(
             fig.colorbar(
                 matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
                 label=overlay_data_label,
+                ax=ax,
                 ticks=[data_min],
             )
         else:
             fig.colorbar(
                 matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
                 label=overlay_data_label,
+                ax=ax,
             )
 
     # random default color
