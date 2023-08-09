@@ -5,14 +5,14 @@ PyNeuroML
 
 Copyright 2023 NeuroML Contributors
 """
-
 import math
 import copy
 import logging
 import re
 import numpy
-import neuroml
 
+import neuroml
+from neuroml.loaders import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -39,6 +39,14 @@ def extract_position_info(
     :rtype: tuple of dicts
     """
 
+    nml_model_copy = copy.deepcopy(nml_model)
+
+    # add any included cells to the main document
+    for inc in nml_model_copy.includes:
+        inc = read_neuroml2_file(inc.href)
+        for acell in inc.cells:
+            nml_model_copy.add(acell)
+
     cell_id_vs_cell = {}
     positions = {}
     pop_id_vs_cell = {}
@@ -46,18 +54,18 @@ def extract_position_info(
     pop_id_vs_radii = {}
 
     cell_elements = []
-    cell_elements.extend(nml_model.cells)
-    cell_elements.extend(nml_model.cell2_ca_poolses)
+    cell_elements.extend(nml_model_copy.cells)
+    cell_elements.extend(nml_model_copy.cell2_ca_poolses)
 
     for cell in cell_elements:
         cell_id_vs_cell[cell.id] = cell
 
-    if len(nml_model.networks) > 0:
-        popElements = nml_model.networks[0].populations
+    if len(nml_model_copy.networks) > 0:
+        popElements = nml_model_copy.networks[0].populations
     else:
         popElements = []
         net = neuroml.Network(id="x")
-        nml_model.networks.append(net)
+        nml_model_copy.networks.append(net)
         cell_str = ""
         for cell in cell_elements:
             pop = neuroml.Population(
@@ -67,7 +75,7 @@ def extract_position_info(
             cell_str += cell.id + "__"
         net.id = cell_str[:-2]
 
-        popElements = nml_model.networks[0].populations
+        popElements = nml_model_copy.networks[0].populations
 
     for pop in popElements:
         name = pop.id
