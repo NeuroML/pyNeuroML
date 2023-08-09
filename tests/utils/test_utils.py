@@ -52,24 +52,26 @@ class TestUtils(BaseTestCase):
     def test_rotate_cell(self):
         """Test rotate_cell"""
         acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
-        soma = acell.add_segment(prox=[0, 0, 0, 1], dist=[0, 0, 0, 1], seg_id=0,
+
+        soma = acell.add_segment(prox=[0, 0, 0, 15], dist=[0, 0, 0, 15], seg_id=0,
                                  use_convention=False, reorder_segment_groups=False,
                                  optimise_segment_groups=False)
-        acell.add_segment(prox=[0, 0, 0, 1], dist=[5, 0, 0, 1], seg_id=1,
+
+        acell.add_segment(prox=[0, 0, 0, 12], dist=[100, 0, 0, 12], seg_id=1,
                           use_convention=False, reorder_segment_groups=False,
                           optimise_segment_groups=False, parent=soma)
 
-        acell.add_segment(prox=[0, 0, 0, 10], dist=[0, 10, 0, 10], seg_id=2,
+        acell.add_segment(prox=[0, 0, 0, 7], dist=[0, 150, 0, 7], seg_id=2,
                           use_convention=False, reorder_segment_groups=False,
                           optimise_segment_groups=False, parent=soma)
 
-        acell.add_segment(prox=[0, 0, 0, 25], dist=[0, 0, 25, 25], seg_id=3,
+        acell.add_segment(prox=[0, 0, 0, 4], dist=[0, 0, 200, 4], seg_id=3,
                           use_convention=False, reorder_segment_groups=False,
                           optimise_segment_groups=False, parent=soma)
 
         print(acell)
 
-        rotated_cell = rotate_cell(acell, x=math.pi / 2, y=0, z=0, order="xyz")
+        rotated_cell = rotate_cell(acell, x=math.pi / 20, y=0, z=0, order="xyz")
         rotated_cell.id = "test_rotated_cell"
         print(rotated_cell)
 
@@ -87,7 +89,7 @@ class TestUtils(BaseTestCase):
                        component=rotated_cell.id,
                        type="populationList", validate=False)
         pop2.add("Instance", id=0, location=pop1.component_factory("Location",
-                                                                   x=50, y=0, z=0))
+                                                                   x=200, y=0, z=0))
 
         newdoc.validate(recursive=True)
-        write_neuroml2_file(newdoc, "test_rotation.net.nml", validate=True)
+        write_neuroml2_file(newdoc, "tests/utils/test_rotation.net.nml", validate=True)
