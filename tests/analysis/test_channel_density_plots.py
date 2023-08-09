@@ -79,3 +79,6 @@ class TestChannelDensityPlots(unittest.TestCase):
         plot_channel_densities(
             cell, ion_channels=["Ih"], distance_plots=True, show_plots_already=False
         )
+        # no channel densities or ion channels, so generate for all ion
+        # channels
+        plot_channel_densities(cell, distance_plots=True, show_plots_already=False)
