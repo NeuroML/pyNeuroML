@@ -155,3 +155,5 @@ arm64
 *.neux
 /test_*plot*png
 /examples/plot.py
+/tests/utils/test_rotation.net.nml
+/tests/utils/test_rotation.net.png
