@@ -33,6 +33,7 @@ from neurotune import optimizers
 from neurotune import evaluators
 from neurotune import utils
 from pyneuroml.tune.NeuroMLController import NeuroMLController
+from pyneuroml.utils.cli import build_namespace
 from pyneuroml import print_v
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -370,7 +371,7 @@ def run_optimisation(**kwargs: typing.Any) -> typing.Optional[dict]:
     :returns: a report of the optimisation in a dictionary.
 
     """
-    a = build_namespace(**kwargs)
+    a = build_namespace(DEFAULTS, **kwargs)
     return _run_optimisation(a)
 
 
@@ -951,39 +952,6 @@ def parse_list_arg(str_list_arg: str) -> typing.Optional[list[typing.Any]]:
             ret.append(e)
     # print("Command line argument %s parsed as: %s"%(str_list_arg,ret))
     return ret
-
-
-def build_namespace(
-    a: typing.Optional[argparse.Namespace] = None, **kwargs: typing.Any
-) -> argparse.Namespace:
-    """Build an argparse namespace."""
-    if a is None:
-        a = argparse.Namespace()
-
-    # Add arguments passed in by keyword.
-    for key, value in kwargs.items():
-        setattr(a, key, value)
-
-    # Add defaults for arguments not provided.
-    for key, value in DEFAULTS.items():
-        new_key = convert_case(key)
-        if not hasattr(a, key) and not hasattr(a, new_key):
-            setattr(a, key, value)
-
-    # Change all values to under_score from camelCase.
-    # Cannot change dictionary while iterating over it, so iterate over a copy
-    for key, value in a.__dict__.copy().items():
-        new_key = convert_case(key)
-        if new_key != key:
-            setattr(a, new_key, value)
-            delattr(a, key)
-    return a
-
-
-def convert_case(name: str) -> str:
-    """Converts from camelCase to snake_case"""
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 if __name__ == "__main__":

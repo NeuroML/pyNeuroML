@@ -792,7 +792,7 @@ def main(args=None):
 
 
 def run(a=None, **kwargs):
-    a = build_namespace(a, **kwargs)
+    a = build_namespace(DEFAULTS, a, **kwargs)
 
     # if (not a.nogui) or a.html:
     #    print('mpl')
