@@ -10,8 +10,10 @@ import os
 import pprint
 import typing
 from collections import OrderedDict
-from sympy import sympify
 
+import matplotlib
+import numpy
+from matplotlib.colors import LinearSegmentedColormap
 from neuroml import (
     Cell,
     Cell2CaPools,
@@ -24,13 +26,13 @@ from neuroml import (
     ChannelDensityNonUniformGHK,
     ChannelDensityNonUniformNernst,
     ChannelDensityVShift,
-    Segment,
     VariableParameter,
 )
+from pyneuroml.plot.Plot import generate_plot
+from pyneuroml.plot.PlotMorphology import plot_2D_cell_morphology
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
-from pyneuroml.plot.PlotMorphology import plot_2D_cell_morphology
-from pyneuroml.plot.Plot import generate_plot
+from sympy import sympify
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -495,6 +497,8 @@ def plot_channel_densities(
     channel_density_ids: typing.Optional[typing.Union[str, typing.List[str]]] = None,
     ion_channels: typing.Optional[typing.Union[str, typing.List[str]]] = None,
     ymin: typing.Optional[float] = None,
+    ymax: typing.Optional[float] = None,
+    colormap_name: str = "autumn_r",
     plane2d: str = "xy",
     distance_plots: bool = False,
     show_plots_already: bool = True,
@@ -521,6 +525,8 @@ def plot_channel_densities(
     :type ion_channels: str or list(str)
     :param ymin: min y value for plots, if None, automatically calculated
     :type ymin: float or None
+    :param ymax: max y value for plots, if None, automatically calculated
+    :type ymax: float or None
     :param plane2d: plane to plot morphology plot in, passed on to the :py:method:`plot_2D_cell_morphology` function
     :type plane2d: str "xy" or "yz" or "zx"
     :param morph_plot_type: plot type for morphology plot passed on to
@@ -532,6 +538,10 @@ def plot_channel_densities(
     :param distance_plots: also generate plots showing conductance densities at
         distances from the soma
     :type distance_plots: bool
+    :param colormap_name: name of matplotlib colormap to use for morph plot.
+        Note that if there's only one overlay value, the colormap is modified
+        to only show the max value of the colormap to indicate this.
+    :type colormap_name: str
     :returns: None
     """
     if channel_density_ids is not None and ion_channels is not None:
@@ -567,35 +577,76 @@ def plot_channel_densities(
                     print(f"Generating plots for {cd.id}")
                     data = get_conductance_density_for_segments(cell, cd)
                     logger.debug(f"Got data for {cd.id}")
+
+                    # default colormap: what user passed
+                    colormap_name_to_pass = colormap_name
+
+                    # define a new colormap with a single color if there's
+                    # only one value
+                    this_max = numpy.max(list(data.values()))
+                    this_min = numpy.min(list(data.values()))
+                    if this_max == this_min:
+                        logger.debug(
+                            "Only one data value found, creating custom colormap"
+                        )
+                        selected_colormap = matplotlib.colormaps[colormap_name]
+                        maxcolor = selected_colormap(1.0)
+                        cdict = {
+                            "red": (
+                                (0.0, maxcolor[0], maxcolor[0]),
+                                (1.0, maxcolor[0], maxcolor[0]),
+                            ),
+                            "green": (
+                                (0.0, maxcolor[1], maxcolor[1]),
+                                (1.0, maxcolor[1], maxcolor[1]),
+                            ),
+                            "blue": (
+                                (0.0, maxcolor[2], maxcolor[2]),
+                                (1.0, maxcolor[2], maxcolor[2]),
+                            ),
+                            "alpha": (
+                                (0.0, maxcolor[3], maxcolor[3]),
+                                (1.0, maxcolor[3], maxcolor[3]),
+                            ),
+                        }
+                        colormap_name_to_pass = "new_pyneuroml_morph_color_map"
+                        newcolormap = LinearSegmentedColormap(
+                            colormap_name_to_pass, cdict
+                        )
+                        matplotlib.colormaps.register(newcolormap)
+
                     plot_2D_cell_morphology(
                         cell=cell,
                         title=f"{cd.id}",
                         plot_type=morph_plot_type,
                         min_width=morph_min_width,
                         overlay_data=data,
-                        overlay_data_label="(S/m2)"
-                        if "NonUniform" not in cd.__class__.__name__
-                        else "",
+                        overlay_data_label="(S/m2)",
                         save_to_file=f"{cd.id}.png",
                         datamin=ymin,
                         plane2d=plane2d,
                         nogui=not show_plots_already,
+                        colormap_name=colormap_name_to_pass,
                     )
                     if distance_plots:
                         xvals = []
                         yvals = []
                         for segid, distance in sorted_distances.items():
-                            xvals.append(distance)
-                            yvals.append(data[segid])
+                            # if segid is not in data, it'll just skip and
+                            # continue
+                            try:
+                                yvals.append(data[segid])
+                                xvals.append(distance)
+                            except KeyError:
+                                pass
+
                         generate_plot(
                             xvalues=[xvals],
                             yvalues=[yvals],
                             title=f"{cd.id}",
                             title_above_plot=True,
                             xaxis="Distance from soma (um)",
-                            yaxis="g density" + "(S/m2)"
-                            if "NonUniform" not in cd.__class__.__name__
-                            else "",
+                            yaxis="g density (S/m2)",
                             save_figure_to=f"{cd.id}_vs_soma.png",
                             show_plot_already=show_plots_already,
                             linestyles=[" "],
