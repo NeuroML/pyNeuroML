@@ -24,6 +24,7 @@ from neuroml import (
     ChannelDensityNonUniformGHK,
     ChannelDensityNonUniformNernst,
     ChannelDensityVShift,
+    Segment,
     VariableParameter,
 )
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
@@ -393,9 +394,13 @@ def get_conductance_density_for_segments(
         ChannelDensityNonUniformGHK,
         ChannelDensityNonUniformNernst,
     ],
+    seg_ids: typing.Optional[typing.Union[str, typing.List[str]]] = None,
 ) -> typing.Dict[int, float]:
-    """Get conductance density for each segment to be able to generate a morphology
-    plot.
+    """Get conductance density for provided segments to be able to generate a
+    morphology plot.
+
+    If no segment ids are provided, provide values for all segments that the
+    channel density is present on.
 
     For uniform channel densities, the value is reported in SI units, but for
     non-uniform channel densities, for example ChannelDensityNonUniform, where
@@ -409,6 +414,9 @@ def get_conductance_density_for_segments(
 
     :param cell: a NeuroML Cell
     :type cell: Cell
+    :param seg_ids: segment id or list of segment ids to report, if None,
+        report on all segments that channel density is present
+    :type seg_ids: None or str or list(str)
     :param channel_density: a channel density object
     :type channel_density: ChannelDensityGHK or ChannelDensityGHK2 or ChannelDensityVShift or ChannelDensityNernst or ChannelDensityNernstCa2 or ChannelDensityNonUniform or ChannelDensityNonUniformGHK or ChannelDensityNonUniformNernst,
     :returns: dictionary with keys as segment ids and the conductance density
@@ -418,22 +426,41 @@ def get_conductance_density_for_segments(
 
     """
     data = {}
+    segments = []
+
+    # for uniform
+    try:
+        seg_group_name = channel_density.segment_groups
+    # for NonUniform
+    except AttributeError:
+        seg_group_name = channel_density.variable_parameters[0].segment_groups
+    seg_group = cell.get_segment_group(seg_group_name)
+    segments = cell.get_all_segments_in_group(seg_group)
+
+    # add any segments explicitly listed
+    try:
+        segments.extend(channel_density.segments)
+    except TypeError:
+        pass
+    # non uniform channel densities do not have a segments child element
+    except AttributeError:
+        pass
+
+    # filter to seg_ids
+    if seg_ids is not None:
+        if type(seg_ids) == str:
+            segments = [seg_ids]
+        else:
+            segments = list(set(seg_ids) & set(segments))
+
     if "NonUniform" not in channel_density.__class__.__name__:
-        logger.debug(f"Got a uniform channel density: {channel_density}")
-        segments = []
-        segments = cell.get_all_segments_in_group(channel_density.segment_groups)
-        # add any segments explicitly listed
-        try:
-            segments.extend(channel_density.segments)
-        except TypeError:
-            pass
+        logger.debug(f"Got a uniform channel density: {channel_density.id}")
 
         for seg in cell.morphology.segments:
             if seg.id in segments:
                 value = get_value_in_si(channel_density.cond_density)
-                data[seg.id] = 0.00 if value is None else value
-            else:
-                data[seg.id] = 0.00
+                if value is not None:
+                    data[seg.id] = value
     else:
         # get the inhomogeneous param/value from the channel density
         param = channel_density.variable_parameters[0]  # type: VariableParameter
@@ -442,8 +469,6 @@ def get_conductance_density_for_segments(
         inhom_param_id = param.inhomogeneous_value.inhomogeneous_parameters
         logger.debug(f"Inhom value: {inhom_val}, Inhom param id: {inhom_param_id}")
 
-        # get the definision of the inhomogeneous param from the segment group
-        seg_group = cell.get_segment_group(param.segment_groups)
         inhom_params = seg_group.inhomogeneous_parameters
         req_inhom_param = None
         for p in inhom_params:
@@ -454,17 +479,13 @@ def get_conductance_density_for_segments(
             raise ValueError(
                 f"Could not find InhomogeneousValue definition for id: {inhom_param_id}"
             )
-        logger.debug(f"InhomogeneousParameter found: {req_inhom_param}")
+        logger.debug(f"InhomogeneousParameter found: {req_inhom_param.id}")
         expr_variable = req_inhom_param.variable
 
-        segments = cell.get_all_segments_in_group(seg_group)
-        data = {}
         for seg in cell.morphology.segments:
             if seg.id in segments:
                 distance_to_seg = cell.get_distance(seg.id)
                 data[seg.id] = float(inhom_expr.subs(expr_variable, distance_to_seg))
-            else:
-                data[seg.id] = 0.00
 
     return data
 
