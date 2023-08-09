@@ -510,10 +510,8 @@ def plot_channel_densities(
     You can either provide a list of channel densities where it'll generate one
     plot per channel density. Or, you can provide a list of ions, and it'll
     generate one plot per ion---adding up the conductance densities of the
-    different channel densities for that ion. However, note that conductance
-    densities for non uniform channel densities will always be plotted
-    separtely since information on units of calculated conductance densities
-    are not available for them.
+    different channel densities for that ion. If neither are provided, plots
+    for all ion channels on the cell are generated.
 
     .. versionadded:: 1.0.8
 
@@ -549,6 +547,12 @@ def plot_channel_densities(
             "Only one of channel_density_ids or ions channels may be provided"
         )
 
+    channel_densities = get_channel_densities(cell)
+    logger.debug(f"Got channel densities {channel_densities}")
+    # if neither are provided, generate plots for all ion channels on the cell
+    if channel_density_ids is None and ion_channels is None:
+        ion_channels = list(channel_densities.keys())
+
     # calculate distances of segments from soma for later use
     if distance_plots:
         distances = {}
@@ -567,8 +571,6 @@ def plot_channel_densities(
             channel_density_ids = channel_density_ids_list
 
         logger.info(f"Plotting channel density plots for {channel_density_ids}")
-        channel_densities = get_channel_densities(cell)
-        logger.debug(f"Got channel densities {channel_densities}")
 
         for ion_channel, cds in channel_densities.items():
             logger.debug(f"Looking at {ion_channel}: {cds}")
@@ -622,7 +624,7 @@ def plot_channel_densities(
                         min_width=morph_min_width,
                         overlay_data=data,
                         overlay_data_label="(S/m2)",
-                        save_to_file=f"{cd.id}.png",
+                        save_to_file=f"{cd.id}.cd.png",
                         datamin=ymin,
                         plane2d=plane2d,
                         nogui=not show_plots_already,
@@ -647,7 +649,7 @@ def plot_channel_densities(
                             title_above_plot=True,
                             xaxis="Distance from soma (um)",
                             yaxis="g density (S/m2)",
-                            save_figure_to=f"{cd.id}_vs_soma.png",
+                            save_figure_to=f"{cd.id}_cd_vs_dist.png",
                             show_plot_already=show_plots_already,
                             linestyles=[" "],
                             linewidths=["0"],
@@ -659,8 +661,6 @@ def plot_channel_densities(
             ion_channel_list.append(ion_channels)
             ion_channels = ion_channel_list
         logger.info(f"Plotting channel density plots for ion channels: {ion_channels}")
-        channel_densities = get_channel_densities(cell)
-        logger.debug(f"Got channel densities {channel_densities}")
 
         for ion_channel, cds in channel_densities.items():
             if ion_channel in ion_channels:
@@ -680,6 +680,7 @@ def plot_channel_densities(
                 # note: plotting code is almost identical to code above with
                 # changes to use ion channel instead of cd
                 # so, when updating, remember to update both
+                # can probably be split out into a private helper method
 
                 # default colormap: what user passed
                 colormap_name_to_pass = colormap_name
@@ -721,7 +722,7 @@ def plot_channel_densities(
                     min_width=morph_min_width,
                     overlay_data=data,
                     overlay_data_label="(S/m2)",
-                    save_to_file=f"{ion_channel}.png",
+                    save_to_file=f"{ion_channel}.ion.png",
                     datamin=ymin,
                     plane2d=plane2d,
                     nogui=not show_plots_already,
@@ -746,14 +747,13 @@ def plot_channel_densities(
                         title_above_plot=True,
                         xaxis="Distance from soma (um)",
                         yaxis="g density (S/m2)",
-                        save_figure_to=f"{ion_channel}_vs_soma.png",
+                        save_figure_to=f"{ion_channel}_ion_vs_dist.png",
                         show_plot_already=show_plots_already,
                         linestyles=[" "],
                         linewidths=["0"],
                         markers=["."],
                     )
-    else:
-        print("No channel densities or ion channels provided to plot.")
+    # will never reach here
 
 
 if __name__ == "__main__":
