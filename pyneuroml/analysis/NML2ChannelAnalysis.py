@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 
 import neuroml
 from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
-from pyneuroml.utils import convert_case, get_ion_color, get_colour_hex, get_state_color
+from pyneuroml.utils import get_ion_color, get_colour_hex, get_state_color
+from pyneuroml.utils.cli import build_namespace
 
 
 logger = logging.getLogger(__name__)
@@ -782,38 +783,6 @@ def make_md_file(info):
     lf.write(merged)
     lf.close()
     logger.info("Written Markdown info to: %s" % new_md_file)
-
-
-def build_namespace(a=None, **kwargs):
-    if a is None:
-        a = argparse.Namespace()
-
-    # Add arguments passed in by keyword.
-    for key, value in kwargs.items():
-        setattr(a, key, value)
-
-    # Add defaults for arguments not provided.
-    for key, value in DEFAULTS.items():
-        if not hasattr(a, key):
-            setattr(a, key, value)
-
-    # Change all values from camelCase to under_score.
-    # This should have always worked in one pass, but for some reason
-    # it is failing (stochastically) on some keys, so it needs to keep
-    # trying until all keys are under_score.
-    flag = True
-    while flag:
-        flag = False
-        keys = list(a.__dict__.keys())
-        for key in keys:
-            value = a.__dict__[key]
-            new_key = convert_case(key)
-            if new_key != key:
-                setattr(a, new_key, value)
-                delattr(a, key)
-                flag = True
-
-    return a
 
 
 def main(args=None):
