@@ -12,8 +12,9 @@ import typing
 from collections import OrderedDict
 
 import matplotlib
-import numpy
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.pyplot as plt
+import numpy
 from neuroml import (
     Cell,
     Cell2CaPools,
@@ -32,10 +33,12 @@ from pyneuroml.plot.Plot import generate_plot
 from pyneuroml.plot.PlotMorphology import plot_2D_cell_morphology
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
+from pyneuroml.utils.cli import build_namespace
 from sympy import sympify
+import argparse
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 pp = pprint.PrettyPrinter(depth=6)
@@ -49,6 +52,41 @@ start = -2
 stop = start + order
 
 substitute_ion_channel_names = {"LeakConductance": "Pas"}
+
+CHANNEL_DENSITY_PLOTTER_CLI_DEFAULTS = {
+    "nogui": False,
+}
+
+
+def channel_density_plotter_process_args():
+    """Parse command-line arguments.
+
+    :returns: None
+    """
+    parser = argparse.ArgumentParser(
+        description=(
+            "A script to generate channel density plots"
+            "for different ion channels on a NeuroML2"
+            "cell"
+        )
+    )
+
+    parser.add_argument(
+        "cellFiles",
+        type=str,
+        nargs="+",
+        metavar="<NeuroML 2 Cell file>",
+        help="Name of the NeuroML 2 file(s)",
+    )
+
+    parser.add_argument(
+        "-nogui",
+        action="store_true",
+        default=CHANNEL_DENSITY_PLOTTER_CLI_DEFAULTS["nogui"],
+        help=("Do not show plots as they are generated"),
+    )
+
+    return parser.parse_args()
 
 
 def _get_rect(ion_channel, row, max_, min_, r, g, b, extras=False):
@@ -754,6 +792,24 @@ def plot_channel_densities(
                         markers=["."],
                     )
     # will never reach here
+
+
+def channel_density_plotter_cli(args=None):
+    if args is None:
+        args = channel_density_plotter_process_args()
+    channel_density_plotter_runner(a=args)
+
+
+def channel_density_plotter_runner(a=None, **kwargs):
+    a = build_namespace(CHANNEL_DENSITY_PLOTTER_CLI_DEFAULTS, a, **kwargs)
+
+    if len(a.cell_files) > 0:
+        for cell_file in a.cell_files:
+            nml_doc = read_neuroml2_file(
+                cell_file, include_includes=True, verbose=False, optimized=True
+            )
+            # show all plots at end
+            plot_channel_densities(nml_doc.cells[0], show_plots_already=not a.nogui)
 
 
 if __name__ == "__main__":
