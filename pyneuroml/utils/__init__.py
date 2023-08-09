@@ -6,11 +6,11 @@ PyNeuroML
 Copyright 2023 NeuroML Contributors
 """
 
-import typing
 import logging
 import re
-import neuroml
+import typing
 
+import neuroml
 
 logger = logging.getLogger(__name__)
 

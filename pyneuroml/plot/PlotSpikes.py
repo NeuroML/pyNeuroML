@@ -1,15 +1,13 @@
 import argparse
+import logging
+import os
+import sys
+from collections import OrderedDict
 
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 import numpy as np
-import re
-import sys
-import os
-import logging
 from pyneuroml.plot import generate_plot
 from pyneuroml.utils.cli import build_namespace
-
 
 logger = logging.getLogger(__name__)
 
