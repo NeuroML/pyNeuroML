@@ -49,19 +49,20 @@ class TestChannelDensityPlots(unittest.TestCase):
         soma_group = cell.get_all_segments_in_group("soma_group")
         self.assertEqual(data_Im[soma_group[0]], 3.06)
         self.assertEqual(data_Im[soma_group[-1]], 3.06)
-        self.assertEqual(len(data_Im), len(cell.morphology.segments))
 
         data_Im = get_conductance_density_for_segments(cell, channel_densities_Im[1])
         axon_group = cell.get_all_segments_in_group("axon_group")
         self.assertEqual(data_Im[axon_group[0]], 0.000000)
-        self.assertEqual(len(data_Im), len(cell.morphology.segments))
 
         channel_densities_Ih = channel_densities["Ih"]
         for cd in channel_densities_Ih:
             if "NonUniform" in cd.__class__.__name__:
                 data_Ih = get_conductance_density_for_segments(cell, cd)
-                self.assertEqual(data_Ih[soma_group[0]], 0.000000)
-                self.assertEqual(len(data_Ih), len(cell.morphology.segments))
+                self.assertNotIn(soma_group[0], data_Ih.keys())
+                self.assertEqual(
+                    len(data_Ih),
+                    len(cell.get_all_segments_in_group("apical_dendrite_group")),
+                )
 
     def test_plot_channel_densities(self):
         """Test the plot_channel_densities function."""
@@ -70,5 +71,11 @@ class TestChannelDensityPlots(unittest.TestCase):
 
         # check with channel densities
         plot_channel_densities(
-            cell, channel_density_ids=["pas", "Ih_apical"], ymin=0, distance_plots=True
+            cell,
+            channel_density_ids=["Ih_apical", "Ih_somatic", "Ih_basal", "Ih"],
+            distance_plots=True,
+            show_plots_already=False,
+        )
+        plot_channel_densities(
+            cell, ion_channels=["Ih"], distance_plots=True, show_plots_already=False
         )
