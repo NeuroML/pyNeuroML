@@ -60,7 +60,28 @@ def generate_current_vs_frequency_curve(
     segment_id: typing.Optional[str] = None,
     fraction_along: typing.Optional[float] = None
 ):
-    """Generate current vs firing rate frequency curve for provided cell.
+    """Generate current vs firing rate frequency curves for provided cell.
+
+    It runs a number of simulations of the cell with different input currents,
+    and generates the following metrics/graphs:
+
+    - sub-threshold potentials for all currents
+    - F-I curve for the cell
+    - membrane potential traces for each stimulus
+
+    Using the method arguments, these graphs and the data they are generated
+    from may be enabled/disabled/saved.
+
+    When the I-F curve plotting is enabled, it also notes the spiking threshold
+    current value in a file. Note that this value is simply the lowest input
+    stimulus current at which spiking was detected, so should be taken as an
+    approximate value. It does not, for example, implement a bisection based
+    method to find the accurate spiking threshold current. This is also true
+    for the I-F curves: the resolution is constrained by the values of the
+    stimulus currents.
+
+    The various plotting related arguments to this method are passed on to
+    :py:method`pynml.generate_plot`
 
     :param nml2_file: name of NeuroML file containing cell definition
     :type nml2_file: str
@@ -303,6 +324,10 @@ def generate_current_vs_frequency_curve(
     volts_labels = []
     if_results = {}
     iv_results = {}
+
+    # arbitrarily large value to start with
+    spike_threshold_current = float(math.inf)
+
     for i in range(number_cells):
         t = np.array(results["t"]) * 1000
         v = np.array(results["%s[%i]/v" % (pop.id, i)]) * 1000
@@ -315,6 +340,7 @@ def generate_current_vs_frequency_curve(
         mm = max_min(v, t, delta=0, peak_threshold=spike_threshold_mV)
         spike_times = mm["maxima_times"]
         freq = 0.0
+
         if len(spike_times) > 2:
             count = 0
             for s in spike_times:
@@ -323,6 +349,9 @@ def generate_current_vs_frequency_curve(
                 ):
                     count += 1
             freq = 1000 * count / float(analysis_duration)
+            if count > 0:
+                if stims[i] < spike_threshold_current:
+                    spike_threshold_current = stims[i]
 
         mean_freq = mean_spike_frequency(spike_times)
         logger.debug(
@@ -399,6 +428,8 @@ def generate_current_vs_frequency_curve(
             with open(save_if_data_to, "w") as if_file:
                 for i in range(len(stims_pA)):
                     if_file.write("%s\t%s\n" % (stims_pA[i], freqs[i]))
+            with open(f"threshold_i_{save_if_data_to}", "w") as if_file:
+                print(spike_threshold_current, file=if_file)
     if plot_iv:
         stims = sorted(iv_results.keys())
         stims_pA = [ii * 1000 for ii in sorted(iv_results.keys())]
