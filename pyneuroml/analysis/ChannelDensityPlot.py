@@ -462,7 +462,7 @@ def get_conductance_density_for_segments(
     :returns: dictionary with keys as segment ids and the conductance density
         for that segment as the value
 
-    .. versionadded:: 1.0.9
+    .. versionadded:: 1.0.10
 
     """
     data = {}
@@ -551,7 +551,7 @@ def plot_channel_densities(
     different channel densities for that ion. If neither are provided, plots
     for all ion channels on the cell are generated.
 
-    .. versionadded:: 1.0.9
+    .. versionadded:: 1.0.10
 
     :param cell: a NeuroML cell object
     :type cell: neuroml.Cell
