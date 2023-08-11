@@ -55,6 +55,7 @@ substitute_ion_channel_names = {"LeakConductance": "Pas"}
 
 CHANNEL_DENSITY_PLOTTER_CLI_DEFAULTS = {
     "nogui": False,
+    "noDistancePlots": False,
 }
 
 
@@ -79,6 +80,12 @@ def channel_density_plotter_process_args():
         help="Name of the NeuroML 2 file(s)",
     )
 
+    parser.add_argument(
+        "-noDistancePlots",
+        action="store_true",
+        default=CHANNEL_DENSITY_PLOTTER_CLI_DEFAULTS["noDistancePlots"],
+        help=("Do not generate distance plots"),
+    )
     parser.add_argument(
         "-nogui",
         action="store_true",
@@ -809,7 +816,11 @@ def channel_density_plotter_runner(a=None, **kwargs):
                 cell_file, include_includes=True, verbose=False, optimized=True
             )
             # show all plots at end
-            plot_channel_densities(nml_doc.cells[0], show_plots_already=not a.nogui)
+            plot_channel_densities(
+                nml_doc.cells[0],
+                show_plots_already=not a.nogui,
+                distance_plots=not a.no_distance_plots,
+            )
 
 
 if __name__ == "__main__":
