@@ -700,6 +700,9 @@ def plot_channel_densities(
                             linewidths=["0"],
                             markers=["."],
                         )
+            if show_plots_already is False:
+                plt.close()
+
     elif ion_channels is not None:
         if type(ion_channels) == str:
             ion_channel_list = []
@@ -798,6 +801,8 @@ def plot_channel_densities(
                         linewidths=["0"],
                         markers=["."],
                     )
+            if show_plots_already is False:
+                plt.close()
     # will never reach here
 
 
