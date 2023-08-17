@@ -8,16 +8,15 @@ Copyright 2023 NeuroML contributors
 """
 
 
-import unittest
 import logging
 import pathlib
+import unittest
 
 from pyneuroml.archive import (
-    get_model_file_list,
     create_combine_archive,
     create_combine_archive_manifest,
+    get_model_file_list,
 )
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -90,15 +89,17 @@ class TestArchiveModule(unittest.TestCase):
         filelist = []
         dirname = str(thispath.parent.parent)
         create_combine_archive(
-            "HH_example", dirname + "/HH_example_cell.nml", filelist=filelist
+            zipfile_name="HH_example",
+            rootfile=dirname + "/HH_example_cell.nml",
+            filelist=filelist,
         )
         self.assertTrue(pathlib.Path(dirname + "/HH_example.neux").exists())
 
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         create_combine_archive(
-            "LEMS_NML2_Ex5_DetCell",
-            dirname + "/examples/LEMS_NML2_Ex5_DetCell.xml",
+            zipfile_name="LEMS_NML2_Ex5_DetCell",
+            rootfile=dirname + "/examples/LEMS_NML2_Ex5_DetCell.xml",
             filelist=filelist,
         )
         self.assertTrue(
@@ -108,8 +109,8 @@ class TestArchiveModule(unittest.TestCase):
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         create_combine_archive(
-            "NML2_SingleCompHHCell",
-            dirname + "/examples/NML2_SingleCompHHCell.nml",
+            zipfile_name="NML2_SingleCompHHCell",
+            rootfile=dirname + "/examples/NML2_SingleCompHHCell.nml",
             filelist=filelist,
         )
         self.assertTrue(
