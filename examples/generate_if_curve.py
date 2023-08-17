@@ -16,4 +16,5 @@ generate_current_vs_frequency_curve(
     plot_voltage_traces=not nogui,
     plot_if=not nogui,
     plot_iv=not nogui,
+    save_if_data_to="if_data.dat"
 )

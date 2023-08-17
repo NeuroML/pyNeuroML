@@ -12,7 +12,6 @@ import logging
 import typing
 import matplotlib
 import matplotlib.axes
-import plotly.graph_objects as go
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -374,6 +373,7 @@ def generate_interactive_plot(
         Note: you can also save the file from the interactive web page.
     :type save_figure_to: str
     """
+    import plotly.graph_objects as go
     fig = go.Figure()
 
     if len(xvalues) != len(yvalues):

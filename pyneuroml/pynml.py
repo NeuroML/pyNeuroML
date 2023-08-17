@@ -1485,8 +1485,9 @@ def run_lems_with_jneuroml_netpyne(
     only_generate_json: bool = False,
     verbose: bool = DEFAULTS["v"],
     exit_on_fail: bool = True,
+    return_string: bool = False,
     cleanup: bool = False,
-) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
+) -> typing.Union[bool, tuple[bool, str], typing.Union[dict, tuple[dict, dict]]]:
     """Run LEMS file with the NEURON simulator
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -1519,8 +1520,15 @@ def run_lems_with_jneuroml_netpyne(
     :type verbose: bool
     :param exit_on_fail: toggle whether command should exit if jnml fails
     :type exit_on_fail: bool
+    :param return_string: toggle whether command output string should be returned
+    :type return_string: bool
     :param cleanup: toggle whether the directory should be cleaned of generated files after run completion
     :type cleanup: bool
+    :returns: either a bool, or a Tuple (bool, str) depending on the value of
+        return_string: True of jnml ran successfully, False if not; along with the
+        output of the command. If load_saved_data is True, it returns a dict
+        with the data
+
     """
 
     logger.info(
@@ -1543,17 +1551,32 @@ def run_lems_with_jneuroml_netpyne(
     if skip_run:
         success = True
     else:
-        success = run_jneuroml(
-            "",
-            lems_file_name,
-            post_args,
-            max_memory=max_memory,
-            exec_in_dir=exec_in_dir,
-            verbose=verbose,
-            exit_on_fail=exit_on_fail,
-        )
+        if return_string is True:
+            (success, output_string) = run_jneuroml(
+                "",
+                lems_file_name,
+                post_args,
+                max_memory=max_memory,
+                exec_in_dir=exec_in_dir,
+                verbose=verbose,
+                exit_on_fail=exit_on_fail,
+                return_string=True,
+            )
+        else:
+            success = run_jneuroml(
+                "",
+                lems_file_name,
+                post_args,
+                max_memory=max_memory,
+                exec_in_dir=exec_in_dir,
+                verbose=verbose,
+                exit_on_fail=exit_on_fail,
+                return_string=False,
+            )
 
-    if not success:
+    if not success and return_string is True:
+        return False, output_string
+    if not success and return_string is False:
         return False
 
     if load_saved_data:
@@ -1567,8 +1590,11 @@ def run_lems_with_jneuroml_netpyne(
             reload_events=reload_events,
             remove_dat_files_after_load=cleanup,
         )
-    else:
-        return True
+
+    if return_string is True:
+        return True, output_string
+
+    return True
 
 
 # TODO: need to enable run with Brian2!
@@ -2297,7 +2323,9 @@ def run_jneuroml(
     :param return_string: toggle whether the output string should be returned
     :type return_string: bool
 
-    :returns: either a bool, or a Tuple (bool, str) depending on the value of return_string: True of jnml ran successfully, False if not; along with the output of the command
+    :returns: either a bool, or a Tuple (bool, str) depending on the value of
+        return_string: True of jnml ran successfully, False if not; along with the
+        output of the command
 
     """
     logger.debug(
