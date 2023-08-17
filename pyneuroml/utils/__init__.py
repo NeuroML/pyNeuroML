@@ -6,10 +6,13 @@ PyNeuroML
 Copyright 2023 NeuroML Contributors
 """
 import copy
+import datetime
 import logging
 import math
 import os
+import random
 import re
+import string
 import time
 import typing
 from pathlib import Path
@@ -339,3 +342,24 @@ def rotate_cell(
         logger.debug(f"distal is: {aseg.distal}")
 
     return newcell
+
+
+def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
+    """Generate a pyneuroml directory name that can be used for various
+    purposes.
+
+    Default format: {rootdir}/{prefix}_{timestamp}_{6 random characters}
+
+    :param rootdir: root directory where to create the new directory
+    :type rootdir: str
+    :param prefix: prefix for directory name
+    :type prefix: str
+    :returns: generated directory name
+    :rtype: str
+
+    """
+    timestamp = datetime.datetime.now().strftime("%y%m%d%H%M%S")
+    random_suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    tdir = rootdir + "/" + f"{prefix}_{timestamp}_{random_suffix}/"
+
+    return tdir
