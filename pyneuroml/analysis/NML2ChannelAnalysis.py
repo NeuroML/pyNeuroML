@@ -21,6 +21,7 @@ from pyneuroml.utils import convert_case
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 pp = pprint.PrettyPrinter(depth=4)
 
 OUTPUT_DIR = os.getcwd()
@@ -356,6 +357,7 @@ def generate_lems_channel_analyser(
     duration: float,
     erev: float,
     gates: typing.List[str],
+    gates_ks: typing.List[str],
     temperature: float,
     ca_conc: float,
     iv_curve: bool,
@@ -439,6 +441,7 @@ def generate_lems_channel_analyser(
         "scale_dt": scale_dt,
         "erev": erev,
         "gates": gates,
+        "gates_ks": gates_ks,
         "temperature": temperature,
         "ca_conc": ca_conc,
         "iv_curve": iv_curve,
@@ -465,7 +468,11 @@ def get_channels_from_channel_file(
     doc = read_neuroml2_file(
         channel_file, include_includes=True, verbose=False, already_included=[]
     )
-    channels = list(doc.ion_channel_hhs.__iter__()) + list(doc.ion_channel.__iter__())
+    channels = (
+        list(doc.ion_channel_hhs.__iter__())
+        + list(doc.ion_channel.__iter__())
+        + list(doc.ion_channel_kses.__iter__())
+    )
     for channel in channels:
         setattr(channel, "file", channel_file)
         if not hasattr(channel, "notes"):
@@ -509,10 +516,14 @@ def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
         raise IOError("File could not be found: %s!\n" % channel_file)
 
     channels = get_channels_from_channel_file(channel_file)
+    logger.debug("Got channels: " + str(channels))
 
     channels_info = []
     for channel in channels:
-        if len(get_channel_gates(channel)) == 0:
+        if (
+            len(get_channel_gates(channel)) == 0
+            and len(get_channel_gates(channel, ks=True)) == 0
+        ):
             logger.warning(
                 "Skipping %s in %s as it has no channels (probably passive conductance)"
                 % (channel.id, channel_file)
@@ -542,10 +553,14 @@ def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
 
 
 def get_channel_gates(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[
+        neuroml.IonChannel, neuroml.IonChannelHH, neuroml.IonChannelKS
+    ],
+    ks: bool = False,
 ) -> typing.List[
     typing.Union[
         neuroml.GateHHUndetermined,
+        neuroml.GateKS,
         neuroml.GateHHRates,
         neuroml.GateHHTauInf,
         neuroml.GateHHInstantaneous,
@@ -559,6 +574,15 @@ def get_channel_gates(
     :rtype: list
     """
     channel_gates = []
+
+    if ks is True:
+        for gates in [
+            "gate_kses",
+        ]:
+            if hasattr(channel, gates):
+                channel_gates += [g.id for g in getattr(channel, gates)]
+    return channel_gates
+
     for gates in [
         "gates",
         "gate_hh_rates",
@@ -571,7 +595,9 @@ def get_channel_gates(
 
 
 def get_conductance_expression(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[
+        neuroml.IonChannel, neuroml.IonChannelHH, neuroml.IonChannelKS
+    ]
 ) -> str:
     """Get expression of conductance in channel.
 
@@ -583,11 +609,12 @@ def get_conductance_expression(
     expr = "g = gmax "
     for gates in [
         "gates",
+        "gates_kses",
         "gate_hh_rates",
         "gate_hh_tau_infs",
         "gate_hh_instantaneouses",
     ]:
-        for g in getattr(channel, gates):
+        for g in getattr(channel, gates, []):
             instances = int(g.instances)
             expr += (
                 "* %s<sup>%s</sup> " % (g.id, g.instances)
@@ -599,6 +626,7 @@ def get_conductance_expression(
 
 def make_lems_file(channel, a):
     gates = get_channel_gates(channel)
+    gates_ks = get_channel_gates(channel, ks=True)
     lems_content = generate_lems_channel_analyser(
         channel.file,
         channel.id,
@@ -611,6 +639,7 @@ def make_lems_file(channel, a):
         a.duration,
         a.erev,
         gates,
+        gates_ks,
         a.temperature,
         a.ca_conc,
         a.iv_curve,
@@ -767,7 +796,6 @@ def compute_iv_curve(channel, a, results, grid=True):
                 times[voltage].append(t)
                 currents[voltage].append(i)
                 if t >= t_start and t <= t_steady_end:
-
                     if i > i_max:
                         i_max = i
                     if i < i_min:
@@ -942,7 +970,6 @@ def run(a=None, **kwargs):
     other_chan_files = []
 
     if len(a.channel_files) > 0:
-
         for channel_file in a.channel_files:
             channels = get_channels_from_channel_file(channel_file)
             # TODO look past 1st channel...
