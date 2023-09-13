@@ -128,6 +128,24 @@ def run_on_nsg(
 
     for model_file in model_file_list:
         logger.debug(f"Copying: {model_file} -> {tdir + '/' + model_file}")
+        # if model file has directory structures in it, recreate the dirs in
+        # the temporary directory
+        if len(model_file.split("/")) > 1:
+            # throw error if files in parent directories are referred to
+            if "../" in model_file:
+                raise ValueError(
+                    """
+                    Cannot handle parent directories because we
+                    cannot create these directories correctly in
+                    the temporary location. Please re-organize
+                    your code such that all included files are in
+                    sub-directories of this main directory.
+                    """
+                )
+
+            model_file_path = pathlib.Path(tdir + "/" + model_file)
+            parent = model_file_path.parent
+            parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(model_file, tdir + "/" + model_file)
 
     if lems_def_dir is not None:
