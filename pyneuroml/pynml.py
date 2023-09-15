@@ -1330,10 +1330,16 @@ def run_lems_with(engine: str, *args: typing.Any, **kwargs: typing.Any):
 
     """
     function_tuple = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
+    found = False
     for fname, function in function_tuple:
         if fname.startswith("run_lems_with") and fname.endswith(engine):
             print(f"Running with {fname}")
+            found = True
             return function(*args, **kwargs)
+
+    if found is False:
+        logger.error(f"Could not find engine {engine}. Exiting.")
+        return False
 
 
 def run_lems_with_jneuroml_neuron(
