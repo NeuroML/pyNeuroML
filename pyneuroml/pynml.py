@@ -1536,7 +1536,7 @@ def run_lems_with_jneuroml_netpyne(
                 exec_in_dir=exec_in_dir,
                 verbose=verbose,
                 exit_on_fail=exit_on_fail,
-                return_string=True
+                return_string=True,
             )
         else:
             success = run_jneuroml(
@@ -1547,7 +1547,7 @@ def run_lems_with_jneuroml_netpyne(
                 exec_in_dir=exec_in_dir,
                 verbose=verbose,
                 exit_on_fail=exit_on_fail,
-                return_string=False
+                return_string=False,
             )
 
     if not success and return_string is True:
@@ -1828,7 +1828,8 @@ def reload_saved_data(
                         id = int(values[0])
                         t = float(values[1])
                     logger.debug(
-                        "Found a event in cell %s (%s) at t = %s" % (id, selections[id], t)
+                        "Found a event in cell %s (%s) at t = %s"
+                        % (id, selections[id], t)
                     )
                     events[selections[id]].append(t)
 
@@ -2015,12 +2016,52 @@ def confirm_lems_file(filename: str) -> None:
         )
 
 
+def version_info(detailed: bool = False):
+    """Print version information.
+
+    :param detailed: also print information about installed simulation engines
+    :type detailed: bool
+
+    """
+    print(version_string)
+    if detailed:
+        print("")
+        print(f"- Python: {sys.version}")
+        try:
+            import neuron
+
+            print(f"- NEURON: {neuron.version}")
+        except ImportError:
+            print("- NEURON: ?")
+        try:
+            import netpyne
+
+            print(f"- NetPyNE: {netpyne.__version__}")
+        except ImportError:
+            print("- NetPyNE: ?")
+        try:
+            import eden_simulator
+
+            print(f"- EDEN: {eden_simulator.__version__}")
+        except ImportError:
+            print("- EDEN: ?")
+        try:
+            import brian2
+
+            print(f"- Brian2: {brian2.__version__}")
+        except ImportError:
+            print("- Brian2: ?")
+
+
 def evaluate_arguments(args):
     logger.debug("    ====  Args: %s" % args)
     global DEFAULTS
 
     if args.version:
-        print(version_string)
+        if args.verbose == "DEBUG":
+            version_info(True)
+        else:
+            version_info()
         return True
 
     if args.verbose:

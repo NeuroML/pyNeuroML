@@ -225,7 +225,8 @@ def create_new_vispy_canvas(
     console_widget.write(f"Center: {view.camera.center}")
     console_widget.write(console_text)
     console_widget.write(
-        f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip()
+        f"Current camera: {view.camera.name}: "
+        + cam_text[view.camera].replace("\n", " ").strip()
     )
 
     if axes_pos:
@@ -280,7 +281,8 @@ def create_new_vispy_canvas(
         # console_widget.write(f"Center: {view.camera.center}")
         console_widget.write(console_text)
         console_widget.write(
-            f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip()
+            f"Current camera: {view.camera.name}: "
+            + cam_text[view.camera].replace("\n", " ").strip()
         )
 
     return scene, view
@@ -348,7 +350,9 @@ def plot_interactive_3D(
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
     else:
-        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
+        raise TypeError(
+            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        )
 
     (
         cell_id_vs_cell,
@@ -368,7 +372,10 @@ def plot_interactive_3D(
     marker_colors = []
 
     if title is None:
-        title = f"{nml_model.networks[0].id} from {nml_file}"
+        try:
+            title = f"{nml_model.networks[0].id} from {nml_file}"
+        except IndexError:
+            title = f"{nml_model.cells[0].id} from {nml_file}"
 
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
@@ -446,7 +453,7 @@ def plot_interactive_3D(
                         offset=pos,
                         cell=cell,
                         segment_groups=None,
-                        labels=True,
+                        color=color,
                         verbose=verbose,
                         current_scene=current_scene,
                         current_view=current_view,
@@ -518,8 +525,9 @@ def plot_3D_cell_morphology(
     :type offset: [float, float]
     :param cell: cell to plot
     :type cell: neuroml.Cell
-    :param color: color to use for segments:
+    :param color: color to use for segments, with some special values:
 
+        - if a color string is given, use that
         - if None, each segment is given a new unique color
         - if "Groups", each unbranched segment group is given a unique color,
           and segments that do not belong to an unbranched segment group are in
@@ -714,6 +722,7 @@ def plot_3D_schematic(
     current_scene: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
     theme: str = "light",
+    color: typing.Optional[str] = "Cell",
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -760,9 +769,30 @@ def plot_3D_schematic(
     :type current_view: ViewBox
     :param theme: theme to use (light/dark)
     :type theme: str
+    :param color: color to use for segment groups with some special values:
+
+        - if None, each unbranched segment group is given a unique color,
+        - if "Cell", each cell is given a unique color
+        - if "Default Groups", each cell is given unique colors for all axons,
+          dendrites, and soma segments
+
+    :type color: str
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
+
+    try:
+        soma_segs = cell.get_all_segments_in_group("soma_group")
+    except Exception:
+        soma_segs = []
+    try:
+        dend_segs = cell.get_all_segments_in_group("dendrite_group")
+    except Exception:
+        dend_segs = []
+    try:
+        axon_segs = cell.get_all_segments_in_group("axon_group")
+    except Exception:
+        axon_segs = []
 
     # if no segment groups are given, do them all
     if segment_groups is None:
@@ -787,6 +817,10 @@ def plot_3D_schematic(
     colors = []
     text = []
     textpoints = []
+    # colors for cell
+    cell_color_soma = get_next_hex_color()
+    cell_color_axon = get_next_hex_color()
+    cell_color_dendrites = get_next_hex_color()
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)
@@ -814,8 +848,29 @@ def plot_3D_schematic(
                 offset[2] + last_seg.distal.z,
             ]
         )
-        colors.append(get_next_hex_color())
-        colors.append(get_next_hex_color())
+        if color is None:
+            colors.append(get_next_hex_color())
+            colors.append(get_next_hex_color())
+        elif color == "Cell":
+            colors.append(cell_color_soma)
+            colors.append(cell_color_soma)
+        elif color == "Default Groups":
+            if first_seg.id in soma_segs:
+                colors.append(cell_color_soma)
+                colors.append(cell_color_soma)
+            elif first_seg.id in axon_segs:
+                colors.append(cell_color_axon)
+                colors.append(cell_color_axon)
+            elif first_seg.id in dend_segs:
+                colors.append(cell_color_dendrites)
+                colors.append(cell_color_dendrites)
+            else:
+                colors.append(get_next_hex_color())
+                colors.append(get_next_hex_color())
+        else:
+            colors.append(color)
+            colors.append(color)
+
         toconnect.append([len(points) - 2, len(points) - 1])
 
         # TODO: needs fixing to show labels
@@ -846,7 +901,7 @@ def plot_3D_schematic(
         connect=numpy.array(toconnect),
     )
     if labels:
-        print("Text rendering")
+        logger.debug("Text rendering")
         scene.Text(
             text, pos=textpoints, font_size=30, color="black", parent=current_view.scene
         )
