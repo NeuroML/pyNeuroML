@@ -541,6 +541,9 @@ def get_conductance_density_for_segments(
         logger.debug(f"InhomogeneousParameter found: {req_inhom_param.id}")
         expr_variable = req_inhom_param.variable
 
+        # TODO: can probably speed this up using lambdify:
+        # https://docs.sympy.org/latest/tutorials/intro-tutorial/basic_operations.html#lambdify
+        # code currently not slow, so leaving this for the future
         for seg in cell.morphology.segments:
             if seg.id in segments:
                 distance_to_seg = cell.get_distance(seg.id)
