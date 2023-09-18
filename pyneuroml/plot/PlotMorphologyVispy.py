@@ -225,7 +225,8 @@ def create_new_vispy_canvas(
     console_widget.write(f"Center: {view.camera.center}")
     console_widget.write(console_text)
     console_widget.write(
-        f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip()
+        f"Current camera: {view.camera.name}: "
+        + cam_text[view.camera].replace("\n", " ").strip()
     )
 
     if axes_pos:
@@ -280,7 +281,8 @@ def create_new_vispy_canvas(
         # console_widget.write(f"Center: {view.camera.center}")
         console_widget.write(console_text)
         console_widget.write(
-            f"Current camera: {view.camera.name}: " + cam_text[view.camera].replace("\n", " ").strip()
+            f"Current camera: {view.camera.name}: "
+            + cam_text[view.camera].replace("\n", " ").strip()
         )
 
     return scene, view
@@ -348,7 +350,9 @@ def plot_interactive_3D(
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
     else:
-        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
+        raise TypeError(
+            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        )
 
     (
         cell_id_vs_cell,
@@ -368,7 +372,10 @@ def plot_interactive_3D(
     marker_colors = []
 
     if title is None:
-        title = f"{nml_model.networks[0].id} from {nml_file}"
+        try:
+            title = f"{nml_model.networks[0].id} from {nml_file}"
+        except IndexError:
+            title = f"{nml_model.cells[0].id} from {nml_file}"
 
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
