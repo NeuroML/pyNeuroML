@@ -5,17 +5,23 @@ PyNeuroML
 
 Copyright 2023 NeuroML Contributors
 """
-import math
+
 import copy
 import logging
+import math
 import re
-import numpy
+import typing
 
 import neuroml
+import numpy
 from neuroml.loaders import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
+MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
 
 
 def extract_position_info(
@@ -146,13 +152,105 @@ def convert_case(name):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
+def get_ion_color(ion: str) -> str:
+    """Get colours for ions in hex format.
+
+    Hard codes for na, k, ca, h. All others get a grey.
+
+    :param ion: name of ion
+    :type ion: str
+    :returns: colour in hex
+    :rtype: str
+    """
+    if ion.lower() == "na":
+        col = "#1E90FF"
+    elif ion.lower() == "k":
+        col = "#CD5C5C"
+    elif ion.lower() == "ca":
+        col = "#8FBC8F"
+    elif ion.lower() == "h":
+        col = "#ffd9b3"
+    else:
+        col = "#A9A9A9"
+
+    return col
+
+
+def get_colour_hex(
+    fract: float,
+    min_colour: typing.Tuple[int, int, int] = MIN_COLOUR,
+    max_colour: typing.Tuple[int, int, int] = MAX_COLOUR,
+) -> str:
+    """Get colour hex at fraction between `min_colour` and `max_colour`.
+
+    :param fract: fraction between `min_colour` and `max_colour`
+    :type fract: float between (0, 1)
+    :param min_colour: lower colour tuple (R, G, B)
+    :type min_colour: tuple
+    :param max_colour upper colour tuple (R, G, B)
+    :type max_colour: tuple
+    :returns: colour in hex representation
+    :rtype: string
+    """
+    rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_colour)]
+    col = "#"
+    for c in rgb:
+        col += c[2:4] if len(c) == 4 else "00"
+    return col
+
+
+def get_state_color(s: str) -> str:
+    """Get colours for state variables.
+
+    Hard codes for m, k, r, h, l, n, a, b, c, q, e, f, p, s, u.
+
+    :param state: name of state
+    :type state: str
+    :returns: colour in hex format
+    :rtype: str
+    """
+    col = "#000000"
+    if s.startswith("m"):
+        col = "#FF0000"
+    if s.startswith("k"):
+        col = "#FF0000"
+    if s.startswith("r"):
+        col = "#FF0000"
+    if s.startswith("h"):
+        col = "#00FF00"
+    if s.startswith("l"):
+        col = "#00FF00"
+    if s.startswith("n"):
+        col = "#0000FF"
+    if s.startswith("a"):
+        col = "#FF0000"
+    if s.startswith("b"):
+        col = "#00FF00"
+    if s.startswith("c"):
+        col = "#0000FF"
+    if s.startswith("q"):
+        col = "#FF00FF"
+    if s.startswith("e"):
+        col = "#00FFFF"
+    if s.startswith("f"):
+        col = "#DDDD00"
+    if s.startswith("p"):
+        col = "#880000"
+    if s.startswith("s"):
+        col = "#888800"
+    if s.startswith("u"):
+        col = "#880088"
+
+    return col
+
+
 def rotate_cell(
     cell: neuroml.Cell,
     x: float = 0,
     y: float = 0,
     z: float = 0,
     order: str = "xyz",
-    relative_to_soma: bool = False
+    relative_to_soma: bool = False,
 ) -> neuroml.Cell:
     """Return a new cell object rotated in the provided order along the
     provided angles (in radians) relative to the soma position.
@@ -176,41 +274,50 @@ def rotate_cell(
     https://github.com/LFPy/LFPy/blob/master/LFPy/cell.py#L1600
     """
 
-    valid_orders = [
-        "xyz", "yzx", "zxy", "xzy", "yxz", "zyx"
-    ]
+    valid_orders = ["xyz", "yzx", "zxy", "xzy", "yxz", "zyx"]
     if order not in valid_orders:
         raise ValueError(f"order must be one of {valid_orders}")
 
     soma_seg_id = cell.get_morphology_root()
     soma_seg = cell.get_segment(soma_seg_id)
-    cell_origin = numpy.array([soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z])
+    cell_origin = numpy.array(
+        [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
+    )
     newcell = copy.deepcopy(cell)
     print(f"Rotating {newcell.id} by {x}, {y}, {z}")
 
     # calculate rotations
     if x != 0:
         anglex = x
-        rotation_x = numpy.array([[1, 0, 0],
-                                  [0, math.cos(anglex), -math.sin(anglex)],
-                                  [0, math.sin(anglex), math.cos(anglex)]
-                                  ])
+        rotation_x = numpy.array(
+            [
+                [1, 0, 0],
+                [0, math.cos(anglex), -math.sin(anglex)],
+                [0, math.sin(anglex), math.cos(anglex)],
+            ]
+        )
         logger.debug(f"x matrix is: {rotation_x}")
 
     if y != 0:
         angley = y
-        rotation_y = numpy.array([[math.cos(angley), 0, math.sin(angley)],
-                                  [0, 1, 0],
-                                  [-math.sin(angley), 0, math.cos(angley)]
-                                  ])
+        rotation_y = numpy.array(
+            [
+                [math.cos(angley), 0, math.sin(angley)],
+                [0, 1, 0],
+                [-math.sin(angley), 0, math.cos(angley)],
+            ]
+        )
         logger.debug(f"y matrix is: {rotation_y}")
 
     if z != 0:
         anglez = z
-        rotation_z = numpy.array([[math.cos(anglez), -math.sin(anglez), 0],
-                                  [math.sin(anglez), math.cos(anglez), 0],
-                                  [0, 0, 1]
-                                  ])
+        rotation_z = numpy.array(
+            [
+                [math.cos(anglez), -math.sin(anglez), 0],
+                [math.sin(anglez), math.cos(anglez), 0],
+                [0, 0, 1],
+            ]
+        )
         logger.debug(f"z matrix is: {rotation_z}")
 
     # rotate each segment
@@ -232,17 +339,17 @@ def rotate_cell(
 
         # rotate
         for axis in order:
-            if axis == 'x' and x != 0:
+            if axis == "x" and x != 0:
                 if prox.any():
                     prox = numpy.dot(prox, rotation_x)
                 dist = numpy.dot(dist, rotation_x)
 
-            if axis == 'y' and y != 0:
+            if axis == "y" and y != 0:
                 if prox.any():
                     prox = numpy.dot(prox, rotation_y)
                 dist = numpy.dot(dist, rotation_y)
 
-            if axis == 'z' and z != 0:
+            if axis == "z" and z != 0:
                 if prox.any():
                     prox = numpy.dot(prox, rotation_z)
                 dist = numpy.dot(dist, rotation_z)

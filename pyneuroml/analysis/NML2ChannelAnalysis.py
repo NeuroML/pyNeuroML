@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 
 import neuroml
 from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
-from pyneuroml.utils import convert_case
+from pyneuroml.utils import get_ion_color, get_colour_hex, get_state_color
+from pyneuroml.utils.cli import build_namespace
 
 
 logger = logging.getLogger(__name__)
@@ -30,9 +31,6 @@ HTML_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.html" % (os.path.dirname(__file__)
 MD_TEMPLATE_FILE = "%s/ChannelInfo_TEMPLATE.md" % (os.path.dirname(__file__))
 
 V = "rampCellPop0[0]/v"  # Key for voltage trace in results dictionary.
-
-MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
-MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
 
 DEFAULTS = {
     "v": False,
@@ -230,99 +228,6 @@ def process_args():
     )
 
     return parser.parse_args()
-
-
-def get_colour_hex(
-    fract: float,
-    min_colour: typing.Tuple[int, int, int] = MIN_COLOUR,
-    max_colour: typing.Tuple[int, int, int] = MAX_COLOUR,
-) -> str:
-    """Get colour hex at fraction between `min_colour` and `max_colour`.
-
-    :param fract: fraction between `min_colour` and `max_colour`
-    :type fract: float between (0, 1)
-    :param min_colour: lower colour tuple (R, G, B)
-    :type min_colour: tuple
-    :param max_colour upper colour tuple (R, G, B)
-    :type max_colour: tuple
-    :returns: colour in hex representation
-    :rtype: string
-    """
-    rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_colour)]
-    col = "#"
-    for c in rgb:
-        col += c[2:4] if len(c) == 4 else "00"
-    return col
-
-
-# Better off elsewhere..?
-def get_ion_color(ion: str) -> str:
-    """Get colours for ions in hex format.
-
-    Hard codes for na, k, ca, h. All others get a grey.
-
-    :param ion: name of ion
-    :type ion: str
-    :returns: colour in hex
-    :rtype: str
-    """
-    if ion.lower() == "na":
-        col = "#1E90FF"
-    elif ion.lower() == "k":
-        col = "#CD5C5C"
-    elif ion.lower() == "ca":
-        col = "#8FBC8F"
-    elif ion.lower() == "h":
-        col = "#ffd9b3"
-    else:
-        col = "#A9A9A9"
-
-    return col
-
-
-def get_state_color(s: str) -> str:
-    """Get colours for state variables.
-
-    Hard codes for m, k, r, h, l, n, a, b, c, q, e, f, p, s, u.
-
-    :param state: name of state
-    :type state: str
-    :returns: colour in hex format
-    :rtype: str
-    """
-    col = "#000000"
-    if s.startswith("m"):
-        col = "#FF0000"
-    if s.startswith("k"):
-        col = "#FF0000"
-    if s.startswith("r"):
-        col = "#FF0000"
-    if s.startswith("h"):
-        col = "#00FF00"
-    if s.startswith("l"):
-        col = "#00FF00"
-    if s.startswith("n"):
-        col = "#0000FF"
-    if s.startswith("a"):
-        col = "#FF0000"
-    if s.startswith("b"):
-        col = "#00FF00"
-    if s.startswith("c"):
-        col = "#0000FF"
-    if s.startswith("q"):
-        col = "#FF00FF"
-    if s.startswith("e"):
-        col = "#00FFFF"
-    if s.startswith("f"):
-        col = "#DDDD00"
-    if s.startswith("p"):
-        col = "#880000"
-    if s.startswith("s"):
-        col = "#888800"
-    if s.startswith("u"):
-        col = "#880088"
-
-    return col
 
 
 def merge_with_template(
@@ -767,7 +672,6 @@ def compute_iv_curve(channel, a, results, grid=True):
                 times[voltage].append(t)
                 currents[voltage].append(i)
                 if t >= t_start and t <= t_steady_end:
-
                     if i > i_max:
                         i_max = i
                     if i < i_min:
@@ -881,38 +785,6 @@ def make_md_file(info):
     logger.info("Written Markdown info to: %s" % new_md_file)
 
 
-def build_namespace(a=None, **kwargs):
-    if a is None:
-        a = argparse.Namespace()
-
-    # Add arguments passed in by keyword.
-    for key, value in kwargs.items():
-        setattr(a, key, value)
-
-    # Add defaults for arguments not provided.
-    for key, value in DEFAULTS.items():
-        if not hasattr(a, key):
-            setattr(a, key, value)
-
-    # Change all values from camelCase to under_score.
-    # This should have always worked in one pass, but for some reason
-    # it is failing (stochastically) on some keys, so it needs to keep
-    # trying until all keys are under_score.
-    flag = True
-    while flag:
-        flag = False
-        keys = list(a.__dict__.keys())
-        for key in keys:
-            value = a.__dict__[key]
-            new_key = convert_case(key)
-            if new_key != key:
-                setattr(a, new_key, value)
-                delattr(a, key)
-                flag = True
-
-    return a
-
-
 def main(args=None):
     if args is None:
         args = process_args()
@@ -920,7 +792,7 @@ def main(args=None):
 
 
 def run(a=None, **kwargs):
-    a = build_namespace(a, **kwargs)
+    a = build_namespace(DEFAULTS, a, **kwargs)
 
     # if (not a.nogui) or a.html:
     #    print('mpl')
@@ -942,7 +814,6 @@ def run(a=None, **kwargs):
     other_chan_files = []
 
     if len(a.channel_files) > 0:
-
         for channel_file in a.channel_files:
             channels = get_channels_from_channel_file(channel_file)
             # TODO look past 1st channel...
