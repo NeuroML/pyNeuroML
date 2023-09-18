@@ -512,7 +512,19 @@ def get_conductance_density_for_segments(
         # get the inhomogeneous param/value from the channel density
         param = channel_density.variable_parameters[0]  # type: VariableParameter
         inhom_val = param.inhomogeneous_value.value
-        inhom_expr = sympify(inhom_val)
+        # H(x) -> Heaviside(x, 0)
+        if "H" in inhom_val:
+            newstr = inhom_val.replace("H", "Heaviside")
+            """
+            # not needed, we use the same H as in sympy
+            for arg in preorder_traversal(inhom_expr):
+                if isinstance(arg, Function) and str(arg.func) == "H":
+                    newstr = newstr.replace(str(arg.args[0]), f"{arg.args[0]}, 0")
+            newstr = newstr.replace("H(", "Heaviside(")
+            """
+            inhom_expr = sympify(newstr)
+        else:
+            inhom_expr = sympify(inhom_val)
         inhom_param_id = param.inhomogeneous_value.inhomogeneous_parameters
         logger.debug(f"Inhom value: {inhom_val}, Inhom param id: {inhom_param_id}")
 
