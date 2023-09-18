@@ -32,7 +32,7 @@ DEFAULTS = {
     "plane2d": "xy",
     "minWidth": 0.8,
     "square": False,
-    "plotType": "constant",
+    "plotType": "detailed",
     "theme": "light",
 }  # type: dict[str, typing.Any]
 
