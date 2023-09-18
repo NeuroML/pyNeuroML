@@ -476,6 +476,7 @@ def plot_2D_cell_morphology(
         norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
         fig.colorbar(
             matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+            ax=ax,
             label=overlay_data_label,
         )
 
@@ -1106,6 +1107,7 @@ def plot_segment_groups_curtain_plots(
         norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
         fig.colorbar(
             matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+            ax=ax,
             label=overlay_data_label,
         )
 
