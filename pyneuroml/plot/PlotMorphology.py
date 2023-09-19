@@ -333,8 +333,6 @@ def plot_2D(
                 )
             except KeyError:
                 pass
-        else:
-            point_cells_pop = point_cells
 
         for cell_index in pos_pop:
             pos = pos_pop[cell_index]
@@ -355,7 +353,11 @@ def plot_2D(
                     nogui=True,
                 )
             else:
-                if plot_type == "point" or cell_index in point_cells_pop:
+                if (
+                    plot_type == "point"
+                    or cell_index in point_cells_pop
+                    or cell.id in point_cells
+                ):
                     # assume that soma is 0, plot point at where soma should be
                     soma_x_y_z = cell.get_actual_proximal(0)
                     pos1 = [
