@@ -7,17 +7,18 @@ Copyright 2023 NeuroML contributors
 """
 
 
-import os
-import typing
-import logging
-import pathlib
 import argparse
+import logging
+import os
+import pathlib
 import shutil
+import typing
 from zipfile import ZipFile
+
+from lems.model.model import Model
 from neuroml.loaders import read_neuroml2_file
 from pyneuroml.pynml import extract_lems_definition_files
 from pyneuroml.utils.cli import build_namespace
-from lems.model.model import Model
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -107,7 +108,7 @@ def get_model_file_list(
     rootfile: str,
     filelist: typing.List[str],
     rootdir: str = ".",
-    lems_def_dir: str = None,
+    lems_def_dir: typing.Optional[str] = None,
 ) -> typing.Optional[str]:
     """Get the list of files to archive.
 
@@ -188,8 +189,8 @@ def get_model_file_list(
 
 
 def create_combine_archive(
-    zipfile_name: str,
     rootfile: str,
+    zipfile_name: typing.Optional[str] = None,
     zipfile_extension=".neux",
     filelist: typing.List[str] = [],
 ):
