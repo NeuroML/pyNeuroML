@@ -234,7 +234,7 @@ def plot_2D(
         before.
     """
 
-    if plot_type not in ["detailed", "constant", "schematic"]:
+    if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
             "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
