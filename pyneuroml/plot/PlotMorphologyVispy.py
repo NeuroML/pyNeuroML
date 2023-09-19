@@ -11,22 +11,17 @@ Copyright 2023 NeuroML contributors
 
 
 import logging
-import typing
-import numpy
+import random
 import textwrap
-from vispy import scene, app
+import typing
 
-from pyneuroml.utils.plot import (
-    DEFAULTS,
-    get_cell_bound_box,
-    get_next_hex_color,
-)
+import numpy
+from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
+from neuroml.neuro_lex_ids import neuro_lex_ids
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
-
-from neuroml import Cell, NeuroMLDocument, SegmentGroup, Segment
-from neuroml.neuro_lex_ids import neuro_lex_ids
-
+from pyneuroml.utils.plot import DEFAULTS, get_cell_bound_box, get_next_hex_color
+from vispy import app, scene
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -296,6 +291,9 @@ def plot_interactive_3D(
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
+    plot_spec: typing.Optional[
+        typing.Dict[str, typing.Union[str, typing.List[int], float]]
+    ] = None,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -316,6 +314,7 @@ def plot_interactive_3D(
         - "constant": show morphology, but use constant line widths
         - "schematic": only plot each unbranched segment group as a straight
           line, not following each segment
+        - "point": show all cells as points
 
         This is only applicable for neuroml.Cell cells (ones with some
         morphology)
@@ -327,10 +326,24 @@ def plot_interactive_3D(
     :type theme: str
     :param nogui: toggle showing gui (for testing only)
     :type nogui: bool
+    :param plot_spec: dictionary that allows passing some specifications that
+        control how a plot is generated. This is mostly useful for large
+        network plots where one may want to have a mix of full morphology and
+        schematic, and point representations of cells. Possible keys are:
+
+        - point_fraction: what fraction of the network to plot as point cells:
+          these cells will be randomly selected
+        - points_cells: list of cell ids to plot as point cells
+        - schematic_cells: list of cell ids to plot as schematics
+        - constant_cells: list of cell ids to plot as constant widths
+
+        The last three lists override the point_fraction setting. If a cell id
+        is not included in the spec here, it will follow the plot_type provided
+        before.
     """
-    if plot_type not in ["detailed", "constant", "schematic"]:
+    if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
-            "plot_type must be one of 'detailed', 'constant', or 'schematic'"
+            "plot_type must be one of 'detailed', 'constant', 'schematic', 'point'"
         )
 
     if verbose:
@@ -429,6 +442,37 @@ def plot_interactive_3D(
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
 
+    # process plot_spec
+    point_cells = []  # type: typing.List[int]
+    schematic_cells = []  # type: typing.List[int]
+    constant_cells = []  # type: typing.List[int]
+    detailed_cells = []  # type: typing.List[int]
+    if plot_spec is not None:
+        cellids = [k for k in cell_id_vs_cell.keys()]  # type: typing.List[str]
+        try:
+            point_cells = random.sample(
+                cellids, int(len(cellids) * plot_spec["point_fraction"])
+            )
+        except KeyError:
+            pass
+        # override with explicit list of point cells
+        try:
+            point_cells = plot_spec["point_cells"]
+        except KeyError:
+            pass
+        try:
+            schematic_cells = plot_spec["schematic_cells"]
+        except KeyError:
+            pass
+        try:
+            constant_cells = plot_spec["constant_cells"]
+        except KeyError:
+            pass
+        try:
+            detailed_cells = plot_spec["detailed_cells"]
+        except KeyError:
+            pass
+
     for pop_id in pop_id_vs_cell:
         cell = pop_id_vs_cell[pop_id]
         pos_pop = positions[pop_id]
@@ -448,7 +492,20 @@ def plot_interactive_3D(
                 marker_sizes.extend([radius])
                 marker_colors.extend([color])
             else:
-                if plot_type == "schematic":
+                if plot_type == "point" or cell.id in point_cells:
+                    # assume that soma is 0, plot point at where soma should be
+                    soma_x_y_z = cell.get_actual_proximal(0)
+                    pos1 = [
+                        pos[0] + soma_x_y_z.x,
+                        pos[1] + soma_x_y_z.y,
+                        pos[2] + soma_x_y_z.z,
+                    ]
+                    marker_points.extend([pos1])
+                    # larger than the default soma width, which would be too
+                    # small
+                    marker_sizes.extend([25])
+                    marker_colors.extend([color])
+                elif plot_type == "schematic" or cell.id in schematic_cells:
                     plot_3D_schematic(
                         offset=pos,
                         cell=cell,
@@ -459,7 +516,12 @@ def plot_interactive_3D(
                         current_view=current_view,
                         nogui=True,
                     )
-                else:
+                elif (
+                    plot_type == "detailed"
+                    or cell.id in detailed_cells
+                    or plot_type == "constant"
+                    or cell.id in constant_cells
+                ):
                     pts, sizes, colors = plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
