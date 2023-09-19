@@ -38,16 +38,16 @@ class TestCellAnalysis(unittest.TestCase):
             c="-50.0mV",
             d="100pA",
         )
-        neuroml.writers.NeuroMLWriter.write(doc, "test_cell_analysis.cell.nml")
-        generate_current_vs_frequency_curve("test_cell_analysis.cell.nml",
+        neuroml.writers.NeuroMLWriter.write(doc, "tests/analysis/test_cell_analysis.cell.nml")
+        generate_current_vs_frequency_curve("tests/analysis/test_cell_analysis.cell.nml",
                                             "izh2007RS0",
                                             plot_voltage_traces=True,
                                             plot_iv=True,
                                             show_plot_already=False,
-                                            save_voltage_traces_to="test_analysis_traces.png",
-                                            save_if_figure_to="test_analysis_if.png",
-                                            save_iv_figure_to="test_analysis_iv.png"
+                                            save_voltage_traces_to="tests/analysis/test_analysis_traces.png",
+                                            save_if_figure_to="tests/analysis/test_analysis_if.png",
+                                            save_iv_figure_to="tests/analysis/test_analysis_iv.png"
                                             )
-        self.assertTrue(pathlib.Path("test_analysis_traces.png").is_file())
-        self.assertTrue(pathlib.Path("test_analysis_if.png").is_file())
-        self.assertTrue(pathlib.Path("test_analysis_iv.png").is_file())
+        self.assertTrue(pathlib.Path("tests/analysis/test_analysis_traces.png").is_file())
+        self.assertTrue(pathlib.Path("tests/analysis/test_analysis_if.png").is_file())
+        self.assertTrue(pathlib.Path("tests/analysis/test_analysis_iv.png").is_file())

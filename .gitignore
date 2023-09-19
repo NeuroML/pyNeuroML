@@ -157,3 +157,10 @@ arm64
 /examples/plot.py
 /tests/utils/test_rotation.net.nml
 /tests/utils/test_rotation.net.png
+/tests/analysis/test_analysis_if.png
+/tests/analysis/test_analysis_iv.png
+/tests/analysis/test_analysis_traces.png
+/tests/analysis/test_cell_analysis.cell.nml
+/tests/plot/test_schematic_plot_2d_test_cell_nml_xy.png
+/tests/plot/test_schematic_plot_2d_test_cell_nml_xz.png
+/tests/plot/test_schematic_plot_2d_test_cell_nml_yz.png
