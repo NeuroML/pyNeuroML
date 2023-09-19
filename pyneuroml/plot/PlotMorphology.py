@@ -289,7 +289,7 @@ def plot_2D(
     # process plot_spec
     point_cells = []  # type: typing.List[int]
     schematic_cells = []  # type: typing.List[int]
-    const_cells = []  # type: typing.List[int]
+    constant_cells = []  # type: typing.List[int]
     detailed_cells = []  # type: typing.List[int]
     if plot_spec is not None:
         cellids = [k for k in cell_id_vs_cell.keys()]  # type: typing.List[str]
@@ -309,7 +309,7 @@ def plot_2D(
         except KeyError:
             pass
         try:
-            const_cells = plot_spec["constant_cells"]
+            constant_cells = plot_spec["constant_cells"]
         except KeyError:
             pass
         try:
@@ -375,7 +375,12 @@ def plot_2D(
                         autoscale=False,
                         square=False,
                     )
-                elif plot_type == "detailed" or cell.id in detailed_cells:
+                elif (
+                    plot_type == "detailed"
+                    or cell.id in detailed_cells
+                    or plot_type == "constant"
+                    or cell.id in constant_cells
+                ):
                     plot_2D_cell_morphology(
                         offset=pos,
                         cell=cell,
