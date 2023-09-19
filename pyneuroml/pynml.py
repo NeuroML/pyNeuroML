@@ -2046,12 +2046,52 @@ def confirm_lems_file(filename: str) -> None:
         )
 
 
+def version_info(detailed: bool = False):
+    """Print version information.
+
+    :param detailed: also print information about installed simulation engines
+    :type detailed: bool
+
+    """
+    print(version_string)
+    if detailed:
+        print("")
+        print(f"- Python: {sys.version}")
+        try:
+            import neuron
+
+            print(f"- NEURON: {neuron.version}")
+        except ImportError:
+            print("- NEURON: ?")
+        try:
+            import netpyne
+
+            print(f"- NetPyNE: {netpyne.__version__}")
+        except ImportError:
+            print("- NetPyNE: ?")
+        try:
+            import eden_simulator
+
+            print(f"- EDEN: {eden_simulator.__version__}")
+        except ImportError:
+            print("- EDEN: ?")
+        try:
+            import brian2
+
+            print(f"- Brian2: {brian2.__version__}")
+        except ImportError:
+            print("- Brian2: ?")
+
+
 def evaluate_arguments(args):
     logger.debug("    ====  Args: %s" % args)
     global DEFAULTS
 
     if args.version:
-        print(version_string)
+        if args.verbose == "DEBUG":
+            version_info(True)
+        else:
+            version_info()
         return True
 
     if args.verbose:

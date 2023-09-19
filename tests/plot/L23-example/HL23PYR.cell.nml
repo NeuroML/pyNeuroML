@@ -1,7 +1,7 @@
 <neuroml xmlns="http://www.neuroml.org/schema/neuroml2"  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.3.xsd" id="NeuroML2_file_exported_from_NEURON">
     <notes> NeuroML 2 file generated from ModelView by: NEURON -- VERSION 8.2.1 HEAD (c1590692) 2022-08-09
           Authors: Michael Hines, Sushil Kambampati and Padraig Gleeson,
-          Yale University and UCL 
+          Yale University and UCL
   </notes>
     <include href="CaDynamics_E2_NML2.nml"/>
     <include href="channels/pas.channel.nml"/>
@@ -23482,8 +23482,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="5805"/>
                 <member segment="5806"/>
@@ -23580,8 +23580,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="5811"/>
                 <member segment="5812"/>
@@ -23686,8 +23686,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="326"/>
                 <member segment="327"/>
@@ -23839,8 +23839,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="21"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="21"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="21"/>
+
                 </annotation>
                 <member segment="5819"/>
                 <member segment="5820"/>
@@ -23886,8 +23886,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="5499"/>
                 <member segment="5500"/>
@@ -24027,8 +24027,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1633"/>
                 <member segment="1634"/>
@@ -24136,8 +24136,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1483"/>
                 <member segment="1484"/>
@@ -24273,8 +24273,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1383"/>
                 <member segment="1384"/>
@@ -24383,8 +24383,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1262"/>
                 <member segment="1263"/>
@@ -24513,8 +24513,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1154"/>
                 <member segment="1155"/>
@@ -24645,8 +24645,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="731"/>
                 <member segment="732"/>
@@ -24770,8 +24770,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="618"/>
                 <member segment="619"/>
@@ -24889,8 +24889,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="504"/>
                 <member segment="505"/>
@@ -25013,8 +25013,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="432"/>
                 <member segment="433"/>
@@ -25092,8 +25092,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="289"/>
                 <member segment="290"/>
@@ -25138,8 +25138,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="242"/>
                 <member segment="243"/>
@@ -25195,8 +25195,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="139"/>
                 <member segment="140"/>
@@ -25285,8 +25285,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="41"/>
                 <member segment="42"/>
@@ -25393,8 +25393,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="5724"/>
                 <member segment="5725"/>
@@ -25484,8 +25484,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="5633"/>
                 <member segment="5634"/>
@@ -25596,8 +25596,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="9"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/>
+
                 </annotation>
                 <member segment="1734"/>
                 <member segment="1735"/>
@@ -25762,8 +25762,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="855"/>
                 <member segment="856"/>
@@ -25907,8 +25907,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1880"/>
                 <member segment="1881"/>
@@ -26052,8 +26052,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1025"/>
                 <member segment="1026"/>
@@ -26174,8 +26174,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="991"/>
                 <member segment="992"/>
@@ -26218,8 +26218,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="9"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/>
+
                 </annotation>
                 <member segment="5307"/>
                 <member segment="5308"/>
@@ -26406,8 +26406,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="5212"/>
                 <member segment="5213"/>
@@ -26527,8 +26527,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2023"/>
                 <member segment="2024"/>
@@ -26637,8 +26637,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="5084"/>
                 <member segment="5085"/>
@@ -26781,8 +26781,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="5005"/>
                 <member segment="5006"/>
@@ -26889,8 +26889,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2140"/>
                 <member segment="2141"/>
@@ -26976,8 +26976,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="4870"/>
                 <member segment="4871"/>
@@ -27200,8 +27200,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="4772"/>
                 <member segment="4773"/>
@@ -27308,8 +27308,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="9"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/>
+
                 </annotation>
                 <member segment="3664"/>
                 <member segment="3665"/>
@@ -27490,8 +27490,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="3571"/>
                 <member segment="3572"/>
@@ -27601,8 +27601,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="3836"/>
                 <member segment="3837"/>
@@ -27712,8 +27712,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="3480"/>
                 <member segment="3481"/>
@@ -27813,8 +27813,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2274"/>
                 <member segment="2275"/>
@@ -27922,8 +27922,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="4565"/>
                 <member segment="4566"/>
@@ -28063,8 +28063,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="4246"/>
                 <member segment="4247"/>
@@ -28165,8 +28165,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2944"/>
                 <member segment="2945"/>
@@ -28351,8 +28351,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="4696"/>
                 <member segment="4697"/>
@@ -28480,8 +28480,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="9"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="9"/>
+
                 </annotation>
                 <member segment="4082"/>
                 <member segment="4083"/>
@@ -28645,8 +28645,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="3954"/>
                 <member segment="3955"/>
@@ -28783,8 +28783,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="3349"/>
                 <member segment="3350"/>
@@ -28953,8 +28953,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2582"/>
                 <member segment="2583"/>
@@ -29084,8 +29084,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="11"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="11"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="11"/>
+
                 </annotation>
                 <member segment="2403"/>
                 <member segment="2404"/>
@@ -29273,8 +29273,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="4439"/>
                 <member segment="4440"/>
@@ -29409,8 +29409,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="4368"/>
                 <member segment="4369"/>
@@ -29490,8 +29490,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="3214"/>
                 <member segment="3215"/>
@@ -29635,8 +29635,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="3080"/>
                 <member segment="3081"/>
@@ -29779,8 +29779,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2835"/>
                 <member segment="2836"/>
@@ -29898,8 +29898,8 @@
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2703"/>
                 <member segment="2704"/>
@@ -30036,19 +30036,6 @@
             </segmentGroup>
             <segmentGroup id="basal_dendrite_group" neuroLexId="GO:0030425">
                 <notes>Basal dendrites</notes>
-                <include segmentGroup="dend_4"/>
-                <include segmentGroup="dend_26"/>
-                <include segmentGroup="dend_25"/>
-                <include segmentGroup="dend_29"/>
-                <include segmentGroup="dend_28"/>
-                <include segmentGroup="dend_22"/>
-                <include segmentGroup="dend_15"/>
-                <include segmentGroup="dend_17"/>
-                <include segmentGroup="dend_18"/>
-                <include segmentGroup="dend_21"/>
-                <include segmentGroup="dend_10"/>
-                <include segmentGroup="dend_11"/>
-                <include segmentGroup="dend_14"/>
                 <include segmentGroup="dend_3"/>
                 <include segmentGroup="dend_5"/>
                 <include segmentGroup="dend_6"/>
@@ -30060,73 +30047,86 @@
                 <include segmentGroup="dend_24"/>
                 <include segmentGroup="dend_0"/>
                 <include segmentGroup="dend_12"/>
+                <include segmentGroup="dend_21"/>
                 <include segmentGroup="dend_7"/>
+                <include segmentGroup="dend_22"/>
                 <include segmentGroup="dend_16"/>
                 <include segmentGroup="dend_8"/>
                 <include segmentGroup="dend_9"/>
                 <include segmentGroup="dend_13"/>
                 <include segmentGroup="dend_1"/>
+                <include segmentGroup="dend_4"/>
+                <include segmentGroup="dend_26"/>
+                <include segmentGroup="dend_25"/>
+                <include segmentGroup="dend_29"/>
+                <include segmentGroup="dend_28"/>
+                <include segmentGroup="dend_15"/>
+                <include segmentGroup="dend_17"/>
+                <include segmentGroup="dend_18"/>
+                <include segmentGroup="dend_10"/>
+                <include segmentGroup="dend_11"/>
+                <include segmentGroup="dend_14"/>
             </segmentGroup>
             <segmentGroup id="apical_dendrite_group" neuroLexId="GO:0030425">
                 <notes>Apical dendrite_group</notes>
-                <include segmentGroup="apic_32"/>
-                <include segmentGroup="apic_47"/>
-                <include segmentGroup="apic_33"/>
-                <include segmentGroup="apic_55"/>
-                <include segmentGroup="apic_38"/>
-                <include segmentGroup="apic_17"/>
-                <include segmentGroup="apic_2"/>
-                <include segmentGroup="apic_44"/>
-                <include segmentGroup="apic_54"/>
-                <include segmentGroup="apic_18"/>
-                <include segmentGroup="apic_5"/>
-                <include segmentGroup="apic_29"/>
-                <include segmentGroup="apic_56"/>
-                <include segmentGroup="apic_34"/>
-                <include segmentGroup="apic_35"/>
-                <include segmentGroup="apic_39"/>
-                <include segmentGroup="apic_46"/>
                 <include segmentGroup="apic_19"/>
                 <include segmentGroup="apic_24"/>
                 <include segmentGroup="apic_40"/>
                 <include segmentGroup="apic_41"/>
+                <include segmentGroup="apic_6"/>
                 <include segmentGroup="apic_45"/>
+                <include segmentGroup="apic_57"/>
                 <include segmentGroup="apic_28"/>
                 <include segmentGroup="apic_36"/>
-                <include segmentGroup="apic_37"/>
-                <include segmentGroup="apic_6"/>
-                <include segmentGroup="apic_20"/>
-                <include segmentGroup="apic_57"/>
-                <include segmentGroup="apic_21"/>
-                <include segmentGroup="apic_25"/>
-                <include segmentGroup="apic_52"/>
-                <include segmentGroup="apic_27"/>
                 <include segmentGroup="apic_0"/>
-                <include segmentGroup="apic_42"/>
-                <include segmentGroup="apic_43"/>
+                <include segmentGroup="apic_52"/>
+                <include segmentGroup="apic_37"/>
+                <include segmentGroup="apic_20"/>
+                <include segmentGroup="apic_21"/>
                 <include segmentGroup="apic_4"/>
-                <include segmentGroup="apic_22"/>
+                <include segmentGroup="apic_25"/>
                 <include segmentGroup="apic_51"/>
-                <include segmentGroup="apic_23"/>
+                <include segmentGroup="apic_27"/>
                 <include segmentGroup="apic_8"/>
-                <include segmentGroup="apic_26"/>
+                <include segmentGroup="apic_42"/>
                 <include segmentGroup="apic_7"/>
+                <include segmentGroup="apic_43"/>
+                <include segmentGroup="apic_22"/>
+                <include segmentGroup="apic_23"/>
+                <include segmentGroup="apic_26"/>
+                <include segmentGroup="apic_1"/>
                 <include segmentGroup="apic_50"/>
+                <include segmentGroup="apic_53"/>
                 <include segmentGroup="apic_9"/>
                 <include segmentGroup="apic_10"/>
+                <include segmentGroup="apic_3"/>
                 <include segmentGroup="apic_12"/>
-                <include segmentGroup="apic_1"/>
                 <include segmentGroup="apic_49"/>
-                <include segmentGroup="apic_53"/>
                 <include segmentGroup="apic_11"/>
                 <include segmentGroup="apic_48"/>
-                <include segmentGroup="apic_3"/>
                 <include segmentGroup="apic_13"/>
                 <include segmentGroup="apic_14"/>
                 <include segmentGroup="apic_16"/>
                 <include segmentGroup="apic_31"/>
                 <include segmentGroup="apic_15"/>
+                <include segmentGroup="apic_55"/>
                 <include segmentGroup="apic_30"/>
+                <include segmentGroup="apic_32"/>
+                <include segmentGroup="apic_2"/>
+                <include segmentGroup="apic_47"/>
+                <include segmentGroup="apic_54"/>
+                <include segmentGroup="apic_33"/>
+                <include segmentGroup="apic_5"/>
+                <include segmentGroup="apic_38"/>
+                <include segmentGroup="apic_56"/>
+                <include segmentGroup="apic_17"/>
+                <include segmentGroup="apic_44"/>
+                <include segmentGroup="apic_18"/>
+                <include segmentGroup="apic_29"/>
+                <include segmentGroup="apic_34"/>
+                <include segmentGroup="apic_35"/>
+                <include segmentGroup="apic_39"/>
+                <include segmentGroup="apic_46"/>
                 <inhomogeneousParameter id="PathLengthOverApicDends" variable="p" metric="Path Length from root">
                     <proximal translationStart="0.0"/>
                 </inhomogeneousParameter>
@@ -30135,21 +30135,90 @@
                 <notes>Myelin group</notes>
                 <include segmentGroup="myelin_0"/>
             </segmentGroup>
-            <segmentGroup id="soma_group" neuroLexId="GO:0043025">
-                <notes>Default soma segment group for the cell</notes>
+            <segmentGroup id="all_minus_myelin">
+                <notes>All without myelin</notes>
                 <include segmentGroup="soma_0"/>
-            </segmentGroup>
-            <segmentGroup id="axon_group" neuroLexId="GO:0030424">
-                <notes>Default axon segment group for the cell</notes>
                 <include segmentGroup="axon_0"/>
+                <include segmentGroup="apic_0"/>
+                <include segmentGroup="dend_23"/>
+                <include segmentGroup="dend_12"/>
+                <include segmentGroup="dend_7"/>
+                <include segmentGroup="dend_0"/>
                 <include segmentGroup="axon_1"/>
-            </segmentGroup>
-            <segmentGroup id="dendrite_group" neuroLexId="GO:0030425">
-                <notes>Default dendrite segment group for the cell</notes>
-                <include segmentGroup="apical_dendrite_group"/>
-                <include segmentGroup="basal_dendrite_group"/>
-            </segmentGroup>
-            <segmentGroup id="all">
+                <include segmentGroup="apic_53"/>
+                <include segmentGroup="apic_1"/>
+                <include segmentGroup="dend_27"/>
+                <include segmentGroup="dend_24"/>
+                <include segmentGroup="dend_16"/>
+                <include segmentGroup="dend_13"/>
+                <include segmentGroup="dend_9"/>
+                <include segmentGroup="dend_8"/>
+                <include segmentGroup="dend_4"/>
+                <include segmentGroup="dend_1"/>
+                <include segmentGroup="apic_55"/>
+                <include segmentGroup="apic_54"/>
+                <include segmentGroup="apic_3"/>
+                <include segmentGroup="apic_2"/>
+                <include segmentGroup="dend_29"/>
+                <include segmentGroup="dend_28"/>
+                <include segmentGroup="dend_26"/>
+                <include segmentGroup="dend_25"/>
+                <include segmentGroup="dend_18"/>
+                <include segmentGroup="dend_17"/>
+                <include segmentGroup="dend_15"/>
+                <include segmentGroup="dend_14"/>
+                <include segmentGroup="dend_11"/>
+                <include segmentGroup="dend_10"/>
+                <include segmentGroup="dend_6"/>
+                <include segmentGroup="dend_5"/>
+                <include segmentGroup="dend_3"/>
+                <include segmentGroup="dend_2"/>
+                <include segmentGroup="apic_57"/>
+                <include segmentGroup="apic_56"/>
+                <include segmentGroup="apic_5"/>
+                <include segmentGroup="apic_4"/>
+                <include segmentGroup="dend_20"/>
+                <include segmentGroup="dend_19"/>
+                <include segmentGroup="apic_7"/>
+                <include segmentGroup="apic_6"/>
+                <include segmentGroup="dend_22"/>
+                <include segmentGroup="dend_21"/>
+                <include segmentGroup="apic_52"/>
+                <include segmentGroup="apic_8"/>
+                <include segmentGroup="apic_51"/>
+                <include segmentGroup="apic_10"/>
+                <include segmentGroup="apic_9"/>
+                <include segmentGroup="apic_50"/>
+                <include segmentGroup="apic_11"/>
+                <include segmentGroup="apic_49"/>
+                <include segmentGroup="apic_12"/>
+                <include segmentGroup="apic_14"/>
+                <include segmentGroup="apic_13"/>
+                <include segmentGroup="apic_48"/>
+                <include segmentGroup="apic_15"/>
+                <include segmentGroup="apic_31"/>
+                <include segmentGroup="apic_16"/>
+                <include segmentGroup="apic_47"/>
+                <include segmentGroup="apic_32"/>
+                <include segmentGroup="apic_30"/>
+                <include segmentGroup="apic_17"/>
+                <include segmentGroup="apic_38"/>
+                <include segmentGroup="apic_33"/>
+                <include segmentGroup="apic_29"/>
+                <include segmentGroup="apic_18"/>
+                <include segmentGroup="apic_44"/>
+                <include segmentGroup="apic_39"/>
+                <include segmentGroup="apic_35"/>
+                <include segmentGroup="apic_34"/>
+                <include segmentGroup="apic_24"/>
+                <include segmentGroup="apic_19"/>
+                <include segmentGroup="apic_46"/>
+                <include segmentGroup="apic_45"/>
+                <include segmentGroup="apic_41"/>
+                <include segmentGroup="apic_40"/>
+                <include segmentGroup="apic_37"/>
+                <include segmentGroup="apic_36"/>
+                <include segmentGroup="apic_28"/>
                 <include segmentGroup="apic_25"/>
                 <include segmentGroup="apic_21"/>
                 <include segmentGroup="apic_20"/>
@@ -30159,6 +30228,22 @@
                 <include segmentGroup="apic_26"/>
                 <include segmentGroup="apic_23"/>
                 <include segmentGroup="apic_22"/>
+            </segmentGroup>
+            <segmentGroup id="soma_group" neuroLexId="GO:0043025">
+                <notes>Default soma segment group for the cell</notes>
+                <include segmentGroup="soma_0"/>
+            </segmentGroup>
+            <segmentGroup id="axon_group" neuroLexId="GO:0030424">
+                <notes>Default axon segment group for the cell</notes>
+                <include segmentGroup="axon_1"/>
+                <include segmentGroup="axon_0"/>
+            </segmentGroup>
+            <segmentGroup id="dendrite_group" neuroLexId="GO:0030425">
+                <notes>Default dendrite segment group for the cell</notes>
+                <include segmentGroup="basal_dendrite_group"/>
+                <include segmentGroup="apical_dendrite_group"/>
+            </segmentGroup>
+            <segmentGroup id="all">
                 <include segmentGroup="soma_0"/>
                 <include segmentGroup="axon_0"/>
                 <include segmentGroup="apic_0"/>
@@ -30242,12 +30327,21 @@
                 <include segmentGroup="apic_37"/>
                 <include segmentGroup="apic_36"/>
                 <include segmentGroup="apic_28"/>
+                <include segmentGroup="apic_25"/>
+                <include segmentGroup="apic_21"/>
+                <include segmentGroup="apic_20"/>
+                <include segmentGroup="apic_43"/>
+                <include segmentGroup="apic_42"/>
+                <include segmentGroup="apic_27"/>
+                <include segmentGroup="apic_26"/>
+                <include segmentGroup="apic_23"/>
+                <include segmentGroup="apic_22"/>
             </segmentGroup>
         </morphology>
         <biophysicalProperties id="biophys">
             <membraneProperties>
-                <channelDensity id="pas" ionChannel="pas" condDensity="0.0000954 S_per_cm2" erev="-80 mV" ion="non_specific"/>
-                <channelDensity id="Ih" ionChannel="Ih" condDensity="0.000148 S_per_cm2" erev="-45 mV" ion="hcn"/>
+                <channelDensity id="pas" ionChannel="pas" condDensity="0.0000954 S_per_cm2" erev="-80 mV" segmentGroup="all_minus_myelin" ion="non_specific"/>
+                <channelDensity id="Ih" ionChannel="Ih" condDensity="0.000148 S_per_cm2" erev="-45 mV" segmentGroup="all_minus_myelin" ion="hcn"/>
                 <channelDensity id="SK_somatic" ionChannel="SK" condDensity="0.000853 S_per_cm2" erev="-85 mV" segmentGroup="soma_group" ion="k"/>
                 <channelDensity id="K_T_somatic" ionChannel="K_T" condDensity="0.0605 S_per_cm2" erev="-85 mV" segmentGroup="soma_group" ion="k"/>
                 <channelDensity id="K_P_somatic" ionChannel="K_P" condDensity="0.000208 S_per_cm2" erev="-85 mV" segmentGroup="soma_group" ion="k"/>
@@ -30255,7 +30349,7 @@
                 <channelDensity id="Ih_somatic" ionChannel="Ih" condDensity="0.000148 S_per_cm2" erev="-45 mV" segmentGroup="soma_group" ion="hcn"/>
                 <channelDensity id="Im_somatic" ionChannel="Im" condDensity="0.000306 S_per_cm2" erev="-85 mV" segmentGroup="soma_group" ion="k"/>
                 <channelDensity id="NaTg_somatic" ionChannel="NaTg_PYR_somatic" condDensity="0.272 S_per_cm2" erev="50 mV" segmentGroup="soma_group" ion="na"/>
-                <channelDensity id="Ih_basal" ionChannel="Ih" condDensity="0.000000709 S_per_cm2" erev="-45 mV" segmentGroup="soma_group" ion="hcn"/>
+                <channelDensity id="Ih_basal" ionChannel="Ih" condDensity="0.000000709 S_per_cm2" erev="-45 mV" segmentGroup="basal_dendrite_group" ion="hcn"/>
                 <channelDensity id="SK_axonal" ionChannel="SK" condDensity="0.0145 S_per_cm2" erev="-85 mV" segmentGroup="axon_group" ion="k"/>
                 <channelDensity id="K_T_axonal" ionChannel="K_T" condDensity="0.0424 S_per_cm2" erev="-85 mV" segmentGroup="axon_group" ion="k"/>
                 <channelDensity id="K_P_axonal" ionChannel="K_P" condDensity="0.338 S_per_cm2" erev="-85 mV" segmentGroup="axon_group" ion="k"/>
@@ -30272,16 +30366,16 @@
                         <inhomogeneousValue inhomogeneousParameter="PathLengthOverApicDends" value="1E9 * (0.148 * 1E-8) * ((2.087 * exp( 3.6161 * (p/606.3464))) - 0.8696)"/>
                     </variableParameter>
                 </channelDensityNonUniform>
-                <specificCapacitance value="1 uF_per_cm2"/>
+                <specificCapacitance value="1 uF_per_cm2" segmentGroup="all_minus_myelin"/>
                 <specificCapacitance value="2 uF_per_cm2" segmentGroup="apical_dendrite_group"/>
                 <specificCapacitance value="2 uF_per_cm2" segmentGroup="basal_dendrite_group"/>
                 <specificCapacitance value="0.02 uF_per_cm2" segmentGroup="myelin_group"/>
                 <initMembPotential value="-80mV"/>
             </membraneProperties>
             <intracellularProperties>
-                <species id="ca" concentrationModel="CaDynamics_E2_NML2_PYR_somatic" ion="ca" initialConcentration="5.0E-11 mol_per_cm3" initialExtConcentration="2.0E-6 mol_per_cm3" segmentGroup="soma_group"/>
-                <species id="ca" concentrationModel="CaDynamics_E2_NML2_PYR_axonal" ion="ca" initialConcentration="5.0E-11 mol_per_cm3" initialExtConcentration="2.0E-6 mol_per_cm3" segmentGroup="axon_group"/>
-                <resistivity value="0.1 kohm_cm"/>
+                <species id="ca" concentrationModel="CaDynamics_E2_NML2_PYR_somatic" ion="ca" initialConcentration="1e-4 mM" initialExtConcentration="2.0E-6 mol_per_cm3" segmentGroup="soma_group"/>
+                <species id="ca" concentrationModel="CaDynamics_E2_NML2_PYR_axonal" ion="ca" initialConcentration="1e-4 mM" initialExtConcentration="2.0E-6 mol_per_cm3" segmentGroup="axon_group"/>
+                <resistivity value="0.1 kohm_cm" segmentGroup="all_minus_myelin"/>
                 <resistivity value="0.1 kohm_cm" segmentGroup="myelin_group"/>
             </intracellularProperties>
         </biophysicalProperties>

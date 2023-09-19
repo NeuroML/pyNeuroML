@@ -474,11 +474,19 @@ def plot_2D_cell_morphology(
 
         acolormap = matplotlib.colormaps[colormap_name]
         norm = matplotlib.colors.Normalize(vmin=data_min, vmax=data_max)
-        fig.colorbar(
-            matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
-            ax=ax,
-            label=overlay_data_label,
-        )
+        if data_min == data_max:
+            fig.colorbar(
+                matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+                label=overlay_data_label,
+                ax=ax,
+                ticks=[data_min],
+            )
+        else:
+            fig.colorbar(
+                matplotlib.cm.ScalarMappable(norm=norm, cmap=acolormap),
+                label=overlay_data_label,
+                ax=ax,
+            )
 
     # random default color
     for seg in cell.morphology.segments:
