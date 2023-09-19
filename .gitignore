@@ -164,3 +164,4 @@ arm64
 /tests/plot/test_schematic_plot_2d_test_cell_nml_xy.png
 /tests/plot/test_schematic_plot_2d_test_cell_nml_xz.png
 /tests/plot/test_schematic_plot_2d_test_cell_nml_yz.png
+/tests/analysis/*png
