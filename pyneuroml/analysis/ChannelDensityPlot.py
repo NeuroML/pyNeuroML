@@ -585,7 +585,8 @@ def plot_channel_densities(
     :type ymin: float or None
     :param ymax: max y value for plots, if None, automatically calculated
     :type ymax: float or None
-    :param plane2d: plane to plot morphology plot in, passed on to the :py:method:`plot_2D_cell_morphology` function
+    :param plane2d: plane to plot morphology plot in, passed on to the
+        :py:function::`plot_2D_cell_morphology` function
     :type plane2d: str "xy" or "yz" or "zx"
     :param morph_plot_type: plot type for morphology plot passed on to
         plot_2D_cell_morphology

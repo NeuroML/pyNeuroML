@@ -187,10 +187,10 @@ def get_colour_hex(
     :type fract: float between (0, 1)
     :param min_colour: lower colour tuple (R, G, B)
     :type min_colour: tuple
-    :param max_colour upper colour tuple (R, G, B)
+    :param max_colour: upper colour tuple (R, G, B)
     :type max_colour: tuple
     :returns: colour in hex representation
-    :rtype: string
+    :rtype: str
     """
     rgb = [hex(int(x + (y - x) * fract)) for x, y in zip(min_colour, max_colour)]
     col = "#"
