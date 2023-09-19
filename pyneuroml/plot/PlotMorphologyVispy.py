@@ -331,7 +331,7 @@ def plot_interactive_3D(
         network plots where one may want to have a mix of full morphology and
         schematic, and point representations of cells. Possible keys are:
 
-        - point_fraction: what fraction of the network to plot as point cells:
+        - point_fraction: what fraction of each population to plot as point cells:
           these cells will be randomly selected
         - points_cells: list of cell ids to plot as point cells
         - schematic_cells: list of cell ids to plot as schematics
@@ -448,14 +448,6 @@ def plot_interactive_3D(
     constant_cells = []  # type: typing.List[int]
     detailed_cells = []  # type: typing.List[int]
     if plot_spec is not None:
-        cellids = [k for k in cell_id_vs_cell.keys()]  # type: typing.List[str]
-        try:
-            point_cells = random.sample(
-                cellids, int(len(cellids) * plot_spec["point_fraction"])
-            )
-        except KeyError:
-            pass
-        # override with explicit list of point cells
         try:
             point_cells = plot_spec["point_cells"]
         except KeyError:
@@ -475,7 +467,21 @@ def plot_interactive_3D(
 
     for pop_id in pop_id_vs_cell:
         cell = pop_id_vs_cell[pop_id]
-        pos_pop = positions[pop_id]
+        pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
+
+        # reinit point_cells for each loop
+        point_cells_pop = []
+        if len(point_cells) == 0:
+            cell_indices = list(pos_pop.keys())
+            try:
+                point_cells_pop = random.sample(
+                    cell_indices,
+                    int(len(cell_indices) * float(plot_spec["point_fraction"])),
+                )
+            except KeyError:
+                pass
+        else:
+            point_cells_pop = point_cells
 
         for cell_index in pos_pop:
             pos = pos_pop[cell_index]
@@ -492,7 +498,7 @@ def plot_interactive_3D(
                 marker_sizes.extend([radius])
                 marker_colors.extend([color])
             else:
-                if plot_type == "point" or cell.id in point_cells:
+                if plot_type == "point" or cell_index in point_cells_pop:
                     # assume that soma is 0, plot point at where soma should be
                     soma_x_y_z = cell.get_actual_proximal(0)
                     pos1 = [

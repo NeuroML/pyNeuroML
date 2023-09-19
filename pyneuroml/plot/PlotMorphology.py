@@ -76,9 +76,16 @@ def process_args():
     )
 
     parser.add_argument(
+        "-pointFraction",
+        type=str,
+        metavar="<fraction of each population to plot as point cells>",
+        default=DEFAULTS["pointFraction"],
+        help="Fraction of network to plot as point cells",
+    )
+    parser.add_argument(
         "-plotType",
         type=str,
-        metavar="<type: detailed, constant, or schematic>",
+        metavar="<type: detailed, constant, schematic, or point>",
         default=DEFAULTS["plotType"],
         help="Level of detail to plot in",
     )
@@ -147,6 +154,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             verbose=a.v,
             plot_type=a.plot_type,
             theme=a.theme,
+            plot_spec={"point_fraction": a.point_fraction},
         )
     else:
         plot_2D(
@@ -158,6 +166,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             a.save_to_file,
             a.square,
             a.plot_type,
+            plot_spec={"point_fraction": a.point_fraction},
         )
 
 
@@ -223,7 +232,7 @@ def plot_2D(
         network plots where one may want to have a mix of full morphology and
         schematic, and point representations of cells. Possible keys are:
 
-        - point_fraction: what fraction of the network to plot as point cells:
+        - point_fraction: what fraction of each population to plot as point cells:
           these cells will be randomly selected
         - points_cells: list of cell ids to plot as point cells
         - schematic_cells: list of cell ids to plot as schematics
@@ -292,14 +301,6 @@ def plot_2D(
     constant_cells = []  # type: typing.List[int]
     detailed_cells = []  # type: typing.List[int]
     if plot_spec is not None:
-        cellids = [k for k in cell_id_vs_cell.keys()]  # type: typing.List[str]
-        try:
-            point_cells = random.sample(
-                cellids, int(len(cellids) * plot_spec["point_fraction"])
-            )
-        except KeyError:
-            pass
-        # override with explicit list of point cells
         try:
             point_cells = plot_spec["point_cells"]
         except KeyError:
@@ -319,7 +320,21 @@ def plot_2D(
 
     for pop_id in pop_id_vs_cell:
         cell = pop_id_vs_cell[pop_id]  # type: Cell
-        pos_pop = positions[pop_id]  # type: typing.List[typing.Any]
+        pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
+
+        # reinit point_cells for each loop
+        point_cells_pop = []
+        if len(point_cells) == 0:
+            cell_indices = list(pos_pop.keys())
+            try:
+                point_cells_pop = random.sample(
+                    cell_indices,
+                    int(len(cell_indices) * float(plot_spec["point_fraction"])),
+                )
+            except KeyError:
+                pass
+        else:
+            point_cells_pop = point_cells
 
         for cell_index in pos_pop:
             pos = pos_pop[cell_index]
@@ -340,7 +355,7 @@ def plot_2D(
                     nogui=True,
                 )
             else:
-                if plot_type == "point" or cell.id in point_cells:
+                if plot_type == "point" or cell_index in point_cells_pop:
                     # assume that soma is 0, plot point at where soma should be
                     soma_x_y_z = cell.get_actual_proximal(0)
                     pos1 = [
