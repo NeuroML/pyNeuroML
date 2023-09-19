@@ -1088,7 +1088,7 @@ def write_neuroml2_file(
     nml2_file_name: str,
     validate: bool = True,
     verbose_validate: bool = False,
-    hdf5: bool = True,
+    hdf5: bool = False,
 ) -> None:
     """Write a NeuroMLDocument object to a file using libNeuroML.
 
