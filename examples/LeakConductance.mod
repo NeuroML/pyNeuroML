@@ -18,9 +18,7 @@ NEURON {
     RANGE i__LeakConductance : a copy of the variable for current which makes it easier to access from outside the mod file
     RANGE gmax                              : Will be changed when ion channel mechanism placed on cell!
     RANGE conductance                       : parameter
-    
     RANGE g                                 : exposure
-    
     RANGE fopen                             : exposure
     RANGE conductanceScale                  : derived variable
     RANGE fopen0                            : derived variable
@@ -36,11 +34,13 @@ UNITS {
     (mV) = (millivolt)
     (mS) = (millisiemens)
     (uS) = (microsiemens)
+    (nF) = (nanofarad)
     (molar) = (1/liter)
     (kHz) = (kilohertz)
     (mM) = (millimolar)
     (um) = (micrometer)
     (umol) = (micromole)
+    (pC) = (picocoulomb)
     (S) = (siemens)
     
 }
@@ -49,7 +49,7 @@ PARAMETER {
     
     gmax = 0  (S/cm2)                       : Will be changed when ion channel mechanism placed on cell!
     
-    conductance = 1.0E-5 (uS)
+    conductance = 1.0E-5 (uS)              : was: 1.0E-11 (conductance)
 }
 
 ASSIGNED {
@@ -62,14 +62,10 @@ ASSIGNED {
     i (mA/cm2)
     i__LeakConductance (mA/cm2)
     
-    
-    conductanceScale                       : derived variable
-    
-    fopen0                                 : derived variable
-    
-    fopen                                  : derived variable
-    
-    g (uS)                                 : derived variable
+    conductanceScale                        : derived variable
+    fopen0                                  : derived variable
+    fopen                                   : derived variable
+    g (uS)                                  : derived variable
     
 }
 

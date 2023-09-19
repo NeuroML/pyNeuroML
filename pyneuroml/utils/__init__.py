@@ -5,12 +5,17 @@ PyNeuroML
 
 Copyright 2023 NeuroML Contributors
 """
-
 import copy
+import datetime
 import logging
 import math
+import os
+import random
 import re
+import string
+import time
 import typing
+from pathlib import Path
 
 import neuroml
 import numpy
@@ -150,6 +155,67 @@ def convert_case(name):
     """Converts from camelCase to under_score"""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def get_files_generated_after(
+    timestamp: float = time.time(),
+    directory: str = ".",
+    ignore_suffixes: typing.List[str] = ["xml", "nml"],
+    include_suffixes: typing.List[str] = [],
+) -> typing.List[str]:
+    """Get files modified after provided time stamp in directory, excluding provided suffixes.
+
+    Currently ignores directories.
+
+    .. versionadded:: 1.0.9
+
+    :param timestamp: time stamp to compare to
+    :type timestamp: float
+    :param directory: directory to list files of
+    :type directory: str
+    :param ignore_suffixes: file suffixes to ignore (none if empty)
+    :type ignore_suffixes: str
+    :param include_suffixes: file suffixes to include (all if empty)
+    :type include_suffixes: str
+    :returns: list of file names
+    :rtype: list(str)
+
+    """
+    logger.debug(f"Timestamp is: {timestamp}")
+    current_files = list(Path(directory).glob("*"))
+    # only files, ignore directories
+    current_files = [f for f in current_files if f.is_file()]
+    files = []
+    for file in current_files:
+        excluded = False
+        for sfx in ignore_suffixes:
+            if file.name.endswith(sfx):
+                excluded = True
+                break
+
+        # no need to proceed
+        if excluded is True:
+            continue
+
+        included = False
+        # if no suffixes, ignore this
+        if len(include_suffixes) == 0:
+            included = True
+        else:
+            for sfx in include_suffixes:
+                if file.name.endswith(sfx):
+                    included = True
+                    break
+
+        # no need to proceed
+        if included is False:
+            continue
+
+        file_mtime = os.path.getmtime(file)
+        if file_mtime > timestamp:
+            files.append(file.name)
+
+    return files
 
 
 def get_ion_color(ion: str) -> str:
@@ -372,3 +438,24 @@ def rotate_cell(
         logger.debug(f"distal is: {aseg.distal}")
 
     return newcell
+
+
+def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
+    """Generate a pyneuroml directory name that can be used for various
+    purposes.
+
+    Default format: {rootdir}/{prefix}_{timestamp}_{6 random characters}
+
+    :param rootdir: root directory where to create the new directory
+    :type rootdir: str
+    :param prefix: prefix for directory name
+    :type prefix: str
+    :returns: generated directory name
+    :rtype: str
+
+    """
+    timestamp = datetime.datetime.now().strftime("%y%m%d%H%M%S")
+    random_suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    tdir = rootdir + "/" + f"{prefix}_{timestamp}_{random_suffix}/"
+
+    return tdir

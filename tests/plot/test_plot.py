@@ -24,7 +24,7 @@ class TestPlot(BaseTestCase):
 
     def test_generate_plot(self):
         """Test generate_plot function."""
-        filename = "test_generate_plot.png"
+        filename = "tests/plot/test_generate_plot.png"
 
         # remove the file first
         try:
@@ -56,7 +56,7 @@ class TestPlot(BaseTestCase):
 
     def test_generate_interactive_plot(self):
         """Test generate_interactive_plot function."""
-        filename = "test_generate_interactive_plot.png"
+        filename = "tests/plot/test_generate_interactive_plot.png"
 
         # remove the file first
         try:

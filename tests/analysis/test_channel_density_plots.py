@@ -75,10 +75,13 @@ class TestChannelDensityPlots(unittest.TestCase):
             channel_density_ids=["Ih_apical", "Ih_somatic", "Ih_basal", "Ih"],
             distance_plots=True,
             show_plots_already=False,
+            target_directory='tests/analysis'
         )
         plot_channel_densities(
-            cell, ion_channels=["Ih"], distance_plots=True, show_plots_already=False
+            cell, ion_channels=["Ih"], distance_plots=True, show_plots_already=False,
+            target_directory='tests/analysis'
         )
         # no channel densities or ion channels, so generate for all ion
         # channels
-        plot_channel_densities(cell, distance_plots=True, show_plots_already=False)
+        plot_channel_densities(cell, distance_plots=True, show_plots_already=False,
+            target_directory='tests/analysis')

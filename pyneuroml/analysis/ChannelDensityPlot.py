@@ -564,6 +564,7 @@ def plot_channel_densities(
     show_plots_already: bool = True,
     morph_plot_type: str = "constant",
     morph_min_width: float = 2.0,
+    target_directory=None
 ):
     """Plot channel densities on a Cell on morphology plots.
 
@@ -603,6 +604,8 @@ def plot_channel_densities(
     :type colormap_name: str
     :returns: None
     """
+    tgt_dir = target_directory+'/' if target_directory else './'
+    
     if channel_density_ids is not None and ion_channels is not None:
         raise ValueError(
             "Only one of channel_density_ids or ions channels may be provided"
@@ -685,7 +688,7 @@ def plot_channel_densities(
                         min_width=morph_min_width,
                         overlay_data=data,
                         overlay_data_label="(S/m2)",
-                        save_to_file=f"{cell.id}_{cd.id}.cd.png",
+                        save_to_file=f"{tgt_dir}{cell.id}_{cd.id}.cd.png",
                         datamin=ymin,
                         plane2d=plane2d,
                         nogui=not show_plots_already,
@@ -710,7 +713,7 @@ def plot_channel_densities(
                             title_above_plot=True,
                             xaxis="Distance from soma (um)",
                             yaxis="g density (S/m2)",
-                            save_figure_to=f"{cell.id}_{cd.id}_cd_vs_dist.png",
+                            save_figure_to=f"{tgt_dir}{cell.id}_{cd.id}_cd_vs_dist.png",
                             show_plot_already=show_plots_already,
                             linestyles=[" "],
                             linewidths=["0"],
@@ -786,7 +789,7 @@ def plot_channel_densities(
                     min_width=morph_min_width,
                     overlay_data=data,
                     overlay_data_label="(S/m2)",
-                    save_to_file=f"{cell.id}_{ion_channel}.ion.png",
+                    save_to_file=f"{tgt_dir}{cell.id}_{ion_channel}.ion.png",
                     datamin=ymin,
                     plane2d=plane2d,
                     nogui=not show_plots_already,
@@ -811,7 +814,7 @@ def plot_channel_densities(
                         title_above_plot=True,
                         xaxis="Distance from soma (um)",
                         yaxis="g density (S/m2)",
-                        save_figure_to=f"{cell.id}_{ion_channel}_ion_vs_dist.png",
+                        save_figure_to=f"{tgt_dir}{cell.id}_{ion_channel}_ion_vs_dist.png",
                         show_plot_already=show_plots_already,
                         linestyles=[" "],
                         linewidths=["0"],
