@@ -324,7 +324,7 @@ def plot_2D(
 
         # reinit point_cells for each loop
         point_cells_pop = []
-        if len(point_cells) == 0:
+        if len(point_cells) == 0 and plot_spec is not None:
             cell_indices = list(pos_pop.keys())
             try:
                 point_cells_pop = random.sample(
