@@ -398,7 +398,10 @@ def plot_interactive_3D(
     logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
     logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
-    if len(positions.keys()) > 1:
+    # not used, clear up
+    del cell_id_vs_cell
+
+    if len(positions) > 1:
         only_pos = []
         for posdict in positions.values():
             for poss in posdict.values():
@@ -467,8 +470,9 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
-    for pop_id, cell in pop_id_vs_cell.items():
-        pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
+    while pop_id_vs_cell:
+        pop_id, cell = pop_id_vs_cell.popitem()
+        pos_pop = positions[pop_id]
 
         # reinit point_cells for each loop
         point_cells_pop = []
@@ -482,7 +486,8 @@ def plot_interactive_3D(
             except KeyError:
                 pass
 
-        for cell_index, pos in pos_pop.items():
+        while pos_pop:
+            cell_index, pos = pos_pop.popitem()
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 

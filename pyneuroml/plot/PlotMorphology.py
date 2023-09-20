@@ -296,6 +296,9 @@ def plot_2D(
         logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
         logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
+    # not used, clear up
+    del cell_id_vs_cell
+
     fig, ax = get_new_matplotlib_morph_plot(title, plane2d)
     axis_min_max = [float("inf"), -1 * float("inf")]
 
@@ -322,7 +325,8 @@ def plot_2D(
         except KeyError:
             pass
 
-    for pop_id, cell in pop_id_vs_cell.items():
+    while pop_id_vs_cell:
+        pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
 
         # reinit point_cells for each loop
@@ -337,7 +341,8 @@ def plot_2D(
             except KeyError:
                 pass
 
-        for cell_index, pos in pos_pop.items():
+        while pos_pop:
+            cell_index, pos = pos_pop.popitem()
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
