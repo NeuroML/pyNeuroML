@@ -1,19 +1,23 @@
 import argparse
+import logging
+import os
+import sys
+from collections import OrderedDict
 
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 import numpy as np
-import re
-import sys
-import os
-import logging
-
+from pyneuroml.plot import generate_plot
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 
+FORMAT_ID_T = "id_t"
+FORMAT_ID_TIME_NEST_DAT = "id_t_nest_dat"
+FORMAT_T_ID = "t_id"
+
 
 DEFAULTS = {
-    "format": "id_t",
+    "format": FORMAT_ID_T,
     "rates": False,
     "save_spike_plot_to": None,
     "rate_window": 50,
@@ -22,33 +26,6 @@ DEFAULTS = {
 }
 
 POP_NAME_SPIKEFILE_WITH_GIDS = "Spiketimes for GIDs"
-
-
-def convert_case(name):
-    """Converts from camelCase to under_score"""
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
-
-def build_namespace(a=None, **kwargs):
-    if a is None:
-        a = argparse.Namespace()
-
-    # Add arguments passed in by keyword.
-    for key, value in kwargs.items():
-        setattr(a, key, value)
-
-    # Add defaults for arguments not provided.
-    for key, value in DEFAULTS.items():
-        if not hasattr(a, key):
-            setattr(a, key, value)
-    # Change all keys to camel case
-    for key, value in a.__dict__.copy().items():
-        new_key = convert_case(key)
-        if new_key != key:
-            setattr(a, new_key, value)
-            delattr(a, key)
-    return a
 
 
 def process_args():
@@ -73,8 +50,10 @@ def process_args():
         metavar="<format>",
         default=DEFAULTS["format"],
         help="How the spiketimes are represented on each line of file: \n"
-        + "id_t: id of cell, space(s) / tab(s), time of spike (default);\n"
-        + "t_id: time of spike, space(s) / tab(s), id of cell;\n"
+        + "%s: id of cell, space(s) / tab(s), time of spike (default);\n" % FORMAT_ID_T
+        + "%s: id of cell, space(s) / tab(s), time of spike, allowing NEST dat file comments/metadata;\n"
+        % FORMAT_ID_TIME_NEST_DAT
+        + "%s: time of spike, space(s) / tab(s), id of cell;\n" % FORMAT_T_ID
         + "sonata: SONATA format HDF5 file containing spike times",
     )
 
@@ -142,7 +121,6 @@ def read_sonata_spikes_hdf5_file(file_name):
 
     ids_times_pops = {}
     if hasattr(h5file.root.spikes, "gids"):
-
         gids = h5file.root.spikes.gids
         timestamps = h5file.root.spikes.timestamps
         ids_times = {}
@@ -197,7 +175,7 @@ def read_sonata_spikes_hdf5_file(file_name):
 
 
 def run(a=None, **kwargs):
-    a = build_namespace(a, **kwargs)
+    a = build_namespace(DEFAULTS, a, **kwargs)
     logger.info(
         "Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s"
         % (a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to)
@@ -270,7 +248,6 @@ def run(a=None, **kwargs):
             else:
                 markersizes.append(4)
     else:
-
         for file_name in a.spiketime_files:
             logger.info("Loading spike times from: %s" % file_name)
             spikes_file = open(file_name)
@@ -287,10 +264,12 @@ def run(a=None, **kwargs):
             ids_in_file[name] = []
 
             for line in spikes_file:
-                if not line.startswith("#"):
-                    if a.format == "id_t":
+                if not line.startswith("#") and not (
+                    line.startswith("sender") and a.format == FORMAT_ID_TIME_NEST_DAT
+                ):
+                    if a.format == FORMAT_ID_T or a.format == FORMAT_ID_TIME_NEST_DAT:
                         [id, t] = line.split()
-                    elif a.format == "t_id":
+                    elif a.format == FORMAT_T_ID:
                         [t, id] = line.split()
                     id_shifted = offset_id + int(float(id))
                     max_id = max(max_id, id_shifted)
@@ -343,7 +322,6 @@ def run(a=None, **kwargs):
     )
 
     if a.rates:
-
         plt.figure()
         bins = a.rate_bins
         for name in times:

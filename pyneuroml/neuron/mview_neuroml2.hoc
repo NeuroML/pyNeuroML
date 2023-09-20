@@ -88,7 +88,7 @@ proc header() {
     file_out = $o1
     file_out.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
     file_out.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-    file_out.printf("    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd\"\n")
+    file_out.printf("    xsi:schemaLocation=\"http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.3.xsd\"\n")
     file_out.printf("    id = \"NeuroML2_file_exported_from_NEURON\">\n\n")
 }
 

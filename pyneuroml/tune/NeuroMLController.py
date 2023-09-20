@@ -14,6 +14,7 @@ import logging
 import pprint
 
 import io
+
 if sys.version_info.major == 2:
     from StringIO import StringIO
 else:
@@ -165,7 +166,9 @@ class NeuroMLController:
                 # less efficient because the nml_doc needs to be created each
                 # time, but this is the only way it will work at the moment.
                 nml_doc_text = StringIO()
-                neuroml.writers.NeuroMLWriter.write(self.nml_doc, nml_doc_text, close=False)
+                neuroml.writers.NeuroMLWriter.write(
+                    self.nml_doc, nml_doc_text, close=False
+                )
                 vars = (
                     sim_var,
                     self.ref,

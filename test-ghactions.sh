@@ -1,6 +1,15 @@
 set -e
 
-python setup.py install
+pip install .
+
+echo
+echo "################################################"
+echo "##   Running unit tests"
+
+
+# skip a few tests that segfault etc. on GH
+pytest --cov=pyneuroml -m "not localonly" .
+
 
 run_neuron_examples=false
 
@@ -35,6 +44,9 @@ echo "##   Validate with jNeuroML"
 
 pynml -validate NML2_SingleCompHHCell.nml
 
+
+echo "##   Multi-validate with jNeuroML"
+pynml -validate *.channel.nml
 
 
 echo
@@ -96,7 +108,7 @@ echo
 echo "################################################"
 echo "##   Test export to PovRay"
 
- pynml-povray NML2_SingleCompHHCell.nml
+pynml-povray NML2_SingleCompHHCell.nml
 
 
 # Requires pyelectro, not in .travis.yml yet...
@@ -125,6 +137,7 @@ if [ "$run_neuron_examples" == true ]; then
     echo "################################################"
     echo "##   Try exporting morphologies to NeuroML from NEURON"
 
+        nrnivmodl
         # Export NeuroML v1 from NEURON example
         python export_neuroml1.py
 
@@ -136,7 +149,7 @@ if [ "$run_neuron_examples" == true ]; then
     echo "################################################"
     echo "##   Test analysis of channel in mod file"
 
-        nrnivmodl
+        # do not run nrnivmodl, modchananalysis should run it if required
         pynml-modchananalysis -stepV 20  NaConductance  -dt 0.01 -nogui
 
 

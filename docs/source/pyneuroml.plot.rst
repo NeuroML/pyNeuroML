@@ -6,6 +6,14 @@ pyneuroml.plot package
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.plot.Plot module
+--------------------------------
+
+.. automodule:: pyneuroml.plot.Plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyneuroml.plot.PlotSpikes module
 --------------------------------
 
@@ -14,10 +22,12 @@ pyneuroml.plot.PlotSpikes module
    :undoc-members:
    :show-inheritance:
 
-pyneuroml.plot.generate\_test\_data module
-------------------------------------------
+pyneuroml.plot.PlotMorphology module
+-------------------------------------
 
-.. automodule:: pyneuroml.plot.generate_test_data
+.. automodule:: pyneuroml.plot.PlotMorphology
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members:  set, add_line, plot_from_console, main, process_args, LineDataUnits
+

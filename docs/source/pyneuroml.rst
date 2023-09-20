@@ -13,13 +13,15 @@ Subpackages
    :maxdepth: 4
 
    pyneuroml.analysis
+   pyneuroml.channelml
    pyneuroml.lems
    pyneuroml.plot
    pyneuroml.povray
    pyneuroml.swc
    pyneuroml.tune
+   pyneuroml.neuron
+   pyneuroml.utils
 
-.. pyneuroml.neuron
 
 pyneuroml.pynml module
 ----------------------

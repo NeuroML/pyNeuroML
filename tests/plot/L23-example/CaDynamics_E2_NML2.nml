@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta3.xsd"
+         id="CaDynamics_E2_NML2">
+
+    <notes>NeuroML 2 implementation of the Ca Pool mechanism</notes>
+
+    <!--<decayingPoolConcentrationModel id="CaDynamics_E2_NML2" restingConc="1e-10mol_per_cm3" decayConstant="80ms" ion="ca" shellThickness="2.787e-4cm"/>-->
+
+    <concentrationModel id="CaDynamics_E2_NML2_PV_somatic" type="concentrationModelHayEtAl" minCai="1e-4 mM" decay="531.0255920416845 ms" depth="0.1 um" gamma="5e-4" ion="ca"/>
+    <concentrationModel id="CaDynamics_E2_NML2_PV_axonal" type="concentrationModelHayEtAl" minCai="1e-4 mM" decay="163.03538024059918 ms" depth="0.1 um" gamma="5e-4" ion="ca"/>
+    <concentrationModel id="CaDynamics_E2_NML2_PYR_somatic" type="concentrationModelHayEtAl" minCai="1e-4 mM" decay="20 ms" depth="0.1 um" gamma="5e-4" ion="ca"/>
+    <concentrationModel id="CaDynamics_E2_NML2_PYR_axonal" type="concentrationModelHayEtAl" minCai="1e-4 mM" decay="226 ms" depth="0.1 um" gamma="5e-4" ion="ca"/>
+
+
+    <!--
+    This is a new, custom ComponentType to handle the calcium mechanism with parameters
+
+    PARAMETER	{
+        gamma = 0.05 : percent of free calcium (not buffered)
+        decay = 80 (ms) : rate of removal of calcium
+        depth = 0.1 (um) : depth of shell
+        minCai = 1e-4 (mM)
+    }
+
+    and derivative mechanism:
+
+    DERIVATIVE states	{
+        cai' = -(10000)*(ica*gamma/(2*FARADAY*depth)) - (cai - minCai)/decay
+    }
+
+    See https://github.com/OpenSourceBrain/L5bPyrCellHayEtAl2011/blob/master/neuroConstruct/cellMechanisms/CaDynamics_E2_init_mod/CaDynamics_E2.mod
+
+    -->
+
+
+    <ComponentType name="concentrationModelHayEtAl" extends="concentrationModel" description="Model of buffering of concentration of specific to Hay Et Al 2011">
+
+        <Parameter name="gamma" dimension="none"/>
+        <Parameter name="minCai" dimension="concentration"/>
+        <Parameter name="decay" dimension="time"/>
+        <Parameter name="depth" dimension="length"/>
+
+
+        <Constant name="Faraday" dimension="charge_per_mole" value="96485.3C_per_mol"/>
+
+        <Requirement name="iCa" dimension="current"/>
+
+        <Text name="species"/>
+
+        <Dynamics>
+
+            <StateVariable name="concentration" exposure="concentration" dimension="concentration"/>
+            <StateVariable name="extConcentration" exposure="extConcentration" dimension="concentration"/>
+
+            <DerivedVariable name="currDensCa" dimension="currentDensity" value="iCa / surfaceArea"/>
+
+            <TimeDerivative variable="concentration" value="(currDensCa * gamma/(2 * Faraday * depth)) - ((concentration - minCai) / decay)"/>
+
+            <OnStart>
+                <StateAssignment variable="concentration" value="initialConcentration"/>
+                <StateAssignment variable="extConcentration" value="initialExtConcentration"/>
+            </OnStart>
+
+        </Dynamics>
+
+    </ComponentType>
+
+
+</neuroml>
