@@ -407,6 +407,7 @@ def plot_interactive_3D(
     logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
     # not used, clear up
+    print(f"Plotting {len(cell_id_vs_cell)} cells")
     del cell_id_vs_cell
 
     if len(positions) > 1:
