@@ -1312,6 +1312,36 @@ def gui_string(nogui: bool) -> str:
     return " -nogui" if nogui else ""
 
 
+def run_lems_with(engine: str, *args: typing.Any, **kwargs: typing.Any):
+    """Run LEMS with specified engine.
+
+    Wrapper around the many `run_lems_with_*` methods.
+    The engine should be the suffix, for example, to use
+    `run_lems_with_jneuroml_neuron`, engine will be `jneuroml_neuron`.
+
+    All kwargs are passed as is to the function. Please see the individual
+    function documentations for information on arguments.
+
+    :param engine: engine to run with
+    :type engine: string (valid names are methods)
+    :param *args: postional arguments to pass to run function
+    :param **kwargs: named arguments to pass to run function
+    :returns: return value of called method
+
+    """
+    function_tuple = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
+    found = False
+    for fname, function in function_tuple:
+        if fname.startswith("run_lems_with") and fname.endswith(engine):
+            print(f"Running with {fname}")
+            found = True
+            return function(*args, **kwargs)
+
+    if found is False:
+        logger.error(f"Could not find engine {engine}. Exiting.")
+        return False
+
+
 def run_lems_with_jneuroml_neuron(
     lems_file_name: str,
     paths_to_include: list[str] = [],

@@ -45,7 +45,7 @@ class TestMorphologyPlot(BaseTestCase):
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
             for plane in ["xy", "yz", "xz"]:
-                filename = f"test_morphology_plot_2d_point_{ofile.replace('.', '_', 100)}_{plane}.png"
+                filename = f"tests/plot/test_morphology_plot_2d_point_{ofile.replace('.', '_', 100)}_{plane}.png"
                 # remove the file first
                 try:
                     pl.Path(filename).unlink()
@@ -70,7 +70,7 @@ class TestMorphologyPlot(BaseTestCase):
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
             for plane in ["xy", "yz", "xz"]:
-                filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+                filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
                 # remove the file first
                 try:
                     pl.Path(filename).unlink()
@@ -90,7 +90,7 @@ class TestMorphologyPlot(BaseTestCase):
             cell = nml_doc.cells[0]  # type: neuroml.Cell
             ofile = pl.Path(nml_file).name
             plane = "xy"
-            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_with_data.png"
+            filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_with_data.png"
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -168,9 +168,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
         for plane in ["xy", "yz", "xz"]:
-            filename = (
-                f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
-            )
+            filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -187,7 +185,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
         for plane in ["xy", "yz", "xz"]:
-            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_constant.png"
+            filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_constant.png"
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -210,7 +208,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
         for plane in ["xy", "yz", "xz"]:
-            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_schematic.png"
+            filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_schematic.png"
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -298,7 +296,9 @@ class TestMorphologyPlot(BaseTestCase):
         nml_files = ["tests/plot/Cell_497232312.cell.nml", "tests/plot/test.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
-            filename = f"test_morphology_plot_3d_{ofile.replace('.', '_', 100)}.png"
+            filename = (
+                f"tests/plot/test_morphology_plot_3d_{ofile.replace('.', '_', 100)}.png"
+            )
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -325,9 +325,7 @@ class TestMorphologyPlot(BaseTestCase):
 
         for plane in ["xy", "yz", "xz"]:
             # olm cell
-            filename = (
-                f"test_schematic_plot_2d_{olm_ofile.replace('.', '_', 100)}_{plane}.png"
-            )
+            filename = f"tests/plot/test_schematic_plot_2d_{olm_ofile.replace('.', '_', 100)}_{plane}.png"
             try:
                 pl.Path(filename).unlink()
             except FileNotFoundError:
@@ -342,9 +340,7 @@ class TestMorphologyPlot(BaseTestCase):
             )
 
             # more complex cell
-            filename = (
-                f"test_schematic_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
-            )
+            filename = f"tests/plot/test_schematic_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
             # remove the file first
             try:
                 pl.Path(filename).unlink()
@@ -372,7 +368,7 @@ class TestMorphologyPlot(BaseTestCase):
         ofile = pl.Path(nml_file).name
 
         # more complex cell
-        filename = f"test_curtain_plot_2d_{ofile.replace('.', '_', 100)}.png"
+        filename = f"tests/plot/test_curtain_plot_2d_{ofile.replace('.', '_', 100)}.png"
         # remove the file first
         try:
             pl.Path(filename).unlink()
@@ -402,7 +398,7 @@ class TestMorphologyPlot(BaseTestCase):
         ofile = pl.Path(nml_file).name
 
         # more complex cell
-        filename = f"test_curtain_plot_2d_{ofile.replace('.', '_', 100)}_withdata.png"
+        filename = f"tests/plot/test_curtain_plot_2d_{ofile.replace('.', '_', 100)}_withdata.png"
         # remove the file first
         try:
             pl.Path(filename).unlink()

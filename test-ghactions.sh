@@ -6,8 +6,10 @@ echo
 echo "################################################"
 echo "##   Running unit tests"
 
+
 # skip a few tests that segfault etc. on GH
 pytest --cov=pyneuroml -m "not localonly" .
+
 
 run_neuron_examples=false
 
@@ -106,7 +108,7 @@ echo
 echo "################################################"
 echo "##   Test export to PovRay"
 
- pynml-povray NML2_SingleCompHHCell.nml
+pynml-povray NML2_SingleCompHHCell.nml
 
 
 # Requires pyelectro, not in .travis.yml yet...
