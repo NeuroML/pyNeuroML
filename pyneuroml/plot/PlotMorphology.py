@@ -261,13 +261,24 @@ def plot_2D(
             verbose=False,
             optimized=True,
         )
-
+        if title is None:
+            try:
+                title = f"{nml_model.networks[0].id} from {nml_file}"
+            except IndexError:
+                title = f"{nml_model.cells[0].id} from {nml_file}"
     elif isinstance(nml_file, Cell):
         nml_model = NeuroMLDocument(id="newdoc")
         nml_model.add(nml_file)
+        if title is None:
+            title = f"{nml_model.cells[0].id}"
 
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
+        if title is None:
+            try:
+                title = f"{nml_model.networks[0].id} from {nml_file.id}"
+            except IndexError:
+                title = f"{nml_model.cells[0].id} from {nml_file.id}"
     else:
         raise TypeError(
             "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
@@ -282,12 +293,6 @@ def plot_2D(
     ) = extract_position_info(
         nml_model, verbose, nml_file if type(nml_file) is str else ""
     )
-
-    if title is None:
-        if len(nml_model.networks) > 0:
-            title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
-        else:
-            title = "2D plot of %s" % (nml_model.cells[0].id)
 
     if verbose:
         logger.debug(f"positions: {positions}")
