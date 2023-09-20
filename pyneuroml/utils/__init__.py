@@ -6,6 +6,7 @@ PyNeuroML
 Copyright 2023 NeuroML Contributors
 """
 
+import os
 import copy
 import logging
 import math
@@ -25,7 +26,7 @@ MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
 
 
 def extract_position_info(
-    nml_model: neuroml.NeuroMLDocument, verbose: bool = False
+    nml_model: neuroml.NeuroMLDocument, verbose: bool = False, nml_file_path: str = ""
 ) -> tuple:
     """Extract position information from a NeuroML model
 
@@ -41,17 +42,29 @@ def extract_position_info(
     :type nml_model: NeuroMLDocument
     :param verbose: toggle function verbosity
     :type verbose: bool
+    :param nml_file_path: path of file corresponding to the model
+    :type nml_file_path: str
     :returns: [cell id vs cell dict, pop id vs cell dict, positions dict, pop id vs colour dict, pop id vs radii dict]
     :rtype: tuple of dicts
     """
+    base_path = os.path.dirname(os.path.realpath(nml_file_path))
 
+    # create a copy of the original model that we can manipulate as required
     nml_model_copy = copy.deepcopy(nml_model)
 
-    # add any included cells to the main document
-    for inc in nml_model_copy.includes:
-        inc = read_neuroml2_file(inc.href)
-        for acell in inc.cells:
-            nml_model_copy.add(acell)
+    # remove bits of the model we don't need
+    model_members = list(vars(nml_model_copy).keys())
+    required_members = [
+        "id",
+        "cells",
+        "cell2_ca_poolses",
+        "networks",
+        "populations",
+        "includes",
+    ]
+    for m in model_members:
+        if m not in required_members:
+            setattr(nml_model_copy, m, None)
 
     cell_id_vs_cell = {}
     positions = {}
@@ -60,16 +73,47 @@ def extract_position_info(
     pop_id_vs_radii = {}
 
     cell_elements = []
-    cell_elements.extend(nml_model_copy.cells)
-    cell_elements.extend(nml_model_copy.cell2_ca_poolses)
+    popElements = []
 
-    for cell in cell_elements:
-        cell_id_vs_cell[cell.id] = cell
-
+    # if the model contains a network, use it
     if len(nml_model_copy.networks) > 0:
-        popElements = nml_model_copy.networks[0].populations
+        # remove network members we don't need
+        network_members = list(vars(nml_model_copy.networks[0]).keys())
+        for m in network_members:
+            if m != "populations":
+                setattr(nml_model_copy.networks[0], m, None)
+
+        # get a list of what cell types are used in the various populations
+        required_cell_types = [
+            pop.component for pop in nml_model_copy.networks[0].populations
+        ]
+
+        # add only required cells that are included in populations to the
+        # document
+        for inc in nml_model_copy.includes:
+            incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
+            inc = read_neuroml2_file(incl_loc)
+            for acell in inc.cells:
+                if acell.id in required_cell_types:
+                    acell.biophysical_properties = None
+                    nml_model_copy.add(acell)
+
+        cell_elements.extend(nml_model_copy.cells)
+        cell_elements.extend(nml_model_copy.cell2_ca_poolses)
+    # if the model does not include a network, plot all the cells in the
+    # model in new dummy populations
     else:
-        popElements = []
+        # add any included cells to the main document
+        for inc in nml_model_copy.includes:
+            incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
+            inc = read_neuroml2_file(incl_loc)
+            for acell in inc.cells:
+                acell.biophysical_properties = None
+                nml_model_copy.add(acell)
+
+        cell_elements.extend(nml_model_copy.cells)
+        cell_elements.extend(nml_model_copy.cell2_ca_poolses)
+
         net = neuroml.Network(id="x")
         nml_model_copy.networks.append(net)
         cell_str = ""
@@ -81,17 +125,20 @@ def extract_position_info(
             cell_str += cell.id + "__"
         net.id = cell_str[:-2]
 
-        popElements = nml_model_copy.networks[0].populations
+    popElements = nml_model_copy.networks[0].populations
+
+    for cell in cell_elements:
+        cell_id_vs_cell[cell.id] = cell
 
     for pop in popElements:
         name = pop.id
         celltype = pop.component
         instances = pop.instances
 
-        if pop.component in cell_id_vs_cell.keys():
-            pop_id_vs_cell[pop.id] = cell_id_vs_cell[pop.component]
+        if celltype in cell_id_vs_cell.keys():
+            pop_id_vs_cell[name] = cell_id_vs_cell[celltype]
         else:
-            pop_id_vs_cell[pop.id] = None
+            pop_id_vs_cell[name] = None
 
         info = "Population: %s has %i positioned cells of type: %s" % (
             name,

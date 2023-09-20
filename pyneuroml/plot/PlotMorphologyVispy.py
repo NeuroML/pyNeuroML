@@ -349,10 +349,10 @@ def plot_interactive_3D(
     if verbose:
         print(f"Plotting {nml_file}")
 
-    if type(nml_file) == str:
+    if type(nml_file) is str:
         nml_model = read_neuroml2_file(
             nml_file,
-            include_includes=True,
+            include_includes=False,
             check_validity_pre_include=False,
             verbose=False,
             optimized=True,
@@ -373,7 +373,9 @@ def plot_interactive_3D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(nml_model, verbose)
+    ) = extract_position_info(
+        nml_model, verbose, nml_file if type(nml_file) is str else ""
+    )
 
     # Collect all markers and only plot one markers object
     # this is more efficient than multiple markers, one for each point.
@@ -465,8 +467,7 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
-    for pop_id in pop_id_vs_cell:
-        cell = pop_id_vs_cell[pop_id]
+    for pop_id, cell in pop_id_vs_cell.items():
         pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
 
         # reinit point_cells for each loop
@@ -481,8 +482,7 @@ def plot_interactive_3D(
             except KeyError:
                 pass
 
-        for cell_index in pos_pop:
-            pos = pos_pop[cell_index]
+        for cell_index, pos in pos_pop.items():
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
