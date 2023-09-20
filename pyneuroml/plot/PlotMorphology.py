@@ -76,9 +76,16 @@ def process_args():
     )
 
     parser.add_argument(
+        "-pointFraction",
+        type=str,
+        metavar="<fraction of each population to plot as point cells>",
+        default=DEFAULTS["pointFraction"],
+        help="Fraction of network to plot as point cells",
+    )
+    parser.add_argument(
         "-plotType",
         type=str,
-        metavar="<type: detailed, constant, or schematic>",
+        metavar="<type: detailed, constant, schematic, or point>",
         default=DEFAULTS["plotType"],
         help="Level of detail to plot in",
     )
@@ -147,6 +154,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             verbose=a.v,
             plot_type=a.plot_type,
             theme=a.theme,
+            plot_spec={"point_fraction": a.point_fraction},
         )
     else:
         plot_2D(
@@ -158,6 +166,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             a.save_to_file,
             a.square,
             a.plot_type,
+            plot_spec={"point_fraction": a.point_fraction},
         )
 
 
@@ -172,6 +181,9 @@ def plot_2D(
     plot_type: str = "detailed",
     title: typing.Optional[str] = None,
     close_plot: bool = False,
+    plot_spec: typing.Optional[
+        typing.Dict[str, typing.Union[str, typing.List[int], float]]
+    ] = None,
 ):
     """Plot cells in a 2D plane.
 
@@ -205,6 +217,7 @@ def plot_2D(
         - "constant": show morphology, but use constant line widths
         - "schematic": only plot each unbranched segment group as a straight
           line, not following each segment
+        - "point": show all cells as points
 
         This is only applicable for neuroml.Cell cells (ones with some
         morphology)
@@ -214,20 +227,36 @@ def plot_2D(
     :type title: str
     :param close_plot: call pyplot.close() to close plot after plotting
     :type close_plot: bool
+    :param plot_spec: dictionary that allows passing some specifications that
+        control how a plot is generated. This is mostly useful for large
+        network plots where one may want to have a mix of full morphology and
+        schematic, and point representations of cells. Possible keys are:
+
+        - point_fraction: what fraction of each population to plot as point cells:
+          these cells will be randomly selected
+        - points_cells: list of cell ids to plot as point cells
+        - schematic_cells: list of cell ids to plot as schematics
+        - constant_cells: list of cell ids to plot as constant widths
+
+        The last three lists override the point_fraction setting. If a cell id
+        is not included in the spec here, it will follow the plot_type provided
+        before.
     """
 
-    if plot_type not in ["detailed", "constant", "schematic"]:
+    if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
-            "plot_type must be one of 'detailed', 'constant', or 'schematic'"
+            "plot_type must be one of 'detailed', 'constant', 'schematic', 'point'"
         )
 
     if verbose:
         print("Plotting %s" % nml_file)
 
-    if type(nml_file) == str:
+    # do not recursive read the file, the extract_position_info function will
+    # do that for us, from a copy of the model
+    if type(nml_file) is str:
         nml_model = read_neuroml2_file(
             nml_file,
-            include_includes=True,
+            include_includes=False,
             check_validity_pre_include=False,
             verbose=False,
             optimized=True,
@@ -250,7 +279,9 @@ def plot_2D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(nml_model, verbose)
+    ) = extract_position_info(
+        nml_model, verbose, nml_file if type(nml_file) is str else ""
+    )
 
     if title is None:
         if len(nml_model.networks) > 0:
@@ -268,12 +299,45 @@ def plot_2D(
     fig, ax = get_new_matplotlib_morph_plot(title, plane2d)
     axis_min_max = [float("inf"), -1 * float("inf")]
 
-    for pop_id in pop_id_vs_cell:
-        cell = pop_id_vs_cell[pop_id]
-        pos_pop = positions[pop_id]
+    # process plot_spec
+    point_cells = []  # type: typing.List[int]
+    schematic_cells = []  # type: typing.List[int]
+    constant_cells = []  # type: typing.List[int]
+    detailed_cells = []  # type: typing.List[int]
+    if plot_spec is not None:
+        try:
+            point_cells = plot_spec["point_cells"]
+        except KeyError:
+            pass
+        try:
+            schematic_cells = plot_spec["schematic_cells"]
+        except KeyError:
+            pass
+        try:
+            constant_cells = plot_spec["constant_cells"]
+        except KeyError:
+            pass
+        try:
+            detailed_cells = plot_spec["detailed_cells"]
+        except KeyError:
+            pass
 
-        for cell_index in pos_pop:
-            pos = pos_pop[cell_index]
+    for pop_id, cell in pop_id_vs_cell.items():
+        pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
+
+        # reinit point_cells for each loop
+        point_cells_pop = []
+        if len(point_cells) == 0 and plot_spec is not None:
+            cell_indices = list(pos_pop.keys())
+            try:
+                point_cells_pop = random.sample(
+                    cell_indices,
+                    int(len(cell_indices) * float(plot_spec["point_fraction"])),
+                )
+            except KeyError:
+                pass
+
+        for cell_index, pos in pos_pop.items():
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
@@ -291,12 +355,36 @@ def plot_2D(
                     nogui=True,
                 )
             else:
-                if plot_type == "schematic":
+                if (
+                    plot_type == "point"
+                    or cell_index in point_cells_pop
+                    or cell.id in point_cells
+                ):
+                    # assume that soma is 0, plot point at where soma should be
+                    soma_x_y_z = cell.get_actual_proximal(0)
+                    pos1 = [
+                        pos[0] + soma_x_y_z.x,
+                        pos[1] + soma_x_y_z.y,
+                        pos[2] + soma_x_y_z.z,
+                    ]
+                    plot_2D_point_cells(
+                        offset=pos1,
+                        plane2d=plane2d,
+                        color=color,
+                        soma_radius=radius,
+                        verbose=verbose,
+                        ax=ax,
+                        fig=fig,
+                        autoscale=False,
+                        scalebar=False,
+                        nogui=True,
+                    )
+                elif plot_type == "schematic" or cell.id in schematic_cells:
                     plot_2D_schematic(
                         offset=pos,
                         cell=cell,
                         segment_groups=None,
-                        labels=True,
+                        labels=False,
                         plane2d=plane2d,
                         verbose=verbose,
                         fig=fig,
@@ -306,7 +394,12 @@ def plot_2D(
                         autoscale=False,
                         square=False,
                     )
-                else:
+                elif (
+                    plot_type == "detailed"
+                    or cell.id in detailed_cells
+                    or plot_type == "constant"
+                    or cell.id in constant_cells
+                ):
                     plot_2D_cell_morphology(
                         offset=pos,
                         cell=cell,
