@@ -1088,6 +1088,7 @@ def write_neuroml2_file(
     nml2_file_name: str,
     validate: bool = True,
     verbose_validate: bool = False,
+    hdf5: bool = False,
 ) -> None:
     """Write a NeuroMLDocument object to a file using libNeuroML.
 
@@ -1099,8 +1100,13 @@ def write_neuroml2_file(
     :type validate: bool
     :param verbose_validate: toggle whether the validation should be verbose
     :type verbose_validate: bool
+    :param hdf5: write to HDF5 file
+    :type hdf5: bool
     """
-    writers.NeuroMLWriter.write(nml2_doc, nml2_file_name)
+    if hdf5 is True:
+        writers.NeuroMLHdf5Writer.write(nml2_doc, nml2_file_name)
+    else:
+        writers.NeuroMLWriter.write(nml2_doc, nml2_file_name)
 
     if validate:
         return validate_neuroml2(nml2_file_name, verbose_validate)
