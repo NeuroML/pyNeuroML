@@ -97,11 +97,12 @@ def extract_position_info(
         # document
         for inc in nml_model_copy.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
-            inc = read_neuroml2_file(incl_loc)
-            for acell in inc.cells:
-                if acell.id in required_cell_types:
-                    acell.biophysical_properties = None
-                    nml_model_copy.add(acell)
+            if os.path.isfile(incl_loc):
+                inc = read_neuroml2_file(incl_loc)
+                for acell in inc.cells:
+                    if acell.id in required_cell_types:
+                        acell.biophysical_properties = None
+                        nml_model_copy.add(acell)
 
         cell_elements.extend(nml_model_copy.cells)
         cell_elements.extend(nml_model_copy.cell2_ca_poolses)
@@ -111,10 +112,11 @@ def extract_position_info(
         # add any included cells to the main document
         for inc in nml_model_copy.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
-            inc = read_neuroml2_file(incl_loc)
-            for acell in inc.cells:
-                acell.biophysical_properties = None
-                nml_model_copy.add(acell)
+            if os.path.isfile(incl_loc):
+                inc = read_neuroml2_file(incl_loc)
+                for acell in inc.cells:
+                    acell.biophysical_properties = None
+                    nml_model_copy.add(acell)
 
         cell_elements.extend(nml_model_copy.cells)
         cell_elements.extend(nml_model_copy.cell2_ca_poolses)

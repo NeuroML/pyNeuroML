@@ -357,11 +357,25 @@ def plot_interactive_3D(
             verbose=False,
             optimized=True,
         )
+        if title is None:
+            try:
+                title = f"{nml_model.networks[0].id} from {nml_file}"
+            except IndexError:
+                title = f"{nml_model.cells[0].id} from {nml_file}"
+
     elif isinstance(nml_file, Cell):
         nml_model = NeuroMLDocument(id="newdoc")
         nml_model.add(nml_file)
+        if title is None:
+            title = f"{nml_model.cells[0].id}"
+
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
+        if title is None:
+            try:
+                title = f"{nml_model.networks[0].id} from {nml_file.id}"
+            except IndexError:
+                title = f"{nml_model.cells[0].id} from {nml_file.id}"
     else:
         raise TypeError(
             "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
@@ -386,19 +400,17 @@ def plot_interactive_3D(
     marker_points = []
     marker_colors = []
 
-    if title is None:
-        try:
-            title = f"{nml_model.networks[0].id} from {nml_file}"
-        except IndexError:
-            title = f"{nml_model.cells[0].id} from {nml_file}"
-
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
     logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
     logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
     logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
-    if len(positions.keys()) > 1:
+    # not used, clear up
+    print(f"Plotting {len(cell_id_vs_cell)} cells")
+    del cell_id_vs_cell
+
+    if len(positions) > 1:
         only_pos = []
         for posdict in positions.values():
             for poss in posdict.values():
@@ -467,8 +479,9 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
-    for pop_id, cell in pop_id_vs_cell.items():
-        pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
+    while pop_id_vs_cell:
+        pop_id, cell = pop_id_vs_cell.popitem()
+        pos_pop = positions[pop_id]
 
         # reinit point_cells for each loop
         point_cells_pop = []
@@ -482,7 +495,8 @@ def plot_interactive_3D(
             except KeyError:
                 pass
 
-        for cell_index, pos in pos_pop.items():
+        while pos_pop:
+            cell_index, pos = pos_pop.popitem()
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
@@ -530,6 +544,7 @@ def plot_interactive_3D(
                     or plot_type == "constant"
                     or cell.id in constant_cells
                 ):
+                    logger.debug(f"Cell for 3d is: {cell.id}")
                     pts, sizes, colors = plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
