@@ -261,13 +261,24 @@ def plot_2D(
             verbose=False,
             optimized=True,
         )
-
+        if title is None:
+            try:
+                title = f"{nml_model.networks[0].id} from {nml_file}"
+            except IndexError:
+                title = f"{nml_model.cells[0].id} from {nml_file}"
     elif isinstance(nml_file, Cell):
         nml_model = NeuroMLDocument(id="newdoc")
         nml_model.add(nml_file)
+        if title is None:
+            title = f"{nml_model.cells[0].id}"
 
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
+        if title is None:
+            try:
+                title = f"{nml_model.networks[0].id} from {nml_file.id}"
+            except IndexError:
+                title = f"{nml_model.cells[0].id} from {nml_file.id}"
     else:
         raise TypeError(
             "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
@@ -283,18 +294,15 @@ def plot_2D(
         nml_model, verbose, nml_file if type(nml_file) is str else ""
     )
 
-    if title is None:
-        if len(nml_model.networks) > 0:
-            title = "2D plot of %s from %s" % (nml_model.networks[0].id, nml_file)
-        else:
-            title = "2D plot of %s" % (nml_model.cells[0].id)
-
     if verbose:
         logger.debug(f"positions: {positions}")
         logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
         logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
         logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
         logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
+
+    # not used, clear up
+    del cell_id_vs_cell
 
     fig, ax = get_new_matplotlib_morph_plot(title, plane2d)
     axis_min_max = [float("inf"), -1 * float("inf")]
@@ -322,7 +330,8 @@ def plot_2D(
         except KeyError:
             pass
 
-    for pop_id, cell in pop_id_vs_cell.items():
+    while pop_id_vs_cell:
+        pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]  # type: typing.Dict[typing.Any, typing.List[float]]
 
         # reinit point_cells for each loop
@@ -337,7 +346,8 @@ def plot_2D(
             except KeyError:
                 pass
 
-        for cell_index, pos in pos_pop.items():
+        while pos_pop:
+            cell_index, pos = pos_pop.popitem()
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
             color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
 
