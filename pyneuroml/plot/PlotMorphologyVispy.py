@@ -14,6 +14,7 @@ import logging
 import random
 import textwrap
 import typing
+import math
 
 import numpy
 from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
@@ -21,7 +22,11 @@ from neuroml.neuro_lex_ids import neuro_lex_ids
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.plot import DEFAULTS, get_cell_bound_box, get_next_hex_color
-from vispy import app, scene
+from vispy import app, scene, use
+from vispy.scene.visuals import Mesh, InstancedMesh, XYZAxis
+from vispy.util.transforms import rotate
+from vispy.geometry.generation import create_cylinder, create_sphere
+from scipy.spatial.transform import Rotation
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -31,6 +36,8 @@ VISPY_THEME = {
     "light": {"bg": "white", "fg": "black"},
     "dark": {"bg": "black", "fg": "white"},
 }
+# vispy: full gl+ context is required for instanced rendering
+use(gl="gl+")
 PYNEUROML_VISPY_THEME = "light"
 
 
@@ -582,13 +589,14 @@ def plot_3D_cell_morphology(
     color: typing.Optional[str] = None,
     title: str = "",
     verbose: bool = False,
-    current_scene: scene.SceneCanvas = None,
+    current_canvas: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
     plot_type: str = "constant",
     theme="light",
+    meshdata=None,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -631,9 +639,9 @@ def plot_3D_cell_morphology(
     :type verbose: bool
     :param nogui: do not show image immediately
     :type nogui: bool
-    :param current_scene: vispy scene.SceneCanvas to use (a new one is created if it is not
+    :param current_canvas: vispy scene.SceneCanvas to use (a new one is created if it is not
         provided)
-    :type current_scene: scene.SceneCanvas
+    :type current_canvas: scene.SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
     :param plot_type: type of plot, one of:
@@ -650,6 +658,9 @@ def plot_3D_cell_morphology(
     :type plot_type: str
     :param theme: theme to use (dark/light)
     :type theme: str
+    :param meshdata: dictionary used to store mesh related data for vispy
+        visualisation
+    :type meshdata: dict
     :raises: ValueError if `cell` is None
 
     """
@@ -671,9 +682,9 @@ def plot_3D_cell_morphology(
     except Exception:
         axon_segs = []
 
-    if current_scene is None or current_view is None:
+    if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(
+        current_canvas, current_view = create_new_vispy_canvas(
             view_min, view_max, title, theme=theme
         )
 
@@ -694,25 +705,29 @@ def plot_3D_cell_morphology(
             for s in segs:
                 color_dict[s.id] = c
 
-    # for lines/segments
-    points = []
-    toconnect = []
-    colors = []
-    # for any spheres which we plot as markers at once
-    marker_points = []
-    marker_colors = []
-    marker_sizes = []
+    if meshdata is None:
+        meshdata = {}
+
+    # for heuristics
+    total_segs = len(cell.morphology.segments)
 
     for seg in cell.morphology.segments:
         p = cell.get_actual_proximal(seg.id)
         d = seg.distal
-        width = (p.diameter + d.diameter) / 2
+        length = cell.get_segment_length(seg.id)
 
-        if width < min_width:
-            width = min_width
-
-        if plot_type == "constant":
-            width = min_width
+        # full precision
+        if total_segs <= 200:
+            key = (f"{p.diameter/2}", f"{d.diameter/2}", f"{length}")
+        # 3 decimals
+        elif total_segs > 200 and total_segs <= 1000:
+            key = (f"{p.diameter/2:.3f}", f"{d.diameter/2:.3f}", f"{length:.3f}")
+        # 2 decimals
+        elif total_segs > 1000 and total_segs <= 2000:
+            key = (f"{p.diameter/2:.2f}", f"{d.diameter/2:.2f}", f"{length:.2f}")
+        # 1 decimals
+        else:
+            key = (f"{p.diameter/2:.1f}", f"{d.diameter/2:.1f}", f"{length:.1f}")
 
         seg_color = "white"
         if color is None:
@@ -738,61 +753,70 @@ def plot_3D_cell_morphology(
         else:
             seg_color = color
 
-        # check if for a spherical segment, add extra spherical node
-        if p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter:
-            marker_points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-            marker_colors.append(seg_color)
-            marker_sizes.append(p.diameter)
-
-        if plot_type == "constant":
-            points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-            colors.append(seg_color)
-            points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
-            colors.append(seg_color)
-            toconnect.append([len(points) - 2, len(points) - 1])
-        # every segment plotted individually
-        elif plot_type == "detailed":
-            points = []
-            toconnect = []
-            colors = []
-            points.append([offset[0] + p.x, offset[1] + p.y, offset[2] + p.z])
-            colors.append(seg_color)
-            points.append([offset[0] + d.x, offset[1] + d.y, offset[2] + d.z])
-            colors.append(seg_color)
-            toconnect.append([len(points) - 2, len(points) - 1])
-            scene.Line(
-                pos=points,
-                color=colors,
-                connect=numpy.array(toconnect),
-                parent=current_view.scene,
-                width=width,
-            )
-
-    if plot_type == "constant":
-        scene.Line(
-            pos=points,
-            color=colors,
-            connect=numpy.array(toconnect),
-            parent=current_view.scene,
-            width=width,
-        )
+        try:
+            meshdata[key].append((p, d, seg_color))
+        except KeyError:
+            meshdata[key] = [(p, d, seg_color)]
 
     if not nogui:
-        # markers
-        if len(marker_points) > 0:
-            scene.Markers(
-                pos=numpy.array(marker_points),
-                size=numpy.array(marker_sizes),
-                spherical=True,
-                face_color=marker_colors,
-                edge_color=marker_colors,
-                edge_width=0,
+        for d, i in meshdata.items():
+            r1 = float(d[0])
+            r2 = float(d[1])
+            length = float(d[2])
+
+            # actual plotting bits
+            if plot_type == "constant":
+                r1 = min_width
+                r2 = min_width
+
+            seg_mesh = None
+            if (
+                r1 == r2
+                and i[0][0].x == i[0][1].x
+                and i[0][0].y == i[0][1].y
+                and i[0][0].z == i[0][1].z
+            ):
+                seg_mesh = create_sphere(3, 5, radius=r1)
+            else:
+                rows = 2 + int(length / 2)
+                seg_mesh = create_cylinder(
+                    rows=rows, cols=9, radius=[r1, r2], length=length
+                )
+
+            instance_positions = []
+            instance_transforms = []
+            instance_colors = []
+            for im in i:
+                prox = im[0]
+                dist = im[1]
+                color = im[2]
+
+                orig_vec = [0, 0, length]
+                dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
+                k = numpy.cross(orig_vec, dir_vector)
+                k = k / numpy.linalg.norm(k)
+                theta = math.acos(
+                    numpy.dot(orig_vec, dir_vector)
+                    / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
+                )
+
+                instance_positions.append([prox.x, prox.y, prox.z])
+                rot_matrix = rotate(math.degrees(theta), k).T
+                rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+                instance_transforms.append(rot_obj.as_matrix())
+                instance_colors.append(color)
+
+            assert len(instance_positions) == len(instance_transforms)
+            InstancedMesh(
+                meshdata=seg_mesh,
+                instance_positions=instance_positions,
+                instance_transforms=instance_transforms,
+                instance_colors=instance_colors,
                 parent=current_view.scene,
-                scaling=True,
-                antialias=0,
             )
+
         app.run()
-    return marker_points, marker_sizes, marker_colors
+    return meshdata
 
 
 def plot_3D_schematic(
