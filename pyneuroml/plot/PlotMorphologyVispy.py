@@ -17,7 +17,7 @@ import typing
 import math
 
 import numpy
-from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
+from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup, Point3DWithDiam
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
@@ -338,15 +338,6 @@ def plot_interactive_3D(
         nml_model, verbose, nml_file if type(nml_file) is str else ""
     )
 
-    # Collect all markers and only plot one markers object
-    # this is more efficient than multiple markers, one for each point.
-    # TODO: also collect all line points and only use one object rather than a
-    # new object for each cell: will only work for the case where all lines
-    # have the same width
-    marker_sizes = []
-    marker_points = []
-    marker_colors = []
-
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
     logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
@@ -426,6 +417,7 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
+    meshdata = {}
     while pop_id_vs_cell:
         pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]
@@ -453,9 +445,23 @@ def plot_interactive_3D(
                 logging.info(f"Plotting a point cell at {pos}")
 
             if cell is None:
-                marker_points.extend([pos])
-                marker_sizes.extend([radius])
-                marker_colors.extend([color])
+                key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
+                try:
+                    meshdata[key].append(
+                        (
+                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
+                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
+                            color,
+                        )
+                    )
+                except KeyError:
+                    meshdata[key] = [
+                        (
+                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
+                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
+                            color,
+                        )
+                    ]
             else:
                 if (
                     plot_type == "point"
@@ -469,11 +475,24 @@ def plot_interactive_3D(
                         pos[1] + soma_x_y_z.y,
                         pos[2] + soma_x_y_z.z,
                     ]
-                    marker_points.extend([pos1])
-                    # larger than the default soma width, which would be too
-                    # small
-                    marker_sizes.extend([25])
-                    marker_colors.extend([color])
+                    key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
+                    try:
+                        meshdata[key].append(
+                            (
+                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
+                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
+                                color,
+                            )
+                        )
+                    except KeyError:
+                        meshdata[key] = [
+                            (
+                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
+                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
+                                color,
+                            )
+                        ]
+
                 elif plot_type == "schematic" or cell.id in schematic_cells:
                     plot_3D_schematic(
                         offset=pos,
@@ -481,7 +500,7 @@ def plot_interactive_3D(
                         segment_groups=None,
                         color=color,
                         verbose=verbose,
-                        current_scene=current_scene,
+                        current_scene=current_canvas,
                         current_view=current_view,
                         nogui=True,
                     )
@@ -492,7 +511,7 @@ def plot_interactive_3D(
                     or cell.id in constant_cells
                 ):
                     logger.debug(f"Cell for 3d is: {cell.id}")
-                    pts, sizes, colors = plot_3D_cell_morphology(
+                    plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
                         color=color,
@@ -502,24 +521,11 @@ def plot_interactive_3D(
                         current_view=current_view,
                         min_width=min_width,
                         nogui=True,
+                        meshdata=meshdata,
                     )
-                    marker_points.extend(pts)
-                    marker_sizes.extend(sizes)
-                    marker_colors.extend(colors)
 
-    if len(marker_points) > 0:
-        scene.Markers(
-            pos=numpy.array(marker_points),
-            size=numpy.array(marker_sizes),
-            spherical=True,
-            face_color=marker_colors,
-            edge_color=marker_colors,
-            edge_width=0,
-            parent=current_view.scene,
-            scaling=True,
-            antialias=0,
-        )
     if not nogui:
+        create_instanced_meshes(meshdata, plot_type, current_view, min_width)
         app.run()
 
 
@@ -699,64 +705,84 @@ def plot_3D_cell_morphology(
             meshdata[key] = [(p, d, seg_color)]
 
     if not nogui:
-        for d, i in meshdata.items():
-            r1 = float(d[0])
-            r2 = float(d[1])
-            length = float(d[2])
-
-            # actual plotting bits
-            if plot_type == "constant":
-                r1 = min_width
-                r2 = min_width
-
-            seg_mesh = None
-            if (
-                r1 == r2
-                and i[0][0].x == i[0][1].x
-                and i[0][0].y == i[0][1].y
-                and i[0][0].z == i[0][1].z
-            ):
-                seg_mesh = create_sphere(3, 5, radius=r1)
-            else:
-                rows = 2 + int(length / 2)
-                seg_mesh = create_cylinder(
-                    rows=rows, cols=9, radius=[r1, r2], length=length
-                )
-
-            instance_positions = []
-            instance_transforms = []
-            instance_colors = []
-            for im in i:
-                prox = im[0]
-                dist = im[1]
-                color = im[2]
-
-                orig_vec = [0, 0, length]
-                dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
-                k = numpy.cross(orig_vec, dir_vector)
-                k = k / numpy.linalg.norm(k)
-                theta = math.acos(
-                    numpy.dot(orig_vec, dir_vector)
-                    / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
-                )
-
-                instance_positions.append([prox.x, prox.y, prox.z])
-                rot_matrix = rotate(math.degrees(theta), k).T
-                rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
-                instance_transforms.append(rot_obj.as_matrix())
-                instance_colors.append(color)
-
-            assert len(instance_positions) == len(instance_transforms)
-            InstancedMesh(
-                meshdata=seg_mesh,
-                instance_positions=instance_positions,
-                instance_transforms=instance_transforms,
-                instance_colors=instance_colors,
-                parent=current_view.scene,
-            )
-
+        create_instanced_meshes(meshdata, plot_type, current_view, min_width)
         app.run()
     return meshdata
+
+
+def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
+    """Internal function to plot instanced meshes from mesh data.
+
+    It is more efficient to collect all the segments that require the same
+    cylindrical mesh and to create instanced meshes for them.
+
+    See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.InstancedMesh
+
+    :param meshdata: meshdata to plot: dictionary with:
+        key: (r1, r2, length)
+        value: [(prox, dist, color)]
+    :param plot_type: type of plot
+    :type plot_type: str
+    :param current_view: vispy viewbox to use
+    :type current_view: ViewBox
+    :param min_width: minimum width of tubes
+    :type min_width: float
+    """
+    for d, i in meshdata.items():
+        r1 = float(d[0])
+        r2 = float(d[1])
+        length = float(d[2])
+
+        # actual plotting bits
+        if plot_type == "constant":
+            r1 = min_width
+            r2 = min_width
+
+        seg_mesh = None
+        if (
+            r1 == r2
+            and i[0][0].x == i[0][1].x
+            and i[0][0].y == i[0][1].y
+            and i[0][0].z == i[0][1].z
+        ):
+            seg_mesh = create_sphere(3, 5, radius=r1)
+        else:
+            rows = 2 + int(length / 2)
+            seg_mesh = create_cylinder(
+                rows=rows, cols=9, radius=[r1, r2], length=length
+            )
+
+        instance_positions = []
+        instance_transforms = []
+        instance_colors = []
+        for im in i:
+            prox = im[0]
+            dist = im[1]
+            color = im[2]
+
+            orig_vec = [0, 0, length]
+            dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
+            k = numpy.cross(orig_vec, dir_vector)
+            k = k / numpy.linalg.norm(k)
+            theta = math.acos(
+                numpy.dot(orig_vec, dir_vector)
+                / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
+            )
+
+            instance_positions.append([prox.x, prox.y, prox.z])
+            rot_matrix = rotate(math.degrees(theta), k).T
+            rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+            instance_transforms.append(rot_obj.as_matrix())
+            instance_colors.append(color)
+
+        assert len(instance_positions) == len(instance_transforms)
+        InstancedMesh(
+            meshdata=seg_mesh,
+            instance_positions=instance_positions,
+            instance_transforms=instance_transforms,
+            instance_colors=instance_colors,
+            parent=current_view.scene,
+        )
 
 
 def plot_3D_schematic(
