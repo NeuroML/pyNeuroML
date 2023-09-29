@@ -88,7 +88,6 @@ def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
     view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
-    console_font_size: float = 10,
     axes_pos: typing.Optional[typing.List] = None,
     axes_length: float = 100,
     axes_width: int = 2,
@@ -125,17 +124,6 @@ def create_new_vispy_canvas(
     title_widget = scene.Label(title, color=VISPY_THEME[theme]["fg"])
     title_widget.height_max = 80
     grid.add_widget(title_widget, row=0, col=0, col_span=1)
-
-    console_widget = scene.Console(
-        text_color=VISPY_THEME[theme]["fg"],
-        font_size=console_font_size,
-    )
-    console_widget.height_max = 80
-    grid.add_widget(console_widget, row=2, col=0, col_span=1)
-
-    bottom_padding = grid.add_widget(row=3, col=0, col_span=1)
-    bottom_padding.height_max = 10
-
     view = grid.add_view(row=1, col=0, border_color=None)
 
     # create cameras
@@ -151,39 +139,6 @@ def create_new_vispy_canvas(
     cam4.autoroll = False
 
     cams = [cam4, cam2]
-
-    # console text
-    console_text = "Controls: reset view: 0; quit: Esc/9"
-    if len(cams) > 1:
-        console_text += "; cycle camera: 1, 2 (fwd/bwd)"
-
-    cam_text = {
-        cam1: textwrap.dedent(
-            """
-            Left mouse button: pans view; right mouse button or scroll:
-            zooms"""
-        ),
-        cam2: textwrap.dedent(
-            """
-            Left mouse button: orbits view around center point; right mouse
-            button or scroll: change zoom level; Shift + left mouse button:
-            translate center point; Shift + right mouse button: change field of
-            view; r/R: view rotation animation"""
-        ),
-        cam3: textwrap.dedent(
-            """
-            Left mouse button: orbits view around center point; right
-            mouse button or scroll: change zoom level; Shift + left mouse
-            button: translate center point; Shift + right mouse button: change
-            field of view"""
-        ),
-        cam4: textwrap.dedent(
-            """
-            Arrow keys/WASD to move forward/backwards/left/right; F/C to move
-            up and down; Space to brake; Left mouse button/I/K/J/L to control
-            pitch and yaw; Q/E for rolling"""
-        ),
-    }
 
     # Turntable is default
     cam_index = 1
@@ -223,13 +178,6 @@ def create_new_vispy_canvas(
 
     for acam in cams:
         acam.set_default_state()
-
-    console_widget.write(f"Center: {view.camera.center}")
-    console_widget.write(console_text)
-    console_widget.write(
-        f"Current camera: {view.camera.name}: "
-        + cam_text[view.camera].replace("\n", " ").strip()
-    )
 
     if axes_pos:
         points = [
@@ -279,15 +227,7 @@ def create_new_vispy_canvas(
         elif event.text == "9":
             canvas.app.quit()
 
-        console_widget.clear()
-        # console_widget.write(f"Center: {view.camera.center}")
-        console_widget.write(console_text)
-        console_widget.write(
-            f"Current camera: {view.camera.name}: "
-            + cam_text[view.camera].replace("\n", " ").strip()
-        )
-
-    return scene, view
+    return canvas, view
 
 
 def plot_interactive_3D(
@@ -457,7 +397,7 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_min = list(numpy.array(pos))
 
-    current_scene, current_view = create_new_vispy_canvas(
+    current_canvas, current_view = create_new_vispy_canvas(
         view_min, view_max, title, theme=theme
     )
 
@@ -558,7 +498,7 @@ def plot_interactive_3D(
                         color=color,
                         plot_type=plot_type,
                         verbose=verbose,
-                        current_scene=current_scene,
+                        current_canvas=current_canvas,
                         current_view=current_view,
                         min_width=min_width,
                         nogui=True,
