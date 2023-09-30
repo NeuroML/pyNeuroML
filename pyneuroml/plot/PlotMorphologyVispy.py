@@ -42,7 +42,7 @@ PYNEUROML_VISPY_THEME = "light"
 
 
 def add_text_to_vispy_3D_plot(
-    current_scene: scene.SceneCanvas,
+    current_canvas: scene.SceneCanvas,
     xv: typing.List[float],
     yv: typing.List[float],
     zv: typing.List[float],
@@ -80,7 +80,7 @@ def add_text_to_vispy_3D_plot(
         text=text,
         color=color,
         rotation=angle,
-        parent=current_scene,
+        parent=current_canvas,
     )
 
 
@@ -395,10 +395,10 @@ def plot_interactive_3D(
     logger.debug(f"figure extents are: {view_min}, {view_max}")
 
     # process plot_spec
-    point_cells = []  # type: typing.List[int]
-    schematic_cells = []  # type: typing.List[int]
-    constant_cells = []  # type: typing.List[int]
-    detailed_cells = []  # type: typing.List[int]
+    point_cells = []
+    schematic_cells = []
+    constant_cells = []
+    detailed_cells = []
     if plot_spec is not None:
         try:
             point_cells = plot_spec["point_cells"]
@@ -417,7 +417,7 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
-    meshdata = {}
+    meshdata = {}  # type: typing.Dict[typing.Any, typing.Any]
     while pop_id_vs_cell:
         pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]
@@ -437,7 +437,11 @@ def plot_interactive_3D(
         while pos_pop:
             cell_index, pos = pos_pop.popitem()
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
-            color = pop_id_vs_color[pop_id] if pop_id in pop_id_vs_color else None
+            color = (
+                pop_id_vs_color[pop_id]
+                if pop_id in pop_id_vs_color
+                else get_next_hex_color()
+            )
 
             try:
                 logging.info(f"Plotting {cell.id}")
@@ -447,21 +451,9 @@ def plot_interactive_3D(
             if cell is None:
                 key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
                 try:
-                    meshdata[key].append(
-                        (
-                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
-                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
-                            color,
-                        )
-                    )
+                    meshdata[key].append((None, None, color, pos))
                 except KeyError:
-                    meshdata[key] = [
-                        (
-                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
-                            Point3DWithDiam(x=pos[0], y=pos[1], z=pos[2]),
-                            color,
-                        )
-                    ]
+                    meshdata[key] = [(None, None, color, pos)]
             else:
                 if (
                     plot_type == "point"
@@ -477,21 +469,10 @@ def plot_interactive_3D(
                     ]
                     key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
                     try:
-                        meshdata[key].append(
-                            (
-                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
-                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
-                                color,
-                            )
-                        )
+                        meshdata[key].append((None, None, color, pos1))
                     except KeyError:
-                        meshdata[key] = [
-                            (
-                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
-                                Point3DWithDiam(x=pos1[0], y=pos1[1], z=pos1[2]),
-                                color,
-                            )
-                        ]
+                        meshdata[key] = [(None, None, color, pos1)]
+                    logger.debug(f"meshdata added: {key}: {meshdata[key]}")
 
                 elif plot_type == "schematic" or cell.id in schematic_cells:
                     plot_3D_schematic(
@@ -500,9 +481,10 @@ def plot_interactive_3D(
                         segment_groups=None,
                         color=color,
                         verbose=verbose,
-                        current_scene=current_canvas,
+                        current_canvas=current_canvas,
                         current_view=current_view,
                         nogui=True,
+                        meshdata=meshdata,
                     )
                 elif (
                     plot_type == "detailed"
@@ -700,9 +682,9 @@ def plot_3D_cell_morphology(
             seg_color = color
 
         try:
-            meshdata[key].append((p, d, seg_color))
+            meshdata[key].append((p, d, seg_color, offset))
         except KeyError:
-            meshdata[key] = [(p, d, seg_color)]
+            meshdata[key] = [(p, d, seg_color, offset)]
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
@@ -720,7 +702,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
 
     :param meshdata: meshdata to plot: dictionary with:
         key: (r1, r2, length)
-        value: [(prox, dist, color)]
+        value: [(prox, dist, color, offset)]
     :param plot_type: type of plot
     :type plot_type: str
     :param current_view: vispy viewbox to use
@@ -728,6 +710,13 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
     :param min_width: minimum width of tubes
     :type min_width: float
     """
+    total_mesh_instances = 0
+    for d, i in meshdata.items():
+        total_mesh_instances += len(i)
+    print(
+        f"Plotting {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
+    )
+
     for d, i in meshdata.items():
         r1 = float(d[0])
         r2 = float(d[1])
@@ -739,17 +728,19 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             r2 = min_width
 
         seg_mesh = None
-        if (
-            r1 == r2
-            and i[0][0].x == i[0][1].x
-            and i[0][0].y == i[0][1].y
-            and i[0][0].z == i[0][1].z
-        ):
-            seg_mesh = create_sphere(3, 5, radius=r1)
+        # for points, we set the prox/dist to None
+        # we can't check if r1 == r2 == length because there may be cylinders
+        # with such a set of parameters
+        if r1 == r2 and i[0][0] is None and i[0][1] is None:
+            seg_mesh = create_sphere(9, 9, radius=r1)
+            logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
             seg_mesh = create_cylinder(
                 rows=rows, cols=9, radius=[r1, r2], length=length
+            )
+            logger.debug(
+                f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
             )
 
         instance_positions = []
@@ -759,30 +750,53 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             prox = im[0]
             dist = im[1]
             color = im[2]
+            offset = im[3]
 
-            orig_vec = [0, 0, length]
-            dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
-            k = numpy.cross(orig_vec, dir_vector)
-            k = k / numpy.linalg.norm(k)
-            theta = math.acos(
-                numpy.dot(orig_vec, dir_vector)
-                / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
-            )
+            # points, spherical meshes
+            if prox is not None and dist is not None:
+                orig_vec = [0, 0, length]
+                dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
+                k = numpy.cross(orig_vec, dir_vector)
+                mag_k = numpy.linalg.norm(k)
 
-            instance_positions.append([prox.x, prox.y, prox.z])
-            rot_matrix = rotate(math.degrees(theta), k).T
-            rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+                if mag_k != 0.0:
+                    k = k / mag_k
+                    theta = math.acos(
+                        numpy.dot(orig_vec, dir_vector)
+                        / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
+                    )
+                    logger.debug(f"k is {k}, theta is {theta}")
+                    rot_matrix = rotate(math.degrees(theta), k).T
+                    rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+                else:
+                    logger.debug("k is [0..], using zeros for rotation matrix")
+                    rot_matrix = numpy.zeros((3, 3))
+                    rot_obj = Rotation.from_matrix(rot_matrix)
+
+                instance_positions.append(
+                    [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
+                )
+            else:
+                instance_positions.append(offset)
+                rot_matrix = numpy.zeros((3, 3))
+                rot_obj = Rotation.from_matrix(rot_matrix)
+
             instance_transforms.append(rot_obj.as_matrix())
             instance_colors.append(color)
 
         assert len(instance_positions) == len(instance_transforms)
-        InstancedMesh(
+        logger.debug(
+            f"Instanced: positions: {instance_positions}, transforms: {instance_transforms}"
+        )
+
+        mesh = InstancedMesh(
             meshdata=seg_mesh,
             instance_positions=instance_positions,
             instance_transforms=instance_transforms,
             instance_colors=instance_colors,
             parent=current_view.scene,
         )
+        assert mesh is not None
 
 
 def plot_3D_schematic(
@@ -794,10 +808,11 @@ def plot_3D_schematic(
     verbose: bool = False,
     nogui: bool = False,
     title: str = "",
-    current_scene: scene.SceneCanvas = None,
+    current_canvas: scene.SceneCanvas = None,
     current_view: scene.ViewBox = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
+    meshdata: typing.Dict[typing.Any, typing.Any] = None,
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -837,9 +852,9 @@ def plot_3D_schematic(
     :type title: str
     :param nogui: toggle if plot should be shown or not
     :type nogui: bool
-    :param current_scene: vispy scene.SceneCanvas to use (a new one is created if it is not
+    :param current_canvas: vispy scene.SceneCanvas to use (a new one is created if it is not
         provided)
-    :type current_scene: scene.SceneCanvas
+    :type current_canvas: scene.SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
     :param theme: theme to use (light/dark)
@@ -881,21 +896,19 @@ def plot_3D_schematic(
     )
 
     # if no canvas is defined, define a new one
-    if current_scene is None or current_view is None:
+    if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
-        current_scene, current_view = create_new_vispy_canvas(
+        current_canvas, current_view = create_new_vispy_canvas(
             view_min, view_max, title, theme=theme
         )
 
-    points = []
-    toconnect = []
-    colors = []
-    text = []
-    textpoints = []
     # colors for cell
     cell_color_soma = get_next_hex_color()
     cell_color_axon = get_next_hex_color()
     cell_color_dendrites = get_next_hex_color()
+
+    if meshdata is None:
+        meshdata = {}
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)
@@ -907,79 +920,42 @@ def plot_3D_schematic(
         # get proximal and distal points
         first_seg = segs[0]  # type: Segment
         last_seg = segs[-1]  # type: Segment
-        first_prox = cell.get_actual_proximal(first_seg.id)
+        first_prox = cell.get_actual_proximal(first_seg.id)  # type: Point3DWithDiam
+        last_dist = last_seg.distal  # type: Point3DWithDiam
 
-        points.append(
-            [
-                offset[0] + first_prox.x,
-                offset[1] + first_prox.y,
-                offset[2] + first_prox.z,
-            ]
+        length = math.dist(
+            (first_prox.x, first_prox.y, first_prox.z),
+            (last_dist.x, last_dist.y, last_dist.z),
         )
-        points.append(
-            [
-                offset[0] + last_seg.distal.x,
-                offset[1] + last_seg.distal.y,
-                offset[2] + last_seg.distal.z,
-            ]
+
+        key = (
+            f"{first_prox.diameter/2:.1f}",
+            f"{last_dist.diameter/2:.1f}",
+            f"{length:.1f}",
         )
+
+        branch_color = color
         if color is None:
-            colors.append(get_next_hex_color())
-            colors.append(get_next_hex_color())
+            branch_color = get_next_hex_color()
         elif color == "Cell":
-            colors.append(cell_color_soma)
-            colors.append(cell_color_soma)
+            branch_color = cell_color_soma
         elif color == "Default Groups":
             if first_seg.id in soma_segs:
-                colors.append(cell_color_soma)
-                colors.append(cell_color_soma)
+                branch_color = cell_color_soma
             elif first_seg.id in axon_segs:
-                colors.append(cell_color_axon)
-                colors.append(cell_color_axon)
+                branch_color = cell_color_axon
             elif first_seg.id in dend_segs:
-                colors.append(cell_color_dendrites)
-                colors.append(cell_color_dendrites)
+                branch_color = cell_color_dendrites
             else:
-                colors.append(get_next_hex_color())
-                colors.append(get_next_hex_color())
+                branch_color = get_next_hex_color()
         else:
-            colors.append(color)
-            colors.append(color)
+            branch_color = color
 
-        toconnect.append([len(points) - 2, len(points) - 1])
-
-        # TODO: needs fixing to show labels
-        if labels:
-            text.append(f"{sgid}")
-            textpoints.append(
-                [
-                    offset[0] + (first_prox.x + last_seg.distal.x) / 2,
-                    offset[1] + (first_prox.y + last_seg.distal.y) / 2,
-                    offset[2] + (first_prox.z + last_seg.distal.z) / 2,
-                ]
-            )
-            """
-
-            alabel = add_text_to_vispy_3D_plot(current_scene=current_view.scene, text=f"{sgid}",
-                                               xv=[offset[0] + first_seg.proximal.x, offset[0] + last_seg.distal.x],
-                                               yv=[offset[0] + first_seg.proximal.y, offset[0] + last_seg.distal.y],
-                                               zv=[offset[1] + first_seg.proximal.z, offset[1] + last_seg.distal.z],
-                                               color=colors[-1])
-            alabel.font_size = 30
-            """
-
-    scene.Line(
-        points,
-        parent=current_view.scene,
-        color=colors,
-        width=width,
-        connect=numpy.array(toconnect),
-    )
-    if labels:
-        logger.debug("Text rendering")
-        scene.Text(
-            text, pos=textpoints, font_size=30, color="black", parent=current_view.scene
-        )
+        try:
+            meshdata[key].append((first_prox, last_dist, branch_color))
+        except KeyError:
+            meshdata[key] = [(first_prox, last_dist, branch_color)]
 
     if not nogui:
+        create_instanced_meshes(meshdata, "Detailed", current_view, width)
         app.run()
