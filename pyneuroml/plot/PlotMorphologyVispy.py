@@ -952,9 +952,9 @@ def plot_3D_schematic(
             branch_color = color
 
         try:
-            meshdata[key].append((first_prox, last_dist, branch_color))
+            meshdata[key].append((first_prox, last_dist, branch_color, offset))
         except KeyError:
-            meshdata[key] = [(first_prox, last_dist, branch_color)]
+            meshdata[key] = [(first_prox, last_dist, branch_color, offset)]
 
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
