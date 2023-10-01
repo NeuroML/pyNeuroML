@@ -36,8 +36,6 @@ VISPY_THEME = {
     "light": {"bg": "white", "fg": "black"},
     "dark": {"bg": "black", "fg": "white"},
 }
-# vispy: full gl+ context is required for instanced rendering
-use(gl="gl+")
 PYNEUROML_VISPY_THEME = "light"
 
 
@@ -111,6 +109,9 @@ def create_new_vispy_canvas(
     :type axes_width: float
     :returns: scene, view
     """
+    # vispy: full gl+ context is required for instanced rendering
+    use(gl="gl+")
+
     canvas = scene.SceneCanvas(
         keys="interactive",
         show=True,
