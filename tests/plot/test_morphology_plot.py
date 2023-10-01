@@ -242,7 +242,7 @@ class TestMorphologyPlot(BaseTestCase):
     def test_3d_morphology_plotter_vispy_network(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
-        plot_interactive_3D(nml_file, min_width=1, nogui=False, theme="dark")
+        plot_interactive_3D(nml_file, min_width=1, nogui=True, theme="dark")
 
     @pytest.mark.localonly
     def test_3d_morphology_plotter_vispy_network_with_spec(self):
