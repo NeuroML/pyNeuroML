@@ -144,7 +144,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     :param kwargs: other arguments
     """
     a = build_namespace(DEFAULTS, a, **kwargs)
-    print(a)
+    logger.debug(a)
     if a.interactive3d:
         from pyneuroml.plot.PlotMorphologyVispy import plot_interactive_3D
 
