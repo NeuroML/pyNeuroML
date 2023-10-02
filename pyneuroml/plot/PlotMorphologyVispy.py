@@ -818,6 +818,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             instance_colors=instance_colors,
             parent=current_view.scene,
         )
+        # TODO: add a shading filter for light?
         assert mesh is not None
     pbar.finish()
 
