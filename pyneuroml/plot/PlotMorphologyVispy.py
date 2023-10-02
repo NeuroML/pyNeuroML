@@ -11,22 +11,22 @@ Copyright 2023 NeuroML contributors
 
 
 import logging
-import random
-import textwrap
-import typing
 import math
+import random
+import typing
 
 import numpy
-from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup, Point3DWithDiam
+import progressbar
+from neuroml import Cell, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.plot import DEFAULTS, get_cell_bound_box, get_next_hex_color
-from vispy import app, scene, use
-from vispy.scene.visuals import Mesh, InstancedMesh, XYZAxis
-from vispy.util.transforms import rotate
-from vispy.geometry.generation import create_cylinder, create_sphere
 from scipy.spatial.transform import Rotation
+from vispy import app, scene, use
+from vispy.geometry.generation import create_cylinder, create_sphere
+from vispy.scene.visuals import InstancedMesh, Mesh, XYZAxis
+from vispy.util.transforms import rotate
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -114,7 +114,7 @@ def create_new_vispy_canvas(
 
     canvas = scene.SceneCanvas(
         keys="interactive",
-        show=True,
+        show=False,
         bgcolor=VISPY_THEME[theme]["bg"],
         size=(800, 600),
         title="NeuroML viewer (VisPy)",
@@ -346,7 +346,8 @@ def plot_interactive_3D(
     logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
     # not used, clear up
-    print(f"Plotting {len(cell_id_vs_cell)} cells")
+    total_cells = len(cell_id_vs_cell)
+    logger.info(f"Plotting {total_cells} cells in {len(pop_id_vs_cell)} populations")
     del cell_id_vs_cell
 
     if len(positions) > 1:
@@ -419,7 +420,15 @@ def plot_interactive_3D(
             pass
 
     meshdata = {}  # type: typing.Dict[typing.Any, typing.Any]
+    logger.info("Processing cells")
+    pbar = progressbar.ProgressBar(
+        max_value=total_cells,
+        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
+        redirect_stdout=True,
+    )
+    pbar_ctr = 0
     while pop_id_vs_cell:
+        pbar.update(pbar_ctr)
         pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]
 
@@ -506,9 +515,12 @@ def plot_interactive_3D(
                         nogui=True,
                         meshdata=meshdata,
                     )
+            pbar_ctr += 1
 
     if not nogui:
+        pbar.finish()
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
+        current_canvas.show()
         app.run()
 
 
@@ -689,6 +701,7 @@ def plot_3D_cell_morphology(
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
+        current_canvas.show()
         app.run()
     return meshdata
 
@@ -714,10 +727,16 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
     total_mesh_instances = 0
     for d, i in meshdata.items():
         total_mesh_instances += len(i)
-    print(
+    logger.info(
         f"Plotting {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
     )
 
+    pbar = progressbar.ProgressBar(
+        max_value=total_mesh_instances,
+        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
+        redirect_stdout=True,
+    )
+    progress_ctr = 0
     for d, i in meshdata.items():
         r1 = float(d[0])
         r2 = float(d[1])
@@ -748,6 +767,8 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         instance_transforms = []
         instance_colors = []
         for im in i:
+            pbar.update(progress_ctr)
+            progress_ctr += 1
             prox = im[0]
             dist = im[1]
             color = im[2]
@@ -798,6 +819,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             parent=current_view.scene,
         )
         assert mesh is not None
+    pbar.finish()
 
 
 def plot_3D_schematic(
