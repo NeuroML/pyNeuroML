@@ -25,7 +25,7 @@ from pyneuroml.utils.plot import DEFAULTS, get_cell_bound_box, get_next_hex_colo
 from scipy.spatial.transform import Rotation
 from vispy import app, scene, use
 from vispy.geometry.generation import create_cylinder, create_sphere
-from vispy.scene.visuals import InstancedMesh, Mesh, XYZAxis
+from vispy.scene.visuals import InstancedMesh, Mesh
 from vispy.util.transforms import rotate
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,8 @@ def create_new_vispy_canvas(
     for acam in cams:
         acam.set_default_state()
 
-    if axes_pos:
+    if axes_pos is not None:
+        # can't get XYZAxis to work, so create manually
         points = [
             axes_pos,  # origin
             [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
