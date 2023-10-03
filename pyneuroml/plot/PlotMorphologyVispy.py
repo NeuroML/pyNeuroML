@@ -20,12 +20,17 @@ import progressbar
 from neuroml import Cell, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info, load_minimal_morphplottable__model
-from pyneuroml.utils.plot import DEFAULTS, get_cell_bound_box, get_next_hex_color
+from pyneuroml.utils import extract_position_info
+from pyneuroml.utils.plot import (
+    DEFAULTS,
+    get_cell_bound_box,
+    get_next_hex_color,
+    load_minimal_morphplottable__model,
+)
 from scipy.spatial.transform import Rotation
 from vispy import app, scene, use
 from vispy.geometry.generation import create_cylinder, create_sphere
-from vispy.scene.visuals import InstancedMesh, Mesh
+from vispy.scene.visuals import InstancedMesh
 from vispy.util.transforms import rotate
 
 logger = logging.getLogger(__name__)

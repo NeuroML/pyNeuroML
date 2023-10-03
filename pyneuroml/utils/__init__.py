@@ -20,7 +20,6 @@ from pathlib import Path
 
 import neuroml
 import numpy
-from neuroml.loaders import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -28,68 +27,6 @@ logger.setLevel(logging.INFO)
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
 MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
-
-
-def load_minimal_morphplottable__model(
-    nml_model: neuroml.NeuroMLDocument, nml_file_path: str = ""
-):
-    """Take a model that has been loaded without recursively including all
-    bits, and load only information that is needed to plot it.
-
-    :param nml_model: partially loaded model
-    :type nml_model: neuroml.NeuroMLDocument
-    :param nml_file_path: path of file corresponding to the model
-    :type nml_file_path: str
-
-    """
-    logger.debug("Loading model bits necessary for plotting.")
-    base_path = os.path.dirname(os.path.realpath(nml_file_path))
-    # remove bits of the model we don't need
-    model_members = list(vars(nml_model).keys())
-    required_members = [
-        "id",
-        "cells",
-        "cell2_ca_poolses",
-        "networks",
-        "populations",
-        "includes",
-    ]
-    for m in model_members:
-        if m not in required_members:
-            setattr(nml_model, m, None)
-
-    # if the model contains a network, use it
-    if len(nml_model.networks) > 0:
-        # remove network members we don't need
-        network_members = list(vars(nml_model.networks[0]).keys())
-        for m in network_members:
-            if m != "populations":
-                setattr(nml_model.networks[0], m, None)
-
-        # get a list of what cell types are used in the various populations
-        required_cell_types = [
-            pop.component for pop in nml_model.networks[0].populations
-        ]
-
-        # add only required cells that are included in populations to the
-        # document
-        for inc in nml_model.includes:
-            incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
-            if os.path.isfile(incl_loc):
-                inc = read_neuroml2_file(incl_loc)
-                for acell in inc.cells:
-                    if acell.id in required_cell_types:
-                        acell.biophysical_properties = None
-                        nml_model.add(acell)
-    else:
-        # add any included cells to the main document
-        for inc in nml_model.includes:
-            incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
-            if os.path.isfile(incl_loc):
-                inc = read_neuroml2_file(incl_loc)
-                for acell in inc.cells:
-                    acell.biophysical_properties = None
-                    nml_model.add(acell)
 
 
 def extract_position_info(

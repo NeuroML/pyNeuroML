@@ -9,33 +9,31 @@ Copyright 2023 NeuroML contributors
 
 
 import argparse
-import os
-import sys
-import random
-
-import typing
 import logging
+import os
+import random
+import sys
+import typing
 
-import numpy
 import matplotlib
+import numpy
 from matplotlib import pyplot as plt
-
-from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils.cli import build_namespace
-from pyneuroml.utils import extract_position_info, load_minimal_morphplottable__model
-from pyneuroml.utils.plot import (
-    add_text_to_matplotlib_2D_plot,
-    get_next_hex_color,
-    add_box_to_matplotlib_2D_plot,
-    get_new_matplotlib_morph_plot,
-    autoscale_matplotlib_plot,
-    add_scalebar_to_matplotlib_plot,
-    add_line_to_matplotlib_2D_plot,
-    DEFAULTS,
-)
-from neuroml import SegmentGroup, Cell, Segment, NeuroMLDocument
+from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
-
+from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.utils import extract_position_info
+from pyneuroml.utils.cli import build_namespace
+from pyneuroml.utils.plot import (
+    DEFAULTS,
+    add_box_to_matplotlib_2D_plot,
+    add_line_to_matplotlib_2D_plot,
+    add_scalebar_to_matplotlib_plot,
+    add_text_to_matplotlib_2D_plot,
+    autoscale_matplotlib_plot,
+    get_new_matplotlib_morph_plot,
+    get_next_hex_color,
+    load_minimal_morphplottable__model,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
