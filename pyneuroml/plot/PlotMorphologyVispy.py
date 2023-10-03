@@ -20,7 +20,7 @@ import progressbar
 from neuroml import Cell, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, load_minimal_morphplottable__model
 from pyneuroml.utils.plot import DEFAULTS, get_cell_bound_box, get_next_hex_color
 from scipy.spatial.transform import Rotation
 from vispy import app, scene, use
@@ -306,6 +306,9 @@ def plot_interactive_3D(
             verbose=False,
             optimized=True,
         )
+        # load bits we need to plot the model
+        load_minimal_morphplottable__model(nml_model, nml_file)
+
         if title is None:
             try:
                 title = f"{nml_model.networks[0].id} from {nml_file}"
@@ -336,9 +339,7 @@ def plot_interactive_3D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(
-        nml_model, verbose, nml_file if type(nml_file) is str else ""
-    )
+    ) = extract_position_info(nml_model, verbose)
 
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")

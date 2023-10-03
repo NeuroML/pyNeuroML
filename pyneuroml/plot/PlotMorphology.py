@@ -22,7 +22,7 @@ from matplotlib import pyplot as plt
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, load_minimal_morphplottable__model
 from pyneuroml.utils.plot import (
     add_text_to_matplotlib_2D_plot,
     get_next_hex_color,
@@ -251,8 +251,6 @@ def plot_2D(
     if verbose:
         print("Plotting %s" % nml_file)
 
-    # do not recursive read the file, the extract_position_info function will
-    # do that for us, from a copy of the model
     if type(nml_file) is str:
         nml_model = read_neuroml2_file(
             nml_file,
@@ -261,6 +259,8 @@ def plot_2D(
             verbose=False,
             optimized=True,
         )
+        # load bits we need to plot the model
+        load_minimal_morphplottable__model(nml_model, nml_file)
         if title is None:
             try:
                 title = f"{nml_model.networks[0].id} from {nml_file}"
@@ -290,9 +290,7 @@ def plot_2D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(
-        nml_model, verbose, nml_file if type(nml_file) is str else ""
-    )
+    ) = extract_position_info(nml_model, verbose)
 
     if verbose:
         logger.debug(f"positions: {positions}")
