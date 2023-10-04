@@ -733,6 +733,7 @@ def plot_3D_cell_morphology(
             meshdata[key].append((p, d, seg_color, offset))
         except KeyError:
             meshdata[key] = [(p, d, seg_color, offset)]
+        logger.debug(f"meshdata added: {key}: {(p, d, seg_color, offset)}")
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
