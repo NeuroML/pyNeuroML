@@ -776,6 +776,11 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             r1 = min_width
             r2 = min_width
 
+        if r1 < min_width:
+            r1 = min_width
+        if r2 < min_width:
+            r2 = min_width
+
         seg_mesh = None
         # for points, we set the prox/dist to None
         # we can't check if r1 == r2 == length because there may be cylinders
