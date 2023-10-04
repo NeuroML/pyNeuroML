@@ -784,10 +784,13 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             r2 = min_width
 
         seg_mesh = None
-        # for points, we set the prox/dist to None
-        # we can't check if r1 == r2 == length because there may be cylinders
-        # with such a set of parameters
-        if r1 == r2 and i[0][0] is None and i[0][1] is None:
+        # 1: for points, we set the prox/dist to None since they only have
+        # positions.
+        # 2: single compartment cells with r1, r2, and length 0
+        # Note: we can't check if r1 == r2 == length because there
+        # may be cylinders with such a set of parameters
+
+        if r1 == r2 and ((i[0][0] is None and i[0][1] is None) or (length == 0.0)):
             seg_mesh = create_sphere(9, 9, radius=r1)
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
