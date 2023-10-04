@@ -363,7 +363,10 @@ def plot_interactive_3D(
     total_segments = 0
     for pop_id, cell in pop_id_vs_cell.items():
         total_cells += len(positions[pop_id])
-        total_segments += len(positions[pop_id]) * len(cell.morphology.segments)
+        try:
+            total_segments += len(positions[pop_id]) * len(cell.morphology.segments)
+        except AttributeError:
+            total_segments += len(positions[pop_id])
 
     mesh_precision = MAX_MESH_PRECISION
     # calculate total segments and reduce precision accordingly
