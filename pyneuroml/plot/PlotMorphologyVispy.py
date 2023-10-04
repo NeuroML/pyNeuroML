@@ -354,14 +354,16 @@ def plot_interactive_3D(
     logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
     logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
-    total_cells = len(cell_id_vs_cell)
+    # calculate total cells and segments to be plotted
+    total_cells = 0
     total_segments = 0
+    for pop_id, cell in pop_id_vs_cell.items():
+        total_cells += len(positions[pop_id])
+        total_segments += len(positions[pop_id]) * len(cell.morphology.segments)
 
     mesh_precision = MAX_MESH_PRECISION
     # calculate total segments and reduce precision accordingly
     # fewer the meshes, better the performance
-    for ac in cell_id_vs_cell.values():
-        total_segments += len(ac.morphology.segments)
     if total_segments > 200 and total_segments <= 1000:
         mesh_precision = MAX_MESH_PRECISION - 1
     elif total_segments > 1000:
