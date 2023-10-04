@@ -484,9 +484,9 @@ def plot_interactive_3D(
             )
 
             try:
-                logging.info(f"Plotting {cell.id}")
+                logging.debug(f"Plotting {cell.id}")
             except AttributeError:
-                logging.info(f"Plotting a point cell at {pos}")
+                logging.debug(f"Plotting a point cell at {pos}")
 
             if cell is None:
                 key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
