@@ -306,15 +306,19 @@ def plot_interactive_3D(
         print(f"Plotting {nml_file}")
 
     if type(nml_file) is str:
-        nml_model = read_neuroml2_file(
-            nml_file,
-            include_includes=False,
-            check_validity_pre_include=False,
-            verbose=False,
-            optimized=True,
-        )
-        # load bits we need to plot the model
-        load_minimal_morphplottable__model(nml_model, nml_file)
+        # load without optimization for older HDF5 API
+        # TODO: check if this is required: must for MultiscaleISN
+        if nml_file.endswith(".h5"):
+            nml_model = read_neuroml2_file(nml_file)
+        else:
+            nml_model = read_neuroml2_file(
+                nml_file,
+                include_includes=False,
+                check_validity_pre_include=False,
+                verbose=False,
+                optimized=True,
+            )
+            load_minimal_morphplottable__model(nml_model, nml_file)
 
         if title is None:
             try:
