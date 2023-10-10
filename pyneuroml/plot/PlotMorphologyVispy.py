@@ -427,7 +427,7 @@ def plot_interactive_3D(
             logger.debug("Got a point cell")
             pos = list((list(positions.values())[0]).values())[0]
             view_min = list(numpy.array(pos))
-            view_min = list(numpy.array(pos))
+            view_max = list(numpy.array(pos))
 
     current_canvas, current_view = create_new_vispy_canvas(
         view_min, view_max, title, theme=theme
