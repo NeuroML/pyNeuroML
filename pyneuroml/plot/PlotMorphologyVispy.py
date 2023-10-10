@@ -250,6 +250,7 @@ def plot_interactive_3D(
     plot_spec: typing.Optional[
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
+    precision: typing.Tuple[int, int] = (4, 200),
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -296,6 +297,17 @@ def plot_interactive_3D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+    :param precision: tuple containing two values: (number of decimal places,
+        maximum number of meshes). The first is used to group segments into
+        meshes to create instances. More precision means fewer segments will be
+        grouped into meshes---this may increase detail, but will reduce
+        performance. The second argument is used to limit the total number of
+        meshes. The function will keep reducing precision until the number of
+        meshes is fewer than the value provided here.
+
+        If you have a good GPU, you can increase both these values to get more
+        detailed visualizations
+    :type precision: (int, int)
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
@@ -303,7 +315,7 @@ def plot_interactive_3D(
         )
 
     if verbose:
-        print(f"Plotting {nml_file}")
+        logger.info(f"Visualising {nml_file}")
 
     if type(nml_file) is str:
         # load without optimization for older HDF5 API
@@ -368,23 +380,11 @@ def plot_interactive_3D(
         except AttributeError:
             total_segments += len(positions[pop_id])
 
-    mesh_precision = MAX_MESH_PRECISION
-    # calculate total segments and reduce precision accordingly
-    # fewer the meshes, better the performance
-    if total_segments > 200 and total_segments <= 1000:
-        mesh_precision = MAX_MESH_PRECISION - 1
-    elif total_segments > 1000:
-        mesh_precision = MAX_MESH_PRECISION - 2
-
-    # minimum precision is 1
-    if mesh_precision < 1:
-        mesh_precision = 1
-
     logger.info(
-        f"Plotting {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
+        f"Visualising {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
     )
-    logger.debug(
-        f"Grouping into mesh instances by diameters at {mesh_precision} decimal places"
+    logger.info(
+        f"Grouping into mesh instances by diameters at {precision[0]} decimal places"
     )
     # not used later, clear up
     del cell_id_vs_cell
@@ -534,7 +534,7 @@ def plot_interactive_3D(
                         current_view=current_view,
                         nogui=True,
                         meshdata=meshdata,
-                        mesh_precision=mesh_precision,
+                        mesh_precision=precision[0],
                     )
                 elif (
                     plot_type == "detailed"
@@ -554,8 +554,30 @@ def plot_interactive_3D(
                         min_width=min_width,
                         nogui=True,
                         meshdata=meshdata,
-                        mesh_precision=mesh_precision,
+                        mesh_precision=precision[0],
                     )
+
+            # if too many meshes, reduce precision and retry, recursively
+            if (len(meshdata.keys()) > precision[1]) and (precision[0] > 0):
+                precision = (precision[0] - 1, precision[1])
+                pbar.finish(dirty=True)
+                logger.info(
+                    f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
+                )
+                plot_interactive_3D(
+                    nml_model,
+                    min_width,
+                    verbose,
+                    plot_type,
+                    title,
+                    theme,
+                    nogui,
+                    plot_spec,
+                    precision,
+                )
+                # break the recursion, don't plot in the calling method
+                return
+
             pbar_ctr += 1
 
     if not nogui:
@@ -767,7 +789,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
     for d, i in meshdata.items():
         total_mesh_instances += len(i)
     logger.info(
-        f"Plotting {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
+        f"Visualising {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
     )
 
     pbar = progressbar.ProgressBar(
