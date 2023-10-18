@@ -31,3 +31,18 @@ pyneuroml.plot.PlotMorphology module
    :show-inheritance:
    :exclude-members:  set, add_line, plot_from_console, main, process_args, LineDataUnits
 
+pyneuroml.plot.PlotMorphologyVispy module
+------------------------------------------
+
+.. automodule:: pyneuroml.plot.PlotMorphologyVispy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyneuroml.plot.PlotMorphologyPlotly module
+------------------------------------------
+
+.. automodule:: pyneuroml.plot.PlotMorphologyPlotly
+   :members:
+   :undoc-members:
+   :show-inheritance:
