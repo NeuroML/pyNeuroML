@@ -8,13 +8,12 @@ Copyright 2023 NeuroML contributors
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import unittest
 import logging
 import pathlib as pl
+import unittest
+
 import pytest
-
 from pyneuroml.lems import LEMSSimulation
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
