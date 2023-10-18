@@ -11,6 +11,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 import unittest
 import logging
 import pathlib as pl
+import pytest
 
 from pyneuroml.lems import LEMSSimulation
 
@@ -38,6 +39,28 @@ class TestLEMSSimulation(unittest.TestCase):
                 "abs_tolerance": "0.0001",
                 "rel_tolerance": "0.0004",
             },
+        )
+        simulation.assign_simulation_target("some_network")
+        # Save the simulation to a file
+        lems_simulation_file = simulation.save_to_file()
+
+        expected_string = '<Meta for="neuron" method="cvode" abs_tolerance="0.0001" rel_tolerance="0.0004"/>'
+
+        with open(lems_simulation_file, "r") as f:
+            self.assertIn(expected_string, f.read())
+
+        pl.Path(lems_simulation_file).unlink()
+
+    @pytest.mark.xfail
+    def test_lemssimulation_meta_should_fail(self):
+        """Test without meta to ensure it's not always added"""
+        # Create a simulation instance of the model
+        simulation_id = "tests-sim-failure"
+        simulation = LEMSSimulation(
+            sim_id=simulation_id,
+            duration=1000,
+            dt=0.1,
+            simulation_seed=123,
         )
         simulation.assign_simulation_target("some_network")
         # Save the simulation to a file
