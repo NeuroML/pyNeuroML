@@ -9,33 +9,31 @@ Copyright 2023 NeuroML contributors
 
 
 import argparse
-import os
-import sys
-import random
-
-import typing
 import logging
+import os
+import random
+import sys
+import typing
 
-import numpy
 import matplotlib
+import numpy
 from matplotlib import pyplot as plt
-
-from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils.cli import build_namespace
-from pyneuroml.utils import extract_position_info
-from pyneuroml.utils.plot import (
-    add_text_to_matplotlib_2D_plot,
-    get_next_hex_color,
-    add_box_to_matplotlib_2D_plot,
-    get_new_matplotlib_morph_plot,
-    autoscale_matplotlib_plot,
-    add_scalebar_to_matplotlib_plot,
-    add_line_to_matplotlib_2D_plot,
-    DEFAULTS,
-)
-from neuroml import SegmentGroup, Cell, Segment, NeuroMLDocument
+from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
-
+from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.utils import extract_position_info
+from pyneuroml.utils.cli import build_namespace
+from pyneuroml.utils.plot import (
+    DEFAULTS,
+    add_box_to_matplotlib_2D_plot,
+    add_line_to_matplotlib_2D_plot,
+    add_scalebar_to_matplotlib_plot,
+    add_text_to_matplotlib_2D_plot,
+    autoscale_matplotlib_plot,
+    get_new_matplotlib_morph_plot,
+    get_next_hex_color,
+    load_minimal_morphplottable__model,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -144,7 +142,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
     :param kwargs: other arguments
     """
     a = build_namespace(DEFAULTS, a, **kwargs)
-    print(a)
+    logger.debug(a)
     if a.interactive3d:
         from pyneuroml.plot.PlotMorphologyVispy import plot_interactive_3D
 
@@ -251,21 +249,27 @@ def plot_2D(
     if verbose:
         print("Plotting %s" % nml_file)
 
-    # do not recursive read the file, the extract_position_info function will
-    # do that for us, from a copy of the model
     if type(nml_file) is str:
-        nml_model = read_neuroml2_file(
-            nml_file,
-            include_includes=False,
-            check_validity_pre_include=False,
-            verbose=False,
-            optimized=True,
-        )
+        # load without optimization for older HDF5 API
+        # TODO: check if this is required: must for MultiscaleISN
+        if nml_file.endswith(".h5"):
+            nml_model = read_neuroml2_file(nml_file)
+        else:
+            nml_model = read_neuroml2_file(
+                nml_file,
+                include_includes=False,
+                check_validity_pre_include=False,
+                verbose=False,
+                optimized=True,
+            )
+            load_minimal_morphplottable__model(nml_model, nml_file)
+
         if title is None:
             try:
                 title = f"{nml_model.networks[0].id} from {nml_file}"
             except IndexError:
                 title = f"{nml_model.cells[0].id} from {nml_file}"
+
     elif isinstance(nml_file, Cell):
         nml_model = NeuroMLDocument(id="newdoc")
         nml_model.add(nml_file)
@@ -290,9 +294,7 @@ def plot_2D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(
-        nml_model, verbose, nml_file if type(nml_file) is str else ""
-    )
+    ) = extract_position_info(nml_model, verbose)
 
     if verbose:
         logger.debug(f"positions: {positions}")
