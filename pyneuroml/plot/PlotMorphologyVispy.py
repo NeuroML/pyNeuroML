@@ -29,7 +29,8 @@ from pyneuroml.utils.plot import (
 )
 from scipy.spatial.transform import Rotation
 from vispy import app, scene, use
-from vispy.geometry.generation import create_cylinder, create_sphere
+from vispy.geometry.generation import create_sphere
+from vispy.geometry.meshdata import MeshData
 from vispy.scene.visuals import InstancedMesh
 from vispy.util.transforms import rotate
 
@@ -825,8 +826,8 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
-            seg_mesh = create_cylinder(
-                rows=rows, cols=9, radius=[r1, r2], length=length
+            seg_mesh = create_cylindrical_mesh(
+                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
             )
             logger.debug(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
@@ -1053,3 +1054,88 @@ def plot_3D_schematic(
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
         app.run()
+
+
+def create_cylindrical_mesh(
+    rows: int,
+    cols: int,
+    radius: typing.Union[float, typing.List[float]] = [1.0, 1.0],
+    length: float = 1.0,
+    closed: bool = True,
+):
+    """Create a cylinderical mesh, adapted from vispy's generation method:
+    https://github.com/vispy/vispy/blob/main/vispy/geometry/generation.py#L451
+
+    :param rows: number of rows to use for mesh
+    :type rows: int
+    :param cols: number of columns
+    :type cols: int
+    :param radius: float or pair of floats for the two radii of the cylinder
+    :type radius: float or [float, float][]
+    :param length: length of cylinder
+    :type length: float
+    :param closed: whether the cylinder should be closed
+    :type closed: bool
+    :returns: Vertices and faces computed for a cylindrical surface.
+    :rtype: MeshData
+
+    """
+    verts = numpy.empty((rows + 1, cols, 3), dtype=numpy.float32)
+    if isinstance(radius, int) or isinstance(radius, float):
+        radius = [radius, radius]  # convert to list
+
+    # compute theta values
+    th = numpy.linspace(2 * numpy.pi, 0, cols).reshape(1, cols)
+    logger.debug(f"Thetas are: {th}")
+
+    # radius as a function of z
+    r = numpy.linspace(radius[0], radius[1], num=rows + 1, endpoint=True).reshape(
+        rows + 1, 1
+    )
+
+    verts[..., 0] = r * numpy.cos(th)  # x = r cos(th)
+    verts[..., 1] = r * numpy.sin(th)  # y = r sin(th)
+    verts[..., 2] = numpy.linspace(0, length, num=rows + 1, endpoint=True).reshape(
+        rows + 1, 1
+    )  # z
+    # just reshape: no redundant vertices...
+    verts = verts.reshape((rows + 1) * cols, 3)
+
+    # add extra points for center of two circular planes that form the caps
+    if closed is True:
+        verts = numpy.append(verts, [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], axis=0)
+    logger.debug(f"Verts are: {verts}")
+
+    # compute faces
+    faces = numpy.empty((rows * cols * 2, 3), dtype=numpy.uint32)
+    rowtemplate1 = (
+        (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 1, 0]])) % cols
+    ) + numpy.array([[0, 0, cols]])
+    logger.debug(f"Template1 is: {rowtemplate1}")
+
+    rowtemplate2 = (
+        (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 1, 1]])) % cols
+    ) + numpy.array([[cols, 0, cols]])
+    # logger.debug(f"Template2 is: {rowtemplate2}")
+
+    for row in range(rows):
+        start = row * cols * 2
+        faces[start : start + cols] = rowtemplate1 + row * cols
+        faces[start + cols : start + (cols * 2)] = rowtemplate2 + row * cols
+
+    # add extra faces to cover the caps
+    if closed is True:
+        cap1 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
+        cap1[..., 0] = len(verts) - 2
+        cap2 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
+        cap2[..., 0] = len(verts) - 1
+
+        logger.debug(f"cap1 is {cap1}")
+        logger.debug(f"cap2 is {cap2}")
+
+        faces = numpy.append(faces, cap1, axis=0)
+        faces = numpy.append(faces, cap2, axis=0)
+
+    logger.debug(f"Faces are: {faces}")
+
+    return MeshData(vertices=verts, faces=faces)
