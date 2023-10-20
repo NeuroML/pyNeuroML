@@ -58,7 +58,7 @@ def generate_current_vs_frequency_curve(
     return_axes: bool = False,
     verbose: bool = False,
     segment_id: typing.Optional[str] = None,
-    fraction_along: typing.Optional[float] = None
+    fraction_along: typing.Optional[float] = None,
 ):
     """Generate current vs firing rate frequency curves for provided cell.
 
@@ -81,7 +81,7 @@ def generate_current_vs_frequency_curve(
     stimulus currents.
 
     The various plotting related arguments to this method are passed on to
-    :py:method`pynml.generate_plot`
+    :py:meth:`pyneuroml.plot.generate_plot`
 
     :param nml2_file: name of NeuroML file containing cell definition
     :type nml2_file: str
@@ -251,8 +251,11 @@ def generate_current_vs_frequency_curve(
         # Add these to cells
         input_list = nml.InputList(id=input_id, component=pg.id, populations=pop.id)
         aninput = nml.Input(
-            id="0", target="../%s[%i]" % (pop.id, i), destination="synapses",
-            segment_id=segment_id, fraction_along=fraction_along
+            id="0",
+            target="../%s[%i]" % (pop.id, i),
+            destination="synapses",
+            segment_id=segment_id,
+            fraction_along=fraction_along,
         )
         input_list.input.append(aninput)
 
@@ -378,7 +381,6 @@ def generate_current_vs_frequency_curve(
                 iv_results[stims[i]] = v_end
 
     if plot_voltage_traces:
-
         traces_ax = pynml.generate_plot(
             times_results,
             volts_results,
@@ -505,7 +507,6 @@ def analyse_spiketime_vs_dt(
     save_figure_to=None,
     num_of_last_spikes=None,
 ):
-
     from pyelectro.analysis import max_min
     import numpy as np
 

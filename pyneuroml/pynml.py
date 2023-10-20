@@ -1330,8 +1330,8 @@ def run_lems_with(engine: str, *args: typing.Any, **kwargs: typing.Any):
 
     :param engine: engine to run with
     :type engine: string (valid names are methods)
-    :param *args: postional arguments to pass to run function
-    :param **kwargs: named arguments to pass to run function
+    :param args: postional arguments to pass to run function
+    :param kwargs: named arguments to pass to run function
     :returns: return value of called method
 
     """

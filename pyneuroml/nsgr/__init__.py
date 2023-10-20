@@ -67,7 +67,7 @@ def run_on_nsg(
 
     .. versionadded:: 1.0.10
 
-    :param engine: name of engine: suffixes of the run_lems_with.. functions
+    :param engine: name of engine: suffixes of the run_lems_with functions
     :type engine: str
     :param lems_file_name: name of LEMS simulation file
     :type lems_file_name: str
@@ -83,9 +83,9 @@ def run_on_nsg(
         It is good practice to separate directories where simulations are run
         from the source of the model/simulations.
     :type run_dir: str
-    :param *engine_args: positional args to be passed to the engine runner
+    :param engine_args: positional args to be passed to the engine runner
         function
-    :param **engine_kwargs: keyword args to be be passed to the engine runner
+    :param engine_kwargs: keyword args to be be passed to the engine runner
         function
     :param dry_run: do everything but do not submit
     :type dry_run: bool

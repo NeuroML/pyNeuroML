@@ -10,24 +10,17 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
+   pyneuroml.pynml
    pyneuroml.analysis
+   pyneuroml.archive
    pyneuroml.channelml
    pyneuroml.lems
+   pyneuroml.neuron
+   pyneuroml.nsgr
    pyneuroml.plot
    pyneuroml.povray
    pyneuroml.swc
    pyneuroml.tune
-   pyneuroml.neuron
    pyneuroml.utils
-
-
-pyneuroml.pynml module
-----------------------
-
-.. automodule:: pyneuroml.pynml
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
