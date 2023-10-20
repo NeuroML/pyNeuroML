@@ -1066,11 +1066,16 @@ def create_cylindrical_mesh(
     """Create a cylinderical mesh, adapted from vispy's generation method:
     https://github.com/vispy/vispy/blob/main/vispy/geometry/generation.py#L451
 
-    :param rows: TODO
-    :param cols: TODO
-    :param radius: TODO
-    :param length: TODO
-    :param closed: TODO
+    :param rows: number of rows to use for mesh
+    :type rows: int
+    :param cols: number of columns
+    :type cols: int
+    :param radius: float or pair of floats for the two radii of the cylinder
+    :type radius: float or [float, float][]
+    :param length: length of cylinder
+    :type length: float
+    :param closed: whether the cylinder should be closed
+    :type closed: bool
     :returns: Vertices and faces computed for a cylindrical surface.
     :rtype: MeshData
 
