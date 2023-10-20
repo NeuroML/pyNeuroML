@@ -564,7 +564,7 @@ def plot_channel_densities(
     show_plots_already: bool = True,
     morph_plot_type: str = "constant",
     morph_min_width: float = 2.0,
-    target_directory=None
+    target_directory=None,
 ):
     """Plot channel densities on a Cell on morphology plots.
 
@@ -601,11 +601,13 @@ def plot_channel_densities(
     :param colormap_name: name of matplotlib colormap to use for morph plot.
         Note that if there's only one overlay value, the colormap is modified
         to only show the max value of the colormap to indicate this.
+
+        See: https://matplotlib.org/stable/users/explain/colors/colormaps.html
     :type colormap_name: str
     :returns: None
     """
-    tgt_dir = target_directory+'/' if target_directory else './'
-    
+    tgt_dir = target_directory + "/" if target_directory else "./"
+
     if channel_density_ids is not None and ion_channels is not None:
         raise ValueError(
             "Only one of channel_density_ids or ions channels may be provided"

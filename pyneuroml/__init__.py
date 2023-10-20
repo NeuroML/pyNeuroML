@@ -8,7 +8,7 @@ except ImportError:
     __version__ = importlib_metadata.version("pyNeuroML")
 
 
-JNEUROML_VERSION = "0.12.4"
+JNEUROML_VERSION = "0.13.0"
 
 # Define a logger for the package
 logging.basicConfig(
