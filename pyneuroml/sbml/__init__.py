@@ -10,10 +10,10 @@ from libsbml import SBMLDocument, SBMLReader
 def validate_sbml_files(input_files : str,units_consistency: bool = False):
     '''
     validate each input file using libsbml.SBMLDocument.checkConsistency
+    input_files is a space separated list of one or more filepaths
     '''
-    file_list = input_files.split()
 
-    for file_name in file_list:
+    for file_name in input_files.split():
         if not os.path.isfile(file_name):
             raise OSError(
                 ("Could not find SBML file %s" % file_name)
