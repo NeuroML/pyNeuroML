@@ -345,6 +345,11 @@ def parse_arguments():
         action="store_true",
         help=("(Via jNeuroML) Validate NeuroML file(s) against the\n" "v1.8.1 Schema"),
     )
+    mut_exc_opts.add_argument(
+        "-validate-sbml",
+        action="store_true",
+        help=("Validate SBML file(s)"),
+    )
 
     return parser.parse_args()
 
@@ -2110,6 +2115,12 @@ def evaluate_arguments(args):
     pre_args = ""
     post_args = ""
     exit_on_fail = True
+
+    # Deal with the SBML validation option which doesn't call run_jneuroml
+    if args.validate_sbml:
+        from pyneuroml.sbml import validate_sbml_files
+        validate_sbml_files(" ".join(args.input_files))
+        return True
 
     # These do not use the shared option where files are supplied
     # They require the file name to be specified after
