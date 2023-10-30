@@ -2119,7 +2119,9 @@ def evaluate_arguments(args):
     # Deal with the SBML validation option which doesn't call run_jneuroml
     if args.validate_sbml:
         from pyneuroml.sbml import validate_sbml_files
+
         validate_sbml_files(" ".join(args.input_files))
+
         return True
 
     # These do not use the shared option where files are supplied
