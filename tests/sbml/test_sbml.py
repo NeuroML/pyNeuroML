@@ -2,5 +2,5 @@
 
 from pyneuroml import sbml
 
-fname = "test_data/test_doc.sbml"
+fname = "tests/sbml/test_data/test_doc.sbml"
 doc = sbml.validate_sbml_files(fname)

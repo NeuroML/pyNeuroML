@@ -5,30 +5,30 @@ based on https://github.com/combine-org/combine-notebooks/blob/main/src/combine_
 
 import os
 import libsbml
-from libsbml import SBMLDocument, SBMLReader
+from libsbml import SBMLReader
+from typing import List
 
-def validate_sbml_files(input_files : str,units_consistency: bool = False):
-    '''
+
+def validate_sbml_files(input_files: str, units_consistency: bool = False):
+    """
     validate each input file using libsbml.SBMLDocument.checkConsistency
     input_files is a space separated list of one or more filepaths
-    '''
+    """
 
     for file_name in input_files.split():
         if not os.path.isfile(file_name):
-            raise OSError(
-                ("Could not find SBML file %s" % file_name)
-            )
+            raise OSError(("Could not find SBML file %s" % file_name))
 
         try:
             reader = SBMLReader()
             doc = reader.readSBML(file_name)
-        except:
-            raise OSError(
-                ("SBMLReader failed to load the file %s" % file_name)
-            )
+        except Exception:
+            raise OSError(("SBMLReader failed to load the file %s" % file_name))
 
         # set the unit checking, similar for the other settings
-        doc.setConsistencyChecks(libsbml.LIBSBML_CAT_UNITS_CONSISTENCY, units_consistency)
+        doc.setConsistencyChecks(
+            libsbml.LIBSBML_CAT_UNITS_CONSISTENCY, units_consistency
+        )
         doc.checkConsistency()
         # get errors/warnings
         n_errors: int = doc.getNumErrors()
