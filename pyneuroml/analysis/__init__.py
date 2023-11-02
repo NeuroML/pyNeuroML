@@ -8,6 +8,7 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.lems import generate_lems_file_for_neuroml
 from pyneuroml.utils.plot import get_next_hex_color
+from pyneuroml.plot import generate_plot
 import neuroml as nml
 from pyelectro.analysis import max_min
 from pyelectro.analysis import mean_spike_frequency
@@ -381,7 +382,7 @@ def generate_current_vs_frequency_curve(
                 iv_results[stims[i]] = v_end
 
     if plot_voltage_traces:
-        traces_ax = pynml.generate_plot(
+        traces_ax = generate_plot(
             times_results,
             volts_results,
             "Membrane potential traces for: %s" % nml2_file,
