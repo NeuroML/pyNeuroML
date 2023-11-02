@@ -404,7 +404,7 @@ def generate_current_vs_frequency_curve(
         stims = sorted(if_results.keys())
         stims_pA = [ii * 1000 for ii in stims]
         freqs = [if_results[s] for s in stims]
-        if_ax = pynml.generate_plot(
+        if_ax = generate_plot(
             [stims_pA],
             [freqs],
             "Firing frequency versus injected current for: %s" % nml2_file,
@@ -456,7 +456,7 @@ def generate_current_vs_frequency_curve(
             xs[-1].append(stim * 1000)
             ys[-1].append(iv_results[stim])
 
-        iv_ax = pynml.generate_plot(
+        iv_ax = generate_plot(
             xs,
             ys,
             "V at %sms versus I below threshold for: %s" % (end_stim, nml2_file),
@@ -622,7 +622,7 @@ def analyse_spiketime_vs_dt(
         markers.append("")
         colors.append("k")
 
-    pynml.generate_plot(
+    generate_plot(
         spxs,
         spys,
         "Spike times vs dt",
@@ -636,7 +636,7 @@ def analyse_spiketime_vs_dt(
     )
 
     if verbose:
-        pynml.generate_plot(
+        generate_plot(
             xs,
             ys,
             "Membrane potentials in %s for %s" % (simulator, dts),
