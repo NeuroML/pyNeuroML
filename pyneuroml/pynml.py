@@ -45,10 +45,31 @@ from neuroml import NeuroMLDocument, Cell
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 
-# to maintain API compatibility:
-# so that existing scripts that use: from pynml import generate_plot
-# continue to work
-from pyneuroml.plot import generate_plot, generate_interactive_plot  # noqa
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+matplotlib_imported = False
+for k in sys.modules.keys():
+    if "matplotlib" in k:
+        matplotlib_imported = True
+        break
+if matplotlib_imported is True:
+    # to maintain API compatibility:
+    # so that existing scripts that use: from pynml import generate_plot
+    # continue to work
+    from pyneuroml.plot import generate_plot, generate_interactive_plot  # noqa
+else:
+    logger.warning("Matplotlib has not been imported, not importing plotting functions")
+    logger.warning("Please import these explicitly from pyneuroml.plot")
+    warnings.warn(
+        """
+        Please note that these plotting methods will be removed from the pynml
+        module in the future. Please import plotting methods expliclitly from
+        the pyneuroml.plot sub module.
+        """,
+        FutureWarning,
+        stacklevel=2,
+    )
 
 DEFAULTS = {
     "v": False,
@@ -57,9 +78,6 @@ DEFAULTS = {
 }  # type: dict[str, typing.Any]
 
 lems_model_with_units = None
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(
     __version__, neuroml.__version__, JNEUROML_VERSION
