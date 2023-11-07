@@ -8,6 +8,7 @@ Copyright 2023 NeuroML contributors
 """
 
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -41,4 +42,16 @@ def plot_chord_diagram(filename):
     :param filename: name of NeuroML file
     :type filename: str
     """
-    pass
+    from pyneuroml.pynml import read_neuroml2_file
+    from mne_connectivity.viz import plot_connectivity_circle
+
+    doc = read_neuroml2_file(filename)
+
+    nodes = [p.id for p in doc.networks[0].populations]
+    print(f"Nodes for chord diagram are: {nodes}")
+
+    con = []
+    # TODO: logic to get connectivity information
+    print(f"Connecitivity is {con}")
+
+    fix, axes = plot_connectivity_circle(con, nodes)
