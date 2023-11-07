@@ -2312,23 +2312,10 @@ def evaluate_arguments(args):
             exit_on_fail = True
         elif args.matrix:
             confirm_neuroml_file(f)
-            from neuromllite.MatrixHandler import MatrixHandler
-
             level = int(args.matrix[0])
+            from pyneuroml.plot.Connectivity import plot_connectivity_matrix
 
-            logger.info("Converting %s to matrix form, level %i" % (f, level))
-
-            from neuroml.hdf5.NeuroMLXMLParser import NeuroMLXMLParser
-
-            handler = MatrixHandler(level=level, nl_network=None)
-
-            currParser = NeuroMLXMLParser(handler)
-
-            currParser.parse(f)
-
-            handler.finalise_document()
-
-            logger.info("Done with MatrixHandler...")
+            plot_connectivity_matrix(f, level)
 
             exit(0)
         elif args.validate:
