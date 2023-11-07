@@ -176,9 +176,7 @@ def generate_plot(
         label = "" if not labels else labels[i]
         marker = rcParams["lines.marker"] if not markers else markers[i]
         linewidth = rcParams["lines.linewidth"] if not linewidths else linewidths[i]
-        markersize = (
-            rcParams["lines.markersizes"] if not markersizes else markersizes[i]
-        )
+        markersize = rcParams["lines.markersize"] if not markersizes else markersizes[i]
 
         if colors:
             plt.plot(
