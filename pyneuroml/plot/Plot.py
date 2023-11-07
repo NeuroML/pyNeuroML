@@ -36,7 +36,7 @@ def generate_plot(
     grid: bool = False,
     logx: bool = False,
     logy: bool = False,
-    font_size: int = 12,
+    font_size: typing.Optional[int] = None,
     bottom_left_spines_only: bool = False,
     cols_in_legend_box: int = 3,
     legend_position: typing.Optional[str] = "best",
@@ -103,7 +103,7 @@ def generate_plot(
     :type logx: boolean
     :param logy: should the y ayis be in log scale (default: False)
     :type logy: boolean
-    :param font_size: font size (default: 12)
+    :param font_size: font size
     :type font_size: float
     :param bottom_left_spines_only: enable/disable spines on right and top (default: False)
                 (a spine is the line noting the data area boundary)
@@ -137,7 +137,8 @@ def generate_plot(
     from matplotlib import pyplot as plt
     from matplotlib import rcParams
 
-    rcParams.update({"font.size": font_size})
+    if font_size is not None:
+        rcParams.update({"font.size": font_size})
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -152,7 +153,7 @@ def generate_plot(
         plt.ylabel(yaxis)
 
     if grid:
-        plt.grid("on")
+        plt.grid(True)
 
     if logx:
         ax.set_xscale("log")
@@ -171,12 +172,13 @@ def generate_plot(
         ax.set_yticklabels([])
 
     for i in range(len(xvalues)):
-
-        linestyle = "-" if not linestyles else linestyles[i]
+        linestyle = rcParams["lines.linestyle"] if not linestyles else linestyles[i]
         label = "" if not labels else labels[i]
-        marker = None if not markers else markers[i]
-        linewidth = 1 if not linewidths else linewidths[i]
-        markersize = None if not markersizes else markersizes[i]
+        marker = rcParams["lines.marker"] if not markers else markers[i]
+        linewidth = rcParams["lines.linewidth"] if not linewidths else linewidths[i]
+        markersize = (
+            rcParams["lines.markersizes"] if not markersizes else markersizes[i]
+        )
 
         if colors:
             plt.plot(
@@ -374,6 +376,7 @@ def generate_interactive_plot(
     :type save_figure_to: str
     """
     import plotly.graph_objects as go
+
     fig = go.Figure()
 
     if len(xvalues) != len(yvalues):
