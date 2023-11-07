@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+Spike plotting helper functions.
+
+File: pyneuroml/plot/PlotSpikes.py
+
+Copyright 2023 NeuroML contributors
+"""
 import argparse
 import logging
 import os
