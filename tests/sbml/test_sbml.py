@@ -2,5 +2,11 @@
 
 from pyneuroml import sbml
 
-fname = "tests/sbml/test_data/test_doc.sbml"
-doc = sbml.validate_sbml_files(fname)
+
+def test_validate_sbml_files():
+    fname = "tests/sbml/test_data/test_doc.sbml"
+    doc = sbml.validate_sbml_files(fname)
+
+
+if __name__ == "__main__":
+    test_validate_sbml_files()
