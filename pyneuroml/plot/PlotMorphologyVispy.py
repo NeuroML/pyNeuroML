@@ -887,8 +887,15 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             instance_transforms=instance_transforms,
             instance_colors=instance_colors,
             parent=current_view.scene,
+            shading="smooth",
         )
-        # TODO: add a shading filter for light?
+        # make light go in direction of camera
+        # mesh.shading_filter.light_dir = current_view.camera.center
+        # mesh.shading_filter.shininess = 50
+        mesh.shading_filter.ambient_light = (1, 1, 1, 1)
+        # mesh.shading_filter.diffuse_light = (1, 1, 1, 0.7)
+        # mesh.shading_filter.specular_light = (1, 1, 1, 0.2)
+
         assert mesh is not None
     pbar.finish()
 
