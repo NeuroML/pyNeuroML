@@ -9,26 +9,30 @@ from libsbml import SBMLReader
 from typing import List
 
 
-def validate_sbml_files(input_files: str, units_consistency: bool = False):
+def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> bool:
     """
     validate each input file using libsbml.SBMLDocument.checkConsistency
-    input_files is a space separated list of one or more filepaths
+    input_files is a list of one or more filepaths
+    strict_units converts unit consistency warnings into errors
     """
 
-    for file_name in input_files.split():
+    if not len(input_files) >= 1:
+        raise Exception("No input files specified")
+
+    no_errors = True
+
+    for file_name in input_files:
         if not os.path.isfile(file_name):
-            raise OSError(("Could not find SBML file %s" % file_name))
+            raise OSError(f"Could not find SBML file {file_name}")
 
         try:
             reader = SBMLReader()
             doc = reader.readSBML(file_name)
         except Exception:
-            raise OSError(("SBMLReader failed to load the file %s" % file_name))
+            raise OSError(f"SBMLReader failed to load the file {file_name}")
 
-        # set the unit checking, similar for the other settings
-        doc.setConsistencyChecks(
-            libsbml.LIBSBML_CAT_UNITS_CONSISTENCY, units_consistency
-        )
+        # always check for unit consistency
+        doc.setConsistencyChecks(libsbml.LIBSBML_CAT_UNITS_CONSISTENCY, True)
         doc.checkConsistency()
         # get errors/warnings
         n_errors: int = doc.getNumErrors()
@@ -41,6 +45,13 @@ def validate_sbml_files(input_files: str, units_consistency: bool = False):
                 severity == libsbml.LIBSBML_SEV_FATAL
             ):
                 errors.append(error)
+            elif (
+                (strict_units == True)
+                and (error.getErrorId() >= 10600)
+                and (error.getErrorId() <= 10700)
+            ):
+                # treat unit consistency warnings as errors
+                errors.append(error)
             else:
                 warnings.append(error)
         # print results
@@ -48,6 +59,7 @@ def validate_sbml_files(input_files: str, units_consistency: bool = False):
         print(f"{'validation error(s)':<25}: {len(errors)}")
         print(f"{'validation warning(s)':<25}: {len(warnings)}")
         if len(errors) > 0:
+            no_errors = False
             print("--- errors ---")
             for kerr in enumerate(errors):
                 print(f"E{kerr}: {error.getCategoryAsString()} L{error.getLine()}")
@@ -62,3 +74,5 @@ def validate_sbml_files(input_files: str, units_consistency: bool = False):
                     f"[{error.getSeverityAsString()}] {error.getShortMessage()} | {error.getMessage()}"
                 )
         print("-" * 80)
+
+    return no_errors
