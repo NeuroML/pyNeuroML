@@ -2134,8 +2134,10 @@ def evaluate_arguments(args):
             sys.exit(ARGUMENT_ERR)
 
         if args.validate_sbml_units:
+            # A failed unit consistency check generates an error
             strict_units = True
         else:
+            # A failed unit consistency check generates only a warning
             strict_units = False
 
         try:
@@ -2144,9 +2146,13 @@ def evaluate_arguments(args):
             logger.critical(f"validate_sbml_files failed with {e.message}")
             sys.exit(UNKNOWN_ERR)
 
-        sys.exit(not result)
+        if result:
+            # All files validated ok (with possible warnings but no errors)
+            sys.exit(0)
 
-        return True
+        # Errors of some kind were found in one or more files
+        logger.error(f"one or more SBML files failed to validate")
+        sys.exit(UNKNOWN_ERR)
 
     # These do not use the shared option where files are supplied
     # They require the file name to be specified after
