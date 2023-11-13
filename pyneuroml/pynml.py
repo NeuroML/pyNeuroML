@@ -2143,7 +2143,7 @@ def evaluate_arguments(args):
         try:
             result = validate_sbml_files(args.input_files, strict_units)
         except Exception as e:
-            logger.critical(f"validate_sbml_files failed with {e.message}")
+            logger.critical(f"validate_sbml_files failed with {str(e)}")
             sys.exit(UNKNOWN_ERR)
 
         if result:

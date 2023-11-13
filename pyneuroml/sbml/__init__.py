@@ -4,6 +4,7 @@ based on https://github.com/combine-org/combine-notebooks/blob/main/src/combine_
 """
 
 import os
+import errno
 import libsbml
 from libsbml import SBMLReader
 from typing import List
@@ -25,7 +26,7 @@ def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> b
         # These checks are already implemented by SBMLReader
         # But could just be logged along with the other error types rather than causing exceptions
         if not os.path.isfile(file_name):
-            raise FileNotFoundError(f"Could not find SBML file {file_name}")
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), file_name)
 
         if not os.access(file_name, os.R_OK):
             raise IOError(f"Could not read SBML file {file_name}")
