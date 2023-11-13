@@ -12,20 +12,22 @@ def test_validate_sbml_files1():
 
 
 def test_validate_sbml_files2():
-    "ensure it raises an exception for failing to provide any files"
+    "ensure it raises a ValueError exception for failing to provide any files"
 
     try:
         result = sbml.validate_sbml_files([])
-    except Exception:
+    except ValueError:
         return
+    except Exception:
+        pass
 
-    raise Exception("failed to flag missing input files")
+    raise Exception("failed to properly flag missing input files")
 
 
 def test_validate_sbml_files3():
     """
     ensure it returns False for all invalid files
-    without raising any exception
+    without raising any exceptions
     """
 
     fail_count = 0
