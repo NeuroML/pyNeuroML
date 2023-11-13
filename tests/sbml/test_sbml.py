@@ -3,7 +3,7 @@
 from pyneuroml import sbml
 
 
-def test_validate_sbml_files1():
+def test_sbml_validate_a_valid_file():
     "ensure it validates a single valid file by returning True"
 
     fname = "tests/sbml/test_data/valid_doc.sbml"
@@ -11,7 +11,7 @@ def test_validate_sbml_files1():
     assert result
 
 
-def test_validate_sbml_files2():
+def test_sbml_validate_valueerror_on_no_inputfiles():
     "ensure it raises a ValueError exception for failing to provide any files"
 
     try:
@@ -24,7 +24,30 @@ def test_validate_sbml_files2():
     raise Exception("failed to properly flag missing input files")
 
 
-def test_validate_sbml_files3():
+def test_sbml_validate_unit_consistency_check():
+    """
+    ensure it fails a unit inconsistency in strict mode
+    ensure it only warns about a unit inconsistency when not in strict mode
+    """
+
+    try:
+        result = sbml.validate_sbml_files(
+            ["tests/sbml/test_data/inconsistent_units_doc.sbml"], strict_units=True
+        )
+        assert not result
+    except Exception:
+        raise Exception("failed to flag inconsistent units as an error")
+
+    try:
+        result = sbml.validate_sbml_files(
+            ["tests/sbml/test_data/inconsistent_units_doc.sbml"], strict_units=False
+        )
+        assert result
+    except Exception:
+        raise Exception("failed to flag inconsistent units as an error")
+
+
+def test_sbml_validate_flag_all_invalid_files():
     """
     ensure it returns False for all invalid files
     without raising any exceptions
@@ -47,6 +70,7 @@ def test_validate_sbml_files3():
 
 
 if __name__ == "__main__":
-    test_validate_sbml_files1()
-    test_validate_sbml_files2()
-    test_validate_sbml_files3()
+    test_sbml_validate_validate_a_valid_file()
+    test_sbml_validate_valueerror_on_no_inputfiles()
+    test_sbml_validate_flag_all_invalid_files()
+    test_sbml_validate_unit_consistency_check()
