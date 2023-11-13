@@ -22,24 +22,26 @@ def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> b
     all_valid = True
 
     for file_name in input_files:
+        # These checks are already implemented by SBMLReader
+        # But could just be logged along with the other error types rather than causing exceptions
         if not os.path.isfile(file_name):
             raise FileNotFoundError(f"Could not find SBML file {file_name}")
 
         if not os.access(file_name, os.R_OK):
             raise IOError(f"Could not read SBML file {file_name}")
 
-        reader = SBMLReader()
-
         try:
+            reader = SBMLReader()
             doc = reader.readSBML(file_name)
         except Exception:
-            raise IOError(f"SBMLReader failed to load the file {file_name}")
+            # usually errors are logged within the doc object rather than being thrown
+            raise IOError(f"SBMLReader failed trying to open the file {file_name}")
 
         # Always check for unit consistency
         doc.setConsistencyChecks(libsbml.LIBSBML_CAT_UNITS_CONSISTENCY, True)
         doc.checkConsistency()
 
-        # Get errors/warnings
+        # Get errors/warnings arising from the file reading or consistency checking calls above
         n_errors: int = doc.getNumErrors()
         errors: List[libsbml.SBMLError] = list()
         warnings: List[libsbml.SBMLError] = list()

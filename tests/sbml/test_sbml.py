@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from pyneuroml import sbml
+import os
+import stat
 
 
 def test_sbml_validate_a_valid_file():
@@ -9,6 +11,36 @@ def test_sbml_validate_a_valid_file():
     fname = "tests/sbml/test_data/valid_doc.sbml"
     result = sbml.validate_sbml_files([fname])
     assert result
+
+
+def test_sbml_validate_missing_inputfile():
+    try:
+        result = sbml.validate_sbml_files(["tests/sbml/test_data/nonexistent_file"])
+    except FileNotFoundError:
+        return
+    except Exception:
+        pass
+
+    raise Exception("failed to properly flag file not found error")
+
+
+def test_sbml_validate_no_read_access():
+    fname = "tests/sbml/test_data/no_read_access.sbml"
+
+    # Remove read permission
+    os.chmod(fname, 0)
+    try:
+        result = sbml.validate_sbml_files([fname])
+    except IOError:
+        os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+        return
+    except Exception:
+        pass
+
+    os.chmod(
+        fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+    )  # Restore permission for git
+    raise Exception("failed to properly flag lack of read access")
 
 
 def test_sbml_validate_valueerror_on_no_inputfiles():
@@ -72,5 +104,7 @@ def test_sbml_validate_flag_all_invalid_files():
 if __name__ == "__main__":
     test_sbml_validate_validate_a_valid_file()
     test_sbml_validate_valueerror_on_no_inputfiles()
+    test_sbml_validate_missing_inputfile()
     test_sbml_validate_flag_all_invalid_files()
     test_sbml_validate_unit_consistency_check()
+    test_sbml_validate_no_read_access()
