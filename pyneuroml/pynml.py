@@ -126,8 +126,8 @@ def parse_arguments():
         "input_files",
         type=str,
         nargs="*",
-        metavar="<LEMS/NeuroML 2 file(s)>",
-        help="LEMS/NeuroML 2 file(s) to process",
+        metavar="<LEMS/NeuroML 2/SBML file(s)>",
+        help="LEMS/NeuroML 2/SBML file(s) to process",
     )
 
     mut_exc_opts_grp = parser.add_argument_group(
@@ -348,7 +348,12 @@ def parse_arguments():
     mut_exc_opts.add_argument(
         "-validate-sbml",
         action="store_true",
-        help=("Validate SBML file(s)"),
+        help=("Validate SBML file(s), unit consistency failure generates a warning"),
+    )
+    mut_exc_opts.add_argument(
+        "-validate-sbml-units",
+        action="store_true",
+        help=("Validate SBML file(s), unit consistency failure generates an error"),
     )
 
     return parser.parse_args()
@@ -2117,12 +2122,37 @@ def evaluate_arguments(args):
     exit_on_fail = True
 
     # Deal with the SBML validation option which doesn't call run_jneuroml
-    if args.validate_sbml:
-        from pyneuroml.sbml import validate_sbml_files
+    if args.validate_sbml or args.validate_sbml_units:
+        try:
+            from pyneuroml.sbml import validate_sbml_files
+        except Exception:
+            logger.critical("Unable to import pyneuroml.sbml")
+            sys.exit(UNKNOWN_ERR)
 
-        validate_sbml_files(" ".join(args.input_files))
+        if not len(args.input_files) >= 1:
+            logger.critical("No input files specified")
+            sys.exit(ARGUMENT_ERR)
 
-        return True
+        if args.validate_sbml_units:
+            # A failed unit consistency check generates an error
+            strict_units = True
+        else:
+            # A failed unit consistency check generates only a warning
+            strict_units = False
+
+        try:
+            result = validate_sbml_files(args.input_files, strict_units)
+        except Exception as e:
+            logger.critical(f"validate_sbml_files failed with {str(e)}")
+            sys.exit(UNKNOWN_ERR)
+
+        if result:
+            # All files validated ok (with possible warnings but no errors)
+            sys.exit(0)
+
+        # Errors of some kind were found in one or more files
+        logger.error(f"one or more SBML files failed to validate")
+        sys.exit(UNKNOWN_ERR)
 
     # These do not use the shared option where files are supplied
     # They require the file name to be specified after
