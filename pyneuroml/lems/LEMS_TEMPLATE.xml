@@ -1,9 +1,9 @@
 <Lems>
-    
+
 #if ($comment)##
     <!-- ${comment} -->
-    
-#end## 
+
+#end##
     <!-- Specify which component to run -->
     <Target component="${sim_id}"${report}/>
 
@@ -11,39 +11,41 @@
     <Include file="Cells.xml"/>
     <Include file="Networks.xml"/>
     <Include file="Simulation.xml"/>
-    
+
 #foreach ($include_file in $include_files)##
     <Include file="${include_file}"/>
-#end##     
-   
+#end##
+
 #set( $start = -0.1 * $duration )
 #set( $end = 1.1 * $duration )
     <Simulation id="${sim_id}" length="${duration}ms" step="${dt}ms" target="${target}" seed="${seed}">  <!-- Note seed: ensures same random numbers used every run -->
-        
+#if ($meta)##
+        <Meta for="${meta.for}" method="${meta.method}" abs_tolerance="${meta.abs_tolerance}" rel_tolerance="${meta.rel_tolerance}"/>
+#end##
 #foreach ($display in $displays)##
         <Display id="${display.id}" title="${display.title}" timeScale="${display.time_scale}" xmin="$start" xmax="$end" ymin="${display.ymin}" ymax="${display.ymax}">
 #foreach ($line in $display.lines)##
             <Line id="${line.id}" quantity="${line.quantity}" scale="${line.scale}" color="${line.color}" timeScale="${line.time_scale}"/>
-#end## 
+#end##
         </Display>
-        
-#end## 
+
+#end##
 #foreach ($output_file in $output_files)##
         <OutputFile id="${output_file.id}" fileName="${output_file.file_name}">
 #foreach ($column in $output_file.columns)##
-            <OutputColumn id="${column.id}" quantity="${column.quantity}"/> 
-#end## 
+            <OutputColumn id="${column.id}" quantity="${column.quantity}"/>
+#end##
         </OutputFile>
-        
-#end## 
+
+#end##
 #foreach ($event_output_file in $event_output_files)##
         <EventOutputFile id="${event_output_file.id}" fileName="${event_output_file.file_name}" format="${event_output_file.format}">
 #foreach ($selection in $event_output_file.selections)##
-            <EventSelection id="${selection.id}" select="${selection.select}" eventPort="${selection.event_port}"/> 
-#end## 
+            <EventSelection id="${selection.id}" select="${selection.select}" eventPort="${selection.event_port}"/>
+#end##
         </EventOutputFile>
-        
-#end## 
+
+#end##
     </Simulation>
 
 </Lems>
