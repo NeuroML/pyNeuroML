@@ -70,6 +70,13 @@ pynml LEMS_NML2_Ex9_FN.xml -spineml
 pynml LEMS_NML2_Ex9_FN.xml -sbml
 
 
+echo
+echo "################################################"
+echo "##   Simple SBML validation example"
+
+pynml -validate-sbml test_data/valid_doc.sbml
+pynml -validate-sbml-units test_data/valid_doc.sbml
+
 
 echo
 echo "################################################"
