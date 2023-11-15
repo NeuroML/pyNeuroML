@@ -69,14 +69,15 @@ def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> b
 
         # print results
         print("-" * 80)
-        print(f"{'validation error(s)':<25}: {len(errors)}")
-        print(f"{'validation warning(s)':<25}: {len(warnings)}")
+        print(f"{'Validating SBML'}: {file_name}")
+        print(f"{'Validation error(s)':<25}: {len(errors)}")
+        print(f"{'Validation warning(s)':<25}: {len(warnings)}")
 
         if len(errors) > 0:
             all_valid = False
             print("--- errors ---")
             for kerr in enumerate(errors):
-                print(f"E{kerr}: {error.getCategoryAsString()} L{error.getLine()}")
+                print(f"E{kerr[0]}: {error.getCategoryAsString()} L{error.getLine()}")
                 print(
                     f"[{error.getSeverityAsString()}] {error.getShortMessage()} | {error.getMessage()}"
                 )
@@ -84,7 +85,7 @@ def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> b
         if len(warnings) > 0:
             print("--- warnings ---")
             for kwarn in enumerate(warnings):
-                print(f"E{kwarn}: {error.getCategoryAsString()} L{error.getLine()}")
+                print(f"E{kwarn[0]}: {error.getCategoryAsString()} L{error.getLine()}")
                 print(
                     f"[{error.getSeverityAsString()}] {error.getShortMessage()} | {error.getMessage()}"
                 )
