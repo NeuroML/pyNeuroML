@@ -60,7 +60,7 @@ if matplotlib_imported is True:
     # continue to work
     from pyneuroml.plot import generate_plot, generate_interactive_plot  # noqa
 else:
-    # Define a new method, which only gets called if a user explicitly tries to 
+    # Define a new method, which only gets called if a user explicitly tries to
     # run generate_plot (and so requires matplotlib). If it's never called, matplotlib
     # doesn't get imported
 
@@ -68,10 +68,10 @@ else:
         try:
             import matplotlib
             from pyneuroml.plot import generate_plot as gp
+
             return gp(*args, **kwargs)
-        
+
         except Exception as e:
-            
             logger.error("Matplotlib not found!")
             warnings.warn(
                 """
@@ -87,10 +87,10 @@ else:
         try:
             import matplotlib
             from pyneuroml.plot import generate_interactive_plot as gp
+
             return gp(*args, **kwargs)
-        
+
         except Exception as e:
-            
             logger.error("Matplotlib not found!")
             warnings.warn(
                 """
@@ -101,6 +101,7 @@ else:
                 FutureWarning,
                 stacklevel=2,
             )
+
 
 DEFAULTS = {
     "v": False,
