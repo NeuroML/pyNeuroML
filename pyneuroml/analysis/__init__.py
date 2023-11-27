@@ -112,8 +112,8 @@ def generate_current_vs_frequency_curve(
     :type temperature: str
     :param spike_threshold_mV: spike threshold potential
     :type spike_threshold_mV: float
-    :param plot_voltage_traces:
-    :type plot_voltage_traces:
+    :param plot_voltage_traces: toggle plotting of voltage traces
+    :type plot_voltage_traces: bool
     :param plot_if: toggle whether to plot I-F graphs
     :type plot_if: bool
     :param plot_iv: toggle whether to plot I-V graphs
@@ -159,10 +159,10 @@ def generate_current_vs_frequency_curve(
     :type simulator: str
     :param num_processors: number of processors to use for analysis
     :type num_processors: int
-    :param include_included:
-    :type include_included:
-    :param title_above_plot:
-    :type title_above_plot:
+    :param include_included: include included files
+    :type include_included: bool
+    :param title_above_plot: title to show above the plot
+    :type title_above_plot: str
     :param return_axes: toggle whether plotting axis should be returned.
         This is useful if one wants to overlay more graphs in the same plot.
     :type return_axes: bool
@@ -170,8 +170,8 @@ def generate_current_vs_frequency_curve(
     :type segment_id: str
     :param fraction_along: fraction along on segment to attach to
     :type fraction_along: float
-    :param verbose:
-    :type verbose:
+    :param verbose: toggle verbosity
+    :type verbose: bool
 
     """
 
