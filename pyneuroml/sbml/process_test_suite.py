@@ -60,7 +60,7 @@ def process_cases(args):
     with open(args.output_file, "w") as fout:
         os.chdir(args.case_path)
         fout.write(header)
-        for fpath in glob.glob(args.case_glob):
+        for fpath in sorted(glob.glob(args.case_glob)):
             sedml_path = fpath.replace(".xml", "-sedml.xml")
             print(fpath)
             assert os.path.isfile(fpath)
