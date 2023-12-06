@@ -6,6 +6,7 @@ produce a markdown table of the results of running various tests on the SBML Tes
 get the version of the test suite that includes sedml versions
 https://github.com/sbmlteam/sbml-test-suite/releases/download/3.4.0/semantic_tests_with_sedml_and_graphs.v3.4.0.zip
 
+
 """
 
 import os
@@ -28,15 +29,15 @@ def parse_arguments():
         action="store",
         type=str,
         default=".",
-        help="Path to cases directory, eg '~/repos/sbml-test-suite/cases'",
+        help="Path to cases directory, eg '~/repos/sbml-test-suite/cases/semantic'",
     )
 
     parser.add_argument(
         "--case-glob",
         action="store",
         type=str,
-        default="semantic/000*/*-sbml-l3v2.xml",
-        help="Shell-style glob matching case file(s) within case_path, eg 'semantic/000*/*-sbml-l3v2.xml'",
+        default="000*/*-sbml-l3v2.xml",
+        help="Shell-style glob matching case file(s) within case_path, eg '000*/*-sbml-l3v2.xml'",
     )
 
     parser.add_argument(
