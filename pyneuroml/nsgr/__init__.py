@@ -177,6 +177,13 @@ def run_on_nsg(
     generated_files = get_files_generated_after(
         start_time, ignore_suffixes=["xml", "nml"]
     )
+
+    # For NetPyNE, the channels are converted to NEURON mod files, but the
+    # network and cells are imported from the nml files.
+    # So we include all the model files too.
+    if engine == "jneuroml_netpyne":
+        generated_files.extend(model_file_list)
+
     logger.debug(f"Generated files are: {generated_files}")
 
     logger.info("Generating zip file")
@@ -199,7 +206,11 @@ def run_on_nsg(
                 if f.endswith("_netpyne.py"):
                     runner_file = f
             fpath = pathlib.Path(f)
-            moved_path = fpath.rename(nsg_dir / fpath)
+            moved_path = nsg_dir / fpath
+            # use os.renames because pathlib.Path.rename does not move
+            # recursively and so cannot move files within directories
+            os.renames(fpath, moved_path)
+
             archive.write(str(moved_path))
 
     logger.debug("Printing testParam.properties")
