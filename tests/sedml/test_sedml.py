@@ -13,6 +13,19 @@ def test_sedml_validate_a_valid_file():
     assert result
 
 
+def test_sedml_validate_missing_sourcefile():
+    try:
+        result = sedml.validate_sedml_files(
+            ["tests/sedml/test_data/missing_model_source.sedml"]
+        )
+        assert not result
+        return
+    except Exception:
+        pass
+
+    raise Exception("failed to properly flag missing source file")
+
+
 def test_sedml_validate_missing_inputfile():
     try:
         result = sedml.validate_sedml_files(["tests/sedml/test_data/nonexistent_file"])
@@ -83,3 +96,4 @@ if __name__ == "__main__":
     test_sedml_validate_valueerror_on_no_inputfiles()
     test_sedml_validate_missing_inputfile()
     test_sedml_validate_no_read_access()
+    test_sedml_validate_missing_sourcefile()
