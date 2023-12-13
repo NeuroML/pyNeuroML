@@ -60,7 +60,7 @@ if matplotlib_imported is True:
     # continue to work
     from pyneuroml.plot import generate_plot, generate_interactive_plot  # noqa
 else:
-    # Define a new method, which only gets called if a user explicitly tries to 
+    # Define a new method, which only gets called if a user explicitly tries to
     # run generate_plot (and so requires matplotlib). If it's never called, matplotlib
     # doesn't get imported
 
@@ -68,10 +68,10 @@ else:
         try:
             import matplotlib
             from pyneuroml.plot import generate_plot as gp
+
             return gp(*args, **kwargs)
-        
+
         except Exception as e:
-            
             logger.error("Matplotlib not found!")
             warnings.warn(
                 """
@@ -87,10 +87,10 @@ else:
         try:
             import matplotlib
             from pyneuroml.plot import generate_interactive_plot as gp
+
             return gp(*args, **kwargs)
-        
+
         except Exception as e:
-            
             logger.error("Matplotlib not found!")
             warnings.warn(
                 """
@@ -101,6 +101,7 @@ else:
                 FutureWarning,
                 stacklevel=2,
             )
+
 
 DEFAULTS = {
     "v": False,
@@ -403,6 +404,11 @@ def parse_arguments():
         "-validate-sbml-units",
         action="store_true",
         help=("Validate SBML file(s), unit consistency failure generates an error"),
+    )
+    mut_exc_opts.add_argument(
+        "-validate-sedml",
+        action="store_true",
+        help=("Validate SEDML file(s)"),
     )
 
     return parser.parse_args()
@@ -2211,6 +2217,32 @@ def evaluate_arguments(args):
 
         # Errors of some kind were found in one or more files
         logger.error(f"one or more SBML files failed to validate")
+        sys.exit(UNKNOWN_ERR)
+
+    # Deal with the SEDML validation option which doesn't call run_jneuroml
+    if args.validate_sedml:
+        try:
+            from pyneuroml.sedml import validate_sedml_files
+        except Exception:
+            logger.critical("Unable to import pyneuroml.sedml")
+            sys.exit(UNKNOWN_ERR)
+
+        if not len(args.input_files) >= 1:
+            logger.critical("No input files specified")
+            sys.exit(ARGUMENT_ERR)
+
+        try:
+            result = validate_sedml_files(args.input_files)
+        except Exception as e:
+            logger.critical(f"validate_sedml_files failed with {str(e)}")
+            sys.exit(UNKNOWN_ERR)
+
+        if result:
+            # All files validated ok (with possible warnings but no errors)
+            sys.exit(0)
+
+        # Errors of some kind were found in one or more files
+        logger.error(f"one or more SEDML files failed to validate")
         sys.exit(UNKNOWN_ERR)
 
     # These do not use the shared option where files are supplied
