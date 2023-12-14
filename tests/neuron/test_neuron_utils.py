@@ -15,8 +15,13 @@ import pytest
 import pathlib
 
 
-from pyneuroml.neuron import (load_hoc_or_python_file, morphinfo,
-                              get_utils_hoc, getinfo, export_mod_to_neuroml2)
+from pyneuroml.neuron import (
+    load_hoc_or_python_file,
+    morphinfo,
+    get_utils_hoc,
+    getinfo,
+    export_mod_to_neuroml2,
+)
 
 from . import load_olm_cell
 
@@ -73,7 +78,7 @@ class TestNeuronUtils(unittest.TestCase):
     @pytest.mark.localonly
     def test_morphinfo(self):
         """Test the morphinfo function"""
-        if not hasattr(self, 'allsections'):
+        if not hasattr(self, "allsections"):
             self.allsections = load_olm_cell()
         self.assertGreater(len(self.allsections), 0)
         logger.debug(f"All sections are: {self.allsections}")
@@ -103,33 +108,47 @@ class TestNeuronUtils(unittest.TestCase):
     def test_getinfo(self):
         """Test the getinfo function"""
         # compile mods
-        if not hasattr(self, 'allsections'):
+        if not hasattr(self, "allsections"):
             self.allsections = load_olm_cell()
         self.assertGreater(len(self.allsections), 0)
         logger.debug(f"All sections are: {self.allsections}")
         allinfo = getinfo(self.allsections, doprint="json")
         logger.debug(f"Info on all sections: {allinfo}")
 
-        soma_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"]["gmax_KvAolm"]["values"]["olm_0_.soma_0"]["values"]["*"]
+        soma_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"][
+            "gmax_KvAolm"
+        ]["values"]["olm_0_.soma_0"]["values"]["*"]
         self.assertEqual(soma_0_KvAolm_gmax, 0.00495)
-        soma_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.soma_0"]["values"]["*"]
-        self.assertEqual(soma_0_leak_gmax, 1E-5)
+        soma_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"][
+            "gmax_leak_chan"
+        ]["values"]["olm_0_.soma_0"]["values"]["*"]
+        self.assertEqual(soma_0_leak_gmax, 1e-5)
 
-        dend_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"]["gmax_KvAolm"]["values"]["olm_0_.dend_0"]["values"]["*"]
+        dend_0_KvAolm_gmax = allinfo["mechanisms"]["KvAolm"]["parameters"][
+            "gmax_KvAolm"
+        ]["values"]["olm_0_.dend_0"]["values"]["*"]
         self.assertEqual(dend_0_KvAolm_gmax, 0.0028)
-        dend_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.dend_0"]["values"]["*"]
-        self.assertEqual(dend_0_leak_gmax, 1E-5)
+        dend_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"][
+            "gmax_leak_chan"
+        ]["values"]["olm_0_.dend_0"]["values"]["*"]
+        self.assertEqual(dend_0_leak_gmax, 1e-5)
 
-        axon_0_Nav_gmax = allinfo["mechanisms"]["Nav"]["parameters"]["gmax_Nav"]["values"]["olm_0_.axon_0"]["values"]["*"]
+        axon_0_Nav_gmax = allinfo["mechanisms"]["Nav"]["parameters"]["gmax_Nav"][
+            "values"
+        ]["olm_0_.axon_0"]["values"]["*"]
         self.assertEqual(axon_0_Nav_gmax, 0.01712)
 
-        axon_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"]["gmax_leak_chan"]["values"]["olm_0_.axon_0"]["values"]["*"]
-        self.assertEqual(axon_0_leak_gmax, 1E-5)
+        axon_0_leak_gmax = allinfo["mechanisms"]["leak_chan"]["parameters"][
+            "gmax_leak_chan"
+        ]["values"]["olm_0_.axon_0"]["values"]["*"]
+        self.assertEqual(axon_0_leak_gmax, 1e-5)
 
     def test_export_mod_to_neuroml2(self):
         """Test the export_mod_to_neuroml2 method."""
         thispath = pathlib.Path(__file__)
-        dirname = str(thispath.parent / pathlib.Path("test_data") / pathlib.Path("mods"))
+        dirname = str(
+            thispath.parent / pathlib.Path("test_data") / pathlib.Path("mods")
+        )
 
         export_mod_to_neuroml2(str(dirname) + "/leak_chan.mod")
         path = pathlib.Path("leak_chan.channel.nml")

@@ -41,7 +41,6 @@ def generate_lems_file_for_neuroml(
     verbose=False,
     simulation_seed=12345,
 ):
-
     my_random = random.Random()
     if lems_file_generate_seed:
         my_random.seed(
@@ -117,7 +116,6 @@ def generate_lems_file_for_neuroml(
         )
 
         for include in nml_doc_inc_not_included.includes:
-
             if nml_dir == "." and os.path.isfile(include.href):
                 incl_curr = include.href
             else:
@@ -167,7 +165,6 @@ def generate_lems_file_for_neuroml(
                         if not os.path.isfile(
                             "%s/%s" % (target_dir, os.path.basename(incl_curr))
                         ) and not os.path.isfile("%s/%s" % (target_dir, incl_curr)):
-
                             shutil.copy(incl_curr, target_dir)
                             ls.include_neuroml2_file(
                                 include.href, include_included=False
@@ -186,10 +183,8 @@ def generate_lems_file_for_neuroml(
         or gen_spike_saves_for_all_somas
         or len(gen_spike_saves_for_only_populations) > 0
     ):
-
         for network in nml_doc.networks:
             for population in network.populations:
-
                 variable = "v"
                 quantity_template_e = "%s[%i]"
 
@@ -322,7 +317,6 @@ def generate_lems_file_for_neuroml(
                         quantities_saved.append(quantity)
 
     for display in sorted(gen_plots_for_quantities.keys()):
-
         quantities = gen_plots_for_quantities[display]
         max_ = "1"
         min_ = "-1"
@@ -349,7 +343,6 @@ def generate_lems_file_for_neuroml(
             quantities_saved.append(q)
 
     for file_name in sorted(gen_spike_saves_for_cells.keys()):
-
         quantities = gen_spike_saves_for_cells[file_name]
         of_id = safe_variable(file_name)
         ls.create_event_output_file(of_id, file_name)

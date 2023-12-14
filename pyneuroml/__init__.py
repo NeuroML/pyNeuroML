@@ -2,9 +2,11 @@ import logging
 
 try:
     import importlib.metadata
+
     __version__ = importlib.metadata.version("pyNeuroML")
 except ImportError:
     import importlib_metadata
+
     __version__ = importlib_metadata.version("pyNeuroML")
 
 
