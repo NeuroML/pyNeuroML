@@ -724,10 +724,11 @@ def plot_3D_cell_morphology(
         length = cell.get_segment_length(seg.id)
 
         # round up to precision
-        r = round(p.diameter / 2, mesh_precision)
+        r1 = round(p.diameter / 2, mesh_precision)
+        r2 = round(d.diameter / 2, mesh_precision)
         key = (
-            f"{r:.{mesh_precision}f}",
-            f"{r:.{mesh_precision}f}",
+            f"{r1:.{mesh_precision}f}",
+            f"{r2:.{mesh_precision}f}",
             f"{round(length, mesh_precision):.{mesh_precision}f}",
         )
 
