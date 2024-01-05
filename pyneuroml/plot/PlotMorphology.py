@@ -182,6 +182,7 @@ def plot_2D(
     plot_spec: typing.Optional[
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
 ):
     """Plot cells in a 2D plane.
 
@@ -191,6 +192,10 @@ def plot_2D(
     where they are.
 
     This method uses matplotlib.
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
+
 
     :param nml_file: path to NeuroML cell file, or a NeuroMLDocument object
     :type nml_file: str or :py:class:`neuroml.NeuroMLDocument` or
@@ -239,12 +244,42 @@ def plot_2D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+    :type plot_spec: dict
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements.  Only used
+        when plotting multi-compartmental cells for marking segments on them
+        ("plot_type" is either "constant" or "detailed")
+
+        Each key in the dictionary will be of the cell id and the values will
+        be more dictionaries, with the segment id as key and the following keys
+        in it:
+
+        - marker_color: color of the marker
+        - marker_size: width of the marker
+
+        E.g.:
+
+        .. code-block:: python
+
+        {
+            "cell id1": {
+                "seg id1": {
+                    "marker_color": "blue",
+                    "marker_size": 10
+                }
+            }
+        }
+
+    :type highlight_spec: dict
     """
 
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
             "plot_type must be one of 'detailed', 'constant', 'schematic', 'point'"
         )
+
+    if highlight_spec is None:
+        highlight_spec = {}
 
     if verbose:
         print("Plotting %s" % nml_file)
@@ -412,6 +447,11 @@ def plot_2D(
                     or plot_type == "constant"
                     or cell.id in constant_cells
                 ):
+                    cell_highlight_spec = {}
+                    try:
+                        cell_highlight_spec = highlight_spec[cell.id]
+                    except KeyError:
+                        pass
                     plot_2D_cell_morphology(
                         offset=pos,
                         cell=cell,
@@ -427,6 +467,7 @@ def plot_2D(
                         nogui=True,
                         autoscale=False,
                         square=False,
+                        highlight_spec=cell_highlight_spec,
                     )
 
     add_scalebar_to_matplotlib_plot(axis_min_max, ax)
@@ -467,6 +508,7 @@ def plot_2D_cell_morphology(
     datamin: typing.Optional[float] = None,
     datamax: typing.Optional[float] = None,
     colormap_name: str = "viridis",
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
 ):
     """Plot the detailed 2D morphology of a cell in provided plane.
 
@@ -534,6 +576,16 @@ def plot_2D_cell_morphology(
     :type datamin: float
     :param datamax: max limits of data (useful to compare different plots)
     :type datamax: float
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements. Mostly
+        only helpful for marking segments on multi-compartmental cells. In the
+        main dictionary are more dictionaries, one for each segment id which
+        will be the key:
+
+        - marker_color: color of the marker
+        - marker_size: width of the marker
+
+    :type highlight_spec: dict
 
     :raises: ValueError if `cell` is None
 
@@ -542,6 +594,10 @@ def plot_2D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if highlight_spec is None:
+        highlight_spec = {}
+    logging.debug("highlight_spec is " + str(highlight_spec))
 
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
@@ -599,11 +655,26 @@ def plot_2D_cell_morphology(
         d = seg.distal
         width = (p.diameter + d.diameter) / 2
 
+        segment_spec = {
+            "marker_size": None,
+            "marker_color": None,
+        }
+        try:
+            segment_spec.update(highlight_spec[str(seg.id)])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+
+        logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
+
         if width < min_width:
             width = min_width
 
         if plot_type == "constant":
             width = min_width
+
+        if segment_spec["marker_size"] is not None:
+            width = float(segment_spec["marker_size"])
 
         if overlay_data and acolormap and norm:
             try:
@@ -616,6 +687,9 @@ def plot_2D_cell_morphology(
                 seg_color = "g"
             elif seg.id in axon_segs:
                 seg_color = "r"
+
+        if segment_spec["marker_color"] is not None:
+            seg_color = segment_spec["marker_color"]
 
         spherical = (
             p.x == d.x and p.y == d.y and p.z == d.z and p.diameter == d.diameter
