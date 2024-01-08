@@ -251,11 +251,16 @@ def plot_interactive_3D(
     plot_spec: typing.Optional[
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
 ):
     """Plot interactive plots in 3D using Vispy
 
     https://vispy.org
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
+
 
     :param nml_file: path to NeuroML cell file or
         :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
@@ -298,6 +303,34 @@ def plot_interactive_3D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+    :type plot_spec: dict
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements.  Only used
+        when plotting multi-compartmental cells for marking segments on them
+        ("plot_type" is either "constant" or "detailed")
+
+        Each key in the dictionary will be of the cell id and the values will
+        be more dictionaries, with the segment id as key and the following keys
+        in it:
+
+        - marker_color: color of the marker
+        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+          is used)
+
+        E.g.:
+
+        .. code-block:: python
+
+        {
+            "cell id1": {
+                "seg id1": {
+                    "marker_color": "blue",
+                    "marker_size": [0.1, 0.1]
+                }
+            }
+        }
+
+    :type highlight_spec: dict
     :param precision: tuple containing two values: (number of decimal places,
         maximum number of meshes). The first is used to group segments into
         meshes to create instances. More precision means fewer segments will be
@@ -314,6 +347,9 @@ def plot_interactive_3D(
         raise ValueError(
             "plot_type must be one of 'detailed', 'constant', 'schematic', 'point'"
         )
+
+    if highlight_spec is None:
+        highlight_spec = {}
 
     if verbose:
         logger.info(f"Visualising {nml_file}")
@@ -525,6 +561,7 @@ def plot_interactive_3D(
                     logger.debug(f"meshdata added: {key}: {meshdata[key]}")
 
                 elif plot_type == "schematic" or cell.id in schematic_cells:
+                    logger.debug(f"Cell for 3d schematic is: {cell.id}")
                     plot_3D_schematic(
                         offset=pos,
                         cell=cell,
@@ -544,6 +581,12 @@ def plot_interactive_3D(
                     or cell.id in constant_cells
                 ):
                     logger.debug(f"Cell for 3d is: {cell.id}")
+                    cell_highlight_spec = {}
+                    try:
+                        cell_highlight_spec = highlight_spec[cell.id]
+                    except KeyError:
+                        pass
+
                     plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
@@ -556,6 +599,7 @@ def plot_interactive_3D(
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
+                        highlight_spec=cell_highlight_spec,
                     )
 
             # if too many meshes, reduce precision and retry, recursively
@@ -566,15 +610,16 @@ def plot_interactive_3D(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
                 plot_interactive_3D(
-                    nml_model,
-                    min_width,
-                    verbose,
-                    plot_type,
-                    title,
-                    theme,
-                    nogui,
-                    plot_spec,
-                    precision,
+                    nml_file=nml_model,
+                    min_width=min_width,
+                    verbose=verbose,
+                    plot_type=plot_type,
+                    title=title,
+                    theme=theme,
+                    nogui=nogui,
+                    plot_spec=plot_spec,
+                    precision=precision,
+                    highlight_spec=highlight_spec,
                 )
                 # break the recursion, don't plot in the calling method
                 return
@@ -603,11 +648,15 @@ def plot_3D_cell_morphology(
     theme: str = "light",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
 
     .. versionadded:: 1.0.0
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
 
     .. seealso::
 
@@ -671,6 +720,17 @@ def plot_3D_cell_morphology(
         instances: more precision means more detail (meshes), means less
         performance
     :type mesh_precision: int
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements. Mostly
+        only helpful for marking segments on multi-compartmental cells. In the
+        main dictionary are more dictionaries, one for each segment id which
+        will be the key:
+
+        - marker_color: color of the marker
+        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+          is used)
+
+    :type highlight_spec: dict
     :raises: ValueError if `cell` is None
 
     """
@@ -678,6 +738,10 @@ def plot_3D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if highlight_spec is None:
+        highlight_spec = {}
+    logging.debug("highlight_spec is " + str(highlight_spec))
 
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
@@ -726,6 +790,25 @@ def plot_3D_cell_morphology(
         # round up to precision
         r1 = round(p.diameter / 2, mesh_precision)
         r2 = round(d.diameter / 2, mesh_precision)
+
+        segment_spec = {
+            "marker_size": None,
+            "marker_color": None,
+        }
+        try:
+            segment_spec.update(highlight_spec[str(seg.id)])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+
+        logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
+
+        if segment_spec["marker_size"] is not None:
+            if type(segment_spec["marker_size"]) is not list:
+                raise RuntimeError("The marker size must be a list")
+            r1 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
+            r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)
+
         key = (
             f"{r1:.{mesh_precision}f}",
             f"{r2:.{mesh_precision}f}",
@@ -755,6 +838,9 @@ def plot_3D_cell_morphology(
                 seg_color = "blue"
         else:
             seg_color = color
+
+        if segment_spec["marker_color"] is not None:
+            seg_color = segment_spec["marker_color"]
 
         try:
             meshdata[key].append((p, d, seg_color, offset))
