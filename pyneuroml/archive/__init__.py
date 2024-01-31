@@ -126,7 +126,7 @@ def get_model_file_list(
     :returns: value of lems_def_dir so that the temporary directory can be
         cleaned up. strings are immuatable in Python so the variable cannot be
         modified in the function.
-    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
+    :raises ValueError: if a file that does not have ".xml", ".nml", or ".h5" as extension is encountered
     """
     logger.debug(f"Processing {rootfile}")
 
@@ -148,7 +148,7 @@ def get_model_file_list(
     logger.debug(f"Appending: {relrootfile}")
     filelist.append(relrootfile)
 
-    if rootfile.endswith(".nml"):
+    if rootfile.endswith(".nml") or rootfile.endswith(".h5"):
         if pathlib.Path(rootfile).is_absolute():
             rootdoc = read_neuroml2_file(rootfile)
         else:
@@ -183,7 +183,9 @@ def get_model_file_list(
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     else:
-        raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
+        raise ValueError(
+            f"File must have a .xml, .nml, or .h5 extension. We got: {rootfile}"
+        )
 
     return lems_def_dir
 
