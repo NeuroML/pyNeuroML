@@ -16,21 +16,19 @@ except ImportError:
     import tesedml as libsedml
 
 
-def run_from_sedml_file(sedml_file):
-    "read a SEDML file and run the model using tellurium's executeSEDML command"
+def run_from_sedml_file(input_files):
+    "read a SEDML file(s) and run the model(s) using tellurium's executeSEDML command"
 
-    sedml_doc = libsedml.readSedML(sedml_file)
-    n_errors = sedml_doc.getErrorLog().getNumFailsWithSeverity(
-        libsedml.LIBSEDML_SEV_ERROR
-    )
-    print("Read SED-ML file %s, number of errors: %i" % (sedml_file, n_errors))
-    if n_errors > 0:
-        print(sedml_doc.getErrorLog().toString())
+    if not len(input_files) >= 1:
+        raise ValueError("No input files specified")
 
-    print(sedml_doc)
+    for file_name in input_files:
+        # check validity of sedml file here
 
-    print(dir(sedml_doc))
-    print(sedml_doc.toSed())
+        try:
+            doc = libsedml.readSedML(file_name)
+        except Exception:
+            raise IOError(f"readSedML failed trying to open the file {file_name}")
 
-    # execute SED-ML using Tellurium
-    te.executeSEDML(sedml_doc.toSed(), workingDir=".")
+        # execute SED-ML using Tellurium
+        te.executeSEDML(doc.toSed(), workingDir=".")
