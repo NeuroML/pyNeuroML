@@ -308,6 +308,14 @@ def parse_arguments():
         help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to SBML format"),
     )
     mut_exc_opts.add_argument(
+        "-sbml-sedml",
+        action="store_true",
+        help=(
+            "(Via jNeuroML) Load a LEMS file, and convert it\n"
+            "to SBML format with a SED-ML file describing the experiment to run"
+        ),
+    )
+    mut_exc_opts.add_argument(
         "-matlab",
         action="store_true",
         help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to MATLAB format"),
@@ -2362,6 +2370,9 @@ def evaluate_arguments(args):
         elif args.sbml:
             confirm_lems_file(f)
             post_args = "-sbml"
+        elif args.sbml_sedml:
+            confirm_lems_file(f)
+            post_args = "-sbml-sedml"
         elif args.matlab:
             confirm_lems_file(f)
             post_args = "-matlab"
