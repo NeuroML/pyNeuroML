@@ -42,6 +42,7 @@ else:
         show_plot_already=False,  # Show or wait for plt.show()?
         font_size=10,  # Font
         bottom_left_spines_only=True,  # Box or just x & y axes
+        legend_position = "bottom center",
         save_figure_to="quick.png",
     )  # Save figure
 

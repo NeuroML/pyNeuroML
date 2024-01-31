@@ -211,7 +211,7 @@ def generate_plot(
             plt.legend(
                 loc="upper center",
                 # to ensure it does not cover the lower axis label
-                bbox_to_anchor=(0.5, -0.15),
+                bbox_to_anchor=(0.5, -0.05),
                 fancybox=True,
                 shadow=True,
                 ncol=cols_in_legend_box,
