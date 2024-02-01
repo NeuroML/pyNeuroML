@@ -2256,7 +2256,7 @@ def evaluate_arguments(args):
         sys.exit(UNKNOWN_ERR)
 
     # Deal with the -run-tellurium option which doesn't call run_jneuroml
-    if args.run_tellurium:
+    if args.run_tellurium is not None:
         try:
             from pyneuroml.tellurium import run_from_sedml_file
         except Exception:
