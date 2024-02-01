@@ -2275,10 +2275,6 @@ def evaluate_arguments(args):
 
         sys.exit(0)
 
-        # Errors of some kind were found in one or more files
-        logger.error(f"one or more SEDML files failed to validate")
-        sys.exit(UNKNOWN_ERR)
-
     # These do not use the shared option where files are supplied
     # They require the file name to be specified after
     # TODO: handle these better
