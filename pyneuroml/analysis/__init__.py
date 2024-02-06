@@ -158,6 +158,8 @@ def generate_current_vs_frequency_curve(
     :param simulator: simulator to use
     :type simulator: str
     :param num_processors: number of processors to use for analysis
+        This option is only used with NetPyNE which can use MPI for
+        parallelising simulations. For other simulators, this is unused.
     :type num_processors: int
     :param include_included: include included files
     :type include_included: bool
