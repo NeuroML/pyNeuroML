@@ -14,7 +14,7 @@ ts = [t * 0.01 for t in range(20000)]
 siny = [math.sin(t / 10) for t in ts]
 cosey = [math.exp(t / -80) * math.cos(t / 5) for t in ts]
 
-if '-i' in sys.argv:
+if "-i" in sys.argv:
     from pyneuroml.plot.Plot import generate_interactive_plot
 
     # Generate a plot for this quickly with generate_interactive_plot
@@ -22,7 +22,7 @@ if '-i' in sys.argv:
         [ts, ts],  # Add 2 sets of x values
         [siny, cosey],  # Add 2 sets of y values
         "Some traces",  # Title
-        labels=['sin', 'cos'],
+        labels=["sin", "cos"],
         xaxis="Time (ms)",  # x axis legend
         yaxis="Arbitrary units...",  # y axis legend
         linewidths=[1, 3],  # Thicknesses of each trace
@@ -30,13 +30,12 @@ if '-i' in sys.argv:
     )  # Save figure
 
 else:
-
     # Generate a plot for this quickly with generate_plot
     ax = generate_plot(
         [ts, ts],  # Add 2 sets of x values
         [siny, cosey],  # Add 2 sets of y values
         "Some traces",  # Title
-        labels=['sin', 'cos'],
+        labels=["sin", "cos"],
         xaxis="Time (ms)",  # x axis legend
         yaxis="Arbitrary units...",  # y axis legend
         linewidths=[1, 3],  # Thicknesses of each trace

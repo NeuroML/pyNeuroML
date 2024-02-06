@@ -59,10 +59,12 @@ def run_on_nsg(
         nsg_sim_config_dict = {
             "number_cores_": "1",
             "number_nodes_": "1",
+            "number_gbmemorypernode_": "1",
             "tasks_per_node_": "1",
             "runtime_": "0.5",
             'toolId': "PY_EXPANSE",
-            'nrnivmodl_o_': "1"
+            'nrnivmodl_o_': "1",
+            "cmdlineopts_": "-nogui"
         }
 
     .. versionadded:: 1.0.10
@@ -104,9 +106,11 @@ def run_on_nsg(
         "number_cores_": "1",
         "number_nodes_": "1",
         "tasks_per_node_": "1",
+        "number_gbmemorypernode_": "1",
         "runtime_": "0.5",
         "toolId": "PY_EXPANSE",
         "nrnivmodl_o_": "1",
+        "cmdlineopts_": "-nogui",
     }
 
     # update dict based on user values
