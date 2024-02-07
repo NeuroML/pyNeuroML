@@ -122,6 +122,8 @@ def run_on_nsg(
     # NSG requires that the top level directory exist
     nsg_dir = pathlib.Path(zipfile_name.replace(".zip", ""))
 
+    cwd = pathlib.Path.cwd()
+
     tdir = generate_sim_scripts_in_folder(
         engine=engine,
         lems_file_name=lems_file_name,
@@ -133,9 +135,10 @@ def run_on_nsg(
     logger.info("Generating zip file")
     runner_file = ""
 
-    generated_files = os.listdir(f"{tdir}/{nsg_dir}/")
+    os.chdir(str(tdir))
+    generated_files = os.listdir(str((pathlib.Path(tdir) / nsg_dir)))
 
-    logger.info(f"Generated files are {generated_files}")
+    print(f"Generated files are {generated_files}")
 
     with ZipFile(zipfile_name, "w") as archive:
         for f in generated_files:
@@ -171,4 +174,5 @@ def run_on_nsg(
     else:
         print("Dry run mode enabled. Not submitting to NSG.")
 
+    os.chdir(str(cwd))
     return tdir

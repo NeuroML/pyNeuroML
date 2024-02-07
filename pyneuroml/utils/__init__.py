@@ -480,7 +480,7 @@ def generate_sim_scripts_in_folder(
     generated_files_dir_name: typing.Optional[str] = None,
     *engine_args: typing.Any,
     **engine_kwargs: typing.Any,
-) -> typing.Optional[typing.List[str]]:
+) -> str:
     """Generate simulation scripts in a new folder.
 
     This method copies the model files and generates the simulation engine
@@ -583,6 +583,7 @@ def generate_sim_scripts_in_folder(
         logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
         shutil.rmtree(lems_def_dir)
 
+    cwd = Path.cwd()
     os.chdir(tdir)
     logger.info(f"Working in {tdir}")
     start_time = time.time() - 1.0
@@ -629,6 +630,10 @@ def generate_sim_scripts_in_folder(
         # use os.renames because pathlib.Path.rename does not move
         # recursively and so cannot move files within directories
         os.renames(fpath, moved_path)
+
+    # return to original directory
+    # doesn't affect scripts much, but does affect our tests
+    os.chdir(str(cwd))
 
     return tdir
 
