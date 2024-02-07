@@ -480,7 +480,7 @@ def generate_sim_scripts_in_folder(
     generated_files_dir_name: typing.Optional[str] = None,
     *engine_args: typing.Any,
     **engine_kwargs: typing.Any,
-) -> typing.Optional[list[str]]:
+) -> typing.Optional[typing.List[str]]:
     """Generate simulation scripts in a new folder.
 
     This method copies the model files and generates the simulation engine

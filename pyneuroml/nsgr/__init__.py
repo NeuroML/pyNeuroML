@@ -11,7 +11,6 @@ Copyright 2023 NeuroML contributors
 import logging
 import os
 import pathlib
-import shutil
 import typing
 from zipfile import ZipFile
 
