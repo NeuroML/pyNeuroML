@@ -11,8 +11,10 @@ import datetime
 import logging
 import math
 import os
+import pathlib
 import random
 import re
+import shutil
 import string
 import time
 import typing
@@ -20,6 +22,9 @@ from pathlib import Path
 
 import neuroml
 import numpy
+from lems.model.model import Model
+from neuroml.loaders import read_neuroml2_file
+from pyneuroml.pynml import extract_lems_definition_files, run_lems_with
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,6 +32,19 @@ logger.setLevel(logging.INFO)
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
 MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
+
+STANDARD_LEMS_FILES = [
+    "Cells.xml",
+    "Channels.xml",
+    "Inputs.xml",
+    "Networks.xml",
+    "NeuroML2CoreTypes.xml",
+    "NeuroMLCoreCompTypes.xml",
+    "NeuroMLCoreDimensions.xml",
+    "PyNN.xml",
+    "Simulation.xml",
+    "Synapses.xml",
+]
 
 
 def extract_position_info(
@@ -452,3 +470,248 @@ def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
     tdir = rootdir + "/" + f"{prefix}_{timestamp}_{random_suffix}/"
 
     return tdir
+
+
+def generate_sim_scripts_in_folder(
+    engine: str,
+    lems_file_name: str,
+    root_dir: typing.Optional[str] = None,
+    run_dir: typing.Optional[str] = None,
+    generated_files_dir_name: typing.Optional[str] = None,
+    *engine_args: typing.Any,
+    **engine_kwargs: typing.Any,
+) -> typing.Optional[list[str]]:
+    """Generate simulation scripts in a new folder.
+
+    This method copies the model files and generates the simulation engine
+    specific files (runner script for NEURON and mod files, for example) for
+    the provided engine in a new folder. This is useful when running
+    simulations on remote systems like a cluster or NSG which may not have the
+    necessary dependencies installed to generate these scripts. One can then
+    copy the folder to the remote system and run simulations there.
+
+    While copying the model files is not compulsory, we do it to ensure that
+    there's a clear correspondence between the set of model files and the
+    generated simulation files generated from them. This is also allows easy
+    inspection of model files for debugging.
+
+    .. versionadded:: 1.0.14
+
+    :param engine: name of engine: suffixes of the run_lems_with functions
+    :type engine: str
+    :param lems_file_name: name of LEMS simulation file
+    :type lems_file_name: str
+    :param root_dir: directory in which LEMS simulation file lives
+        Any included files must be relative to this main directory
+    :type root_dir: str
+    :param run_dir: directory in which model files are copied and backend
+        specific files are generated.
+
+        By default, this is the directory that the command is run from (".")
+
+        It is good practice to separate directories where simulations are run
+        from the source of the model/simulations.
+    :type run_dir: str
+    :param generated_files_dir_name: name of folder to move generated files to
+        if not provided, a `_generated` suffix is added to the main directory
+        that is created
+    :type generated_files_dir_name: str
+    :param engine_args: positional args to be passed to the engine runner
+        function
+    :param engine_kwargs: keyword args to be be passed to the engine runner
+        function
+    :returns: name of directory that was created
+    :rtype: str
+    """
+    supported_engines = ["jneuroml_neuron", "jneuroml_netpyne"]
+    if engine not in supported_engines:
+        print(f"Engine {engine} is not currently supported on NSG")
+        print(f"Supported engines are: {supported_engines}")
+        return None
+
+    logger.debug(f"Engine is {engine}")
+
+    if run_dir is None:
+        run_dir = "."
+
+    if root_dir is None:
+        root_dir = "."
+
+    tdir = get_pyneuroml_tempdir(rootdir=run_dir, prefix="pyneuroml")
+    os.mkdir(tdir)
+
+    if len(Path(lems_file_name).parts) > 1:
+        raise RuntimeError(
+            "Please only provide the name of the file here and use rootdir to provide the folder it lives in"
+        )
+
+    logger.debug("Getting list of model files")
+    model_file_list = []  # type: list
+    lems_def_dir = None
+    lems_def_dir = get_model_file_list(
+        lems_file_name, model_file_list, root_dir, lems_def_dir
+    )
+
+    root_dir = str(Path(root_dir).absolute())
+
+    logger.debug(f"Model file list is {model_file_list}")
+
+    for model_file in model_file_list:
+        logger.debug(f"Copying: {root_dir}/{model_file} -> {tdir + '/' + model_file}")
+        # if model file has directory structures in it, recreate the dirs in
+        # the temporary directory
+        if len(model_file.split("/")) > 1:
+            # throw error if files in parent directories are referred to
+            if "../" in model_file:
+                raise ValueError(
+                    """
+                    Cannot handle parent directories because we
+                    cannot create these directories correctly in
+                    the temporary location. Please re-organize
+                    your code such that all included files are in
+                    sub-directories of the root directory where the
+                    main file resides.
+                    """
+                )
+
+            model_file_path = pathlib.Path(tdir + "/" + model_file)
+            parent = model_file_path.parent
+            parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(root_dir + "/" + model_file, tdir + "/" + model_file)
+
+    if lems_def_dir is not None:
+        logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
+        shutil.rmtree(lems_def_dir)
+
+    os.chdir(tdir)
+    logger.info(f"Working in {tdir}")
+    start_time = time.time() - 1.0
+
+    if engine == "jneuroml_neuron":
+        run_lems_with(
+            engine,
+            lems_file_name=Path(lems_file_name).name,
+            compile_mods=False,
+            only_generate_scripts=True,
+            *engine_args,
+            **engine_kwargs,
+        )
+    elif engine == "jneuroml_netpyne":
+        run_lems_with(
+            engine,
+            lems_file_name=Path(lems_file_name).name,
+            only_generate_scripts=True,
+            *engine_args,
+            **engine_kwargs,
+        )
+
+    generated_files = get_files_generated_after(
+        start_time, ignore_suffixes=["xml", "nml"]
+    )
+
+    # For NetPyNE, the channels are converted to NEURON mod files, but the
+    # network and cells are imported from the nml files.
+    # So we include all the model files too.
+    if engine == "jneuroml_netpyne":
+        generated_files.extend(model_file_list)
+
+    logger.debug(f"Generated files are: {generated_files}")
+
+    if generated_files_dir_name is None:
+        generated_files_dir_name = Path(tdir).name + "_generated"
+    logger.debug(
+        f"Creating directory and moving generated files to it: {generated_files_dir_name}"
+    )
+
+    for f in generated_files:
+        fpath = pathlib.Path(f)
+        moved_path = generated_files_dir_name / fpath
+        # use os.renames because pathlib.Path.rename does not move
+        # recursively and so cannot move files within directories
+        os.renames(fpath, moved_path)
+
+    return tdir
+
+
+def get_model_file_list(
+    rootfile: str,
+    filelist: typing.List[str],
+    rootdir: str = ".",
+    lems_def_dir: typing.Optional[str] = None,
+) -> typing.Optional[str]:
+    """Get the list of files to archive.
+
+    This method will take the rootfile, and recursively resolve all the files
+    it uses.
+
+    :param rootfile: main NeuroML or LEMS file to resolve
+    :type rootfile: str
+    :param filelist: list of file paths to append to
+    :type filelist: list of strings
+    :param rootdir: directory holding the root file
+    :type rootdir: str
+    :param lems_def_dir: path to directory holding lems definition files
+    :type lems_def_dir: str
+    :returns: value of lems_def_dir so that the temporary directory can be
+        cleaned up. strings are immuatable in Python so the variable cannot be
+        modified in the function.
+    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
+    """
+    logger.debug(f"Processing {rootfile}")
+
+    fullrootdir = pathlib.Path(rootdir).absolute()
+
+    # Only store path of file relative to the rootdir, if it's a descendent of
+    # rootdir
+    if rootfile.startswith(str(fullrootdir)):
+        relrootfile = rootfile.replace(str(fullrootdir), "")
+        if relrootfile.startswith("/"):
+            relrootfile = relrootfile[1:]
+    else:
+        relrootfile = rootfile
+
+    if relrootfile in filelist:
+        logger.debug(f"Already processed {rootfile}. No op.")
+        return lems_def_dir
+
+    logger.debug(f"Appending: {relrootfile}")
+    filelist.append(relrootfile)
+
+    if rootfile.endswith(".nml"):
+        if pathlib.Path(rootfile).is_absolute():
+            rootdoc = read_neuroml2_file(rootfile)
+        else:
+            rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
+        logger.debug(f"Has includes: {rootdoc.includes}")
+        for inc in rootdoc.includes:
+            lems_def_dir = get_model_file_list(
+                inc.href, filelist, rootdir, lems_def_dir
+            )
+
+    elif rootfile.endswith(".xml"):
+        # extract the standard NeuroML2 LEMS definitions into a directory
+        # so that the LEMS parser can find them
+        if lems_def_dir is None:
+            lems_def_dir = extract_lems_definition_files()
+
+        if pathlib.Path(rootfile).is_absolute():
+            fullrootfilepath = rootfile
+        else:
+            fullrootfilepath = rootdir + "/" + rootfile
+
+        model = Model(include_includes=True, fail_on_missing_includes=True)
+        model.add_include_directory(lems_def_dir)
+        model.import_from_file(fullrootfilepath)
+
+        for inc in model.included_files:
+            incfile = pathlib.Path(inc).name
+            logger.debug(f"Processing include file {incfile} ({inc})")
+            if incfile in STANDARD_LEMS_FILES:
+                logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
+                continue
+            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
+
+    else:
+        raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
+
+    return lems_def_dir
