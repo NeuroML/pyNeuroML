@@ -35,4 +35,8 @@ def run_from_sedml_file(input_files):
             raise IOError(f"readSedML failed trying to open the file {file_name}")
 
         # execute SED-ML using Tellurium
-        te.executeSEDML(doc.toSed(), workingDir=os.path.dirname(file_name))
+        working_dir = os.path.dirname(file_name)
+        if working_dir == "":
+            working_dir = "."
+        to_sed = doc.toSed()
+        te.executeSEDML(to_sed, workingDir=working_dir)
