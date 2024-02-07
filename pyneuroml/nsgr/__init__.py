@@ -12,13 +12,10 @@ import logging
 import os
 import pathlib
 import shutil
-import time
 import typing
 from zipfile import ZipFile
 
-from pyneuroml.archive import get_model_file_list
-from pyneuroml.pynml import run_lems_with
-from pyneuroml.utils import get_files_generated_after, get_pyneuroml_tempdir
+from pyneuroml.utils import generate_sim_scripts_in_folder
 from pynsgr.commands.nsgr_submit import nsgr_submit
 
 logger = logging.getLogger(__name__)
@@ -28,6 +25,7 @@ logger.setLevel(logging.DEBUG)
 def run_on_nsg(
     engine: str,
     lems_file_name: str,
+    root_dir: typing.Optional[str] = None,
     nsg_sim_config: typing.Dict[typing.Any, typing.Any] = {},
     run_dir: typing.Optional[str] = None,
     dry_run: bool = False,
@@ -73,6 +71,9 @@ def run_on_nsg(
     :type engine: str
     :param lems_file_name: name of LEMS simulation file
     :type lems_file_name: str
+    :param root_dir: directory in which LEMS simulation file lives
+        Any included files must be relative to this main directory
+    :type root_dir: str
     :param nsg_sim_config: dict containing params and values that will be
         printed to testParam.properties
     :type nsg_sim_config: dict
@@ -91,6 +92,8 @@ def run_on_nsg(
         function
     :param dry_run: do everything but do not submit
     :type dry_run: bool
+    :returns: name of new directory
+    :rtype: str
     """
     supported_engines = ["jneuroml_neuron", "jneuroml_netpyne"]
     if engine not in supported_engines:
@@ -117,89 +120,23 @@ def run_on_nsg(
     for key, val in nsg_sim_config.items():
         nsg_sim_config_dict[key] = val
 
-    if run_dir is None:
-        run_dir = "."
+    # NSG requires that the top level directory exist
+    nsg_dir = pathlib.Path(zipfile_name.replace(".zip", ""))
 
-    tdir = get_pyneuroml_tempdir(rootdir=run_dir, prefix="pyneuroml")
-    os.mkdir(tdir)
-
-    logger.debug("Getting list of model files")
-    model_file_list = []  # type: list
-    lems_def_dir = None
-    lems_def_dir = get_model_file_list(
-        lems_file_name, model_file_list, ".", lems_def_dir
+    tdir = generate_sim_scripts_in_folder(
+        engine=engine,
+        lems_file_name=lems_file_name,
+        root_dir=root_dir,
+        run_dir=run_dir,
+        generated_files_dir_name=str(nsg_dir),
     )
-
-    for model_file in model_file_list:
-        logger.debug(f"Copying: {model_file} -> {tdir + '/' + model_file}")
-        # if model file has directory structures in it, recreate the dirs in
-        # the temporary directory
-        if len(model_file.split("/")) > 1:
-            # throw error if files in parent directories are referred to
-            if "../" in model_file:
-                raise ValueError(
-                    """
-                    Cannot handle parent directories because we
-                    cannot create these directories correctly in
-                    the temporary location. Please re-organize
-                    your code such that all included files are in
-                    sub-directories of this main directory.
-                    """
-                )
-
-            model_file_path = pathlib.Path(tdir + "/" + model_file)
-            parent = model_file_path.parent
-            parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(model_file, tdir + "/" + model_file)
-
-    if lems_def_dir is not None:
-        logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
-        shutil.rmtree(lems_def_dir)
-
-    os.chdir(tdir)
-    logger.info(f"Generating simulator specific files in {tdir}")
-    start_time = time.time() - 1.0
-
-    if engine == "jneuroml_neuron":
-        run_lems_with(
-            engine,
-            lems_file_name=lems_file_name,
-            compile_mods=False,
-            only_generate_scripts=True,
-            *engine_args,
-            **engine_kwargs,
-        )
-    elif engine == "jneuroml_netpyne":
-        run_lems_with(
-            engine,
-            lems_file_name=lems_file_name,
-            only_generate_scripts=True,
-            *engine_args,
-            **engine_kwargs,
-        )
-
-    generated_files = get_files_generated_after(
-        start_time, ignore_suffixes=["xml", "nml"]
-    )
-
-    # For NetPyNE, the channels are converted to NEURON mod files, but the
-    # network and cells are imported from the nml files.
-    # So we include all the model files too.
-    if engine == "jneuroml_netpyne":
-        generated_files.extend(model_file_list)
-
-    logger.debug(f"Generated files are: {generated_files}")
 
     logger.info("Generating zip file")
     runner_file = ""
-    # NSG requires that the top level directory exist
-    nsg_dir = pathlib.Path(zipfile_name.replace(".zip", ""))
-    logger.debug(f"Creating directory and moving generated files to it: {nsg_dir}")
 
-    # remove it if it exists
-    if nsg_dir.is_dir():
-        shutil.rmtree(str(nsg_dir))
-    nsg_dir.mkdir()
+    generated_files = os.listdir(f"{tdir}/{nsg_dir}/")
+
+    logger.info(f"Generated files are {generated_files}")
 
     with ZipFile(zipfile_name, "w") as archive:
         for f in generated_files:
@@ -211,10 +148,6 @@ def run_on_nsg(
                     runner_file = f
             fpath = pathlib.Path(f)
             moved_path = nsg_dir / fpath
-            # use os.renames because pathlib.Path.rename does not move
-            # recursively and so cannot move files within directories
-            os.renames(fpath, moved_path)
-
             archive.write(str(moved_path))
 
     logger.debug("Printing testParam.properties")
@@ -239,4 +172,4 @@ def run_on_nsg(
     else:
         print("Dry run mode enabled. Not submitting to NSG.")
 
-    return True
+    return tdir
