@@ -26,11 +26,15 @@ class TestNSGR(BaseTestCase):
         """test run_on_nsg method"""
         thispath = pl.Path(__file__)
         dirname = str(thispath.parent.parent.parent)
+        lems_file_name = "LEMS_NML2_Ex5_DetCell.xml"
         dirname = run_on_nsg(
             engine="jneuroml_neuron",
-            lems_file_name="LEMS_NML2_Ex5_DetCell.xml",
+            lems_file_name=lems_file_name,
             root_dir=dirname + "/examples/",
             run_dir=str(thispath.parent),
             dry_run=True,
         )
         self.assertTrue(pl.Path(dirname).exists())
+        self.assertTrue(
+            pl.Path(f"{dirname}/" + lems_file_name.replace(".xml", "_NSG")).exists()
+        )

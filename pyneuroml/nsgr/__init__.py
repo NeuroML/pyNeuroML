@@ -136,7 +136,7 @@ def run_on_nsg(
     runner_file = ""
 
     os.chdir(str(tdir))
-    generated_files = os.listdir(str((pathlib.Path(tdir) / nsg_dir)))
+    generated_files = os.listdir(nsg_dir)
 
     print(f"Generated files are {generated_files}")
 
