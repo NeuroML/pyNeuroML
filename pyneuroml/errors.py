@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Enter one line description here.
+Error descriptions.
 
-File:
+File: pyneuroml/errors.py
 
-Copyright 2023 Ankur Sinha
-Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
+Copyright 2024 NeuroML contributors
 """
 
 FILE_NOT_FOUND_ERR = 13
