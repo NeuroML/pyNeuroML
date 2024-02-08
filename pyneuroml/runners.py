@@ -88,8 +88,8 @@ def run_lems_with_jneuroml(
         "Loading LEMS file: {} and running with jNeuroML".format(lems_file_name)
     )
     post_args = ""
-    post_args += gui_string(nogui)
-    post_args += include_string(paths_to_include)
+    post_args += _gui_string(nogui)
+    post_args += _include_string(paths_to_include)
 
     t_run = datetime.now()
 
@@ -220,8 +220,8 @@ def run_lems_with_jneuroml_neuron(
     if compile_mods:
         post_args += " -compile"
 
-    post_args += gui_string(nogui)
-    post_args += include_string(paths_to_include)
+    post_args += _gui_string(nogui)
+    post_args += _include_string(paths_to_include)
 
     t_run = datetime.now()
     if skip_run:
@@ -361,8 +361,8 @@ def run_lems_with_jneuroml_netpyne(
     if only_generate_json:
         post_args += " -json"
 
-    post_args += gui_string(nogui)
-    post_args += include_string(paths_to_include)
+    post_args += _gui_string(nogui)
+    post_args += _include_string(paths_to_include)
 
     t_run = datetime.now()
     if skip_run:
@@ -468,8 +468,8 @@ def run_lems_with_jneuroml_brian2(
 
     post_args = " -brian2"
 
-    # post_args += gui_string(nogui)
-    # post_args += include_string(paths_to_include)
+    # post_args += _gui_string(nogui)
+    # post_args += _include_string(paths_to_include)
 
     t_run = datetime.now()
     if skip_run:
@@ -561,7 +561,7 @@ def run_lems_with_eden(
         return True
 
 
-def gui_string(nogui: bool) -> str:
+def _gui_string(nogui: bool) -> str:
     """Return the gui string for jnml
 
     :param nogui: toggle whether GUI should be used or not
@@ -571,10 +571,8 @@ def gui_string(nogui: bool) -> str:
     return " -nogui" if nogui else ""
 
 
-def include_string(paths_to_include: typing.Union[str, tuple[str], list[str]]) -> str:
-    """Convert a path or list of paths into an include string to be used by
-    jnml.
-
+def _include_string(paths_to_include: typing.Union[str, tuple[str], list[str]]) -> str:
+    """Convert a path or list of paths into an include string to be used by jnml.
     :param paths_to_include: path or list or tuple of paths to be included
     :type paths_to_include: str or list(str) or tuple(str)
     :returns: include string to be used with jnml.
