@@ -21,6 +21,7 @@ from neuroml import NeuroMLDocument
 import lems.model.model as lems_model
 from pyneuroml.errors import FILE_NOT_FOUND_ERR
 from pyneuroml.validators import validate_neuroml2
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -30,7 +31,7 @@ def read_neuroml2_file(
     nml2_file_name: str,
     include_includes: bool = False,
     verbose: bool = False,
-    already_included: list = None,
+    already_included: Optional[list] = None,
     optimized: bool = False,
     check_validity_pre_include: bool = False,
 ) -> NeuroMLDocument:

@@ -33,6 +33,7 @@ from pyneuroml.utils import (
     get_path_to_jnml_jar,
     get_pyneuroml_tempdir,
 )
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -827,7 +828,7 @@ def execute_command_in_dir(
     directory: str,
     verbose: bool = DEFAULTS["v"],
     prefix: str = "Output: ",
-    env: typing.Any = None,
+    env: Optional[typing.Any] = None,
 ) -> tuple[int, str]:
     """Execute a command in specific working directory
 
