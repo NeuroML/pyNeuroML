@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 def validate_neuroml1(
     nml1_file_name: str, verbose_validate: bool = True, return_string: bool = False
-) -> typing.Union[bool, tuple[bool, str]]:
+) -> typing.Union[bool, typing.Tuple[bool, str]]:
     """Validate a NeuroML v1 file.
 
     NOTE: NeuroML v1 is deprecated. Please use NeuroML v2.
@@ -61,7 +61,7 @@ def validate_neuroml2(
     verbose_validate: bool = True,
     max_memory: typing.Optional[str] = None,
     return_string: bool = False,
-) -> typing.Union[bool, tuple[bool, str]]:
+) -> typing.Union[bool, typing.Tuple[bool, str]]:
     """Validate a NeuroML2 file using jnml.
 
     :params nml2_file_name: name of NeuroML 2 file to validate

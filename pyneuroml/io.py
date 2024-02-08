@@ -79,7 +79,7 @@ def read_neuroml2_file(
         for include in nml2_doc.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, include.href))
             if incl_loc not in already_included:
-                inc = True  # type: typing.Union[bool, tuple[bool, str]]
+                inc = True  # type: typing.Union[bool, typing.Tuple[bool, str]]
                 if check_validity_pre_include:
                     inc = validate_neuroml2(incl_loc, verbose_validate=False)
 

@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 lems_model_with_units = None
 
 
-def split_nml2_quantity(nml2_quantity: str) -> tuple[float, str]:
+def split_nml2_quantity(nml2_quantity: str) -> typing.Tuple[float, str]:
     """Split a NeuroML 2 quantity into its magnitude and units
 
     :param nml2_quantity: NeuroML2 quantity to split

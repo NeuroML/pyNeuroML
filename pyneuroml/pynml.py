@@ -406,7 +406,7 @@ def _parse_arguments():
 def list_exposures(
     nml_doc_fn: str, substring: str = ""
 ) -> typing.Union[
-    dict[lems.model.component.Component, list[lems.model.component.Exposure]],
+    dict[lems.model.component.Component, typing.List[lems.model.component.Exposure]],
     None,
 ]:
     """List exposures in a NeuroML model document file.
@@ -435,7 +435,7 @@ def list_exposures(
 
 def list_recording_paths_for_exposures(
     nml_doc_fn: str, substring: str = "", target: str = ""
-) -> list[str]:
+) -> typing.List[str]:
     """List the recording path strings for exposures.
 
     This wraps around `lems.model.list_recording_paths` to list the recording
@@ -831,7 +831,7 @@ def _evaluate_arguments(args):
 """
 
 
-def reload_standard_dat_file(file_name: str) -> tuple[dict, list]:
+def reload_standard_dat_file(file_name: str) -> typing.Tuple[dict, list]:
     """Reload a datafile as usually saved by jLEMS, etc.
     First column is time (in seconds), multiple other columns.
 

@@ -53,7 +53,7 @@ def run_lems_with_jneuroml(
     verbose: bool = DEFAULTS["v"],
     exit_on_fail: bool = True,
     cleanup: bool = False,
-) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
+) -> typing.Union[bool, typing.Union[dict, typing.Tuple[dict, dict]]]:
     """Parse/Run a LEMS file with jnml.
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -156,7 +156,7 @@ def run_lems_with(engine: str, *args: typing.Any, **kwargs: typing.Any):
 
 def run_lems_with_jneuroml_neuron(
     lems_file_name: str,
-    paths_to_include: list[str] = [],
+    paths_to_include: typing.List[str] = [],
     max_memory: str = DEFAULTS["default_java_max_memory"],
     skip_run: bool = False,
     nogui: bool = False,
@@ -171,7 +171,7 @@ def run_lems_with_jneuroml_neuron(
     exit_on_fail: bool = True,
     cleanup: bool = False,
     realtime_output: bool = False,
-) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
+) -> typing.Union[bool, typing.Union[dict, typing.Tuple[dict, dict]]]:
     # jnml_runs_neuron=True):  #jnml_runs_neuron=False is Work in progress!!!
     """Run LEMS file with the NEURON simulator
 
@@ -289,7 +289,7 @@ def run_lems_with_jneuroml_neuron(
 
 def run_lems_with_jneuroml_netpyne(
     lems_file_name: str,
-    paths_to_include: list[str] = [],
+    paths_to_include: typing.List[str] = [],
     max_memory: str = DEFAULTS["default_java_max_memory"],
     skip_run: bool = False,
     nogui: bool = False,
@@ -305,7 +305,9 @@ def run_lems_with_jneuroml_netpyne(
     exit_on_fail: bool = True,
     return_string: bool = False,
     cleanup: bool = False,
-) -> typing.Union[bool, tuple[bool, str], typing.Union[dict, tuple[dict, dict]]]:
+) -> typing.Union[
+    bool, typing.Tuple[bool, str], typing.Union[dict, typing.Tuple[dict, dict]]
+]:
     """Run LEMS file with the NEURON simulator
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -418,7 +420,7 @@ def run_lems_with_jneuroml_netpyne(
 # TODO: need to enable run with Brian2!
 def run_lems_with_jneuroml_brian2(
     lems_file_name: str,
-    paths_to_include: list[str] = [],
+    paths_to_include: typing.List[str] = [],
     max_memory: str = DEFAULTS["default_java_max_memory"],
     skip_run: bool = False,
     nogui: bool = False,
@@ -430,7 +432,7 @@ def run_lems_with_jneuroml_brian2(
     verbose: bool = DEFAULTS["v"],
     exit_on_fail: bool = True,
     cleanup: bool = False,
-) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
+) -> typing.Union[bool, typing.Union[dict, typing.Tuple[dict, dict]]]:
     """Run LEMS file with the NEURON simulator
 
     Tip: set `skip_run=True` to only parse the LEMS file but not run the simulation.
@@ -521,7 +523,7 @@ def run_lems_with_eden(
     load_saved_data: bool = False,
     reload_events: bool = False,
     verbose: bool = DEFAULTS["v"],
-) -> typing.Union[bool, typing.Union[dict, tuple[dict, dict]]]:
+) -> typing.Union[bool, typing.Union[dict, typing.Tuple[dict, dict]]]:
     """Run LEMS file with the EDEN simulator
 
     :param lems_file_name: name of LEMS file to run
@@ -572,7 +574,9 @@ def _gui_string(nogui: bool) -> str:
     return " -nogui" if nogui else ""
 
 
-def _include_string(paths_to_include: typing.Union[str, tuple[str], list[str]]) -> str:
+def _include_string(
+    paths_to_include: typing.Union[str, typing.Tuple[str], typing.List[str]]
+) -> str:
     """Convert a path or list of paths into an include string to be used by jnml.
     :param paths_to_include: path or list or tuple of paths to be included
     :type paths_to_include: str or list(str) or tuple(str)
@@ -598,7 +602,7 @@ def run_jneuroml(
     report_jnml_output: bool = True,
     exit_on_fail: bool = False,
     return_string: bool = False,
-) -> typing.Union[tuple[bool, str], bool]:
+) -> typing.Union[typing.Tuple[bool, str], bool]:
     """Run jnml with provided arguments.
 
     :param pre_args: pre-file name arguments
@@ -829,7 +833,7 @@ def execute_command_in_dir(
     verbose: bool = DEFAULTS["v"],
     prefix: str = "Output: ",
     env: Optional[typing.Any] = None,
-) -> tuple[int, str]:
+) -> typing.Tuple[int, str]:
     """Execute a command in specific working directory
 
     :param command: command to run
@@ -906,7 +910,7 @@ def reload_saved_data(
     reload_events: bool = False,
     verbose: bool = DEFAULTS["v"],
     remove_dat_files_after_load: bool = False,
-) -> typing.Union[dict, tuple[dict, dict]]:
+) -> typing.Union[dict, typing.Tuple[dict, dict]]:
     """Reload data saved from previous LEMS simulation run.
 
     :param lems_file_name: name of LEMS file that was used to generate the data
