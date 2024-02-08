@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Enter one line description here.
+Utilities for getting information from NeuroML models
 
-File:
+File: pyneuroml/utils/info.py
 
-Copyright 2023 Ankur Sinha
-Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
+Copyright 2024 NeuroML contributors
 """
 
 import inspect

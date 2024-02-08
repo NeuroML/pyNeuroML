@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 The utils package contains various utility functions to aid users working with
-PyNeuroML
+PyNeuroML. Many of these methods are meant for internal use in the package and
+so may change in the future: the API here is not considered stable.
 
-Copyright 2023 NeuroML Contributors
+Copyright 2024 NeuroML Contributors
 """
 
 import copy

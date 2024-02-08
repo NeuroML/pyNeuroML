@@ -2,11 +2,12 @@
 """
 
 Python wrapper around jnml command.
-Also a number of helper functions for
-handling/generating/running LEMS/NeuroML2 files
+(Thanks to Werner van Geit for an initial version of a python wrapper for jnml.)
 
-Thanks to Werner van Geit for an initial version of a python wrapper for jnml.
-
+For convenience and backward compatibility, this also includes various
+helper/utility methods that are defined in other modules in the package. But
+please try and use these from their defined locations as these imports will
+gradually be removed from here in the future.
 """
 
 # py3.7, 3.8 require this to use standard collections as generics
@@ -25,20 +26,15 @@ import lems
 import lems.model.model as lems_model
 from pyneuroml import DEFAULTS, JNEUROML_VERSION, __version__
 from pyneuroml.errors import ARGUMENT_ERR, UNKNOWN_ERR
-from pyneuroml.io import (
-    confirm_file_exists,
-    confirm_lems_file,  # noqa
-    confirm_neuroml_file,
-    read_lems_file,
-    read_neuroml2_file,
-    write_lems_file,
-    write_neuroml2_file,
-)
-from pyneuroml.modelgraphs import generate_nmlgraph
-from pyneuroml.runners import *
 from pyneuroml.utils import extract_lems_definition_files
-from pyneuroml.utils.units import get_value_in_si
+from pyneuroml.utils.units import *
+from pyneuroml.modelgraphs import *
+from pyneuroml.runners import *
 from pyneuroml.validators import *
+from pyneuroml.annotations import *
+from pyneuroml.nsgr import *
+from pyneuroml.io import *
+from pyneuroml.utils.info import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -59,15 +55,15 @@ else:
     # run generate_plot (and so requires matplotlib). If it's never called, matplotlib
     # doesn't get imported
 
-    def generate_plot(*args, **kwargs):
+    def generate_plot(*args, **kwargs):  # type: ignore
         try:
-            import matplotlib
+            import matplotlib  # noqa
 
             from pyneuroml.plot import generate_plot as gp
 
             return gp(*args, **kwargs)
 
-        except Exception as e:
+        except Exception:
             logger.error("Matplotlib not found!")
             warnings.warn(
                 """
@@ -79,15 +75,15 @@ else:
                 stacklevel=2,
             )
 
-    def generate_interactive_plot(*args, **kwargs):
+    def generate_interactive_plot(*args, **kwargs):  # type: ignore
         try:
-            import matplotlib
+            import matplotlib  # noqa
 
             from pyneuroml.plot import generate_interactive_plot as gp
 
             return gp(*args, **kwargs)
 
-        except Exception as e:
+        except Exception:
             logger.error("Matplotlib not found!")
             warnings.warn(
                 """
