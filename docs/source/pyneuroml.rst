@@ -1,13 +1,13 @@
-pyneuroml package
+API Documentation
 =================
 
 .. automodule:: pyneuroml
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: print_v
 
-Subpackages
------------
+The PyNeuroML package includes the following sub-packages:
 
 .. toctree::
    :maxdepth: 1
