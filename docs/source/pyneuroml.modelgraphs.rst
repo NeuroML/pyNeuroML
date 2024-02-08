@@ -1,7 +1,7 @@
-pyneuroml.nsgr module
+pyneuroml.modelgraphs module
 ======================
 
-.. automodule:: pyneuroml.nsgr
+.. automodule:: pyneuroml.modelgraphs
    :members:
    :undoc-members:
    :show-inheritance:

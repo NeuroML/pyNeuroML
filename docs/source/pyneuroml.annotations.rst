@@ -1,7 +1,7 @@
-pyneuroml.nsgr module
+pyneuroml.annotations module
 ======================
 
-.. automodule:: pyneuroml.nsgr
+.. automodule:: pyneuroml.annotations
    :members:
    :undoc-members:
    :show-inheritance:
