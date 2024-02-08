@@ -2,9 +2,9 @@
 """
 Module for working with NSG. See https://github.com/OpenSourceBrain/pynsgr
 
-File: pyneuroml/nsgr/__init__.py
+File: pyneuroml/nsgr.py
 
-Copyright 2023 NeuroML contributors
+Copyright 2024 NeuroML contributors
 """
 
 
