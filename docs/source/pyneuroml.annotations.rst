@@ -1,5 +1,5 @@
 pyneuroml.annotations module
-======================
+=============================
 
 .. automodule:: pyneuroml.annotations
    :members:

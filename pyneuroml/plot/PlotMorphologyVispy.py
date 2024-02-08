@@ -321,14 +321,14 @@ def plot_interactive_3D(
 
         .. code-block:: python
 
-        {
-            "cell id1": {
-                "seg id1": {
-                    "marker_color": "blue",
-                    "marker_size": [0.1, 0.1]
+            {
+                "cell id1": {
+                    "seg id1": {
+                        "marker_color": "blue",
+                        "marker_size": [0.1, 0.1]
+                    }
                 }
             }
-        }
 
     :type highlight_spec: dict
     :param precision: tuple containing two values: (number of decimal places,

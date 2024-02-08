@@ -1,5 +1,5 @@
 pyneuroml.modelgraphs module
-======================
+=============================
 
 .. automodule:: pyneuroml.modelgraphs
    :members:

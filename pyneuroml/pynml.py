@@ -101,7 +101,7 @@ version_string = "pyNeuroML v{} (libNeuroML v{}, jNeuroML v{})".format(
 )
 
 
-def parse_arguments():
+def _parse_arguments():
     """Parse command line arguments"""
 
     import argparse
@@ -520,7 +520,7 @@ def version_info(detailed: bool = False):
             print("- Brian2: ?")
 
 
-def evaluate_arguments(args):
+def _evaluate_arguments(args):
     logger.debug("    ====  Args: %s" % args)
     global DEFAULTS
 
@@ -858,14 +858,12 @@ def reload_standard_dat_file(file_name: str) -> tuple[dict, list]:
     return data, indeces
 
 
-"""
-Work in progress: expand a (simple) ComponentType  and evaluate an instance of it by
-giving parameters & required variables
-Used in MOOSE NeuroML reader...
-"""
-
-
 def evaluate_component(comp_type, req_variables={}, parameter_values={}):
+    """
+    Work in progress: expand a (simple) ComponentType  and evaluate an instance of it by
+    giving parameters & required variables
+    Used in MOOSE NeuroML reader...
+    """
     logger.debug(
         "Evaluating %s with req:%s; params:%s"
         % (comp_type.name, req_variables, parameter_values)
@@ -909,9 +907,9 @@ def main(args=None):
     """Main"""
 
     if args is None:
-        args = parse_arguments()
+        args = _parse_arguments()
 
-    evaluate_arguments(args)
+    _evaluate_arguments(args)
 
 
 if __name__ == "__main__":

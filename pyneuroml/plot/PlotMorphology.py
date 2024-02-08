@@ -244,6 +244,7 @@ def plot_2D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+
     :type plot_spec: dict
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements.  Only used
@@ -261,14 +262,14 @@ def plot_2D(
 
         .. code-block:: python
 
-        {
-            "cell id1": {
-                "seg id1": {
-                    "marker_color": "blue",
-                    "marker_size": 10
+            {
+                "cell id1": {
+                    "seg id1": {
+                        "marker_color": "blue",
+                        "marker_size": 10
+                    }
                 }
             }
-        }
 
     :type highlight_spec: dict
     """
