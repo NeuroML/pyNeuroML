@@ -16,7 +16,6 @@ import neuroml
 from pyneuroml.pynml import read_neuroml2_file, write_neuroml2_file
 from pyneuroml.utils import (
     extract_position_info,
-    generate_sim_scripts_in_folder,
     get_files_generated_after,
     rotate_cell,
 )
@@ -70,21 +69,6 @@ class TestUtils(BaseTestCase):
         current_files = list(pl.Path(".").glob("*.ini"))
         current_files = [f for f in current_files if f.is_file()]
         self.assertEqual(len(files), len(current_files))
-
-    def test_generate_sim_scripts_in_folder(self):
-        """test generate_sim_scripts_in_folder method"""
-        thispath = pl.Path(__file__)
-        dirname = str(thispath.parent.parent.parent)
-        dirname = generate_sim_scripts_in_folder(
-            engine="jneuroml_neuron",
-            lems_file_name="LEMS_NML2_Ex5_DetCell.xml",
-            root_dir=dirname + "/examples/",
-            run_dir=str(thispath.parent),
-        )
-        self.assertTrue(pl.Path(dirname).exists())
-        self.assertTrue(
-            pl.Path(dirname + "/" + pl.Path(dirname).name + "_generated").exists()
-        )
 
     def test_rotate_cell(self):
         """Test rotate_cell"""

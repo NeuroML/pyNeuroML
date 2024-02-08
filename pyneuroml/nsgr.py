@@ -14,7 +14,7 @@ import pathlib
 import typing
 from zipfile import ZipFile
 
-from pyneuroml.utils import generate_sim_scripts_in_folder
+from pyneuroml.runners import generate_sim_scripts_in_folder
 from pynsgr.commands.nsgr_submit import nsgr_submit
 
 logger = logging.getLogger(__name__)
