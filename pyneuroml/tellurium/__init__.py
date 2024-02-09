@@ -20,10 +20,10 @@ import libsedml
 
 
 def run_from_sedml_file(input_files):
-    "read a SEDML file(s) and run the model(s) using tellurium's executeSEDML command"
+    "read a SEDML file and run it using tellurium's executeSEDML command"
 
-    # input file list is a shared option therefore datatype will be a list
-    # not a single filename
+    # input_files list is a shared option with commands that can take >1 filename
+    # therefore datatype is a list not a single filename
     if not len(input_files) >= 1:
         raise ValueError("No input files specified")
 
