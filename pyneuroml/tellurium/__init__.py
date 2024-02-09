@@ -7,7 +7,6 @@ import tellurium as te
 
 te.setDefaultPlottingEngine("matplotlib")
 
-import sys
 import os
 import libsedml
 
@@ -19,7 +18,7 @@ import libsedml
 #     import tesedml as libsedml
 
 
-def run_from_sedml_file(input_files):
+def run_from_sedml_file(input_files, args):
     "read a SEDML file and run it using tellurium's executeSEDML command"
 
     # input_files list is a shared option with commands that can take >1 filename
@@ -29,6 +28,15 @@ def run_from_sedml_file(input_files):
 
     if len(input_files) > 1:
         raise ValueError("Only a single input file is supported")
+
+    outputdir = None
+    saveoutputs = False
+    if "-outputdir" in args:
+        try:
+            outputdir = args[args.index("-outputdir") + 1]
+        except:
+            raise ValueError("Incorrectly specified outputdir")
+        saveoutputs = True
 
     file_name = input_files[0]
 
@@ -47,4 +55,10 @@ def run_from_sedml_file(input_files):
     to_sed = doc.toSed()
 
     # execute SED-ML using Tellurium
-    te.executeSEDML(to_sed, workingDir=working_dir)
+    te.executeSEDML(
+        to_sed,
+        workingDir=working_dir,
+        createOutputs=True,
+        saveOutputs=saveoutputs,
+        outputDir=outputdir,
+    )

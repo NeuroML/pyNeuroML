@@ -176,8 +176,8 @@ def parse_arguments():
         "input_files",
         type=str,
         nargs="*",
-        metavar="<LEMS/NeuroML 2/SBML file(s)>",
-        help="LEMS/NeuroML 2/SBML file(s) to process",
+        metavar="<LEMS/NeuroML 2/SBML/SEDML file(s)>",
+        help="LEMS/NeuroML 2/SBML/SEDML file(s) to process",
     )
 
     mut_exc_opts_grp = parser.add_argument_group(
@@ -222,9 +222,11 @@ def parse_arguments():
         nargs=argparse.REMAINDER,
         help=(
             "Load a SEDML file, and run it using tellurium:\n"
-            "-run-tellurium <SEDML file>\n"
+            "<SEDML file> -run-tellurium [-outputdir dir]\n"
             "    <SEDML file>\n"
             "        the SEDML file to use"
+            "    -outputdir <dir>\n"
+            "        save any output reports in directory <dir>"
         ),
     )
     mut_exc_opts.add_argument(
@@ -346,7 +348,7 @@ def parse_arguments():
         nargs=3,
         help=(
             "(Via jNeuroML) Load a SBML file, and convert it\n"
-            "toLEMS format using values for duration & dt\n"
+            "to LEMS format using values for duration & dt\n"
             "in ms (ignoring SBML units)"
         ),
     )
@@ -2263,12 +2265,15 @@ def evaluate_arguments(args):
             logger.critical("Unable to import pyneuroml.tellurium")
             sys.exit(UNKNOWN_ERR)
 
-        if not len(args.input_files) >= 1:
+        if len(args.input_files) < 1:
             logger.critical("No input files specified")
+            sys.exit(ARGUMENT_ERR)
+        elif len(args.input_files) != 1:
+            logger.critical("Only a single input file is supported by this option")
             sys.exit(ARGUMENT_ERR)
 
         try:
-            run_from_sedml_file(args.input_files)
+            run_from_sedml_file(args.input_files, args.run_tellurium)
         except Exception as e:
             logger.critical(f"run_from_sedml_file failed with {str(e)}")
             sys.exit(UNKNOWN_ERR)
