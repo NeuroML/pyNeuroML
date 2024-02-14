@@ -103,9 +103,16 @@ else:
             )
 
 
+# read from env variable if found
+try:
+    java_max_memory = os.environ["JNML_MAX_MEMORY_LOCAL"]
+except KeyError:
+    java_max_memory = "400M"
+
+
 DEFAULTS = {
     "v": False,
-    "default_java_max_memory": "400M",
+    "default_java_max_memory": java_max_memory,
     "nogui": False,
 }  # type: dict[str, typing.Any]
 
@@ -318,6 +325,14 @@ def parse_arguments():
         "-sbml",
         action="store_true",
         help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to SBML format"),
+    )
+    mut_exc_opts.add_argument(
+        "-sbml-sedml",
+        action="store_true",
+        help=(
+            "(Via jNeuroML) Load a LEMS file, and convert it\n"
+            "to SBML format with a SED-ML file describing the experiment to run"
+        ),
     )
     mut_exc_opts.add_argument(
         "-matlab",
@@ -2397,6 +2412,9 @@ def evaluate_arguments(args):
         elif args.sbml:
             confirm_lems_file(f)
             post_args = "-sbml"
+        elif args.sbml_sedml:
+            confirm_lems_file(f)
+            post_args = "-sbml-sedml"
         elif args.matlab:
             confirm_lems_file(f)
             post_args = "-matlab"
@@ -2532,7 +2550,9 @@ def run_jneuroml(
     :param target_file: LEMS or NeuroML file to run jnml on
     :type target_file: str
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+        Note that the default value of this can be overridden using the
+        JNML_MAX_MEMORY_LOCAL environment variable
+    :type max_memory: str
     :param exec_in_dir: working directory to execute LEMS simulation in
     :type exec_in_dir: str
     :param verbose: toggle whether jnml should print verbose information
