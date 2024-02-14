@@ -469,7 +469,7 @@ def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
     :rtype: str
 
     """
-    timestamp = datetime.datetime.now().strftime("%y%m%d%H%M%S")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     random_suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     tdir = rootdir + "/" + f"{prefix}_{timestamp}_{random_suffix}/"
 
