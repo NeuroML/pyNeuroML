@@ -34,6 +34,7 @@ from pyneuroml.utils.plot import (
     get_next_hex_color,
     load_minimal_morphplottable__model,
 )
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -244,6 +245,7 @@ def plot_2D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+
     :type plot_spec: dict
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements.  Only used
@@ -261,14 +263,14 @@ def plot_2D(
 
         .. code-block:: python
 
-        {
-            "cell id1": {
-                "seg id1": {
-                    "marker_color": "blue",
-                    "marker_size": 10
+            {
+                "cell id1": {
+                    "seg id1": {
+                        "marker_color": "blue",
+                        "marker_size": 10
+                    }
                 }
             }
-        }
 
     :type highlight_spec: dict
     """
@@ -487,13 +489,13 @@ def plot_2D(
 
 def plot_2D_cell_morphology(
     offset: typing.List[float] = [0, 0],
-    cell: Cell = None,
+    cell: Optional[Cell] = None,
     plane2d: str = "xy",
     color: typing.Optional[str] = None,
     title: str = "",
     verbose: bool = False,
-    fig: matplotlib.figure.Figure = None,
-    ax: matplotlib.axes.Axes = None,
+    fig: Optional[matplotlib.figure.Figure] = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     scalebar: bool = False,
@@ -794,8 +796,8 @@ def plot_2D_point_cells(
     soma_radius: float = 10.0,
     title: str = "",
     verbose: bool = False,
-    fig: matplotlib.figure.Figure = None,
-    ax: matplotlib.axes.Axes = None,
+    fig: Optional[matplotlib.figure.Figure] = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     scalebar: bool = False,
     nogui: bool = True,
@@ -942,8 +944,8 @@ def plot_2D_schematic(
     save_to_file: typing.Optional[str] = None,
     scalebar: bool = True,
     autoscale: bool = True,
-    fig: matplotlib.figure.Figure = None,
-    ax: matplotlib.axes.Axes = None,
+    fig: Optional[matplotlib.figure.Figure] = None,
+    ax: Optional[matplotlib.axes.Axes] = None,
     title: str = "",
     close_plot: bool = False,
 ) -> None:

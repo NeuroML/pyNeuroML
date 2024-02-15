@@ -22,6 +22,7 @@ from lxml.etree import parse, XSLT, tostring
 
 
 from pyneuroml.utils.cli import build_namespace
+from typing import Optional
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,9 @@ DEFAULTS = {
 }
 
 
-def channelml2nml(channelmlfile: str, xsltfile: str = None) -> typing.Optional[str]:
+def channelml2nml(
+    channelmlfile: str, xsltfile: Optional[str] = None
+) -> typing.Optional[str]:
     """Convert a ChannelML file to NeuroMLv2.
 
     The second argument is optional, and if not set, the XSL file provided by

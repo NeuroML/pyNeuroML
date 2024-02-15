@@ -12,6 +12,7 @@ import logging
 import typing
 import matplotlib
 import matplotlib.axes
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,10 +28,10 @@ def generate_plot(
     linewidths: typing.Optional[typing.List[str]] = None,
     markers: typing.Optional[typing.List[str]] = None,
     markersizes: typing.Optional[typing.List[str]] = None,
-    xaxis: str = None,
-    yaxis: str = None,
-    xlim: typing.List[float] = None,
-    ylim: typing.List[float] = None,
+    xaxis: Optional[str] = None,
+    yaxis: Optional[str] = None,
+    xlim: Optional[typing.List[float]] = None,
+    ylim: Optional[typing.List[float]] = None,
     show_xticklabels: bool = True,
     show_yticklabels: bool = True,
     grid: bool = False,
@@ -211,7 +212,7 @@ def generate_plot(
             plt.legend(
                 loc="upper center",
                 # to ensure it does not cover the lower axis label
-                bbox_to_anchor=(0.5, -0.15),
+                bbox_to_anchor=(0.5, -0.05),
                 fancybox=True,
                 shadow=True,
                 ncol=cols_in_legend_box,
@@ -263,9 +264,9 @@ def generate_interactive_plot(
     ] = None,
     plot_bgcolor: typing.Optional[str] = None,
     modes: typing.Optional[typing.List[str]] = None,
-    xaxis: str = None,
-    yaxis: str = None,
-    legend_title: str = None,
+    xaxis: Optional[str] = None,
+    yaxis: Optional[str] = None,
+    legend_title: Optional[str] = None,
     xaxis_color: str = "#fff",
     yaxis_color: str = "#fff",
     xaxis_width: typing.Union[float, int] = 1,

@@ -6,3 +6,42 @@ pyneuroml.utils package
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.utils.info module
+---------------------------
+
+.. automodule:: pyneuroml.utils.info
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyneuroml.utils.plot module
+---------------------------
+
+.. automodule:: pyneuroml.utils.plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyneuroml.utils.cli module
+---------------------------
+
+.. automodule:: pyneuroml.utils.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyneuroml.utils.units module
+----------------------------
+
+.. automodule:: pyneuroml.utils.units
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyneuroml.utils.xml module
+----------------------------
+
+.. automodule:: pyneuroml.utils.xml
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -12,6 +12,7 @@ from pyneuroml.plot import generate_plot
 import neuroml as nml
 from pyelectro.analysis import max_min
 from pyelectro.analysis import mean_spike_frequency
+from typing import Optional
 
 
 logger = logging.getLogger(__name__)
@@ -34,10 +35,10 @@ def generate_current_vs_frequency_curve(
     plot_voltage_traces: bool = False,
     plot_if: bool = True,
     plot_iv: bool = False,
-    xlim_if: typing.List[float] = None,
-    ylim_if: typing.List[float] = None,
-    xlim_iv: typing.List[float] = None,
-    ylim_iv: typing.List[float] = None,
+    xlim_if: Optional[typing.List[float]] = None,
+    ylim_if: Optional[typing.List[float]] = None,
+    xlim_iv: Optional[typing.List[float]] = None,
+    ylim_iv: Optional[typing.List[float]] = None,
     label_xaxis: bool = True,
     label_yaxis: bool = True,
     show_volts_label: bool = True,
@@ -47,11 +48,11 @@ def generate_current_vs_frequency_curve(
     linewidth: str = "1",
     bottom_left_spines_only: bool = False,
     show_plot_already: bool = True,
-    save_voltage_traces_to: str = None,
-    save_if_figure_to: str = None,
-    save_iv_figure_to: str = None,
-    save_if_data_to: str = None,
-    save_iv_data_to: str = None,
+    save_voltage_traces_to: Optional[str] = None,
+    save_if_figure_to: Optional[str] = None,
+    save_iv_figure_to: Optional[str] = None,
+    save_if_data_to: Optional[str] = None,
+    save_iv_data_to: Optional[str] = None,
     simulator: str = "jNeuroML",
     num_processors: int = 1,
     include_included: bool = True,
