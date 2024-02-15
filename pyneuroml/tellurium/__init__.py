@@ -29,14 +29,19 @@ def run_from_sedml_file(input_files, args):
     if len(input_files) > 1:
         raise ValueError("Only a single input file is supported")
 
-    outputdir = None
-    saveoutputs = False
+    # set default output directory
+    outputdir = "."
+    saveoutputs = True
+
     if "-outputdir" in args:
         try:
             outputdir = args[args.index("-outputdir") + 1]
         except:
             raise ValueError("Incorrectly specified outputdir")
-        saveoutputs = True
+
+        if outputdir == "none":
+            outputdir = None
+            saveoutputs = False
 
     file_name = input_files[0]
 

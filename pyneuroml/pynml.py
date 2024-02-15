@@ -205,9 +205,11 @@ def _parse_arguments():
             "Load a SEDML file, and run it using tellurium:\n"
             "<SEDML file> -run-tellurium [-outputdir dir]\n"
             "    <SEDML file>\n"
-            "        the SEDML file to use"
+            "        the SEDML file to use\n"
             "    -outputdir <dir>\n"
-            "        save any output reports in directory <dir>"
+            "        save any output reports in directory <dir>\n"
+            "        default is current directory ie '.'\n"
+            "        use 'none' to disable output altogether"
         ),
     )
     mut_exc_opts.add_argument(
