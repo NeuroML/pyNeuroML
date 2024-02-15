@@ -77,6 +77,11 @@ echo "##   Simple SBML validation example"
 pynml -validate-sbml test_data/valid_doc.sbml
 pynml -validate-sbml-units test_data/valid_doc.sbml
 
+echo
+echo "################################################"
+echo "##   Simple SEDML validation example"
+
+pynml -validate-sedml test_data/valid_doc_sedml.sedml
 
 echo
 echo "################################################"
