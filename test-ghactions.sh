@@ -74,14 +74,20 @@ echo
 echo "################################################"
 echo "##   Simple SBML validation example"
 
-pynml -validate-sbml test_data/valid_doc.sbml
-pynml -validate-sbml-units test_data/valid_doc.sbml
+pynml test_data/valid_doc.sbml -validate-sbml
+pynml test_data/valid_doc.sbml -validate-sbml-units
 
 echo
 echo "################################################"
 echo "##   Simple SEDML validation example"
 
-pynml -validate-sedml test_data/valid_doc_sedml.sedml
+pynml  test_data/valid_doc_sedml.sedml -validate-sedml
+
+echo
+echo "################################################"
+echo "##   Tellurium validation example"
+
+pynml test_data/valid_doc_sedml.sedml -run-tellurium -outputdir none
 
 echo
 echo "################################################"
