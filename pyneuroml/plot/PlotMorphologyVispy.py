@@ -33,6 +33,7 @@ from vispy.geometry.generation import create_sphere
 from vispy.geometry.meshdata import MeshData
 from vispy.scene.visuals import InstancedMesh
 from vispy.util.transforms import rotate
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -321,14 +322,14 @@ def plot_interactive_3D(
 
         .. code-block:: python
 
-        {
-            "cell id1": {
-                "seg id1": {
-                    "marker_color": "blue",
-                    "marker_size": [0.1, 0.1]
+            {
+                "cell id1": {
+                    "seg id1": {
+                        "marker_color": "blue",
+                        "marker_size": [0.1, 0.1]
+                    }
                 }
             }
-        }
 
     :type highlight_spec: dict
     :param precision: tuple containing two values: (number of decimal places,
@@ -635,12 +636,12 @@ def plot_interactive_3D(
 
 def plot_3D_cell_morphology(
     offset: typing.List[float] = [0, 0, 0],
-    cell: Cell = None,
+    cell: Optional[Cell] = None,
     color: typing.Optional[str] = None,
     title: str = "",
     verbose: bool = False,
-    current_canvas: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
+    current_canvas: Optional[scene.SceneCanvas] = None,
+    current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
@@ -989,8 +990,8 @@ def plot_3D_schematic(
     verbose: bool = False,
     nogui: bool = False,
     title: str = "",
-    current_canvas: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
+    current_canvas: Optional[scene.SceneCanvas] = None,
+    current_view: Optional[scene.ViewBox] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
