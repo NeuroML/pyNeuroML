@@ -1190,7 +1190,7 @@ def plot_2D_schematic(
 
 def plot_segment_groups_curtain_plots(
     cell: Cell,
-    segment_groups: typing.List[SegmentGroup],
+    segment_groups: typing.List[str],
     labels: bool = False,
     verbose: bool = False,
     nogui: bool = False,
@@ -1210,8 +1210,8 @@ def plot_segment_groups_curtain_plots(
 
     :param cell: cell to plot
     :type cell: neuroml.Cell
-    :param segment_groups: list of unbranched segment groups to plot
-    :type segment_groups: list(SegmentGroup)
+    :param segment_groups: list of ids of unbranched segment groups to plot
+    :type segment_groups: list(str)
     :param labels: toggle labelling of segment groups
     :type labels: bool
     :param verbose: show extra information (default: False)
@@ -1309,9 +1309,12 @@ def plot_segment_groups_curtain_plots(
     ax.set_xlabel(title)
     ax.set_ylabel("length (μm)")
 
+    logger.debug(f"Generating curtain plot for {len(ord_segs)} segment groups")
+
     # column counter
     column = 0
     for sgid, segs in ord_segs.items():
+        logger.debug(f"Processing {sgid}")
         column += 1
         length = 0
 
