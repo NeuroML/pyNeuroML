@@ -167,3 +167,5 @@ arm64
 /tests/analysis/*png
 *ken.sh
 /tests/plot/test_morphology*.png
+
+.vscode
