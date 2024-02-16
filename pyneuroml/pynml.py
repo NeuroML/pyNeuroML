@@ -157,8 +157,8 @@ def _parse_arguments():
         "input_files",
         type=str,
         nargs="*",
-        metavar="<LEMS/NeuroML 2/SBML file(s)>",
-        help="LEMS/NeuroML 2/SBML file(s) to process",
+        metavar="<LEMS/NeuroML 2/SBML/SEDML file(s)>",
+        help="LEMS/NeuroML 2/SBML/SEDML file(s) to process",
     )
 
     mut_exc_opts_grp = parser.add_argument_group(
@@ -187,7 +187,7 @@ def _parse_arguments():
             "The full format of the '-neuron' option is:\n"
             "-neuron [-nogui] [-run] [-outputdir dir] <LEMS file>\n"
             "    -nogui\n"
-            "        do not generate gtaphical elements in NEURON,\n"
+            "        do not generate graphical elements in NEURON,\n"
             "        just run, save data, and quit\n"
             "    -run\n"
             "        compile NMODL files and run the main NEURON\n"
@@ -196,6 +196,20 @@ def _parse_arguments():
             "        generate NEURON files in directory <dir>\n"
             "    <LEMS file>\n"
             "        the LEMS file to use"
+        ),
+    )
+    mut_exc_opts.add_argument(
+        "-run-tellurium",
+        nargs=argparse.REMAINDER,
+        help=(
+            "Load a SEDML file, and run it using tellurium:\n"
+            "<SEDML file> -run-tellurium [-outputdir dir]\n"
+            "    <SEDML file>\n"
+            "        the SEDML file to use\n"
+            "    -outputdir <dir>\n"
+            "        save any output reports in directory <dir>\n"
+            "        default is current directory ie '.'\n"
+            "        use 'none' to disable output altogether"
         ),
     )
     mut_exc_opts.add_argument(
@@ -325,7 +339,7 @@ def _parse_arguments():
         nargs=3,
         help=(
             "(Via jNeuroML) Load a SBML file, and convert it\n"
-            "toLEMS format using values for duration & dt\n"
+            "to LEMS format using values for duration & dt\n"
             "in ms (ignoring SBML units)"
         ),
     )
@@ -600,6 +614,29 @@ def _evaluate_arguments(args):
         # Errors of some kind were found in one or more files
         logger.error("one or more SEDML files failed to validate")
         sys.exit(UNKNOWN_ERR)
+
+    # Deal with the -run-tellurium option which doesn't call run_jneuroml
+    if args.run_tellurium is not None:
+        try:
+            from pyneuroml.tellurium import run_from_sedml_file
+        except Exception:
+            logger.critical("Unable to import pyneuroml.tellurium")
+            sys.exit(UNKNOWN_ERR)
+
+        if len(args.input_files) < 1:
+            logger.critical("No input files specified")
+            sys.exit(ARGUMENT_ERR)
+        elif len(args.input_files) != 1:
+            logger.critical("Only a single input file is supported by this option")
+            sys.exit(ARGUMENT_ERR)
+
+        try:
+            run_from_sedml_file(args.input_files, args.run_tellurium)
+        except Exception as e:
+            logger.critical(f"run_from_sedml_file failed with {str(e)}")
+            sys.exit(UNKNOWN_ERR)
+
+        sys.exit(0)
 
     # These do not use the shared option where files are supplied
     # They require the file name to be specified after
