@@ -13,6 +13,8 @@ from typing import List
 def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> bool:
     """Validate input files using libsbml.SBMLDocument.checkConsistency
 
+    .. versionadded:: 1.1.5
+
     :param input_files: a list of one or more filepaths
     :type input_files: list(str)
     :param strict_units: toggle whether unit consistency warnings should be
