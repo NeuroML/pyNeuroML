@@ -26,5 +26,6 @@ The PyNeuroML package includes the following sub-packages:
    pyneuroml.povray
    pyneuroml.runners
    pyneuroml.swc
+   pyneuroml.sbml
    pyneuroml.tune
    pyneuroml.utils
