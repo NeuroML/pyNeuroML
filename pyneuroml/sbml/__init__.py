@@ -11,10 +11,15 @@ from typing import List
 
 
 def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> bool:
-    """
-    validate each input file using libsbml.SBMLDocument.checkConsistency
-    input_files is a list of one or more filepaths
-    strict_units converts unit consistency warnings into errors
+    """Validate input files using libsbml.SBMLDocument.checkConsistency
+
+    :param input_files: a list of one or more filepaths
+    :type input_files: list(str)
+    :param strict_units: toggle whether unit consistency warnings should be
+        treated as errors
+    :type strict_units: bool
+    :returns: True if all files are valid, else False
+    :rtype: bool
     """
 
     if not len(input_files) >= 1:
