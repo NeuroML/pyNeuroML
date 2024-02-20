@@ -389,12 +389,17 @@ class LEMSSimulation:
         :returns: name of file
         :rtype: str
         """
+
         if file_name is None:
             file_name = "LEMS_%s.xml" % self.lems_info["sim_id"]
 
-        lems_file = open(file_name, "w")
-        lems_file.write(self.to_xml())
-        lems_file.close()
+        logger.info(
+            "Writing LEMS Simulation %s to file: %s..."
+            % (self.lems_info["sim_id"], file_name)
+        )
+        with open(file_name, "w") as lems_file:
+            lems_file.write(self.to_xml())
+        
         logger.info(
             "Written LEMS Simulation %s to file: %s"
             % (self.lems_info["sim_id"], file_name)
