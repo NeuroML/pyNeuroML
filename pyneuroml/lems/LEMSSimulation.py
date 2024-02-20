@@ -7,6 +7,7 @@ import os.path
 import logging
 import typing
 import random
+import os
 
 import airspeed
 from pyneuroml import __version__ as pynml_ver
@@ -399,6 +400,8 @@ class LEMSSimulation:
         )
         with open(file_name, "w") as lems_file:
             lems_file.write(self.to_xml())
+            lems_file.flush()
+            os.fsync(lems_file.fileno())
         
         logger.info(
             "Written LEMS Simulation %s to file: %s"
