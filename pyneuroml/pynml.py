@@ -32,7 +32,6 @@ from pyneuroml.modelgraphs import *
 from pyneuroml.runners import *
 from pyneuroml.validators import *
 from pyneuroml.annotations import *
-from pyneuroml.nsgr import *
 from pyneuroml.io import *
 from pyneuroml.utils.info import *
 
