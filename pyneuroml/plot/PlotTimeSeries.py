@@ -8,6 +8,7 @@ Copyright 2024 NeuroML contributors
 """
 
 
+import argparse
 import logging
 import math
 import typing
@@ -17,9 +18,13 @@ import pyneuroml.lems as pynmll
 import pyneuroml.plot.Plot as pynmlplt
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+TIME_SERIES_PLOTTER_DEFAULTS = {"offset": True}
 
 
 def plot_time_series(
@@ -226,3 +231,56 @@ def plot_time_series_from_data_files(
         all_traces.append(traces)
 
     plot_time_series(all_traces, labels=False, **kwargs)
+
+
+def _plot_time_series_from_console(arg1):
+    """Plot time series from the terminal
+
+    :param arg1: TODO
+    :returns: TODO
+
+    """
+    pass
+
+
+def _process_time_series_plotter_args():
+    """
+    Parse command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=("A script to plot time series data from data files or LEMS files")
+    )
+
+    parser.add_argument(
+        "-inputFiles",
+        type=str,
+        metavar="<LEMS file or data files>",
+        nargs="*",
+        help="LEMS file (LEMS_..) or data files to plot time series from",
+    )
+
+    parser.add_argument(
+        "-offset",
+        action="store_true",
+        default=TIME_SERIES_PLOTTER_DEFAULTS["offset"],
+        help=("Toggle whether plots are overlaid or offset"),
+    )
+
+    return parser.parse_args()
+
+
+def _time_series_plotter_main(args=None):
+    if args is None:
+        args = _process_time_series_plotter_args()
+
+    a = build_namespace(TIME_SERIES_PLOTTER_DEFAULTS, a=args)
+
+    logger.debug(a)
+    if len(a.input_files) == 1 and a.input_files[0].startswith("LEMS_"):
+        plot_time_series_from_lems_file(
+            a.input_files[0], offset=a.offset, bottom_left_spines_only=True
+        )
+    else:
+        plot_time_series_from_data_files(
+            a.input_files, offset=a.offset, bottom_left_spines_only=True
+        )
