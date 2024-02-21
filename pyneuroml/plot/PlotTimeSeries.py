@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-TIME_SERIES_PLOTTER_DEFAULTS = {"offset": True}
+TIME_SERIES_PLOTTER_DEFAULTS = {"offset": False}
 
 
 def plot_time_series(
@@ -231,16 +231,6 @@ def plot_time_series_from_data_files(
         all_traces.append(traces)
 
     plot_time_series(all_traces, labels=False, **kwargs)
-
-
-def _plot_time_series_from_console(arg1):
-    """Plot time series from the terminal
-
-    :param arg1: TODO
-    :returns: TODO
-
-    """
-    pass
 
 
 def _process_time_series_plotter_args():
