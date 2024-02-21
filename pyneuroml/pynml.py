@@ -27,6 +27,8 @@ import lems.model.model as lems_model
 from pyneuroml import DEFAULTS, JNEUROML_VERSION, __version__
 from pyneuroml.errors import ARGUMENT_ERR, UNKNOWN_ERR
 from pyneuroml.utils import extract_lems_definition_files
+
+# these imports are included for backwards compatibility
 from pyneuroml.utils.units import *
 from pyneuroml.modelgraphs import *
 from pyneuroml.runners import *
