@@ -396,7 +396,7 @@ def load_sim_data_from_lems_file(
     base_dir: str = ".",
     get_events: bool = True,
     get_traces: bool = True,
-) -> typing.Optional[typing.Union[typing.Tuple[typing.Dict, typing.Dict], typing.Dict]]:
+) -> typing.Union[typing.Tuple[typing.Dict, typing.Dict], typing.Dict]:
     """Load simulation outputs using the LEMS simulation file
 
     .. versionadded:: 1.2.2
