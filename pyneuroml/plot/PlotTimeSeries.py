@@ -113,8 +113,9 @@ def plot_time_series(
                 if min_trace < miny:
                     miny = min_trace
 
-    trace_width = abs(miny) + abs(maxy)
-    print(f"trace max, min, width are: {maxy}, {miny}, {trace_width}")
+    if offset is True or scalebar_location is not None:
+        trace_width = abs(miny) + abs(maxy)
+        logger.debug(f"trace max, min, width are: {maxy}, {miny}, {trace_width}")
 
     ctr = 0
     for td in trace_data:
