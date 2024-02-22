@@ -122,15 +122,15 @@ class TestLEMSModule(unittest.TestCase):
         )
 
         self.assertIsNotNone(events)
-        self.assertEquals(events["IzPop0[0]"][0], 0.04350000000009967)
-        self.assertEquals(events["IzPop0[0]"][-1], 0.9433999999997897)
+        self.assertEqual(events["IzPop0[0]"][0], 0.04350000000009967)
+        self.assertEqual(events["IzPop0[0]"][-1], 0.9433999999997897)
         print(events)
 
         self.assertIsNotNone(traces)
-        self.assertEquals(traces["t"][0], 0.0)
-        self.assertEquals(traces["t"][-1], 0.0019)
-        self.assertEquals(traces["IzhPop0[0]/v"][0], -0.06)
-        self.assertEquals(traces["IzhPop0[0]/v"][-1], -0.058818895)
+        self.assertEqual(traces["t"][0], 0.0)
+        self.assertEqual(traces["t"][-1], 0.0019)
+        self.assertEqual(traces["IzhPop0[0]/v"][0], -0.06)
+        self.assertEqual(traces["IzhPop0[0]/v"][-1], -0.058818895)
         print(traces)
 
         os.unlink(f.name)
