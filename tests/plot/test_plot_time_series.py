@@ -8,9 +8,12 @@ Copyright 2024 NeuroML contributors
 """
 
 
-import numpy
+import os
 import unittest
+
+import numpy
 from pyneuroml.plot.PlotTimeSeries import *
+
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -18,13 +21,12 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestPlotTimeSeries(BaseTestCase):
-
     """Test PlotTimeSeries module"""
 
     def test_plot_time_series(self):
         """Test plot_time_series function."""
 
-        npoints = 10000
+        npoints = 1000
         traces_dict = {}
         traces_dict["t"] = list(numpy.arange(0, 1000, 1000 / npoints))
 
@@ -35,8 +37,25 @@ class TestPlotTimeSeries(BaseTestCase):
                 numpy.random.default_rng().uniform(-30, 80, npoints)
             )
 
-        plot_time_series(traces_dict, title="", offset=False, show_plot_already=True)
-        plot_time_series(traces_dict, title="", offset=True, show_plot_already=True)
+        plot_time_series(
+            traces_dict,
+            title="",
+            offset=False,
+            show_plot_already=False,
+            save_figure_to="time-series-test.png",
+        )
+        plot_time_series(
+            traces_dict,
+            title="",
+            offset=True,
+            show_plot_already=False,
+            save_figure_to="time-series-test-2.png",
+        )
+        self.assertIsFile("time-series-test.png")
+        self.assertIsFile("time-series-test-2.png")
+
+        os.unlink("time-series-test.png")
+        os.unlink("time-series-test-2.png")
 
 
 if __name__ == "__main__":
