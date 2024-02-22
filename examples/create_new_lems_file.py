@@ -14,7 +14,6 @@ pp = pprint.PrettyPrinter(depth=6)
 
 
 if __name__ == "__main__":
-
     ############################################
     #  Create a LEMS file "manually"...
 

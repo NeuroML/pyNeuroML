@@ -27,7 +27,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestUtils(BaseTestCase):
-
     """Test utils module"""
 
     def test_extract_position_info(self):

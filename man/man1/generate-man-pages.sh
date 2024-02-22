@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2023 Ankur Sinha
-# Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com> 
+# Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 # File : generate-man-pages.sh
 #
 # Generate man pages for all pyNeuroML command lines using help2man
@@ -27,6 +27,17 @@ else
     echo ".PP" >> version.h2m
     echo "${fullversioninfo}" >> version.h2m
 
+    echo "Generating common file: common.h2m"
+    echo "[see-also]" > common.h2m
+
+    for f in ${bin_location}/pynml*
+    do
+        current_file=$(basename $f)
+        echo ".BR ${current_file} (1)," >> common.h2m
+    done
+    echo ".PP" >> common.h2m
+    echo "Please see https://docs.neuroml.org for complete documentation on the NeuroML standard and the software ecosystem." >> common.h2m
+
     cat common.h2m version.h2m >> common-temp.h2m
 
     for f in ${bin_location}/pynml*
@@ -39,4 +50,3 @@ else
 
     rm common-temp.h2m
 fi
-

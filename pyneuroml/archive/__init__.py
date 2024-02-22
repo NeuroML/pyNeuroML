@@ -6,7 +6,6 @@ File: pyneuroml/archive/__init__.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import argparse
 import logging
 import os
@@ -15,27 +14,11 @@ import shutil
 import typing
 from zipfile import ZipFile
 
-from lems.model.model import Model
-from neuroml.loaders import read_neuroml2_file
-from pyneuroml.pynml import extract_lems_definition_files
+from pyneuroml.utils import get_model_file_list
 from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-STANDARD_LEMS_FILES = [
-    "Cells.xml",
-    "Channels.xml",
-    "Inputs.xml",
-    "Networks.xml",
-    "NeuroML2CoreTypes.xml",
-    "NeuroMLCoreCompTypes.xml",
-    "NeuroMLCoreDimensions.xml",
-    "PyNN.xml",
-    "Simulation.xml",
-    "Synapses.xml",
-]
 
 
 DEFAULTS = {
@@ -102,90 +85,6 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
         zipfile_extension=a.zipfile_extension,
         filelist=a.filelist,
     )
-
-
-def get_model_file_list(
-    rootfile: str,
-    filelist: typing.List[str],
-    rootdir: str = ".",
-    lems_def_dir: typing.Optional[str] = None,
-) -> typing.Optional[str]:
-    """Get the list of files to archive.
-
-    This method will take the rootfile, and recursively resolve all the files
-    it uses.
-
-    :param rootfile: main NeuroML or LEMS file to resolve
-    :type rootfile: str
-    :param filelist: list of file paths to append to
-    :type filelist: list of strings
-    :param rootdir: directory holding the root file
-    :type rootdir: str
-    :param lems_def_dir: path to directory holding lems definition files
-    :type lems_def_dir: str
-    :returns: value of lems_def_dir so that the temporary directory can be
-        cleaned up. strings are immuatable in Python so the variable cannot be
-        modified in the function.
-    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
-    """
-    logger.debug(f"Processing {rootfile}")
-
-    fullrootdir = pathlib.Path(rootdir).absolute()
-
-    # Only store path of file relative to the rootdir, if it's a descendent of
-    # rootdir
-    if rootfile.startswith(str(fullrootdir)):
-        relrootfile = rootfile.replace(str(fullrootdir), "")
-        if relrootfile.startswith("/"):
-            relrootfile = relrootfile[1:]
-    else:
-        relrootfile = rootfile
-
-    if relrootfile in filelist:
-        logger.debug(f"Already processed {rootfile}. No op.")
-        return lems_def_dir
-
-    logger.debug(f"Appending: {relrootfile}")
-    filelist.append(relrootfile)
-
-    if rootfile.endswith(".nml"):
-        if pathlib.Path(rootfile).is_absolute():
-            rootdoc = read_neuroml2_file(rootfile)
-        else:
-            rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
-        logger.debug(f"Has includes: {rootdoc.includes}")
-        for inc in rootdoc.includes:
-            lems_def_dir = get_model_file_list(
-                inc.href, filelist, rootdir, lems_def_dir
-            )
-
-    elif rootfile.endswith(".xml"):
-        # extract the standard NeuroML2 LEMS definitions into a directory
-        # so that the LEMS parser can find them
-        if lems_def_dir is None:
-            lems_def_dir = extract_lems_definition_files()
-
-        if pathlib.Path(rootfile).is_absolute():
-            fullrootfilepath = rootfile
-        else:
-            fullrootfilepath = rootdir + "/" + rootfile
-
-        model = Model(include_includes=True, fail_on_missing_includes=True)
-        model.add_include_directory(lems_def_dir)
-        model.import_from_file(fullrootfilepath)
-
-        for inc in model.included_files:
-            incfile = pathlib.Path(inc).name
-            logger.debug(f"Processing include file {incfile} ({inc})")
-            if incfile in STANDARD_LEMS_FILES:
-                logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
-                continue
-            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
-
-    else:
-        raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
-
-    return lems_def_dir
 
 
 def create_combine_archive(

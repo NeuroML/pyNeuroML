@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+Spike plotting helper functions.
+
+File: pyneuroml/plot/PlotSpikes.py
+
+Copyright 2023 NeuroML contributors
+"""
 import argparse
 import logging
 import os
@@ -104,7 +112,12 @@ def main(args=None):
     run(a=args)
 
 
-def read_sonata_spikes_hdf5_file(file_name):
+def read_sonata_spikes_hdf5_file(file_name: str):
+    """Read a sonata HDF5 file with spike data
+
+    :param file_name: name of file to read
+    :type file_name: str
+    """
     full_path = os.path.abspath(file_name)
     logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
 

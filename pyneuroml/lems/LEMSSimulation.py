@@ -14,6 +14,7 @@ from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
 from pyneuroml.utils.plot import get_next_hex_color
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class LEMSSimulation:
         target: typing.Optional[str] = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
-        lems_file_generate_seed: typing.Any = None,
+        lems_file_generate_seed: Optional[typing.Any] = None,
         simulation_seed: int = 12345,
         meta: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:

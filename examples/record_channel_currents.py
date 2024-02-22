@@ -15,7 +15,6 @@ pp = pprint.PrettyPrinter(depth=6)
 
 
 if __name__ == "__main__":
-
     root_dir = "test_data/ca1"
     cell_file = "cells/olm.cell.nml"
     cell_comp = "olmcell"

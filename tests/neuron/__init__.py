@@ -16,7 +16,7 @@ from pyneuroml.neuron import load_hoc_or_python_file
 
 
 def load_olm_cell():
-    """Setup for all tests """
+    """Setup for all tests"""
     thispath = pathlib.Path(__file__)
     dirname = str(thispath.parent / pathlib.Path("test_data"))
     subprocess.run(["nrnivmodl", dirname + "/mods"])

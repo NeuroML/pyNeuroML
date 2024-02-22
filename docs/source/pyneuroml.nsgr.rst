@@ -1,4 +1,4 @@
-pyneuroml.nsgr package
+pyneuroml.nsgr module
 ======================
 
 .. automodule:: pyneuroml.nsgr

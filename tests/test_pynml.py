@@ -8,21 +8,20 @@ Copyright 2023 NeuroML contributors
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import unittest
+import logging
 import os
 import shutil
-import logging
+import unittest
 
 from pyneuroml.pynml import (
+    execute_command_in_dir,
+    execute_command_in_dir_with_realtime_output,
     extract_lems_definition_files,
     list_exposures,
     list_recording_paths_for_exposures,
-    execute_command_in_dir,
-    execute_command_in_dir_with_realtime_output,
     run_jneuroml,
     validate_neuroml2,
 )
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<sedML xmlns="http://sed-ml.org/sed-ml/level1/version2" level="1" version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://sed-ml.org/sed-ml/level1/version2   https://raw.githubusercontent.com/SED-ML/sed-ml/master/schema/level1/version2/sed-ml-L1-V2.xsd">
+    <notes>
+        <p xmlns="http://www.w3.org/1999/xhtml">
+
+SED-ML export for:
+Components:
+    fn1 (Type: fitzHughNagumoCell:  I=0.8 (dimensionless) SEC=1.0 (SI time))
+    net1 (Type: network)
+    sim1 (Type: Simulation:  length=200.0 (SI time) step=0.01 (SI time))
+
+        </p>
+    </notes>
+
+    <!--Adding simulation Component(id=sim1 type=Simulation) of network: net1 (Type: network)-->
+
+    <listOfSimulations>
+
+        <uniformTimeCourse id="sim1" initialTime="0" outputStartTime="0" outputEndTime="200.0" numberOfPoints="20000">
+            <algorithm kisaoID="KISAO:0000019"/>
+        </uniformTimeCourse>
+
+    </listOfSimulations>
+
+    <listOfModels>
+        <model id="net1" language="urn:sedml:language:sbml" source="LEMS_NML2_Ex9_FN.sbml"/>
+    </listOfModels>
+
+    <listOfTasks>
+        <task id="sim1_net1" simulationReference="sim1" modelReference="net1"/>
+    </listOfTasks>
+
+    <listOfDataGenerators>
+        <dataGenerator id="time" name="time">
+            <listOfVariables>
+                <variable id="var_time_0" taskReference="sim1_net1" symbol="urn:sedml:symbol:time"/>
+            </listOfVariables>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <ci> var_time_0 </ci>
+            </math>
+        </dataGenerator>
+        <dataGenerator id="d1_V" name="d1_V">
+            <listOfVariables>
+                <variable id="fnPop1_0_V" taskReference="sim1_net1" target="/sbml:sbml/sbml:model/sbml:listOfParameters/sbml:parameter[@id='V']"/>
+            </listOfVariables>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <ci>fnPop1_0_V</ci>
+            </math>
+        </dataGenerator>
+        <dataGenerator id="d1_W" name="d1_W">
+            <listOfVariables>
+                <variable id="fnPop1_0_W" taskReference="sim1_net1" target="/sbml:sbml/sbml:model/sbml:listOfParameters/sbml:parameter[@id='W']"/>
+            </listOfVariables>
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <ci>fnPop1_0_W</ci>
+            </math>
+        </dataGenerator>
+    </listOfDataGenerators>
+
+    <listOfOutputs>
+        <plot2D id="d1">
+            <listOfCurves>
+                <curve id="curve_V" logX="false" logY="false" xDataReference="time" yDataReference="d1_V"/>
+                <curve id="curve_W" logX="false" logY="false" xDataReference="time" yDataReference="d1_W"/>
+            </listOfCurves>
+        </plot2D>
+    </listOfOutputs>
+
+</sedML>

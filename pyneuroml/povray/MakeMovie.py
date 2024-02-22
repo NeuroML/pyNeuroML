@@ -134,7 +134,6 @@ def main(argv):
     pref = args.prefix
 
     if gen_images:
-
         for i in range(args.frames):
             index = str(i + 1)
             while len(index) < (len(str(args.frames))):

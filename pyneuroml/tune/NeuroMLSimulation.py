@@ -51,9 +51,7 @@ class NeuroMLSimulation(object):
         from matplotlib import pyplot as plt
 
         if self.already_run:
-
             for ref in self.volts.keys():
-
                 plt.plot(self.t, self.volts[ref], label=ref)
                 plt.title("Simulation voltage vs time")
                 plt.legend()
@@ -130,7 +128,6 @@ if __name__ == "__main__":
     dt = 0.05
 
     if len(sys.argv) == 2 and sys.argv[1] == "-net":
-
         sim = NeuroMLSimulation(
             "TestNet",
             "../../examples/test_data/simplenet.nml",

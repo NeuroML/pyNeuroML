@@ -30,7 +30,6 @@ def generate_Vm_vs_time_plot(
     simulator="jNeuroML",
     include_included=True,
 ):
-
     ref = "Test"
     logger.info(
         "Generating Vm(mV) vs Time(ms) plot for cell %s in %s using %s (Inj %snA / %sms dur after %sms delay)"

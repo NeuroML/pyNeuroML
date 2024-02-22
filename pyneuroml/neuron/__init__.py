@@ -135,7 +135,6 @@ def export_to_neuroml1(hoc_file, nml1_file_name, level=1, validate=True):
     h.mvnml1.exportNeuroML(nml1_file_name, level)
 
     if validate:
-
         validate_neuroml1(nml1_file_name)
 
 
