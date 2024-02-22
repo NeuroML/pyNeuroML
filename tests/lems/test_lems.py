@@ -7,10 +7,10 @@ File: tests/lems/tests_lems.py
 Copyright 2024 NeuroML contributors
 """
 
-import os
 import logging
-import unittest
+import os
 import tempfile
+import unittest
 
 import pyneuroml.lems as pyl
 
@@ -19,7 +19,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestLEMSModule(unittest.TestCase):
-
     """Test the LEMS module"""
 
     def test_load_sim_data_from_lems_file(self):
@@ -123,9 +122,17 @@ class TestLEMSModule(unittest.TestCase):
         )
 
         self.assertIsNotNone(events)
+        self.assertEquals(events["IzPop0[0]"][0], 0.04350000000009967)
+        self.assertEquals(events["IzPop0[0]"][-1], 0.9433999999997897)
         print(events)
+
         self.assertIsNotNone(traces)
+        self.assertEquals(traces["t"][0], 0.0)
+        self.assertEquals(traces["t"][-1], 0.0019)
+        self.assertEquals(traces["IzhPop0[0]/v"][0], -0.06)
+        self.assertEquals(traces["IzhPop0[0]/v"][-1], -0.058818895)
         print(traces)
+
         os.unlink(f.name)
         os.unlink(event_data_file.name)
         os.unlink(trace_file.name)
