@@ -243,11 +243,11 @@ def _process_time_series_plotter_args():
     )
 
     parser.add_argument(
-        "-inputFiles",
+        "input_files",
         type=str,
-        metavar="<LEMS file or data files>",
+        metavar="<a LEMS file or data files>",
         nargs="*",
-        help="LEMS file (LEMS_..) or data files to plot time series from",
+        help="a LEMS file (LEMS_..) or data files to plot time series from",
     )
 
     parser.add_argument(

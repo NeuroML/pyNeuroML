@@ -3,19 +3,18 @@
 .SH NAME
 pynml-plottimeseries \- manual page for pynml-plottimeseries v1.2.2
 .SH DESCRIPTION
-usage: pynml\-plottimeseries [\-h] [\-inputFiles [<LEMS file or data files> ...]]
-.IP
-[\-offset]
+usage: pynml\-plottimeseries [\-h] [\-offset] [<a LEMS file or data files> ...]
 .PP
 A script to plot time series data from data files or LEMS files
+.SS "positional arguments:"
+.TP
+<a LEMS file or data files>
+a LEMS file (LEMS_..) or data files to plot time
+series from
 .SS "options:"
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 show this help message and exit
-.TP
-\fB\-inputFiles\fR [<LEMS file or data files> ...]
-LEMS file (LEMS_..) or data files to plot time series
-from
 .TP
 \fB\-offset\fR
 Toggle whether plots are overlaid or offset
