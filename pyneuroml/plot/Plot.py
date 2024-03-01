@@ -119,6 +119,8 @@ def generate_plot(
                 - "bottom center" places the legend on the bottom, below the
                   figure
 
+                Note that if labels is None, a legend is not shown
+
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean

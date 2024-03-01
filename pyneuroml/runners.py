@@ -27,12 +27,8 @@ from lxml import etree
 
 from pyneuroml import DEFAULTS, __version__
 from pyneuroml.errors import UNKNOWN_ERR
-from pyneuroml.utils import (
-    get_files_generated_after,
-    get_model_file_list,
-    get_path_to_jnml_jar,
-    get_pyneuroml_tempdir,
-)
+import pyneuroml.utils
+import pyneuroml.utils.misc
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -646,7 +642,7 @@ def run_jneuroml(
     else:
         pre_jar = ""
 
-    jar_path = get_path_to_jnml_jar()
+    jar_path = pyneuroml.utils.misc.get_path_to_jnml_jar()
     output = ""
     retcode = -1
 
@@ -726,7 +722,7 @@ def run_jneuroml_with_realtime_output(
         pre_jar = " -Djava.awt.headless=true"
     else:
         pre_jar = ""
-    jar_path = get_path_to_jnml_jar()
+    jar_path = pyneuroml.utils.misc.get_path_to_jnml_jar()
 
     command = ""
     command_success = False
@@ -1202,7 +1198,7 @@ def generate_sim_scripts_in_folder(
     if root_dir is None:
         root_dir = "."
 
-    tdir = get_pyneuroml_tempdir(rootdir=run_dir, prefix="pyneuroml")
+    tdir = pyneuroml.utils.get_pyneuroml_tempdir(rootdir=run_dir, prefix="pyneuroml")
     os.mkdir(tdir)
 
     if len(Path(lems_file_name).parts) > 1:
@@ -1213,7 +1209,7 @@ def generate_sim_scripts_in_folder(
     logger.debug("Getting list of model files")
     model_file_list = []  # type: list
     lems_def_dir = None
-    lems_def_dir = get_model_file_list(
+    lems_def_dir = pyneuroml.utils.get_model_file_list(
         lems_file_name, model_file_list, root_dir, lems_def_dir
     )
 
@@ -1271,7 +1267,7 @@ def generate_sim_scripts_in_folder(
             **engine_kwargs,
         )
 
-    generated_files = get_files_generated_after(
+    generated_files = pyneuroml.utils.get_files_generated_after(
         start_time, ignore_suffixes=["xml", "nml"]
     )
 
