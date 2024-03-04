@@ -98,12 +98,6 @@ def process_args():
     return parser.parse_args()
 
 
-def main(args=None):
-    if args is None:
-        args = process_args()
-    run(a=args)
-
-
 def read_sonata_spikes_hdf5_file(file_name):
     full_path = os.path.abspath(file_name)
     logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
