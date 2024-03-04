@@ -14,7 +14,7 @@ import zipfile
 
 import lems.model.model as lems_model
 from lems.parser.LEMS import LEMSFileParser
-from pyneuroml.utils import get_path_to_jnml_jar
+import pyneuroml.utils.misc as pymisc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -109,7 +109,7 @@ def get_lems_model_with_units() -> lems_model.Model:
     global lems_model_with_units
 
     if lems_model_with_units is None:
-        jar_path = get_path_to_jnml_jar()
+        jar_path = pymisc.get_path_to_jnml_jar()
         logger.debug(
             "Loading standard NeuroML2 dimension/unit definitions from %s" % jar_path
         )

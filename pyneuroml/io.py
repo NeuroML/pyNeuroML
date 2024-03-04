@@ -13,6 +13,7 @@ import os
 import sys
 import textwrap
 import typing
+from typing import Optional
 
 import neuroml.loaders as loaders
 import neuroml.writers as writers
@@ -21,7 +22,6 @@ from neuroml import NeuroMLDocument
 import lems.model.model as lems_model
 from pyneuroml.errors import FILE_NOT_FOUND_ERR
 from pyneuroml.validators import validate_neuroml2
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -134,7 +134,7 @@ def write_neuroml2_file(
     validate: bool = True,
     verbose_validate: bool = False,
     hdf5: bool = False,
-) -> None:
+) -> typing.Optional[typing.Union[bool, typing.Tuple[bool, str]]]:
     """Write a NeuroMLDocument object to a file using libNeuroML.
 
     :param nml2_doc: NeuroMLDocument object to write to file
@@ -155,6 +155,7 @@ def write_neuroml2_file(
 
     if validate:
         return validate_neuroml2(nml2_file_name, verbose_validate)
+    return None
 
 
 def read_lems_file(

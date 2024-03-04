@@ -22,6 +22,14 @@ pyneuroml.utils.plot module
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.utils.misc module
+---------------------------
+
+.. automodule:: pyneuroml.utils.misc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyneuroml.utils.cli module
 ---------------------------
 

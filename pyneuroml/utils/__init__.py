@@ -8,7 +8,7 @@ Copyright 2024 NeuroML Contributors
 """
 
 import copy
-import datetime
+from datetime import datetime
 import logging
 import math
 import os
@@ -27,8 +27,8 @@ import neuroml
 import numpy
 from lems.model.model import Model
 from neuroml.loaders import read_neuroml2_file
-from pyneuroml import JNEUROML_VERSION
 from pyneuroml.errors import UNKNOWN_ERR
+import pyneuroml.utils.misc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -469,7 +469,7 @@ def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
     :rtype: str
 
     """
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     random_suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     tdir = rootdir + "/" + f"{prefix}_{timestamp}_{random_suffix}/"
 
@@ -584,7 +584,7 @@ def extract_lems_definition_files(
     :type path: str or None
     :returns: directory path
     """
-    jar_path = get_path_to_jnml_jar()
+    jar_path = pyneuroml.utils.misc.get_path_to_jnml_jar()
     logger.debug(
         "Loading standard NeuroML2 dimension/unit definitions from %s" % jar_path
     )
@@ -614,17 +614,3 @@ def extract_lems_definition_files(
     path = path + "/NeuroML2CoreTypes/"
     logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
     return path
-
-
-def get_path_to_jnml_jar() -> str:
-    """Get the path to the jNeuroML jar included with PyNeuroML.
-
-    :returns: path of jar file
-    """
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-    jar_path = os.path.join(
-        script_dir,
-        "./../lib",
-        "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION,
-    )
-    return jar_path
