@@ -3,7 +3,9 @@
 .SH NAME
 pynml-plottimeseries \- manual page for pynml-plottimeseries v1.2.5
 .SH DESCRIPTION
-usage: pynml\-plottimeseries [\-h] [\-offset] [<a LEMS file or data files> ...]
+usage: pynml\-plottimeseries [\-h] [\-offset] [\-saveToFile <Image file name>]
+.IP
+[<a LEMS file or data files> ...]
 .PP
 A script to plot time series data from data files or LEMS files
 .SS "positional arguments:"
@@ -18,6 +20,9 @@ show this help message and exit
 .TP
 \fB\-offset\fR
 Toggle whether plots are overlaid or offset
+.TP
+\fB\-saveToFile\fR <Image file name>
+Name of the image file to save plot to
 .SH "SEE-ALSO"
 .BR pynml (1),
 .BR pynml-archive (1),
@@ -36,4 +41,4 @@ Toggle whether plots are overlaid or offset
 Please see https://docs.neuroml.org for complete documentation on the NeuroML standard and the software ecosystem.
 .SH ENVIRONMENT
 .PP
-pyNeuroML v1.2.5 (libNeuroML v0.5.8, jNeuroML v0.13.0)
+pyNeuroML v1.2.5 (libNeuroML v0.5.9, jNeuroML v0.13.0)
