@@ -36,6 +36,7 @@ from pyneuroml.validators import *
 from pyneuroml.annotations import *
 from pyneuroml.io import *
 from pyneuroml.utils.info import *
+from pyneuroml.utils.misc import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

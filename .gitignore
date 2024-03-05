@@ -169,3 +169,4 @@ arm64
 /tests/plot/test_morphology*.png
 
 .vscode
+/tests/pyneuroml_20*
