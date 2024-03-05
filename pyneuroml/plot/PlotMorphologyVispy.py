@@ -801,6 +801,12 @@ def plot_3D_cell_morphology(
         # if there's no spec for this segment
         except KeyError:
             logger.debug("No segment highlight spec found for segment" + str(seg.id))
+        # also test if segment id is given as int
+        try:
+            segment_spec.update(highlight_spec[seg.id])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
 
         logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
 
