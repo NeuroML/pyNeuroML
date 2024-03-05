@@ -581,8 +581,8 @@ def plot_2D_cell_morphology(
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements. Mostly
         only helpful for marking segments on multi-compartmental cells. In the
-        main dictionary are more dictionaries, one for each segment id which
-        will be the key:
+        main dictionary are more dictionaries, one for each segment id (as
+        string or integer) which will be the key:
 
         - marker_color: color of the marker
         - marker_size: width of the marker
@@ -663,6 +663,12 @@ def plot_2D_cell_morphology(
         }
         try:
             segment_spec.update(highlight_spec[str(seg.id)])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+        # Also check if segment ids are provided as ints
+        try:
+            segment_spec.update(highlight_spec[seg.id])
         # if there's no spec for this segment
         except KeyError:
             logger.debug("No segment highlight spec found for segment" + str(seg.id))
