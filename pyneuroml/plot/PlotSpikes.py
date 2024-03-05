@@ -168,12 +168,18 @@ def read_sonata_spikes_hdf5_file(file_name):
     return ids_times_pops
 
 
-def run(a=None, **kwargs):
-    a = build_namespace(DEFAULTS, a, **kwargs)
-    logger.info(
-        "Generating spiketime plot for %s; format: %s; plotting: %s; save to: %s"
-        % (a.spiketime_files, a.format, a.show_plots_already, a.save_spike_plot_to)
-    )
+def plot_spikes(
+    spiketime_files=None,
+    spike_data=None,
+    format=FORMAT_ID_T,
+    rates=False,
+    save_spike_plot_to=None,
+    rate_window=50,
+    rate_bins=500,
+    show_plots_already=True,
+):
+    if spiketime_files is None and spike_data is None:
+        raise ValueError("Either spiketime_files or spike_data must be provided.")
 
     xs = []
     ys = []
