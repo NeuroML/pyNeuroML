@@ -256,6 +256,13 @@ def _process_time_series_plotter_args():
         default=TIME_SERIES_PLOTTER_DEFAULTS["offset"],
         help=("Toggle whether plots are overlaid or offset"),
     )
+    parser.add_argument(
+        "-saveToFile",
+        type=str,
+        metavar="<Image file name>",
+        default=None,
+        help="Name of the image file to save plot to",
+    )
 
     return parser.parse_args()
 
@@ -269,9 +276,15 @@ def _time_series_plotter_main(args=None):
     logger.debug(a)
     if len(a.input_files) == 1 and a.input_files[0].startswith("LEMS_"):
         plot_time_series_from_lems_file(
-            a.input_files[0], offset=a.offset, bottom_left_spines_only=True
+            a.input_files[0],
+            offset=a.offset,
+            bottom_left_spines_only=True,
+            save_figure_to=a.save_to_file,
         )
     else:
         plot_time_series_from_data_files(
-            a.input_files, offset=a.offset, bottom_left_spines_only=True
+            a.input_files,
+            offset=a.offset,
+            bottom_left_spines_only=True,
+            save_figure_to=a.save_to_file,
         )
