@@ -625,15 +625,14 @@ def _evaluate_arguments(args):
             logger.critical("Unable to import pyneuroml.tellurium")
             sys.exit(UNKNOWN_ERR)
 
-        if len(args.input_files) < 1:
+        if len(args.run_tellurium) < 1:
             logger.critical("No input files specified")
-            sys.exit(ARGUMENT_ERR)
-        elif len(args.input_files) != 1:
-            logger.critical("Only a single input file is supported by this option")
             sys.exit(ARGUMENT_ERR)
 
         try:
-            run_from_sedml_file(args.input_files, args.run_tellurium)
+            sedml_file = [args.run_tellurium[0]]
+            other_args = args.run_tellurium[1:]
+            run_from_sedml_file(sedml_file, other_args)
         except Exception as e:
             logger.critical(f"run_from_sedml_file failed with {str(e)}")
             sys.exit(UNKNOWN_ERR)
