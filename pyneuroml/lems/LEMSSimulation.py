@@ -7,6 +7,7 @@ import os.path
 import logging
 import typing
 import random
+import os
 
 import airspeed
 from pyneuroml import __version__ as pynml_ver
@@ -14,6 +15,7 @@ from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
 from pyneuroml.utils.plot import get_next_hex_color
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +36,12 @@ class LEMSSimulation:
         sim_id: str,
         duration: float,
         dt: float,
-        target: str = None,
+        target: typing.Optional[str] = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
-        lems_file_generate_seed: typing.Any = None,
+        lems_file_generate_seed: Optional[typing.Any] = None,
         simulation_seed: int = 12345,
+        meta: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
         """Init a new LEMSSimulation object.
 
@@ -62,6 +65,18 @@ class LEMSSimulation:
         :type lems_file_generate_seed:
         :param simulation_seed: simulation seed to set to
         :type simulation_seed: int
+        :param meta: dictionary to set Meta options.
+
+            Currently, only supported for the Neuron simulator to use the CVODE
+            solver. A dict needs to be passed:
+            {
+                "for": "neuron",
+                "method": "cvode",
+                "abs_tolerance" = "0.001",
+                "rel_tolerance": "0.001"
+            }
+
+        :type meta: dict
         """
 
         self.lems_info["sim_id"] = sim_id
@@ -75,6 +90,7 @@ class LEMSSimulation:
         self.lems_info["displays"] = []
         self.lems_info["output_files"] = []
         self.lems_info["event_output_files"] = []
+        self.lems_info["meta"] = meta
 
         if target:
             self.lems_info["target"] = target
@@ -251,7 +267,7 @@ class LEMSSimulation:
         line_id: str,
         quantity: str,
         scale: str = "1",
-        color: str = None,
+        color: typing.Optional[str] = None,
         timeScale: str = "1ms",
     ) -> None:
         """Add a new line to the display
@@ -364,21 +380,29 @@ class LEMSSimulation:
             templ = airspeed.Template(f.read())
         return templ.merge(self.lems_info)
 
-    def save_to_file(self, file_name: str = None):
+    def save_to_file(self, file_name: typing.Optional[str] = None):
         """Save LEMSSimulation to a file.
 
         :param file_name: name of file to store to.
             `LEMS_<some id string>.xml` is the suggested format. Leave empty
-            to use `LEMS_<sim_id>.xml` :type file_name: str
+            to use `LEMS_<sim_id>.xml`
+        :type file_name: str
         :returns: name of file
         :rtype: str
         """
+
         if file_name is None:
             file_name = "LEMS_%s.xml" % self.lems_info["sim_id"]
 
-        lems_file = open(file_name, "w")
-        lems_file.write(self.to_xml())
-        lems_file.close()
+        logger.info(
+            "Writing LEMS Simulation %s to file: %s..."
+            % (self.lems_info["sim_id"], file_name)
+        )
+        with open(file_name, "w") as lems_file:
+            lems_file.write(self.to_xml())
+            lems_file.flush()
+            os.fsync(lems_file.fileno())
+        
         logger.info(
             "Written LEMS Simulation %s to file: %s"
             % (self.lems_info["sim_id"], file_name)

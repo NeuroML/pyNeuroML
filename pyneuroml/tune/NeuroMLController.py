@@ -125,9 +125,7 @@ class NeuroMLController:
         start_time = time.time()
 
         if self.num_parallel_evaluations == 1:
-
             for candidate_i in range(len(candidates)):
-
                 candidate = candidates[candidate_i]
                 sim_var = dict(zip(parameters, candidate))
                 print_v(
@@ -296,7 +294,6 @@ def run_individual(
         nml_doc = neuroml.loaders.read_neuroml2_string(nml_doc)
 
     for var_name in sim_var.keys():
-
         individual_var_names = var_name.split("+")
 
         for individual_var_name in individual_var_names:

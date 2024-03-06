@@ -42,6 +42,30 @@ pyNeuroML can be installed with pip (preferably in a [virtual environment](https
 
     pip install pyneuroml
 
+
+A number of extra packages are also provided for convenience. You can install these to pull in other dependencies if required:
+
+
+    pip install pyneuroml[neuron]       # for NEURON simulation backend
+    pip install pyneuroml[brian]        # for Brian2 simulation backend
+    pip install pyneuroml[netpyne]      # for NetPyNE simulation backend
+    pip install pyneuroml[povray]       # for povray functions
+    pip install pyneuroml[hdf5]         # for HDF5 support
+    pip install pyneuroml[analysis]     # for analysis functions
+    pip install pyneuroml[tune]         # for tuning/fitting functions
+    pip install pyneuroml[vispy]        # for 3D interactive morphology plotting using vispy
+    pip install pyneuroml[plotly]       # for interactive plotting with plotly
+    pip install pyneuroml[nsg]          # pulls in pynsgr to use NSG
+    pip install pyneuroml[combine]      # includes libsbml, libsedml
+    pip install pyneuroml[tellurium]    # for Tellurium simulation backend
+    pip install pyneuroml[all]          # installs all of the above
+    pip install pyneuroml[dev]          # installs all of the above and other test related packages
+    pip install pyneuroml[doc]          # for building documentation
+
+
+Please see the `setup.cfg` file for more details.
+
+
 ### Fedora
 
 The [NeuroFedora](https://neuro.fedoraproject.org) community initiative provides pyNeuroML for use on the [Fedora Linux Distribution](https://getfedora.org).
@@ -185,4 +209,3 @@ More closely tied to PyNN?
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
-

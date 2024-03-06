@@ -76,7 +76,9 @@ def plot_3D_cell_morphology_plotly(
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
     else:
-        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
+        raise TypeError(
+            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        )
 
     fig = go.Figure()
     for cell in nml_model.cells:
