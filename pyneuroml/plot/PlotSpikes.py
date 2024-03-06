@@ -239,7 +239,7 @@ def plot_spikes(
                 linestyles.append("")
 
     else:
-        for file_name in a.spiketime_files:
+        for file_name in spiketime_files:
             logger.info("Loading spike times from: %s" % file_name)
             spikes_file = open(file_name)
             x = []
@@ -256,11 +256,11 @@ def plot_spikes(
 
             for line in spikes_file:
                 if not line.startswith("#") and not (
-                    line.startswith("sender") and a.format == FORMAT_ID_TIME_NEST_DAT
+                    line.startswith("sender") and format == FORMAT_ID_TIME_NEST_DAT
                 ):
-                    if a.format == FORMAT_ID_T or a.format == FORMAT_ID_TIME_NEST_DAT:
+                    if format == FORMAT_ID_T or format == FORMAT_ID_TIME_NEST_DAT:
                         [id, t] = line.split()
-                    elif a.format == FORMAT_T_ID:
+                    elif format == FORMAT_T_ID:
                         [t, id] = line.split()
                     id_shifted = offset_id + int(float(id))
                     max_id = max(max_id, id_shifted)
@@ -282,22 +282,38 @@ def plot_spikes(
             ys.append(y)
             markers.append(".")
             linestyles.append("")
+    if spike_data is not None:
+        for data in spike_data:
+            x = [t for t in data["times"]]
+            y = [id_shifted for id_shifted in data["ids"]]
 
-        xlim = [max_time / -20.0, max_time * 1.05]
-        ylim = [max_id_here / -20.0, max_id_here * 1.05]
-        markersizes = []
-        for xx in xs:
-            if len(unique_ids) > 50:
-                markersizes.append(2)
-            elif len(unique_ids) > 200:
-                markersizes.append(1)
-            else:
-                markersizes.append(4)
+            name = data["name"]
+            times[name] = data["times"]
+            ids_in_file[name] = data["ids"]
+            max_id_here = max(data["ids"])
+
+            labels.append("%s (%i)" % (name, max_id_here - offset_id))
+            offset_id = max_id_here + 1
+            xs.append(x)
+            ys.append(y)
+            markers.append(".")
+            linestyles.append("")
+
+    xlim = [max_time / -20.0, max_time * 1.05]
+    ylim = [max_id / -20.0, max_id * 1.05] if max_id > 0 else [-1, 1]
+    markersizes = []
+    for xx in xs:
+        if len(unique_ids) > 50:
+            markersizes.append(2)
+        elif len(unique_ids) > 200:
+            markersizes.append(1)
+        else:
+            markersizes.append(4)
 
     generate_plot(
         xs,
         ys,
-        "Spike times from: %s" % a.spiketime_files,
+        "Spike times from: %s" % spiketime_files,
         labels=labels,
         linestyles=linestyles,
         markers=markers,
@@ -308,13 +324,13 @@ def plot_spikes(
         markersizes=markersizes,
         grid=False,
         show_plot_already=False,
-        save_figure_to=a.save_spike_plot_to,
+        save_figure_to=save_spike_plot_to,
         legend_position="right",
     )
 
-    if a.rates:
+    if rates:
         plt.figure()
-        bins = a.rate_bins
+        bins = rate_bins
         for name in times:
             tt = times[name]
             ids_here = len(ids_in_file[name])
@@ -349,7 +365,7 @@ def plot_spikes(
 
             boxes = [5, 10, 20, 50]
             boxes = [20, 50]
-            boxes = [int(a.rate_window)]
+            boxes = [int(rate_window)]
             for b in boxes:
                 box = np.ones(b)
 
@@ -361,7 +377,7 @@ def plot_spikes(
 
         # plt.legend()
 
-    if a.show_plots_already:
+    if show_plots_already:
         plt.show()
     else:
         plt.close()
