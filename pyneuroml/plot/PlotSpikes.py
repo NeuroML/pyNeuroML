@@ -195,9 +195,10 @@ def plot_spikes(
     times = OrderedDict()
     ids_in_file = OrderedDict()
 
-    if a.format == "sonata" or a.format == "s":
-        for file_name in a.spiketime_files:
-            ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
+    if spiketime_files is not None:
+        if format == "sonata" or format == "s":
+            for file_name in spiketime_files:
+                ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
 
             for pop in ids_times_pops:
                 ids_times = ids_times_pops[pop]
@@ -374,6 +375,12 @@ def plot_spikes(
         plt.show()
     else:
         plt.close()
+
+
+def main(args=None):
+    if args is None:
+        args = process_args()
+    plot_spikes(**vars(args))
 
 
 if __name__ == "__main__":
