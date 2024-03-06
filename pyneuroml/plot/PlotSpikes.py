@@ -238,16 +238,6 @@ def plot_spikes(
                 markers.append(".")
                 linestyles.append("")
 
-        xlim = [max_time / -20.0, max_time * 1.05]
-        ylim = [max_id / -20.0, max_id * 1.05] if max_id > 0 else [-1, 1]
-        markersizes = []
-        for xx in xs:
-            if len(unique_ids) > 50:
-                markersizes.append(2)
-            elif len(unique_ids) > 200:
-                markersizes.append(1)
-            else:
-                markersizes.append(4)
     else:
         for file_name in a.spiketime_files:
             logger.info("Loading spike times from: %s" % file_name)
