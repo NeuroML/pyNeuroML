@@ -1,16 +1,18 @@
-import os.path
-from pyneuroml.lems.LEMSSimulation import LEMSSimulation
-
-import shutil
-import os
 import logging
+import os
+import os.path
+import random
+import shutil
+import typing
+
+import neuroml
+from lxml import etree
+from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
-import random
-import neuroml
-
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def generate_lems_file_for_neuroml(
@@ -41,7 +43,6 @@ def generate_lems_file_for_neuroml(
     verbose=False,
     simulation_seed=12345,
 ):
-
     my_random = random.Random()
     if lems_file_generate_seed:
         my_random.seed(
@@ -117,7 +118,6 @@ def generate_lems_file_for_neuroml(
         )
 
         for include in nml_doc_inc_not_included.includes:
-
             if nml_dir == "." and os.path.isfile(include.href):
                 incl_curr = include.href
             else:
@@ -167,7 +167,6 @@ def generate_lems_file_for_neuroml(
                         if not os.path.isfile(
                             "%s/%s" % (target_dir, os.path.basename(incl_curr))
                         ) and not os.path.isfile("%s/%s" % (target_dir, incl_curr)):
-
                             shutil.copy(incl_curr, target_dir)
                             ls.include_neuroml2_file(
                                 include.href, include_included=False
@@ -186,10 +185,8 @@ def generate_lems_file_for_neuroml(
         or gen_spike_saves_for_all_somas
         or len(gen_spike_saves_for_only_populations) > 0
     ):
-
         for network in nml_doc.networks:
             for population in network.populations:
-
                 variable = "v"
                 quantity_template_e = "%s[%i]"
 
@@ -322,7 +319,6 @@ def generate_lems_file_for_neuroml(
                         quantities_saved.append(quantity)
 
     for display in sorted(gen_plots_for_quantities.keys()):
-
         quantities = gen_plots_for_quantities[display]
         max_ = "1"
         min_ = "-1"
@@ -349,7 +345,6 @@ def generate_lems_file_for_neuroml(
             quantities_saved.append(q)
 
     for file_name in sorted(gen_spike_saves_for_cells.keys()):
-
         quantities = gen_spike_saves_for_cells[file_name]
         of_id = safe_variable(file_name)
         ls.create_event_output_file(of_id, file_name)
@@ -394,3 +389,173 @@ def get_pop_index(quantity):
         pop = s[0]
         index = int(s[1])
         return pop, index
+
+
+def load_sim_data_from_lems_file(
+    lems_file_name: str,
+    base_dir: str = ".",
+    get_events: bool = True,
+    get_traces: bool = True,
+) -> typing.Union[typing.Tuple[typing.Dict, typing.Dict], typing.Dict]:
+    """Load simulation outputs using the LEMS simulation file
+
+    .. versionadded:: 1.2.2
+
+    :param lems_file_name: name of LEMS file that was used to generate the data
+    :type lems_file_name: str
+    :param base_dir: directory to run in
+    :type base_dir: str
+    :returns: if both `get_events` and `get_traces` are selected, a tuple with
+        two dictionaries, one for traces, one for events, is returned.
+
+        Otherwise one dictionary for whichever was selected.
+
+        The events dictionary has the following format:
+
+        .. code-block:: python
+
+            {
+                '<value of select attribute>': [<events>]
+            }
+
+        The traces dictionary has the following format:
+
+        .. code-block:: python
+
+            {
+                't': [<values>],
+                'col 1': [<values>]
+            }
+
+    :raises ValueError: if neither traces nor events are selected for loading
+    :raises ValueError: if no traces are found
+    :raises ValueError: if no events are found
+
+    """
+    if not os.path.isfile(lems_file_name):
+        real_lems_file = os.path.realpath(os.path.join(base_dir, lems_file_name))
+    else:
+        real_lems_file = os.path.realpath(lems_file_name)
+
+    if not get_events and not get_traces:
+        raise ValueError("One of events or traces must be True")
+
+    logger.debug(
+        "Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s;"
+        % (lems_file_name, real_lems_file, base_dir, os.getcwd())
+    )
+
+    # Could use pylems to parse all this...
+    traces = {}  # type: dict
+    events = {}  # type: dict
+
+    base_lems_file_path = os.path.dirname(os.path.realpath(lems_file_name))
+    tree = etree.parse(real_lems_file)
+
+    sim = tree.getroot().find("Simulation")
+    ns_prefix = ""
+
+    possible_prefixes = ["{http://www.neuroml.org/lems/0.7.2}"]
+    if sim is None:
+        for pre in possible_prefixes:
+            for comp in tree.getroot().findall(pre + "Component"):
+                if comp.attrib["type"] == "Simulation":
+                    ns_prefix = pre
+                    sim = comp
+
+    if get_events:
+        event_output_files = sim.findall(ns_prefix + "EventOutputFile")
+        for i, of in enumerate(event_output_files):
+            name = of.attrib["fileName"]
+            file_name = os.path.join(base_dir, name)
+            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
+                file_name = os.path.join(base_lems_file_path, name)
+
+            # if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            #    file_name = os.path.join(os.getcwd(),name)
+            # ... try relative to cwd.
+            # if not os.path.isfile(file_name): # If not relative to the LEMS file...
+            #    file_name = os.path.join(os.getcwd(),'NeuroML2','results',name)
+            # ... try relative to cwd in NeuroML2/results subdir.
+            if not os.path.isfile(file_name):  # If not relative to the base dir...
+                raise OSError(
+                    ("Could not find simulation output " "file %s" % file_name)
+                )
+            format = of.attrib["format"]
+            logger.info(
+                "Loading saved events from %s (format: %s)" % (file_name, format)
+            )
+            selections = {}
+            for col in of.findall(ns_prefix + "EventSelection"):
+                id = int(col.attrib["id"])
+                select = col.attrib["select"]
+                events[select] = []
+                selections[id] = select
+
+            with open(file_name) as f:
+                for line in f:
+                    values = line.split()
+                    if format == "TIME_ID":
+                        t = float(values[0])
+                        id = int(values[1])
+                    elif format == "ID_TIME":
+                        id = int(values[0])
+                        t = float(values[1])
+                    logger.debug(
+                        "Found a event in cell %s (%s) at t = %s"
+                        % (id, selections[id], t)
+                    )
+                    events[selections[id]].append(t)
+
+    if get_traces:
+        output_files = sim.findall(ns_prefix + "OutputFile")
+
+        for i, of in enumerate(output_files):
+            traces["t"] = []
+            name = of.attrib["fileName"]
+            file_name = os.path.join(base_dir, name)
+
+            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
+                file_name = os.path.join(base_lems_file_path, name)
+
+            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
+                file_name = os.path.join(os.getcwd(), name)
+
+                # ... try relative to cwd.
+            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
+                file_name = os.path.join(os.getcwd(), "NeuroML2", "results", name)
+                # ... try relative to cwd in NeuroML2/results subdir.
+            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
+                raise OSError(
+                    ("Could not find simulation output " "file %s" % file_name)
+                )
+
+            logger.info("Loading traces from %s" % (file_name))
+            cols = []
+            cols.append("t")
+            for col in of.findall(ns_prefix + "OutputColumn"):
+                quantity = col.attrib["quantity"]
+                traces[quantity] = []
+                cols.append(quantity)
+
+            # TODO: could be quicker using numpy etc?
+            with open(file_name) as f:
+                for line in f:
+                    values = line.split()
+                    for vi in range(len(values)):
+                        traces[cols[vi]].append(float(values[vi]))
+
+    if get_traces and get_events:
+        if len(traces) == 0:
+            raise ValueError("No traces found")
+        if len(events) == 0:
+            raise ValueError("No events found")
+        return traces, events
+    elif get_events:
+        if len(events) == 0:
+            raise ValueError("No events found")
+        return events
+    else:
+        if len(traces) == 0:
+            raise ValueError("No traces found")
+        return traces
