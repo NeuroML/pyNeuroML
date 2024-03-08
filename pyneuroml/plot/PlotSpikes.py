@@ -108,7 +108,16 @@ def process_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_sonata_spikes_hdf5_file(file_name):
+def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
+    """
+        Read spike times from a SONATA format HDF5 file.
+
+    Args:
+        file_name (str): The name of the HDF5 file.
+
+    Returns:
+        dict: A dictionary where the keys are population names and the values are dictionaries of spike times for each ID in the population.
+    """
     full_path = os.path.abspath(file_name)
     logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
 
