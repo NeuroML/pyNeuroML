@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+Spike plotting helper functions.
+
+File: pyneuroml/plot/PlotSpikes.py
+
+Copyright 2023 NeuroML contributors
+"""
 import argparse
 import logging
 import os
@@ -15,7 +23,6 @@ FORMAT_ID_T = "id_t"
 FORMAT_ID_TIME_NEST_DAT = "id_t_nest_dat"
 FORMAT_T_ID = "t_id"
 
-
 DEFAULTS = {
     "format": FORMAT_ID_T,
     "rates": False,
@@ -28,9 +35,12 @@ DEFAULTS = {
 POP_NAME_SPIKEFILE_WITH_GIDS = "Spiketimes for GIDs"
 
 
-def process_args():
+def process_args() -> argparse.Namespace:
     """
-    Parse command-line arguments.
+    Parse command line arguments.
+
+    Returns:
+        argparse.Namespace: The parsed arguments.
     """
     parser = argparse.ArgumentParser(
         description="A script for plotting files containing spike time data"
@@ -200,26 +210,70 @@ def plot_spikes(
             for file_name in spiketime_files:
                 ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
 
-            for pop in ids_times_pops:
-                ids_times = ids_times_pops[pop]
+                for pop in ids_times_pops:
+                    ids_times = ids_times_pops[pop]
 
+                    x = []
+                    y = []
+                    max_id_here = 0
+
+                    name = file_name.split(" / ")[-1]
+                    if name.endswith("_spikes.h5"):
+                        name = name[:-10]
+                    elif name.endswith(".h5"):
+                        name = name[:-3]
+                    times[name] = []
+                    ids_in_file[name] = []
+
+                    for id in ids_times:
+                        for t in ids_times[id]:
+                            id_shifted = offset_id + int(float(id))
+                            max_id = max(max_id, id_shifted)
+
+                            if id_shifted not in ids_in_file[name]:
+                                ids_in_file[name].append(id_shifted)
+                            times[name].append(t)
+                            max_id_here = max(max_id_here, id_shifted)
+                            max_time = max(t, max_time)
+                            if id_shifted not in unique_ids:
+                                unique_ids.append(id_shifted)
+                            x.append(t)
+                            y.append(id_shifted)
+
+                    labels.append("%s, %s (%i)" % (name, pop, max_id_here - offset_id))
+                    offset_id = max_id_here + 1
+                    xs.append(x)
+                    ys.append(y)
+                    markers.append(".")
+                    linestyles.append("")
+
+        else:
+            for file_name in spiketime_files:
+                logger.info("Loading spike times from: %s" % file_name)
+                spikes_file = open(file_name)
                 x = []
                 y = []
                 max_id_here = 0
 
-                name = file_name.split(" / ")[-1]
-                if name.endswith("_spikes.h5"):
-                    name = name[:-10]
-                elif name.endswith(".h5"):
-                    name = name[:-3]
+                name = spikes_file.name
+                if name.endswith(".spikes"):
+                    name = name[:-7]
+                if name.endswith(".spike"):
+                    name = name[:-6]
                 times[name] = []
                 ids_in_file[name] = []
 
-                for id in ids_times:
-                    for t in ids_times[id]:
+                for line in spikes_file:
+                    if not line.startswith("#") and not (
+                        line.startswith("sender") and format == FORMAT_ID_TIME_NEST_DAT
+                    ):
+                        if format == FORMAT_ID_T or format == FORMAT_ID_TIME_NEST_DAT:
+                            [id, t] = line.split()
+                        elif format == FORMAT_T_ID:
+                            [t, id] = line.split()
                         id_shifted = offset_id + int(float(id))
                         max_id = max(max_id, id_shifted)
-
+                        t = float(t)
                         if id_shifted not in ids_in_file[name]:
                             ids_in_file[name].append(id_shifted)
                         times[name].append(t)
@@ -230,59 +284,14 @@ def plot_spikes(
                         x.append(t)
                         y.append(id_shifted)
 
-                # print("max_id_here in %s: %i"%(file_name, max_id_here))
-                labels.append("%s, %s (%i)" % (name, pop, max_id_here - offset_id))
+                labels.append("%s (%i)" % (name, max_id_here - offset_id))
                 offset_id = max_id_here + 1
                 xs.append(x)
                 ys.append(y)
                 markers.append(".")
                 linestyles.append("")
 
-    else:
-        for file_name in spiketime_files:
-            logger.info("Loading spike times from: %s" % file_name)
-            spikes_file = open(file_name)
-            x = []
-            y = []
-            max_id_here = 0
-
-            name = spikes_file.name
-            if name.endswith(".spikes"):
-                name = name[:-7]
-            if name.endswith(".spike"):
-                name = name[:-6]
-            times[name] = []
-            ids_in_file[name] = []
-
-            for line in spikes_file:
-                if not line.startswith("#") and not (
-                    line.startswith("sender") and format == FORMAT_ID_TIME_NEST_DAT
-                ):
-                    if format == FORMAT_ID_T or format == FORMAT_ID_TIME_NEST_DAT:
-                        [id, t] = line.split()
-                    elif format == FORMAT_T_ID:
-                        [t, id] = line.split()
-                    id_shifted = offset_id + int(float(id))
-                    max_id = max(max_id, id_shifted)
-                    t = float(t)
-                    if id_shifted not in ids_in_file[name]:
-                        ids_in_file[name].append(id_shifted)
-                    times[name].append(t)
-                    max_id_here = max(max_id_here, id_shifted)
-                    max_time = max(t, max_time)
-                    if id_shifted not in unique_ids:
-                        unique_ids.append(id_shifted)
-                    x.append(t)
-                    y.append(id_shifted)
-
-            # print("max_id_here in %s: %i"%(file_name, max_id_here))
-            labels.append("%s (%i)" % (name, max_id_here - offset_id))
-            offset_id = max_id_here + 1
-            xs.append(x)
-            ys.append(y)
-            markers.append(".")
-            linestyles.append("")
-    if spike_data is not None:
+    elif spike_data is not None:
         for data in spike_data:
             x = [t for t in data["times"]]
             y = [id_shifted for id_shifted in data["ids"]]
@@ -345,10 +354,6 @@ def plot_spikes(
             hist, bin_edges = np.histogram(
                 tt, bins=bins, weights=[bins * max(tt) / (float(ids_here))] * len(tt)
             )
-            """
-            width = bin_edges[1]-bin_edges[0]
-            mids = [i + width / 2 for i in bin_edges[: -1]]
-            plt.plot(mids, hist, label=name)"""
 
         plt.figure()
 
@@ -374,8 +379,6 @@ def plot_spikes(
                 ys = hist_c
                 xs = [i / (float(len(ys))) for i in range(len(ys))]
                 plt.plot(xs, ys, label=name + "_%i_c" % b)
-
-        # plt.legend()
 
     if show_plots_already:
         plt.show()
