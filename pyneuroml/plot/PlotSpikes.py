@@ -429,7 +429,14 @@ def plot_spikes(
         plt.close()
 
 
-def main(args=None):
+def main(args: Optional[argparse.Namespace] = None) -> None:
+    """Entry point for the script.
+
+    :param args: Parsed command line arguments. Defaults to None.
+    :type args: Optional[argparse.Namespace]
+    :return: None
+    :rtype: None
+    """
     if args is None:
         args = process_args()
     plot_spikes(**vars(args))
