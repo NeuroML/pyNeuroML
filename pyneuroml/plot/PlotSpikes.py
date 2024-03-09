@@ -109,14 +109,12 @@ def process_args() -> argparse.Namespace:
 
 
 def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
-    """
-        Read spike times from a SONATA format HDF5 file.
+    """Read spike times from a SONATA format HDF5 file.
 
-    Args:
-        file_name (str): The name of the HDF5 file.
-
-    Returns:
-        dict: A dictionary where the keys are population names and the values are dictionaries of spike times for each ID in the population.
+    :param file_name: The name of the HDF5 file.
+    :type file_name: str
+    :return: A dictionary where the keys are population names and the values are dictionaries of spike times for each ID in the population.
+    :rtype: dict
     """
     full_path = os.path.abspath(file_name)
     logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
@@ -201,40 +199,37 @@ def plot_spikes(
     show_plots_already: bool = True,
 ) -> None:
     """
-     Plot spike times from files or data.
+    Plot spike times from files or data.
 
-     Args:
-        spiketime_files (List[str], optional): List of spike time files to be plotted.
-            If provided, `spike_data` should be `None`. Defaults to `None`.
-        spike_data (List[Dict[str, Union[List[float], List[int]]]], optional): List of
-            dictionaries containing spike time data. Each dictionary should have the
-            following keys:
-            - "name" (str): Name of the population or file.
-            - "times" (List[float]): List of spike times in seconds.
-            - "ids" (List[int]): List of cell IDs corresponding to each spike time.
-            If provided, `spiketime_files` should be `None`. Defaults to `None`.
-        format (str, optional): Format of the spike time data in the files. Can be one
-            of the following:
-            - "id_t": Each line contains a cell ID (int) followed by a spike time (float).
-            - "id_time_nest_dat": Each line contains a cell ID (int) followed by a spike
-              time (float), with NEST-style comments allowed.
-            - "t_id": Each line contains a spike time (float) followed by a cell ID (int).
-            - "sonata": SONATA-style HDF5 file.
-            Defaults to "id_t".
-        rates (bool, optional): Whether to plot rates in addition to spike times.
-            Defaults to False.
-        save_spike_plot_to (str, optional): Path to save the spike plot to. If `None`, the
-            plot will not be saved. Defaults to `None`.
-        rate_window (int, optional): Window size for rate calculation in ms. Defaults to 50.
-        rate_bins (int, optional): Number of bins for rate histogram. Defaults to 500.
-        show_plots_already (bool, optional): Whether to show the plots immediately after
-            they are generated. Defaults to True.
-
-    Raises:
-        ValueError: If neither `spiketime_files` nor `spike_data` is provided.
-
-    Returns:
-        None
+    :param spiketime_files: List of spike time files to be plotted. If provided, `spike_data` should be `None`. Defaults to `None`.
+    :type spiketime_files: Optional[List[str]]
+    :param spike_data: List of dictionaries containing spike time data. Each dictionary should have the following keys:
+                        - "name" (str): Name of the population or file.
+                        - "times" (List[float]): List of spike times in seconds.
+                        - "ids" (List[int]): List of cell IDs corresponding to each spike time.
+                        If provided, `spiketime_files` should be `None`. Defaults to `None`.
+    :type spike_data: Optional[List[Dict[str, Union[List[float], List[int]]]]]
+    :param format: Format of the spike time data in the files. Can be one of the following:
+                   - "id_t": Each line contains a cell ID (int) followed by a spike time (float).
+                   - "id_time_nest_dat": Each line contains a cell ID (int) followed by a spike time (float),
+                                         with NEST-style comments allowed.
+                   - "t_id": Each line contains a spike time (float) followed by a cell ID (int).
+                   - "sonata": SONATA-style HDF5 file.
+                   Defaults to "id_t".
+    :type format: str
+    :param rates: Whether to plot rates in addition to spike times. Defaults to False.
+    :type rates: bool
+    :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
+    :type save_spike_plot_to: Optional[str]
+    :param rate_window: Window size for rate calculation in ms. Defaults to 50.
+    :type rate_window: int
+    :param rate_bins: Number of bins for rate histogram. Defaults to 500.
+    :type rate_bins: int
+    :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
+    :type show_plots_already: bool
+    :raises ValueError: If neither `spiketime_files` nor `spike_data` is provided.
+    :return: None
+    :rtype: None
     """
     if spiketime_files is None and spike_data is None:
         raise ValueError("Either spiketime_files or spike_data must be provided.")
