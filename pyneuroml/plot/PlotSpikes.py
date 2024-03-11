@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyneuroml.plot import generate_plot
 from pyneuroml.utils.cli import build_namespace
+from typing import Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -183,9 +184,6 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
     h5file.close()
 
     return ids_times_pops
-
-
-from typing import Dict, List, Optional, Union
 
 
 def plot_spikes(
