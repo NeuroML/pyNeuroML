@@ -30,6 +30,7 @@ logger.setLevel(logging.INFO)
 def read_neuroml2_file(
     nml2_file_name: str,
     include_includes: bool = False,
+    critical_includes: bool = False,
     verbose: bool = False,
     already_included: Optional[list] = None,
     optimized: bool = False,
@@ -41,6 +42,8 @@ def read_neuroml2_file(
     :type nml2_file_name: str
     :param include_includes: toggle whether files included in NML file should also be included/read
     :type include_includes: bool
+    :param critical_includes: toggle whether system should exit or continue with warning on missing included files
+    :type critical_includes: bool
     :param verbose: toggle verbosity
     :type verbose: bool
     :param already_included: list of files already included
@@ -56,9 +59,12 @@ def read_neuroml2_file(
 
     logger.info("Loading NeuroML2 file: %s" % nml2_file_name)
 
-    if not os.path.isfile(nml2_file_name):
+    if not os.path.isfile(nml2_file_name) and critical_includes:
         logger.critical("Unable to find file: %s!" % nml2_file_name)
         sys.exit(FILE_NOT_FOUND_ERR)
+    elif not os.path.isfile(nml2_file_name) and not critical_includes:
+        logger.warning("Unable to find file: %s!" % nml2_file_name)
+        return
 
     if nml2_file_name.endswith(".h5") or nml2_file_name.endswith(".hdf5"):
         nml2_doc = loaders.NeuroMLHdf5Loader.load(nml2_file_name, optimized=optimized)
@@ -95,6 +101,7 @@ def read_neuroml2_file(
                     nml2_sub_doc = read_neuroml2_file(
                         incl_loc,
                         True,
+                        critical_includes=critical_includes,
                         verbose=verbose,
                         already_included=already_included,
                         check_validity_pre_include=check_validity_pre_include,
