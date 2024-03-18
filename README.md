@@ -12,7 +12,7 @@ pyNeuroML
 [![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
 [![Gitter](https://badges.gitter.im/NeuroML/community.svg)](https://gitter.im/NeuroML/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-13-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
@@ -193,6 +193,7 @@ More closely tied to PyNN?
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/RokasSt"><img src="https://avatars.githubusercontent.com/u/12904422?v=4?s=100" width="100px;" alt="Rokas Stanislovas"/><br /><sub><b>Rokas Stanislovas</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3ARokasSt" title="Bug reports">🐛</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=RokasSt" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/robertvi"><img src="https://avatars.githubusercontent.com/u/456100?v=4?s=100" width="100px;" alt="Robert Vickerstaff"/><br /><sub><b>Robert Vickerstaff</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=robertvi" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=robertvi" title="Tests">⚠️</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/lej0hn"><img src="https://avatars.githubusercontent.com/u/72049569?v=4?s=100" width="100px;" alt="Giannis Daras"/><br /><sub><b>Giannis Daras</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Alej0hn" title="Bug reports">🐛</a> <a href="#ideas-lej0hn" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Dhruvanshu-Joshi"><img src="https://avatars.githubusercontent.com/u/104030847?v=4?s=100" width="100px;" alt="Dhruvanshu-Joshi"/><br /><sub><b>Dhruvanshu-Joshi</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3ADhruvanshu-Joshi" title="Bug reports">🐛</a> <a href="#ideas-Dhruvanshu-Joshi" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
   <tfoot>
