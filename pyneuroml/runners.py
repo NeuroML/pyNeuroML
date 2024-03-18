@@ -132,6 +132,7 @@ def run_multiple_lems_with(
         will auto-detect
     :type num_parallel: None or int
     :param sims_spec: dictionary with simulation specifications
+
         Each key of the dict should be the name of the LEMS file to be
         simulated, and the keys will be dictionaries that contain the arguments
         and key word arguments to pass to the `run_lems_with` method:
@@ -156,9 +157,9 @@ def run_multiple_lems_with(
 
         .. code-block:: python
 
-        {
-            "LEMS1.xml": <results>
-        }
+            {
+                "LEMS1.xml": <results>
+            }
 
     :rtype: dict
     """
