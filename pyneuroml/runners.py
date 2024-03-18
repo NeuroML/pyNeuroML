@@ -126,9 +126,7 @@ def run_multiple_lems_with(
 ):
     """Run multiple LEMS simulation files in a pool.
 
-    Wrapper around the `run_lems_with` method for the execution of
-    multiple simulations using a pool. Uses the `ppft
-    <https://ppft.readthedocs.io/en/latest/>`__ module.
+    Uses the `ppft <https://ppft.readthedocs.io/en/latest/>`__ module.
 
     :param num_parallel: number of simulations to run in parallel, if None, ppft
         will auto-detect
@@ -176,7 +174,7 @@ def run_multiple_lems_with(
     for sim, sim_dict in sims_spec.items():
         # ppft's submit function only takes args, not kwargs, so we need to
         # create args from provided kwargs
-        # In doing so,we end up re-implementing some functionality of the
+        # In doing so, we end up re-implementing some functionality of the
         # `run_lems_with` function, but that cannot be helped
         found = False
         for fname, function in function_tuple:
