@@ -140,7 +140,7 @@ def run_multiple_lems_with(
 
             {
                 "LEMS1.xml": {
-                        'engine': "name of engine",
+                        "engine": "name of engine",
                         "args": ("arg1", "arg2"),
                         "kwargs": {
                             "kwarg1": value
@@ -153,10 +153,11 @@ def run_multiple_lems_with(
 
     :type sims_spec: dict
     :returns: dict with results of runs, depending on given arguments:
+
         .. code-block:: python
 
         {
-            'LEMS1.xml': <results>
+            "LEMS1.xml": <results>
         }
 
     :rtype: dict
