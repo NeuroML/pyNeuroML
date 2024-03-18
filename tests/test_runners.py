@@ -47,7 +47,11 @@ class TestRunners(BaseTestCase):
             "LEMS_NML2_Ex5_DetCell.xml": {
                 "engine": "jneuroml_neuron",
                 "args": (),
-                "kwargs": {"exec_in_dir": "examples", "nogui": True},
+                "kwargs": {
+                    "exec_in_dir": "examples",
+                    "nogui": True,
+                    "compile_mods": False,
+                },
             },
         }
 
