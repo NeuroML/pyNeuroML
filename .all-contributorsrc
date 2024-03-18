@@ -181,6 +181,16 @@
         "code",
         "test"
       ]
+    },
+    {
+      "login": "lej0hn",
+      "name": "Giannis Daras",
+      "avatar_url": "https://avatars.githubusercontent.com/u/72049569?v=4",
+      "profile": "https://github.com/lej0hn",
+      "contributions": [
+        "bug",
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 7,
