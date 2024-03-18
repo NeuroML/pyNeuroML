@@ -10,7 +10,7 @@ Copyright 2024 NeuroML contributors
 import logging
 import pathlib as pl
 
-from pyneuroml.runners import generate_sim_scripts_in_folder
+from pyneuroml.runners import generate_sim_scripts_in_folder, run_multiple_lems_with
 
 from . import BaseTestCase
 
@@ -35,3 +35,22 @@ class TestRunners(BaseTestCase):
         self.assertTrue(
             pl.Path(dirname + "/" + pl.Path(dirname).name + "_generated").exists()
         )
+
+    def test_run_multiple_lems_with(self):
+        """Test the run_multiple_lems_with function."""
+        spec = {
+            "LEMS_NML2_Ex9_FN.xml": {
+                "engine": "jneuroml_neuron",
+                "args": (),
+                "kwargs": {"exec_in_dir": "examples", "nogui": True},
+            },
+            "LEMS_NML2_Ex5_DetCell.xml": {
+                "engine": "jneuroml_neuron",
+                "args": (),
+                "kwargs": {"exec_in_dir": "examples", "nogui": True},
+            },
+        }
+
+        results = run_multiple_lems_with(2, sims_spec=spec)
+        for sim, res in results.items():
+            self.assertTrue(res())
