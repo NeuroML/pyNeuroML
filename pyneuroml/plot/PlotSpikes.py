@@ -40,8 +40,8 @@ def process_args() -> argparse.Namespace:
     """
     Parse command line arguments.
 
-    Returns:
-        argparse.Namespace: The parsed arguments.
+    :returns: An argparse.Namespace object containing the parsed arguments.
+    :rtype: argparse.Namespace
     """
     parser = argparse.ArgumentParser(
         description="A script for plotting files containing spike time data"
