@@ -441,4 +441,4 @@ def _spike_plotter_main(args: Optional[argparse.Namespace] = None) -> None:
 
 
 if __name__ == "__main__":
-    _spike_plotter_main()
+    _spike_plotter_main(_process_args())
