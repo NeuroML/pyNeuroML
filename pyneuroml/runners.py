@@ -1399,3 +1399,71 @@ def generate_sim_scripts_in_folder(
     os.chdir(str(cwd))
 
     return tdir
+
+
+def execute_multiple_in_dir(
+    num_parallel: typing.Optional[int],
+    cmds_spec: typing.List[typing.Dict[typing.Any, typing.Any]],
+) -> typing.List[typing.Tuple[int, str]]:
+    """Wraper around `execute_command_in_dir` to allow running commands in
+    parallel using ppft
+
+    :param num_parallel: number of simulations to run in parallel, if None, ppft
+        will auto-detect
+    :type num_parallel: None or int
+    :param cmds_spec: list with keyword arguments to `execute_command_in_dir`
+
+        .. code-block:: python
+
+            [
+                {
+                    "kwarg1": value
+                }
+            ]
+
+    :type sims_spec: dict
+    :returns: list of tuples returned from `execute_command_in_dir`
+    :rtype: list
+
+    """
+    results = []
+    if num_parallel is None:
+        jobserver = pp.Server()
+        logger.info("Created job server by auto-detecting number of jobs")
+    else:
+        logger.info(f"Created job server using {num_parallel} jobs")
+        jobserver = pp.Server(num_parallel)
+
+    ctr = 0
+    for cmd_dict in cmds_spec:
+        # ppft's submit function only takes args, not kwargs, so we need to
+        # create args from provided kwargs
+        callfunc = inspect.signature(execute_command_in_dir)
+
+        if len(cmd_dict) == 0:
+            raise ValueError("cmd_dict is empty")
+
+        bound_arguments = callfunc.bind_partial(**cmd_dict)
+        bound_arguments.apply_defaults()
+
+        print(f"[{ctr}/{len(cmds_spec)}] Submitting to jobserver")
+        logger.debug(
+            f"[{ctr}/{len(cmds_spec)}] Submitting to jobserver with specs: {bound_arguments.arguments}"
+        )
+        logger.debug(f"globals are: {globals()}")
+        results.append(
+            jobserver.submit(
+                execute_command_in_dir,
+                args=bound_arguments.args,
+                modules=(),
+                globals=globals(),
+            )
+        )
+        jobserver.print_stats()
+        ctr += 1
+
+    logger.info("Waiting for jobs to finish")
+    jobserver.wait()
+    jobserver.print_stats()
+
+    return results
