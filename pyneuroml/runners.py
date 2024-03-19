@@ -174,6 +174,13 @@ def run_multiple_lems_with(
     function_tuple = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
     ctr = 0
     for sim, sim_dict in sims_spec.items():
+        if "engine" not in sim_dict:
+            raise ValueError("No engine provided")
+
+        if "args" not in sim_dict:
+            sim_dict["args"] = ()
+        if "kwargs" not in sim_dict:
+            sim_dict["kwargs"] = {}
         # ppft's submit function only takes args, not kwargs, so we need to
         # create args from provided kwargs
         # In doing so, we end up re-implementing some functionality of the
@@ -923,7 +930,7 @@ def execute_command_in_dir(
     directory: str,
     verbose: bool = DEFAULTS["v"],
     prefix: str = "Output: ",
-    env: Optional[typing.Any] = None,
+    env: Optional[typing.Mapping] = None,
 ) -> typing.Tuple[int, str]:
     """Execute a command in specific working directory
 
@@ -936,7 +943,7 @@ def execute_command_in_dir(
     :param prefix: string to prefix console output with
     :type prefix: str
     :param env: environment variables to be used
-    :type env: str
+    :type env: Mapping
     """
     return_string = ""  # type: typing.Union[bytes, str]
     if os.name == "nt":
