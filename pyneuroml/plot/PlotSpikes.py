@@ -427,7 +427,7 @@ def plot_spikes(
         plt.close()
 
 
-def main(args: Optional[argparse.Namespace] = None) -> None:
+def _spike_plotter_main(args: Optional[argparse.Namespace] = None) -> None:
     """Entry point for the script.
 
     :param args: Parsed command line arguments. Defaults to None.
@@ -441,4 +441,4 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    _spike_plotter_main()
