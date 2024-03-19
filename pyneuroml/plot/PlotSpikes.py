@@ -36,7 +36,7 @@ DEFAULTS = {
 POP_NAME_SPIKEFILE_WITH_GIDS = "Spiketimes for GIDs"
 
 
-def process_args() -> argparse.Namespace:
+def _process_args() -> argparse.Namespace:
     """
     Parse command line arguments.
 
@@ -436,7 +436,7 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
     :rtype: None
     """
     if args is None:
-        args = process_args()
+        args = _process_args()
     plot_spikes(**vars(args))
 
 
