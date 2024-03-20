@@ -11,6 +11,7 @@ import logging
 import pathlib as pl
 
 from pyneuroml.runners import (
+    execute_command_in_dir,
     execute_multiple_in_dir,
     generate_sim_scripts_in_folder,
     run_multiple_lems_with,
@@ -42,11 +43,19 @@ class TestRunners(BaseTestCase):
 
     def test_run_multiple_lems_with(self):
         """Test the run_multiple_lems_with function."""
+
+        # compile first, otherwise makes commands fail
+        execute_command_in_dir("nrnivmodl", directory="examples")
+
         spec = {
             "LEMS_NML2_Ex9_FN.xml": {
                 "engine": "jneuroml_neuron",
                 "args": (),
-                "kwargs": {"exec_in_dir": "examples", "nogui": True},
+                "kwargs": {
+                    "exec_in_dir": "examples",
+                    "nogui": True,
+                    "compile_mods": False,
+                },
             },
             "LEMS_NML2_Ex5_DetCell.xml": {
                 "engine": "jneuroml_neuron",
