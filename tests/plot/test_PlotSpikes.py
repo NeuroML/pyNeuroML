@@ -44,7 +44,6 @@ class TestPlotSpikes(BaseTestCase):
             spiketime_files=[spike_file.name],
             format="id_t",
             show_plots_already=False,
-            save_figure_to="spike-plot-from-file-test.png",
         )
         self.assertIsFile("spike-plot-from-file-test.png")
 
