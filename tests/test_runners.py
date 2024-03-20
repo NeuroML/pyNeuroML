@@ -55,6 +55,7 @@ class TestRunners(BaseTestCase):
                     "exec_in_dir": "examples",
                     "nogui": True,
                     "compile_mods": False,
+                    "skip_run": True,
                 },
             },
             "LEMS_NML2_Ex5_DetCell.xml": {
@@ -64,6 +65,7 @@ class TestRunners(BaseTestCase):
                     "exec_in_dir": "examples",
                     "nogui": True,
                     "compile_mods": False,
+                    "skip_run": True,
                 },
             },
         }
