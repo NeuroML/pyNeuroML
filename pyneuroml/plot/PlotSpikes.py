@@ -17,6 +17,8 @@ import numpy as np
 from pyneuroml.plot import generate_plot
 from pyneuroml.utils.cli import build_namespace
 from typing import Dict, List, Optional, Union
+from typing import Tuple
+
 
 logger = logging.getLogger(__name__)
 
@@ -393,6 +395,74 @@ def plot_spikes_from_data_files(
 
     plot_spikes(
         spike_data,
+        show_plots_already=show_plots_already,
+        save_spike_plot_to=save_spike_plot_to,
+        rates=rates,
+        rate_window=rate_window,
+        rate_bins=rate_bins,
+    )
+
+
+def get_spike_data_files_from_lems(
+    lems_file_name: str, base_dir: str
+) -> Tuple[List[str], str]:
+    """
+    Read a LEMS simulation file and get the paths of the spike data files and their format.
+
+    :param lems_file_name: Path to the LEMS simulation file.
+    :type lems_file_name: str
+    :param base_dir: Directory where the LEMS file resides.
+    :type base_dir: str
+    :return: A tuple containing a list of spike data file paths and the format of the spike data files.
+    :rtype: Tuple[List[str], str]
+    """
+    # Code to read the LEMS file and extract the spike data file paths and format
+    spike_data_files = [...]
+    spike_data_format = "..."
+
+    return spike_data_files, spike_data_format
+
+
+def plot_spikes_from_lems_file(
+    lems_file_name: str,
+    base_dir: str = ".",
+    show_plots_already: bool = True,
+    save_spike_plot_to: Optional[str] = None,
+    rates: bool = False,
+    rate_window: int = 50,
+    rate_bins: int = 500,
+) -> None:
+    """
+    Plot spike times from a LEMS simulation file.
+
+    This function reads a LEMS simulation file to figure out the names of the spike data files,
+    and then calls `plot_spikes_from_data_files` to load and plot the spike data.
+
+    :param lems_file_name: Path to the LEMS simulation file.
+    :type lems_file_name: str
+    :param base_dir: Directory where the LEMS file resides. Defaults to the current directory.
+    :type base_dir: str
+    :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
+    :type show_plots_already: bool
+    :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
+    :type save_spike_plot_to: Optional[str]
+    :param rates: Whether to plot rates in addition to spike times. Defaults to False.
+    :type rates: bool
+    :param rate_window: Window size for rate calculation in ms. Defaults to 50.
+    :type rate_window: int
+    :param rate_bins: Number of bins for rate histogram. Defaults to 500.
+    :type rate_bins: int
+    :return: None
+    :rtype: None
+    """
+    # Code to read the LEMS simulation file and get the spike data file paths and format
+    spike_data_files, spike_data_format = get_spike_data_files_from_lems(
+        lems_file_name, base_dir
+    )
+
+    plot_spikes_from_data_files(
+        spike_data_files,
+        spike_data_format,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
         rates=rates,
