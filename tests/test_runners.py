@@ -10,7 +10,11 @@ Copyright 2024 NeuroML contributors
 import logging
 import pathlib as pl
 
-from pyneuroml.runners import generate_sim_scripts_in_folder, run_multiple_lems_with
+from pyneuroml.runners import (
+    execute_multiple_in_dir,
+    generate_sim_scripts_in_folder,
+    run_multiple_lems_with,
+)
 
 from . import BaseTestCase
 
@@ -58,3 +62,18 @@ class TestRunners(BaseTestCase):
         results = run_multiple_lems_with(2, sims_spec=spec)
         for sim, res in results.items():
             self.assertTrue(res())
+
+    def test_execute_multiple_in_dir(self):
+        """Test the execute_multiple_in_dir function"""
+        cmd_spec = [
+            {"command": "ls", "directory": "."},
+            {"command": "ls -lash", "directory": "."},
+            {"command": "ls -A", "directory": "."},
+            {"command": "ls -l", "directory": "."},
+        ]
+
+        results = execute_multiple_in_dir(4, cmd_spec)
+        for res in results:
+            res_one = res()
+            self.assertEqual(0, res_one[0])  # return code
+            self.assertIn("LICENSE.lesser", res_one[1])
