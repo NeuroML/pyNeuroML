@@ -321,6 +321,86 @@ def plot_spikes(
         plt.close()
 
 
+def plot_spikes_from_data_files(
+    spiketime_files: List[str],
+    format: str,
+    show_plots_already: bool = True,
+    save_spike_plot_to: Optional[str] = None,
+    rates: bool = False,
+    rate_window: int = 50,
+    rate_bins: int = 500,
+) -> None:
+    """
+    Plot spike times from data files.
+
+    :param spiketime_files: List of spike time files to be plotted.
+    :type spiketime_files: List[str]
+    :param format: Format of the spike time data in the files. Can be one of the following:
+                   - "id_t": Each line contains a cell ID (int) followed by a spike time (float).
+                   - "id_time_nest_dat": Each line contains a cell ID (int) followed by a spike time (float),
+                                         with NEST-style comments allowed.
+                   - "t_id": Each line contains a spike time (float) followed by a cell ID (int).
+                   - "sonata": SONATA-style HDF5 file.
+    :type format: str
+    :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
+    :type show_plots_already: bool
+    :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
+    :type save_spike_plot_to: Optional[str]
+    :param rates: Whether to plot rates in addition to spike times. Defaults to False.
+    :type rates: bool
+    :param rate_window: Window size for rate calculation in ms. Defaults to 50.
+    :type rate_window: int
+    :param rate_bins: Number of bins for rate histogram. Defaults to 500.
+    :type rate_bins: int
+    :return: None
+    :rtype: None
+    """
+    spike_data = []
+
+    if format == "sonata":
+        for file_name in spiketime_files:
+            ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
+
+            for pop in ids_times_pops:
+                ids_times = ids_times_pops[pop]
+                times = [t for id, times_list in ids_times.items() for t in times_list]
+                ids = [id for id, times_list in ids_times.items() for _ in times_list]
+
+                spike_data.append(
+                    {"name": f"{pop} ({file_name})", "times": times, "ids": ids}
+                )
+
+    else:
+        for file_name in spiketime_files:
+            logger.info("Loading spike times from: %s" % file_name)
+            spikes_file = open(file_name)
+            name = os.path.basename(file_name)
+            times = []
+            ids = []
+
+            for line in spikes_file:
+                if not line.startswith("#") and not (
+                    line.startswith("sender") and format == "id_time_nest_dat"
+                ):
+                    if format == "id_t" or format == "id_time_nest_dat":
+                        id, t = line.split()
+                    elif format == "t_id":
+                        t, id = line.split()
+                    times.append(float(t))
+                    ids.append(int(float(id)))
+
+            spike_data.append({"name": name, "times": times, "ids": ids})
+
+    plot_spikes(
+        spike_data,
+        show_plots_already=show_plots_already,
+        save_spike_plot_to=save_spike_plot_to,
+        rates=rates,
+        rate_window=rate_window,
+        rate_bins=rate_bins,
+    )
+
+
 def _spike_plotter_main(args: Optional[argparse.Namespace] = None) -> None:
     """Entry point for the script.
 
