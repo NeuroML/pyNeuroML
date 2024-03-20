@@ -187,51 +187,34 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
 
 
 def plot_spikes(
-    spiketime_files: Optional[List[str]] = None,
-    spike_data: Optional[List[Dict[str, Union[List[float], List[int]]]]] = None,
-    format: str = FORMAT_ID_T,
-    rates: bool = False,
+    spike_data: List[Dict[str, Union[List[float], List[int]]]],
+    show_plots_already: bool = True,
     save_spike_plot_to: Optional[str] = None,
+    rates: bool = False,
     rate_window: int = 50,
     rate_bins: int = 500,
-    show_plots_already: bool = True,
 ) -> None:
     """
-    Plot spike times from files or data.
+    Plot spike times from data.
 
-    :param spiketime_files: List of spike time files to be plotted. If provided, `spike_data` should be `None`. Defaults to `None`.
-    :type spiketime_files: Optional[List[str]]
     :param spike_data: List of dictionaries containing spike time data. Each dictionary should have the following keys:
                         - "name" (str): Name of the population or file.
                         - "times" (List[float]): List of spike times in seconds.
                         - "ids" (List[int]): List of cell IDs corresponding to each spike time.
-                        If provided, `spiketime_files` should be `None`. Defaults to `None`.
-    :type spike_data: Optional[List[Dict[str, Union[List[float], List[int]]]]]
-    :param format: Format of the spike time data in the files. Can be one of the following:
-                   - "id_t": Each line contains a cell ID (int) followed by a spike time (float).
-                   - "id_time_nest_dat": Each line contains a cell ID (int) followed by a spike time (float),
-                                         with NEST-style comments allowed.
-                   - "t_id": Each line contains a spike time (float) followed by a cell ID (int).
-                   - "sonata": SONATA-style HDF5 file.
-                   Defaults to "id_t".
-    :type format: str
-    :param rates: Whether to plot rates in addition to spike times. Defaults to False.
-    :type rates: bool
+    :type spike_data: List[Dict[str, Union[List[float], List[int]]]]
+    :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
+    :type show_plots_already: bool
     :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
     :type save_spike_plot_to: Optional[str]
+    :param rates: Whether to plot rates in addition to spike times. Defaults to False.
+    :type rates: bool
     :param rate_window: Window size for rate calculation in ms. Defaults to 50.
     :type rate_window: int
     :param rate_bins: Number of bins for rate histogram. Defaults to 500.
     :type rate_bins: int
-    :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
-    :type show_plots_already: bool
-    :raises ValueError: If neither `spiketime_files` nor `spike_data` is provided.
     :return: None
     :rtype: None
     """
-    if spiketime_files is None and spike_data is None:
-        raise ValueError("Either spiketime_files or spike_data must be provided.")
-
     xs = []
     ys = []
     labels = []
@@ -243,111 +226,24 @@ def plot_spikes(
     max_time = 0
     max_id = 0
     unique_ids = []
-    times = OrderedDict()
-    ids_in_file = OrderedDict()
+    times = {}
+    ids_in_file = {}
 
-    if spiketime_files is not None:
-        if format == "sonata" or format == "s":
-            for file_name in spiketime_files:
-                ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
+    for data in spike_data:
+        x = [t for t in data["times"]]
+        y = [id_shifted for id_shifted in data["ids"]]
 
-                for pop in ids_times_pops:
-                    ids_times = ids_times_pops[pop]
+        name = data["name"]
+        times[name] = data["times"]
+        ids_in_file[name] = data["ids"]
+        max_id_here = max(data["ids"])
 
-                    x = []
-                    y = []
-                    max_id_here = 0
-
-                    name = file_name.split(" / ")[-1]
-                    if name.endswith("_spikes.h5"):
-                        name = name[:-10]
-                    elif name.endswith(".h5"):
-                        name = name[:-3]
-                    times[name] = []
-                    ids_in_file[name] = []
-
-                    for id in ids_times:
-                        for t in ids_times[id]:
-                            id_shifted = offset_id + int(float(id))
-                            max_id = max(max_id, id_shifted)
-
-                            if id_shifted not in ids_in_file[name]:
-                                ids_in_file[name].append(id_shifted)
-                            times[name].append(t)
-                            max_id_here = max(max_id_here, id_shifted)
-                            max_time = max(t, max_time)
-                            if id_shifted not in unique_ids:
-                                unique_ids.append(id_shifted)
-                            x.append(t)
-                            y.append(id_shifted)
-
-                    labels.append("%s, %s (%i)" % (name, pop, max_id_here - offset_id))
-                    offset_id = max_id_here + 1
-                    xs.append(x)
-                    ys.append(y)
-                    markers.append(".")
-                    linestyles.append("")
-
-        else:
-            for file_name in spiketime_files:
-                logger.info("Loading spike times from: %s" % file_name)
-                spikes_file = open(file_name)
-                x = []
-                y = []
-                max_id_here = 0
-
-                name = spikes_file.name
-                if name.endswith(".spikes"):
-                    name = name[:-7]
-                if name.endswith(".spike"):
-                    name = name[:-6]
-                times[name] = []
-                ids_in_file[name] = []
-
-                for line in spikes_file:
-                    if not line.startswith("#") and not (
-                        line.startswith("sender") and format == FORMAT_ID_TIME_NEST_DAT
-                    ):
-                        if format == FORMAT_ID_T or format == FORMAT_ID_TIME_NEST_DAT:
-                            [id, t] = line.split()
-                        elif format == FORMAT_T_ID:
-                            [t, id] = line.split()
-                        id_shifted = offset_id + int(float(id))
-                        max_id = max(max_id, id_shifted)
-                        t = float(t)
-                        if id_shifted not in ids_in_file[name]:
-                            ids_in_file[name].append(id_shifted)
-                        times[name].append(t)
-                        max_id_here = max(max_id_here, id_shifted)
-                        max_time = max(t, max_time)
-                        if id_shifted not in unique_ids:
-                            unique_ids.append(id_shifted)
-                        x.append(t)
-                        y.append(id_shifted)
-
-                labels.append("%s (%i)" % (name, max_id_here - offset_id))
-                offset_id = max_id_here + 1
-                xs.append(x)
-                ys.append(y)
-                markers.append(".")
-                linestyles.append("")
-
-    elif spike_data is not None:
-        for data in spike_data:
-            x = [t for t in data["times"]]
-            y = [id_shifted for id_shifted in data["ids"]]
-
-            name = data["name"]
-            times[name] = data["times"]
-            ids_in_file[name] = data["ids"]
-            max_id_here = max(data["ids"])
-
-            labels.append("%s (%i)" % (name, max_id_here - offset_id))
-            offset_id = max_id_here + 1
-            xs.append(x)
-            ys.append(y)
-            markers.append(".")
-            linestyles.append("")
+        labels.append("%s (%i)" % (name, max_id_here - offset_id))
+        offset_id = max_id_here + 1
+        xs.append(x)
+        ys.append(y)
+        markers.append(".")
+        linestyles.append("")
 
     xlim = [max_time / -20.0, max_time * 1.05]
     ylim = [max_id / -20.0, max_id * 1.05] if max_id > 0 else [-1, 1]
@@ -363,7 +259,7 @@ def plot_spikes(
     generate_plot(
         xs,
         ys,
-        "Spike times from: %s" % spiketime_files,
+        "Spike times",
         labels=labels,
         linestyles=linestyles,
         markers=markers,
@@ -409,8 +305,6 @@ def plot_spikes(
             width = bin_edges[1] - bin_edges[0]
             mids = [i + width / 2 for i in bin_edges[:-1]]
 
-            boxes = [5, 10, 20, 50]
-            boxes = [20, 50]
             boxes = [int(rate_window)]
             for b in boxes:
                 box = np.ones(b)
