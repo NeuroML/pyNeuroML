@@ -481,7 +481,27 @@ def _spike_plotter_main(args: Optional[argparse.Namespace] = None) -> None:
     """
     if args is None:
         args = _process_args()
-    plot_spikes(**vars(args))
+    if args.lemsFile:
+        plot_spikes_from_lems_file(
+            args.lemsFile,
+            show_plots_already=args.showPlotsAlready,
+            save_spike_plot_to=args.saveSpikePlotTo,
+            rates=args.rates,
+            rate_window=args.rateWindow,
+            rate_bins=args.rateBins,
+        )
+    elif args.spiketimeFiles:
+        plot_spikes_from_data_files(
+            args.spiketimeFiles,
+            args.format,
+            show_plots_already=args.showPlotsAlready,
+            save_spike_plot_to=args.saveSpikePlotTo,
+            rates=args.rates,
+            rate_window=args.rateWindow,
+            rate_bins=args.rateBins,
+        )
+    else:
+        print("Please provide either spike data files or a LEMS simulation file.")
 
 
 if __name__ == "__main__":
