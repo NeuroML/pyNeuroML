@@ -170,3 +170,4 @@ arm64
 
 .vscode
 /tests/pyneuroml_20*
+/pyneuroml/xppaut/report.txt
