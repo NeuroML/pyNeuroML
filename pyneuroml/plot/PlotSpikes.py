@@ -471,7 +471,7 @@ def plot_spikes_from_lems_file(
     )
 
 
-def _spike_plotter_main(args: Optional[argparse.Namespace] = None) -> None:
+def main(args: Optional[argparse.Namespace] = None) -> None:
     """Entry point for the script.
 
     :param args: Parsed command line arguments. Defaults to None.
@@ -505,4 +505,4 @@ def _spike_plotter_main(args: Optional[argparse.Namespace] = None) -> None:
 
 
 if __name__ == "__main__":
-    _spike_plotter_main(_process_args())
+    main()
