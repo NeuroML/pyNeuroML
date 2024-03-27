@@ -419,7 +419,7 @@ def _parse_arguments():
     mut_exc_opts.add_argument(
         "-swc",
         action="store_true",
-        help=("Load a NeuroML file, and convert it to swc format\n"),
+        help=("Load NeuroML file(s), and convert it to swc format\n"),
     )
 
     return parser.parse_args()
@@ -859,10 +859,12 @@ def _evaluate_arguments(args):
             run_multi = True
 
         elif args.swc:
+            convert_count = 0
             for f in args.input_files:
-                logger.info(f"converting {f} to swc format...")
-                convert_to_swc(f)
-            logger.info(f"Done converting {len(args.input_files)} files to swc format")
+                confirm_neuroml_file(f)
+                logger.info(f"trying to convert {f} to swc format ?")
+                convert_count += 1 if convert_to_swc(f) else 0
+            logger.info(f"Converted {convert_count} file(s) to swc format")
             sys.exit(0)
 
         if run_multi is False:

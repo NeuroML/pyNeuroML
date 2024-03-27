@@ -124,6 +124,9 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
     lines = []
     comment_lines = []
 
+    if not nml_doc.cells:
+        return False
+
     for cell in nml_doc.cells:
         swc_file_name = "%s/%s.swc" % (target_dir, cell.id)
         swc_file = open(swc_file_name, "w")
@@ -183,12 +186,14 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
         for i in range(len(lines)):
             line = lines[i]
             swc_line = "%s" % (line)
-            print(swc_line)
+            logger.debug(swc_line)
             swc_file.write("%s\n" % swc_line)
 
         swc_file.close()
 
         print("Written to %s" % swc_file_name)
+
+    return True
 
 
 if __name__ == "__main__":
