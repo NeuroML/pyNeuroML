@@ -862,7 +862,7 @@ def _evaluate_arguments(args):
             convert_count = 0
             for f in args.input_files:
                 confirm_neuroml_file(f)
-                logger.info(f"trying to convert {f} to swc format ?")
+                logger.info(f"Trying to convert {f} to swc format...")
                 convert_count += 1 if convert_to_swc(f) else 0
             logger.info(f"Converted {convert_count} file(s) to swc format")
             sys.exit(0)
