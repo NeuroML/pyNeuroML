@@ -22,7 +22,7 @@ class TestPlotSpikes(BaseTestCase):
         pyplts.plot_spikes(
             spike_data=self.spike_data,
             show_plots_already=False,
-            save_figure_to="spike-plot-test.png",
+            save_spike_plot_to="spike-plot-test.png",
         )
         self.assertIsFile("spike-plot-test.png")
         os.unlink("spike-plot-test.png")
@@ -44,6 +44,7 @@ class TestPlotSpikes(BaseTestCase):
             spiketime_files=[spike_file.name],
             format="id_t",
             show_plots_already=False,
+            save_spike_plot_to="spike-plot-from-file-test.png",
         )
         self.assertIsFile("spike-plot-from-file-test.png")
 
