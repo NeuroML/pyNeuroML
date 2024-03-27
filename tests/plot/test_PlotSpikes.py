@@ -42,7 +42,6 @@ class TestPlotSpikes(BaseTestCase):
         # Generate a plot from the spike time file and save it to a file
         pyplts.plot_spikes(
             [spike_file.name],
-            format="id_t",
             show_plots_already=False,
             save_spike_plot_to="spike-plot-from-file-test.png",
         )
