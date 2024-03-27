@@ -4,6 +4,7 @@ import tempfile
 import numpy as np
 
 from .. import BaseTestCase
+from collections import defaultdict
 import pyneuroml.plot.PlotSpikes as pyplts
 
 
@@ -32,9 +33,26 @@ class TestPlotSpikes(BaseTestCase):
         spike_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
 
         # Write spike data to the temporary file
+        times = defaultdict(list)
+        unique_ids = []
+        spike_data = []
         for pop_data in self.spike_data:
             for i, (time, id) in enumerate(zip(pop_data["times"], pop_data["ids"])):
                 print(f"{id} {time}", file=spike_file)
+                if id not in times:
+                    times[id] = []
+                times[id].append(time)
+                unique_ids.append(id)
+        max_time = max(max(times[id]) for id in times)
+        max_id = max(unique_ids)
+        for id in unique_ids:
+            spike_data.append(
+                {
+                    "name": f"Population_{id}",
+                    "times": times[id],
+                    "ids": [id] * len(times[id]),
+                }
+            )
 
         spike_file.flush()
         spike_file.close()
