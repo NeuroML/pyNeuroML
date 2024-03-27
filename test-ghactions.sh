@@ -74,6 +74,7 @@ echo "##   Test some conversions"
 
 pynml NML2_SingleCompHHCell.nml -svg
 pynml NML2_SingleCompHHCell.nml -png
+pynml NML2_SingleCompHHCell.nml -swc
 pynml LEMS_NML2_Ex5_DetCell.xml -sedml
 pynml LEMS_NML2_Ex9_FN.xml -dlems
 pynml LEMS_NML2_Ex9_FN.xml -brian

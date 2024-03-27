@@ -1,0 +1,16 @@
+[see-also]
+.BR pynml (1),
+.BR pynml-archive (1),
+.BR pynml-channelanalysis (1),
+.BR pynml-channelml2nml (1),
+.BR pynml-modchananalysis (1),
+.BR pynml-plotchan (1),
+.BR pynml-plotmorph (1),
+.BR pynml-plotspikes (1),
+.BR pynml-plottimeseries (1),
+.BR pynml-povray (1),
+.BR pynml-sonata (1),
+.BR pynml-summary (1),
+.BR pynml-tune (1),
+.PP
+Please see https://docs.neuroml.org for complete documentation on the NeuroML standard and the software ecosystem.
