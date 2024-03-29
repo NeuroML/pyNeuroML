@@ -27,6 +27,7 @@ from pyneuroml.plot.PlotMorphologyVispy import (
     plot_3D_schematic,
     plot_3D_cell_morphology,
     plot_interactive_3D,
+    create_cylindrical_mesh,
 )
 from pyneuroml.pynml import read_neuroml2_file
 from .. import BaseTestCase
@@ -434,3 +435,10 @@ class TestMorphologyPlot(BaseTestCase):
 
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
+
+    def test_cylindrical_mesh_generator(self):
+        """Test the create_cylindrical_mesh function"""
+        mesh = create_cylindrical_mesh(5, 10, 1.0, 1, closed=False)
+        mesh2 = create_cylindrical_mesh(5, 10, 1.0, 1, closed=True)
+
+        self.assertEqual(mesh.n_vertices + 2, mesh2.n_vertices)

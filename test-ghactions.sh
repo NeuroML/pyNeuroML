@@ -1,6 +1,25 @@
 set -e
 
+# CI already installs package and all optional dependencies, so this is redundant.
+# But we keep it to allow easy local testing.
 pip install .
+
+echo
+echo "################################################"
+echo "##   Testing all CLI tools"
+
+full_path=$(command -v pynml)
+bin_location=$(dirname $full_path)
+
+for f in ${bin_location}/pynml*
+do
+    current_exec=$(basename $f)
+    echo "-> Testing $current_exec runs"
+    echo
+    command $current_exec -h
+    echo
+    echo
+done
 
 echo
 echo "################################################"
@@ -70,6 +89,24 @@ pynml LEMS_NML2_Ex9_FN.xml -spineml
 pynml LEMS_NML2_Ex9_FN.xml -sbml
 
 
+echo
+echo "################################################"
+echo "##   Simple SBML validation example"
+
+pynml test_data/valid_doc.sbml -validate-sbml
+pynml test_data/valid_doc.sbml -validate-sbml-units
+
+echo
+echo "################################################"
+echo "##   Simple SEDML validation example"
+
+pynml  test_data/valid_doc_sedml.sedml -validate-sedml
+
+echo
+echo "################################################"
+echo "##   Tellurium validation example"
+
+pynml test_data/valid_doc_sedml.sedml -run-tellurium -outputdir none
 
 echo
 echo "################################################"

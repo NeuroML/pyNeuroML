@@ -31,9 +31,11 @@ from pyneuroml.utils.plot import (
 )
 from scipy.spatial.transform import Rotation
 from vispy import app, scene, use
-from vispy.geometry.generation import create_cylinder, create_sphere
+from vispy.geometry.generation import create_sphere
+from vispy.geometry.meshdata import MeshData
 from vispy.scene.visuals import InstancedMesh
 from vispy.util.transforms import rotate
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -253,11 +255,16 @@ def plot_interactive_3D(
     plot_spec: typing.Optional[
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
 ):
     """Plot interactive plots in 3D using Vispy
 
     https://vispy.org
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
+
 
     :param nml_file: path to NeuroML cell file or
         :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
@@ -302,6 +309,34 @@ def plot_interactive_3D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+    :type plot_spec: dict
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements.  Only used
+        when plotting multi-compartmental cells for marking segments on them
+        ("plot_type" is either "constant" or "detailed")
+
+        Each key in the dictionary will be of the cell id and the values will
+        be more dictionaries, with the segment id as key and the following keys
+        in it:
+
+        - marker_color: color of the marker
+        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+          is used)
+
+        E.g.:
+
+        .. code-block:: python
+
+            {
+                "cell id1": {
+                    "seg id1": {
+                        "marker_color": "blue",
+                        "marker_size": [0.1, 0.1]
+                    }
+                }
+            }
+
+    :type highlight_spec: dict
     :param precision: tuple containing two values: (number of decimal places,
         maximum number of meshes). The first is used to group segments into
         meshes to create instances. More precision means fewer segments will be
@@ -318,6 +353,9 @@ def plot_interactive_3D(
         raise ValueError(
             "plot_type must be one of 'detailed', 'constant', 'schematic', 'point'"
         )
+
+    if highlight_spec is None:
+        highlight_spec = {}
 
     if verbose:
         logger.info(f"Visualising {nml_file}")
@@ -529,6 +567,7 @@ def plot_interactive_3D(
                     logger.debug(f"meshdata added: {key}: {meshdata[key]}")
 
                 elif plot_type == "schematic" or cell.id in schematic_cells:
+                    logger.debug(f"Cell for 3d schematic is: {cell.id}")
                     plot_3D_schematic(
                         offset=pos,
                         cell=cell,
@@ -548,6 +587,12 @@ def plot_interactive_3D(
                     or cell.id in constant_cells
                 ):
                     logger.debug(f"Cell for 3d is: {cell.id}")
+                    cell_highlight_spec = {}
+                    try:
+                        cell_highlight_spec = highlight_spec[cell.id]
+                    except KeyError:
+                        pass
+
                     plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
@@ -560,6 +605,7 @@ def plot_interactive_3D(
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
+                        highlight_spec=cell_highlight_spec,
                     )
 
             # if too many meshes, reduce precision and retry, recursively
@@ -570,15 +616,16 @@ def plot_interactive_3D(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
                 plot_interactive_3D(
-                    nml_model,
-                    min_width,
-                    verbose,
-                    plot_type,
-                    title,
-                    theme,
-                    nogui,
-                    plot_spec,
-                    precision,
+                    nml_file=nml_model,
+                    min_width=min_width,
+                    verbose=verbose,
+                    plot_type=plot_type,
+                    title=title,
+                    theme=theme,
+                    nogui=nogui,
+                    plot_spec=plot_spec,
+                    precision=precision,
+                    highlight_spec=highlight_spec,
                 )
                 # break the recursion, don't plot in the calling method
                 return
@@ -599,12 +646,12 @@ def plot_interactive_3D(
 
 def plot_3D_cell_morphology(
     offset: typing.List[float] = [0, 0, 0],
-    cell: Cell = None,
+    cell: Optional[Cell] = None,
     color: typing.Optional[str] = None,
     title: str = "",
     verbose: bool = False,
-    current_canvas: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
+    current_canvas: Optional[scene.SceneCanvas] = None,
+    current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
     nogui: bool = True,
@@ -612,11 +659,15 @@ def plot_3D_cell_morphology(
     theme: str = "light",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
 
     .. versionadded:: 1.0.0
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
 
     .. seealso::
 
@@ -680,6 +731,17 @@ def plot_3D_cell_morphology(
         instances: more precision means more detail (meshes), means less
         performance
     :type mesh_precision: int
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements. Mostly
+        only helpful for marking segments on multi-compartmental cells. In the
+        main dictionary are more dictionaries, one for each segment id which
+        will be the key:
+
+        - marker_color: color of the marker
+        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+          is used)
+
+    :type highlight_spec: dict
     :raises: ValueError if `cell` is None
 
     """
@@ -687,6 +749,10 @@ def plot_3D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if highlight_spec is None:
+        highlight_spec = {}
+    logging.debug("highlight_spec is " + str(highlight_spec))
 
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
@@ -733,10 +799,36 @@ def plot_3D_cell_morphology(
         length = cell.get_segment_length(seg.id)
 
         # round up to precision
-        r = round(p.diameter / 2, mesh_precision)
+        r1 = round(p.diameter / 2, mesh_precision)
+        r2 = round(d.diameter / 2, mesh_precision)
+
+        segment_spec = {
+            "marker_size": None,
+            "marker_color": None,
+        }
+        try:
+            segment_spec.update(highlight_spec[str(seg.id)])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+        # also test if segment id is given as int
+        try:
+            segment_spec.update(highlight_spec[seg.id])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+
+        logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
+
+        if segment_spec["marker_size"] is not None:
+            if type(segment_spec["marker_size"]) is not list:
+                raise RuntimeError("The marker size must be a list")
+            r1 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
+            r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)
+
         key = (
-            f"{r:.{mesh_precision}f}",
-            f"{r:.{mesh_precision}f}",
+            f"{r1:.{mesh_precision}f}",
+            f"{r2:.{mesh_precision}f}",
             f"{round(length, mesh_precision):.{mesh_precision}f}",
         )
 
@@ -763,6 +855,9 @@ def plot_3D_cell_morphology(
                 seg_color = "blue"
         else:
             seg_color = color
+
+        if segment_spec["marker_color"] is not None:
+            seg_color = segment_spec["marker_color"]
 
         try:
             meshdata[key].append((p, d, seg_color, offset))
@@ -835,8 +930,8 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
-            seg_mesh = create_cylinder(
-                rows=rows, cols=9, radius=[r1, r2], length=length
+            seg_mesh = create_cylindrical_mesh(
+                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
             )
             logger.debug(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
@@ -911,8 +1006,8 @@ def plot_3D_schematic(
     verbose: bool = False,
     nogui: bool = False,
     title: str = "",
-    current_canvas: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
+    current_canvas: Optional[scene.SceneCanvas] = None,
+    current_view: Optional[scene.ViewBox] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
@@ -1063,3 +1158,88 @@ def plot_3D_schematic(
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
         app.run()
+
+
+def create_cylindrical_mesh(
+    rows: int,
+    cols: int,
+    radius: typing.Union[float, typing.List[float]] = [1.0, 1.0],
+    length: float = 1.0,
+    closed: bool = True,
+):
+    """Create a cylinderical mesh, adapted from vispy's generation method:
+    https://github.com/vispy/vispy/blob/main/vispy/geometry/generation.py#L451
+
+    :param rows: number of rows to use for mesh
+    :type rows: int
+    :param cols: number of columns
+    :type cols: int
+    :param radius: float or pair of floats for the two radii of the cylinder
+    :type radius: float or [float, float][]
+    :param length: length of cylinder
+    :type length: float
+    :param closed: whether the cylinder should be closed
+    :type closed: bool
+    :returns: Vertices and faces computed for a cylindrical surface.
+    :rtype: MeshData
+
+    """
+    verts = numpy.empty((rows + 1, cols, 3), dtype=numpy.float32)
+    if isinstance(radius, int) or isinstance(radius, float):
+        radius = [radius, radius]  # convert to list
+
+    # compute theta values
+    th = numpy.linspace(2 * numpy.pi, 0, cols).reshape(1, cols)
+    logger.debug(f"Thetas are: {th}")
+
+    # radius as a function of z
+    r = numpy.linspace(radius[0], radius[1], num=rows + 1, endpoint=True).reshape(
+        rows + 1, 1
+    )
+
+    verts[..., 0] = r * numpy.cos(th)  # x = r cos(th)
+    verts[..., 1] = r * numpy.sin(th)  # y = r sin(th)
+    verts[..., 2] = numpy.linspace(0, length, num=rows + 1, endpoint=True).reshape(
+        rows + 1, 1
+    )  # z
+    # just reshape: no redundant vertices...
+    verts = verts.reshape((rows + 1) * cols, 3)
+
+    # add extra points for center of two circular planes that form the caps
+    if closed is True:
+        verts = numpy.append(verts, [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], axis=0)
+    logger.debug(f"Verts are: {verts}")
+
+    # compute faces
+    faces = numpy.empty((rows * cols * 2, 3), dtype=numpy.uint32)
+    rowtemplate1 = (
+        (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 1, 0]])) % cols
+    ) + numpy.array([[0, 0, cols]])
+    logger.debug(f"Template1 is: {rowtemplate1}")
+
+    rowtemplate2 = (
+        (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 1, 1]])) % cols
+    ) + numpy.array([[cols, 0, cols]])
+    # logger.debug(f"Template2 is: {rowtemplate2}")
+
+    for row in range(rows):
+        start = row * cols * 2
+        faces[start : start + cols] = rowtemplate1 + row * cols
+        faces[start + cols : start + (cols * 2)] = rowtemplate2 + row * cols
+
+    # add extra faces to cover the caps
+    if closed is True:
+        cap1 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
+        cap1[..., 0] = len(verts) - 2
+        cap2 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
+        cap2[..., 0] = len(verts) - 1
+
+        logger.debug(f"cap1 is {cap1}")
+        logger.debug(f"cap2 is {cap2}")
+
+        faces = numpy.append(faces, cap1, axis=0)
+        faces = numpy.append(faces, cap2, axis=0)
+
+    logger.debug(f"Faces are: {faces}")
+
+    return MeshData(vertices=verts, faces=faces)

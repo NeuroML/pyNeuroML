@@ -1,10 +1,14 @@
 import logging
+import os
+import typing
 
 try:
     import importlib.metadata
+
     __version__ = importlib.metadata.version("pyNeuroML")
 except ImportError:
     import importlib_metadata
+
     __version__ = importlib_metadata.version("pyNeuroML")
 
 
@@ -27,3 +31,16 @@ def print_v(msg):
     :type msg: str
     """
     print("pyNeuroML >>> " + msg)
+
+
+# read from env variable if found
+try:
+    java_max_memory = os.environ["JNML_MAX_MEMORY_LOCAL"]
+except KeyError:
+    java_max_memory = "400M"
+
+DEFAULTS = {
+    "v": False,
+    "default_java_max_memory": java_max_memory,
+    "nogui": False,
+}  # type: dict[str, typing.Any]

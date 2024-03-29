@@ -1,25 +1,34 @@
 #!/usr/bin/env python3
 """
 The utils package contains various utility functions to aid users working with
-PyNeuroML
+PyNeuroML. Many of these methods are meant for internal use in the package and
+so may change in the future: the API here is not considered stable.
 
-Copyright 2023 NeuroML Contributors
+Copyright 2024 NeuroML Contributors
 """
 
 import copy
-import datetime
+from datetime import datetime
 import logging
 import math
 import os
+import pathlib
 import random
 import re
 import string
+import sys
+import tempfile
 import time
 import typing
+import zipfile
 from pathlib import Path
 
 import neuroml
 import numpy
+from lems.model.model import Model
+from neuroml.loaders import read_neuroml2_file
+from pyneuroml.errors import UNKNOWN_ERR
+import pyneuroml.utils.misc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,6 +36,19 @@ logger.setLevel(logging.INFO)
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
 MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
+
+STANDARD_LEMS_FILES = [
+    "Cells.xml",
+    "Channels.xml",
+    "Inputs.xml",
+    "Networks.xml",
+    "NeuroML2CoreTypes.xml",
+    "NeuroMLCoreCompTypes.xml",
+    "NeuroMLCoreDimensions.xml",
+    "PyNN.xml",
+    "Simulation.xml",
+    "Synapses.xml",
+]
 
 
 def extract_position_info(
@@ -447,8 +469,148 @@ def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
     :rtype: str
 
     """
-    timestamp = datetime.datetime.now().strftime("%y%m%d%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     random_suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     tdir = rootdir + "/" + f"{prefix}_{timestamp}_{random_suffix}/"
 
     return tdir
+
+
+def get_model_file_list(
+    rootfile: str,
+    filelist: typing.List[str],
+    rootdir: str = ".",
+    lems_def_dir: typing.Optional[str] = None,
+) -> typing.Optional[str]:
+    """Get the list of files to archive.
+
+    This method will take the rootfile, and recursively resolve all the files
+    it uses.
+
+    :param rootfile: main NeuroML or LEMS file to resolve
+    :type rootfile: str
+    :param filelist: list of file paths to append to
+    :type filelist: list of strings
+    :param rootdir: directory holding the root file
+    :type rootdir: str
+    :param lems_def_dir: path to directory holding lems definition files
+    :type lems_def_dir: str
+    :returns: value of lems_def_dir so that the temporary directory can be
+        cleaned up. strings are immuatable in Python so the variable cannot be
+        modified in the function.
+    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
+    """
+    logger.debug(f"Processing {rootfile}")
+
+    fullrootdir = pathlib.Path(rootdir).absolute()
+
+    # Only store path of file relative to the rootdir, if it's a descendent of
+    # rootdir
+    if rootfile.startswith(str(fullrootdir)):
+        relrootfile = rootfile.replace(str(fullrootdir), "")
+        if relrootfile.startswith("/"):
+            relrootfile = relrootfile[1:]
+    else:
+        relrootfile = rootfile
+
+    if relrootfile in filelist:
+        logger.debug(f"Already processed {rootfile}. No op.")
+        return lems_def_dir
+
+    logger.debug(f"Appending: {relrootfile}")
+    filelist.append(relrootfile)
+
+    if rootfile.endswith(".nml"):
+        if pathlib.Path(rootfile).is_absolute():
+            rootdoc = read_neuroml2_file(rootfile)
+        else:
+            rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
+        logger.debug(f"Has includes: {rootdoc.includes}")
+        for inc in rootdoc.includes:
+            lems_def_dir = get_model_file_list(
+                inc.href, filelist, rootdir, lems_def_dir
+            )
+
+    elif rootfile.endswith(".xml"):
+        # extract the standard NeuroML2 LEMS definitions into a directory
+        # so that the LEMS parser can find them
+        if lems_def_dir is None:
+            lems_def_dir = extract_lems_definition_files()
+
+        if pathlib.Path(rootfile).is_absolute():
+            fullrootfilepath = rootfile
+        else:
+            fullrootfilepath = rootdir + "/" + rootfile
+
+        model = Model(include_includes=True, fail_on_missing_includes=True)
+        model.add_include_directory(lems_def_dir)
+        model.import_from_file(fullrootfilepath)
+
+        for inc in model.included_files:
+            incfile = pathlib.Path(inc).name
+            logger.debug(f"Processing include file {incfile} ({inc})")
+            if incfile in STANDARD_LEMS_FILES:
+                logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
+                continue
+            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
+
+    else:
+        raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
+
+    return lems_def_dir
+
+
+def extract_lems_definition_files(
+    path: typing.Union[str, None, tempfile.TemporaryDirectory] = None
+) -> str:
+    """Extract the NeuroML2 LEMS definition files to a directory and return its path.
+
+    This function can be used by other LEMS related functions that need to
+    include the NeuroML2 LEMS definitions.
+
+    If a path is provided, the folder is created relative to the current
+    working directory.
+
+    If no path is provided, for repeated usage for example, the files are
+    extracted to a temporary directory using Python's
+    `tempfile.mkdtemp
+    <https://docs.python.org/3/library/tempfile.html>`__ function.
+
+    Note: in both cases, it is the user's responsibility to remove the created
+    directory when it is no longer required, for example using.  the
+    `shutil.rmtree()` Python function.
+
+    :param path: path of directory relative to current working directory to extract to, or None
+    :type path: str or None
+    :returns: directory path
+    """
+    jar_path = pyneuroml.utils.misc.get_path_to_jnml_jar()
+    logger.debug(
+        "Loading standard NeuroML2 dimension/unit definitions from %s" % jar_path
+    )
+    jar = zipfile.ZipFile(jar_path, "r")
+    namelist = [x for x in jar.namelist() if ".xml" in x and "NeuroML2CoreTypes" in x]
+    logger.debug("NeuroML LEMS definition files in jar are: {}".format(namelist))
+
+    # If a string is provided, ensure that it is relative to cwd
+    if path and isinstance(path, str) and len(path) > 0:
+        path = "./" + path
+        try:
+            os.makedirs(path)
+        except FileExistsError:
+            logger.warning(
+                "{} already exists. Any NeuroML LEMS files in it will be overwritten".format(
+                    path
+                )
+            )
+        except OSError as err:
+            logger.critical(err)
+            sys.exit(UNKNOWN_ERR)
+    else:
+        path = tempfile.mkdtemp()
+
+    logger.debug("Created directory: " + path)
+    jar.extractall(path, namelist)
+    path = path + "/NeuroML2CoreTypes/"
+    logger.info("NeuroML LEMS definition files extracted to: {}".format(path))
+    return path

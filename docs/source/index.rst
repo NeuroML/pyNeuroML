@@ -11,16 +11,17 @@ Here you will find information on installing, using, and contributing to pyNeuro
 For more information on NeuroML standard, other tools in the NeuroML ecosystem, the NeuroML community and how to get in touch with us, please see the documentation at https://docs.neuroml.org.
 
 
+Contents
+---------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
 
    introduction
-   modules
+   pyneuroml
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
