@@ -535,6 +535,14 @@ def main():
             file.close()
             print("Written info to file: %s" % file_name)
 
+    figs = pylab.get_fignums()
+
+    for fig in figs:
+        pylab.figure(fig)
+        window_title = pylab.get_current_fig_manager().get_window_title()
+        file_name = f"{window_title}.png"
+        plt.savefig(file_name)
+
     if not args.nogui:
         pylab.show()
 
