@@ -124,7 +124,7 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
     lines = []
     comment_lines = []
 
-    if not nml_doc.cells:
+    if len(nml_doc.cells) == 0:
         return False
 
     for cell in nml_doc.cells:
