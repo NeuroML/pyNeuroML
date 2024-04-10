@@ -26,6 +26,7 @@ import lems
 import lems.model.model as lems_model
 from pyneuroml import DEFAULTS, JNEUROML_VERSION, __version__
 from pyneuroml.errors import ARGUMENT_ERR, UNKNOWN_ERR
+from pyneuroml.swc.ExportSWC import convert_to_swc
 from pyneuroml.utils import extract_lems_definition_files
 
 # these imports are included for backwards compatibility
@@ -414,6 +415,11 @@ def _parse_arguments():
         "-validate-sedml",
         action="store_true",
         help=("Validate SEDML file(s)"),
+    )
+    mut_exc_opts.add_argument(
+        "-swc",
+        action="store_true",
+        help=("Load NeuroML file(s), and convert it to swc format\n"),
     )
 
     return parser.parse_args()
@@ -851,6 +857,15 @@ def _evaluate_arguments(args):
             pre_args = "-validatev1"
             exit_on_fail = True
             run_multi = True
+
+        elif args.swc:
+            convert_count = 0
+            for f in args.input_files:
+                confirm_neuroml_file(f)
+                logger.info(f"Trying to convert {f} to swc format...")
+                convert_count += 1 if convert_to_swc(f) else 0
+            logger.info(f"Converted {convert_count} file(s) to swc format")
+            sys.exit(0)
 
         if run_multi is False:
             run_jneuroml(
