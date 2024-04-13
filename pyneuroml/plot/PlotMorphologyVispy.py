@@ -125,7 +125,8 @@ def create_new_vispy_canvas(
     """
     # vispy: full gl+ context is required for instanced rendering
     use(gl="gl+")
-
+    canvas_name = "My 3D Visualization"
+    canvas, scene_canvas, view = create_new_vispy_canvas(canvas_name)
     canvas = vispy.app.Canvas(keys="interactive", size=(800, 600), title=canvas_name)
     scene_canvas = SceneCanvas(keys="interactive", show=True)
     view = scene_canvas.central_widget.add_view()
@@ -776,7 +777,7 @@ def plot_3D_cell_morphology(
 
     """
     cell_mesh = MeshVisual(...)
-    view.add(cell_mesh)
+    current_view.add(cell_mesh)
 
     if cell is None:
         raise ValueError(
