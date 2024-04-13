@@ -775,6 +775,9 @@ def plot_3D_cell_morphology(
     :raises: ValueError if `cell` is None
 
     """
+    cell_mesh = MeshVisual(...)
+    view.add(cell_mesh)
+
     if cell is None:
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
