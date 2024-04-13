@@ -776,8 +776,6 @@ def plot_3D_cell_morphology(
     :raises: ValueError if `cell` is None
 
     """
-    cell_mesh = MeshVisual(...)
-    current_view.add(cell_mesh)
 
     if cell is None:
         raise ValueError(
