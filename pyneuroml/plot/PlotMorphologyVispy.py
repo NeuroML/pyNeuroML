@@ -259,6 +259,13 @@ def plot_interactive_3D(
 
     https://vispy.org
 
+    Note that on Linux systems using Wayland, one may need to set the
+    environment variable for PyOpenGL to work correctly:
+
+    .. code-block:: bash
+
+        QT_QPA_PLATFORM=wayland-egl
+
     .. versionadded:: 1.1.12
         The hightlight_spec parameter
 
