@@ -190,6 +190,7 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
 
 def plot_spikes(
     spike_data: List[Dict[str, Union[List[float], List[int]]]],
+    spiketime_files: List[str],
     show_plots_already: bool = True,
     save_spike_plot_to: Optional[str] = None,
     rates: bool = False,
@@ -228,8 +229,8 @@ def plot_spikes(
     max_time = 0
     max_id = 0
     unique_ids = []
-    times = {}
-    ids_in_file = {}
+    times = OrderedDict()
+    ids_in_file = OrderedDict()
 
     for data in spike_data:
         x = [t for t in data["times"]]
@@ -247,21 +248,16 @@ def plot_spikes(
         markers.append(".")
         linestyles.append("")
 
-    xlim = [max_time / -20.0, max_time * 1.05]
+    xlim = [0, max([max(times[name]) for name in times]) * 1.05]
     ylim = [max_id / -20.0, max_id * 1.05] if max_id > 0 else [-1, 1]
-    markersizes = []
-    for xx in xs:
-        if len(unique_ids) > 50:
-            markersizes.append(2)
-        elif len(unique_ids) > 200:
-            markersizes.append(1)
-        else:
-            markersizes.append(4)
+    markersizes = [
+        4 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
+    ]
 
     generate_plot(
         xs,
         ys,
-        "Spike times",
+        "Spike times from: %s" % ", ".join(spiketime_files),
         labels=labels,
         linestyles=linestyles,
         markers=markers,
@@ -317,6 +313,7 @@ def plot_spikes(
                 xs = [i / (float(len(ys))) for i in range(len(ys))]
                 plt.plot(xs, ys, label=name + "_%i_c" % b)
 
+        plt.legend()
     if show_plots_already:
         plt.show()
     else:
