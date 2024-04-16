@@ -481,15 +481,21 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
     """
     if args is None:
         args = _process_args()
-    if args.lemsFile:
-        plot_spikes_from_lems_file(
-            args.lemsFile,
-            show_plots_already=args.showPlotsAlready,
-            save_spike_plot_to=args.saveSpikePlotTo,
-            rates=args.rates,
-            rate_window=args.rateWindow,
-            rate_bins=args.rateBins,
-        )
+
+    lems_files = [f for f in args.spiketimeFiles if f.startswith("LEMS_")]
+
+    spike_data_files = [f for f in args.spiketimeFiles if not f.startswith("LEMS_")]
+
+    if lems_files:
+        for lems_file in lems_files:
+            plot_spikes_from_lems_file(
+                lems_file,
+                show_plots_already=args.showPlotsAlready,
+                save_spike_plot_to=args.saveSpikePlotTo,
+                rates=args.rates,
+                rate_window=args.rateWindow,
+                rate_bins=args.rateBins,
+            )
     elif args.spiketimeFiles:
         plot_spikes_from_data_files(
             args.spiketimeFiles,
