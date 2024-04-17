@@ -2,7 +2,7 @@ import os
 import unittest
 import tempfile
 import numpy as np
-
+import random
 from .. import BaseTestCase
 from collections import defaultdict
 import pyneuroml.plot.PlotSpikes as pyplts
@@ -13,16 +13,33 @@ class TestPlotSpikes(BaseTestCase):
 
     def setUp(self):
         """Set up test data for the test suite."""
-        self.spike_data = [
-            {"name": "Population1", "times": [1.0, 2.0, 3.0], "ids": [1, 2, 3]},
-            {"name": "Population2", "times": [2.5, 3.5], "ids": [4, 5]},
+        self.spike_data = []
+
+        num_neurons_pop1 = 10000
+        num_spikes_pop1 = 50000
+        population1_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop1)]
+        population1_ids = [
+            random.randint(0, num_neurons_pop1 - 1) for _ in range(num_spikes_pop1)
         ]
+        self.spike_data.append(
+            {"name": "Population1", "times": population1_times, "ids": population1_ids}
+        )
+
+        num_neurons_pop2 = 5000
+        num_spikes_pop2 = 20000
+        population2_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop2)]
+        population2_ids = [
+            random.randint(0, num_neurons_pop2 - 1) for _ in range(num_spikes_pop2)
+        ]
+        self.spike_data.append(
+            {"name": "Population2", "times": population2_times, "ids": population2_ids}
+        )
 
     def test_plot_spikes_from_data(self):
         """Test the plot_spikes function with spike data."""
         pyplts.plot_spikes(
             spike_data=self.spike_data,
-            show_plots_already=False,
+            show_plots_already=True,
             save_spike_plot_to="spike-plot-test.png",
         )
         self.assertIsFile("spike-plot-test.png")
