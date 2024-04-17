@@ -24,7 +24,7 @@ logger.setLevel(logging.INFO)
 
 DEFAULTS = {
     "zipfileName": None,
-    "zipfileExtension": ".neux",
+    "zipfileExtension": None,
     "filelist": [],
 }  # type: typing.Dict[str, typing.Any]
 
@@ -56,7 +56,7 @@ def process_args():
         type=str,
         metavar="<zip file extension>",
         default=DEFAULTS["zipfileExtension"],
-        help="Extension to use for archive.",
+        help="Extension to use for archive: .neux by default",
     )
     parser.add_argument(
         "-filelist",
@@ -87,8 +87,10 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
 
     rootfile = a.rootfile
+    zipfile_extension = None
 
     # first generate SED-ML file
+    # use .omex as extension
     if (
         a.rootfile.startswith("LEMS") and a.rootfile.endswith(".xml")
     ) and a.sedml is True:
@@ -96,11 +98,16 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
         run_jneuroml("", a.rootfile, "-sedml")
 
         rootfile = a.rootfile.replace(".xml", ".sedml")
+        zipfile_extension = ".omex"
+
+    # if explicitly given, use that
+    if a.zipfile_extension is not None:
+        zipfile_extension = a.zipfile_extension
 
     create_combine_archive(
         zipfile_name=a.zipfile_name,
         rootfile=rootfile,
-        zipfile_extension=a.zipfile_extension,
+        zipfile_extension=zipfile_extension,
         filelist=a.filelist,
     )
 
