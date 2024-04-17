@@ -218,6 +218,7 @@ def plot_spikes(
     :return: None
     :rtype: None
     """
+
     xs = []
     ys = []
     labels = []
@@ -229,6 +230,10 @@ def plot_spikes(
     max_time = 0
     max_id = 0
     unique_ids = []
+    unique_ids = []
+    for data in spike_data:
+        unique_ids.extend(data["ids"])
+    unique_ids = list(set(unique_ids))
     times = OrderedDict()
     ids_in_file = OrderedDict()
 
@@ -241,6 +246,8 @@ def plot_spikes(
         ids_in_file[name] = data["ids"]
         max_id_here = max(data["ids"])
 
+        max_time = max(max_time, max(x))
+
         labels.append("%s (%i)" % (name, max_id_here - offset_id))
         offset_id = max_id_here + 1
         xs.append(x)
@@ -248,8 +255,11 @@ def plot_spikes(
         markers.append(".")
         linestyles.append("")
 
-    xlim = [0, max([max(times[name]) for name in times]) * 1.05]
-    ylim = [max_id / -20.0, max_id * 1.05] if max_id > 0 else [-1, 1]
+    xlim = [0, max_time * 1.05]
+    max_id = max([max(ids_in_file[name]) for name in ids_in_file])
+    min_id = min([min(ids_in_file[name]) for name in ids_in_file])
+    ylim = [min_id - 1, max_id + 1]
+
     markersizes = [
         4 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
     ]
@@ -493,7 +503,7 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
                 rate_window=args.rateWindow,
                 rate_bins=args.rateBins,
             )
-    elif args.spiketimeFiles:
+    elif spike_data_files:
         plot_spikes_from_data_files(
             args.spiketimeFiles,
             args.format,
