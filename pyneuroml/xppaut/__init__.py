@@ -512,10 +512,13 @@ file_of1.close()"""
     ls.save_to_file()"""
 
 
-
 if __name__ == "__main__":
+    main()
+
+def main():
+
     if len(sys.argv) < 2:
-        print("Usage: python script.py filename <-lems> <-xpp>")
+        print("Usage: pynml-xpp ode_filename <-lems> <-xpp>")
         sys.exit(1)
 
     file_path = sys.argv[1]
