@@ -32,12 +32,17 @@ class TestPlotSpikes(BaseTestCase):
             random.randint(0, num_neurons_pop2 - 1) for _ in range(num_spikes_pop2)
         ]
         self.spike_data.append(
-            {"name": "Population2", "times": population2_times, "ids": population2_ids}
+            {
+                "name": "Population2",
+                "times": population2_times,
+                "ids": [id + num_neurons_pop1 for id in population2_ids],
+            }
         )
 
     def test_plot_spikes_from_data(self):
         """Test the plot_spikes function with spike data."""
         pyplts.plot_spikes(
+            spiketime_files=[],
             spike_data=self.spike_data,
             show_plots_already=True,
             save_spike_plot_to="spike-plot-test.png",
@@ -76,7 +81,8 @@ class TestPlotSpikes(BaseTestCase):
 
         # Generate a plot from the spike time file and save it to a file
         pyplts.plot_spikes(
-            spike_data,
+            spiketime_files=[spike_file.name],
+            spike_data=spike_data,
             show_plots_already=False,
             save_spike_plot_to="spike-plot-from-file-test.png",
         )
