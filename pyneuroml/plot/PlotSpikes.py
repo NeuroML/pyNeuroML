@@ -15,6 +15,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 from pyneuroml.plot import generate_plot
+from pynml import load_sim_data_from_lems_file
 from pyneuroml.utils.cli import build_namespace
 from typing import Dict, List, Optional, Union
 from typing import Tuple
@@ -424,8 +425,14 @@ def get_spike_data_files_from_lems(
     :rtype: Tuple[List[str], str]
     """
     # Code to read the LEMS file and extract the spike data file paths and format
-    spike_data_files = [...]
-    spike_data_format = "..."
+    sim_data = load_sim_data_from_lems_file(lems_file_name)
+
+    spike_data_files = []
+    spike_data_format = None
+    for data_file in sim_data.data_files:
+        if data_file.type == "spike_times":
+            spike_data_files.append(os.path.join(base_dir, data_file.file_path))
+            spike_data_format = data_file.format
 
     return spike_data_files, spike_data_format
 
