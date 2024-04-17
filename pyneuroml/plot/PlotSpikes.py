@@ -15,8 +15,10 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 from pyneuroml.plot import generate_plot
-from pynml import load_sim_data_from_lems_file
+from pyneuroml.lems import load_sim_data_from_lems_file
 from pyneuroml.utils.cli import build_namespace
+from matplotlib import pyplot as plt
+from matplotlib_scalebar.scalebar import ScaleBar
 from typing import Dict, List, Optional, Union
 from typing import Tuple
 
@@ -262,7 +264,7 @@ def plot_spikes(
     ylim = [min_id - 1, max_id + 1]
 
     markersizes = [
-        4 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
+        50 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
     ]
 
     generate_plot(
@@ -277,7 +279,7 @@ def plot_spikes(
         xlim=xlim,
         ylim=ylim,
         markersizes=markersizes,
-        grid=False,
+        grid=True,
         show_plot_already=False,
         save_figure_to=save_spike_plot_to,
         legend_position="right",
