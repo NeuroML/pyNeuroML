@@ -16,6 +16,7 @@ from zipfile import ZipFile
 
 from pyneuroml.utils import get_model_file_list
 from pyneuroml.utils.cli import build_namespace
+from pyneuroml.runners import run_jneuroml
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -39,8 +40,8 @@ def process_args():
     parser.add_argument(
         "rootfile",
         type=str,
-        metavar="<NeuroML 2/LEMS file>",
-        help="Name of the NeuroML 2/LEMS main file",
+        metavar="<NeuroML 2/LEMS file/SED-ML file>",
+        help="Name of the NeuroML 2/LEMS/SED-ML main file",
     )
 
     parser.add_argument(
@@ -64,6 +65,11 @@ def process_args():
         default=DEFAULTS["filelist"],
         help="Explicit list of files to create archive of.",
     )
+    parser.add_argument(
+        "-sedml",
+        action="store_true",
+        help=("Generate SED-ML file from main LEMS file and use as master file."),
+    )
 
     return parser.parse_args()
 
@@ -79,9 +85,21 @@ def main(args=None):
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
     a = build_namespace(DEFAULTS, a, **kwargs)
+
+    rootfile = a.rootfile
+
+    # first generate SED-ML file
+    if (
+        a.rootfile.startswith("LEMS") and a.rootfile.endswith(".xml")
+    ) and a.sedml is True:
+        logger.debug("Generating SED-ML file from LEMS file")
+        run_jneuroml("", a.rootfile, "-sedml")
+
+        rootfile = a.rootfile.replace(".xml", ".sedml")
+
     create_combine_archive(
         zipfile_name=a.zipfile_name,
-        rootfile=a.rootfile,
+        rootfile=rootfile,
         zipfile_extension=a.zipfile_extension,
         filelist=a.filelist,
     )
@@ -109,7 +127,7 @@ def create_combine_archive(
 
     :param zipfile_name: name of zip file without extension: rootfile if not provided
     :type zipfile_name: str
-    :param rootfile: full path to main root file
+    :param rootfile: full path to main root file (SED-ML/LEMS/NeuroML2)
     :type rootfile: str
     :param zipfile_extension: extension for zip file, starting with ".".
     :type zipfile_extension: str
@@ -177,43 +195,36 @@ def create_combine_archive_manifest(
     with open(manifest, "w") as mf:
         print('<?xml version="1.0" encoding="utf-8"?>', file=mf)
         print(
-            """
-            <omexManifest
-            xmlns="http://identifiers.org/combine.specifications/omex-manifest">
-            """,
+            """<omexManifest xmlns="http://identifiers.org/combine.specifications/omex-manifest">""",
             file=mf,
         )
 
         print(
-            """
-            <content location="."
-                format="http://identifiers.org/combine.specifications/omex"/>
-            """,
+            """\t<content location="." format="http://identifiers.org/combine.specifications/omex"/>""",
             file=mf,
         )
 
         for f in filelist:
+            if f.endswith(".xml") and f.startswith("LEMS"):
+                # TODO: check what the string for LEMS should be
+                format_string = "http://identifiers.org/combine.specifications/neuroml"
+            elif f.endswith(".nml"):
+                format_string = "http://identifiers.org/combine.specifications/neuroml"
+            elif f.endswith(".sedml"):
+                format_string = "http://identifiers.org/combine.specifications/sed-ml"
+
             if f == rootfile:
-                print(
-                    f"""
-                    <content location="{f}" master="true"
-                        format="http://identifiers.org/combine.specifications/neuroml"/>
-                    """,
-                    file=mf,
-                )
+                master_string = 'master="true"'
             else:
-                print(
-                    f"""
-                    <content location="{f}"
-                        format="http://identifiers.org/combine.specifications/neuroml"/>
-                    """,
-                    file=mf,
-                )
+                master_string = ""
+
+            print(
+                f"""\t<content location="{f}" {master_string} format="{format_string}"/>""",
+                file=mf,
+            )
 
         print(
-            """
-            </omexManifest>
-            """,
+            """</omexManifest>""",
             file=mf,
             flush=True,
         )
