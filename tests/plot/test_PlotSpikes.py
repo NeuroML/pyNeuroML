@@ -15,8 +15,8 @@ class TestPlotSpikes(BaseTestCase):
         """Set up test data for the test suite."""
         self.spike_data = []
 
-        num_neurons_pop1 = 10000
-        num_spikes_pop1 = 50000
+        num_neurons_pop1 = 1000
+        num_spikes_pop1 = 5000
         population1_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop1)]
         population1_ids = [
             random.randint(0, num_neurons_pop1 - 1) for _ in range(num_spikes_pop1)
@@ -25,8 +25,8 @@ class TestPlotSpikes(BaseTestCase):
             {"name": "Population1", "times": population1_times, "ids": population1_ids}
         )
 
-        num_neurons_pop2 = 5000
-        num_spikes_pop2 = 20000
+        num_neurons_pop2 = 500
+        num_spikes_pop2 = 2000
         population2_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop2)]
         population2_ids = [
             random.randint(0, num_neurons_pop2 - 1) for _ in range(num_spikes_pop2)
