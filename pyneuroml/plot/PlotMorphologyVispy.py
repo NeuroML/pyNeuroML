@@ -15,11 +15,8 @@ import math
 import random
 import typing
 import imageio
+import glob
 from vispy.gloo import util
-import vispy.app
-from vispy.scene import SceneCanvas
-from vispy.visuals import MeshVisual
-
 import numpy
 import progressbar
 from neuroml import Cell, NeuroMLDocument, SegmentGroup, Segment
@@ -51,6 +48,10 @@ VISPY_THEME = {
 PYNEUROML_VISPY_THEME = "light"
 
 MAX_MESH_PRECISION = 3
+
+# Global variables for video recording
+recording = False
+frames = []
 
 
 def add_text_to_vispy_3D_plot(
@@ -125,14 +126,6 @@ def create_new_vispy_canvas(
     """
     # vispy: full gl+ context is required for instanced rendering
     use(gl="gl+")
-    canvas_name = "My 3D Visualization"
-    canvas, scene_canvas, view = create_new_vispy_canvas(canvas_name)
-    canvas = vispy.app.Canvas(keys="interactive", size=(800, 600), title=canvas_name)
-    scene_canvas = SceneCanvas(keys="interactive", show=True)
-    view = scene_canvas.central_widget.add_view()
-
-    camera = scene_canvas.central_widget.camera
-    view.camera = camera
 
     canvas = scene.SceneCanvas(
         keys="interactive",
@@ -223,9 +216,19 @@ def create_new_vispy_canvas(
 
     rotation_timer = app.Timer(connect=vispy_rotate)
 
-    @canvas.events.key_press.connect
-    def vispy_on_key_press(event):
+    recording = [False]
+    frames = []
+
+    def vispy_on_key_press(event, canvas):
+        nonlocal recording, frames
         nonlocal cam_index
+
+        if event.text == "r":
+            if not recording:
+                output_file = f"output-{len(glob.glob('output-*.mp4')) + 1}.mp4"
+                start_recording(canvas, output_file)
+            else:
+                stop_recording(canvas)
 
         # Disable camera cycling. The fly camera looks sufficient.
         # Keeping views/ranges same when switching cameras is not simple.
@@ -250,36 +253,31 @@ def create_new_vispy_canvas(
         # quit
         elif event.text == "9":
             canvas.app.quit()
-        if event.key == "r":
-            # Start recording video
-            output_file = "output.mp4"
-            duration = 10  # Video duration in seconds
-            fps = 24  # Frames per second
-        record_video(output_file, duration, fps)
 
-        def record_video(output_file, duration, fps):
-            """
-            Record a video of the vispy canvas content for a specified duration.
-
-            Args:
-                output_file (str): The output file path for the video.
-                duration (int): The duration of the video in seconds (default: 5).
-                fps (int): The frames per second for the video (default: 30).
-            """
-
+    def start_recording(canvas, output_file):
+        nonlocal recording, frames
+        recording = True
         frames = []
-        for _ in range(duration * fps):
-            canvas.app.flush_commands()
-            frame = util._screenshot((canvas.size[0], canvas.size[1]))
-            frames.append(frame)
+        print(f"Recording started. Output file: {output_file}")
 
-        imageio.mimwrite(output_file, frames, fps=fps)
-        print(f"Video saved to {output_file}")
+    def stop_recording(canvas):
+        nonlocal recording, frames
+        recording = False
+        output_file = f"output-{len(glob.glob('output-*.mp4'))}.mp4"
+        imageio.mimwrite(output_file, frames, fps=24)
+        print(f"Recording stopped. Video saved to {output_file}")
+        frames = []
 
-    # Additional setup and event handling for the vispy canvas
+    def capture_frame(event, canvas):
+        nonlocal recording, frames
+
+        if recording:
+            frames.append(canvas.render().cv2png())
+
+    canvas.events.draw.connect(capture_frame)
     canvas.events.key_press.connect(vispy_on_key_press)
 
-    return canvas, scene_canvas, view
+    return canvas, view
 
 
 def plot_interactive_3D(
