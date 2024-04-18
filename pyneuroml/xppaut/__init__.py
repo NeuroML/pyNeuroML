@@ -5,6 +5,7 @@ import sys
 from pprint import pprint
 import typing
 import argparse
+import logging
 
 XPP_TIME = 'xpp_time'
 LEMS_TIME = 't'
@@ -336,16 +337,18 @@ def to_lems(data, lems_model_id, lems_model_file):
 
     ls.create_display(disp0, "Params", "-90", "50")
 
+    of0 = "output_file"
+    ls.create_output_file(of0, "output.dat")
+
     from pyneuroml.utils.plot import get_next_hex_color
     for e in ct.exposures:
         if not e.name == XPP_TIME:
             ls.add_line_to_display(disp0, e.name, "%s"%(e.name), "1", get_next_hex_color())
+            ls.add_column_to_output_file(of0, e.name, "%s"%(e.name))
+
+    
 
     '''
-    of0 = "Volts_file"
-    ls.create_output_file(of0, "%s.v.dat" % lems_model_id)
-    ls.add_column_to_output_file(of0, "v", "hhpop[0]/v")
-
     eof0 = "Events_file"
     ls.create_event_output_file(eof0, "%s.v.spikes" % lems_model_id, format="ID_TIME")
 
@@ -358,7 +361,9 @@ def to_lems(data, lems_model_id, lems_model_file):
     #print("\nLEMS: ")
     #print(ls.to_xml())
 
-    ls.save_to_file()
+    lems_filename = ls.save_to_file()
+
+    return lems_filename
 
 
 
@@ -524,6 +529,7 @@ DEFAULTS = {
     "xpp": False,
     "brian2": False,
     "run": False,
+    "plot": False,
 }  # type: typing.Dict[str, typing.Any]
 
 
@@ -566,6 +572,12 @@ def process_args():
         default=DEFAULTS["lems"],
         help="Run generated file",
     )
+    parser.add_argument(
+        "-plot",
+        action="store_true",
+        default=DEFAULTS["plot"],
+        help="Plot saved variables",
+    )
 
 
     return parser.parse_args()
@@ -588,17 +600,30 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     parsed_data = parse_script(file_path)
     pprint(parsed_data)
 
+    logger.info("Loaded XPP file: %s" % a.ode_filename)
+
+
     lems_model_id = file_path.replace('.ode','').split('/')[-1]
     lems_model_file = file_path.replace('.ode','.model.xml')
 
     if a.lems:
-        to_lems(parsed_data, lems_model_id, lems_model_file)
+        lems_filename = to_lems(parsed_data, lems_model_id, lems_model_file)
+        logger.info("Generated LEMS file: %s" % lems_filename)
+        if a.run:
+            logger.info("Running %s with jNeuroML (plotting: %s)..." % (lems_filename, a.plot))
+            from pyneuroml.runners import run_lems_with_jneuroml
+            run_lems_with_jneuroml(lems_filename, nogui=True, plot=a.plot, verbose=True, load_saved_data=True)
+
 
     if a.xpp:
         to_xpp(parsed_data, file_path.replace('.ode','_2.ode'))
+        if a.run or a.plot:
+            raise NotImplementedError("Running XPP not yet implemented!")
 
     if a.brian2:
-        to_brian2(parsed_data, file_path.replace('.ode','_brain2.py'))
+        to_brian2(parsed_data, file_path.replace('.ode','_brian2.py'))
+        if a.run or a.plot:
+            raise NotImplementedError("Running Brian generated from XPP not yet implemented!")
 
 if __name__ == "__main__":
     main()
