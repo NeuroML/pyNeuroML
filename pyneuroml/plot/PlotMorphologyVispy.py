@@ -34,6 +34,8 @@ from vispy.geometry.meshdata import MeshData
 from vispy.scene.visuals import InstancedMesh
 from vispy.util.transforms import rotate
 from typing import Optional
+from sklearn.decomposition import PCA
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -887,6 +889,22 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         f"Visualising {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
     )
 
+    sections = [i for i in meshdata.values()]
+
+    first_points = []
+    last_points = []
+    # Get from each section, the proximal point of the first segment and and distal point of the last segment
+    for section in sections:
+        if len(section) > 1:
+            first_points.append([section[0][0].x, section[0][0].y, section[0][0].z])
+            last_points.append([section[-1][1].x, section[-1][1].y, section[-1][1].z])
+
+    coords = numpy.concatenate((first_points, last_points), axis=0)
+
+    # Get the PCA components
+    pca = PCA()
+    pca.fit(coords)
+
     pbar = progressbar.ProgressBar(
         max_value=total_mesh_instances,
         widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
@@ -933,15 +951,16 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         for im in i:
             pbar.update(progress_ctr)
             progress_ctr += 1
-            prox = im[0]
-            dist = im[1]
+            prox = pca.transform([[im[0].x, im[0].y, im[0].z]])
+            prox = prox.ravel()
+            dist = pca.transform([[im[1].x, im[1].y, im[1].z]])
+            dist = dist.ravel()
             color = im[2]
-            offset = im[3]
-
+            offset = im[3]  # maybe transform here too
             # points, spherical meshes
             if prox is not None and dist is not None:
                 orig_vec = [0, 0, length]
-                dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
+                dir_vector = [dist[0] - prox[0], dist[1] - prox[1], dist[2] - prox[2]]
                 k = numpy.cross(orig_vec, dir_vector)
                 mag_k = numpy.linalg.norm(k)
 
@@ -960,7 +979,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
                     rot_obj = Rotation.from_matrix(rot_matrix)
 
                 instance_positions.append(
-                    [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
+                    [offset[0] + prox[0], offset[1] + prox[1], offset[2] + prox[2]]
                 )
             else:
                 instance_positions.append(offset)
