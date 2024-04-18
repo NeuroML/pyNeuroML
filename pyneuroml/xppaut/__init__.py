@@ -3,6 +3,8 @@
 
 import sys
 from pprint import pprint
+import typing
+import argparse
 
 XPP_TIME = 'xpp_time'
 LEMS_TIME = 't'
@@ -512,27 +514,91 @@ file_of1.close()"""
     ls.save_to_file()"""
 
 
-if __name__ == "__main__":
-    main()
 
-def main():
 
-    if len(sys.argv) < 2:
-        print("Usage: pynml-xpp ode_filename <-lems> <-xpp>")
-        sys.exit(1)
 
-    file_path = sys.argv[1]
+from pyneuroml.utils.cli import build_namespace
+
+DEFAULTS = {
+    "lems": False,
+    "xpp": False,
+    "brian2": False,
+    "run": False,
+}  # type: typing.Dict[str, typing.Any]
+
+
+def process_args():
+    """
+    Parse command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=("A script to interact with XPPAUT ode files")
+    )
+
+    parser.add_argument(
+        "ode_filename",
+        type=str,
+        metavar="<XPPAUT ode file>",
+        help="XPPAUT ode file",
+    )
+
+    parser.add_argument(
+        "-xpp",
+        action="store_true",
+        default=DEFAULTS["xpp"],
+        help="Regenerate XPP ode file from loaded XPP file (for testing purposes)",
+    )
+    parser.add_argument(
+        "-lems",
+        action="store_true",
+        default=DEFAULTS["lems"],
+        help="Generate LEMS equivalent of XPP file",
+    )
+    parser.add_argument(
+        "-brian2",
+        action="store_true",
+        default=DEFAULTS["brian2"],
+        help="Generate Brian 2 equivalent of XPP file",
+    )
+    parser.add_argument(
+        "-run",
+        action="store_true",
+        default=DEFAULTS["lems"],
+        help="Run generated file",
+    )
+
+
+    return parser.parse_args()
+
+
+def main(args=None):
+    """Main runner method"""
+    if args is None:
+        args = process_args()
+
+    cli(a=args)
+
+
+def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
+    """Main cli caller method"""
+    a = build_namespace(DEFAULTS, a, **kwargs)
+
+
+    file_path = a.ode_filename
     parsed_data = parse_script(file_path)
     pprint(parsed_data)
 
     lems_model_id = file_path.replace('.ode','').split('/')[-1]
     lems_model_file = file_path.replace('.ode','.model.xml')
 
-    if '-lems' in sys.argv:
+    if a.lems:
         to_lems(parsed_data, lems_model_id, lems_model_file)
 
-    if '-xpp' in sys.argv:
+    if a.xpp:
         to_xpp(parsed_data, file_path.replace('.ode','_2.ode'))
 
-    if '-brian' in sys.argv:
-        to_brian2(parsed_data, file_path.replace('.ode','_brain.py'))
+    if a.brian2:
+        to_brian2(parsed_data, file_path.replace('.ode','_brain2.py'))
+
+if __name__ == "__main__":
+    main()
