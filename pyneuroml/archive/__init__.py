@@ -17,6 +17,7 @@ from zipfile import ZipFile
 from pyneuroml.utils import get_model_file_list
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.runners import run_jneuroml
+from pyneuroml.sedml import validate_sedml_files
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -99,6 +100,9 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
 
         rootfile = a.rootfile.replace(".xml", ".sedml")
         zipfile_extension = ".omex"
+
+        # validate the generated file
+        validate_sedml_files([rootfile])
 
     # if explicitly given, use that
     if a.zipfile_extension is not None:
