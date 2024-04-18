@@ -199,6 +199,7 @@ def plot_spikes(
     rates: bool = False,
     rate_window: int = 50,
     rate_bins: int = 500,
+    max_image_size: Optional[Tuple[int, int]] = None,
 ) -> None:
     """
     Plot spike times from data.
@@ -266,6 +267,8 @@ def plot_spikes(
     markersizes = [
         50 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
     ]
+    if max_image_size is not None:
+        plt.figure(figsize=(max_image_size[0] / 100, max_image_size[1] / 100))
 
     generate_plot(
         xs,
