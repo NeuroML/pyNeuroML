@@ -14,7 +14,9 @@ import logging
 import math
 import random
 import typing
-
+import imageio
+import glob
+from vispy.gloo import util
 import numpy
 import progressbar
 from neuroml import Cell, NeuroMLDocument, SegmentGroup, Segment
@@ -46,6 +48,10 @@ VISPY_THEME = {
 PYNEUROML_VISPY_THEME = "light"
 
 MAX_MESH_PRECISION = 3
+
+# Global variables for video recording
+recording = False
+frames = []
 
 
 def add_text_to_vispy_3D_plot(
@@ -210,9 +216,19 @@ def create_new_vispy_canvas(
 
     rotation_timer = app.Timer(connect=vispy_rotate)
 
-    @canvas.events.key_press.connect
-    def vispy_on_key_press(event):
+    recording = [False]
+    frames = []
+
+    def vispy_on_key_press(event, canvas):
+        nonlocal recording, frames
         nonlocal cam_index
+
+        if event.text == "r":
+            if not recording:
+                output_file = f"output-{len(glob.glob('output-*.mp4')) + 1}.mp4"
+                start_recording(canvas, output_file)
+            else:
+                stop_recording(canvas)
 
         # Disable camera cycling. The fly camera looks sufficient.
         # Keeping views/ranges same when switching cameras is not simple.
@@ -237,6 +253,29 @@ def create_new_vispy_canvas(
         # quit
         elif event.text == "9":
             canvas.app.quit()
+
+    def start_recording(canvas, output_file):
+        nonlocal recording, frames
+        recording = True
+        frames = []
+        print(f"Recording started. Output file: {output_file}")
+
+    def stop_recording(canvas):
+        nonlocal recording, frames
+        recording = False
+        output_file = f"output-{len(glob.glob('output-*.mp4'))}.mp4"
+        imageio.mimwrite(output_file, frames, fps=24)
+        print(f"Recording stopped. Video saved to {output_file}")
+        frames = []
+
+    def capture_frame(event, canvas):
+        nonlocal recording, frames
+
+        if recording:
+            frames.append(canvas.render().cv2png())
+
+    canvas.events.draw.connect(capture_frame)
+    canvas.events.key_press.connect(vispy_on_key_press)
 
     return canvas, view
 
