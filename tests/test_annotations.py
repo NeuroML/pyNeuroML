@@ -21,7 +21,7 @@ logger.setLevel(logging.DEBUG)
 class TestAnnotations(BaseTestCase):
     """Test annotations module"""
 
-    def tests_create_annotation(self):
+    def test_create_annotation(self):
         """Test create_annotations"""
         annotation = create_annotation(
             "model.nml",
