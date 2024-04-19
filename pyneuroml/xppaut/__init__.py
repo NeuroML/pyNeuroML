@@ -6,6 +6,7 @@ from pprint import pprint
 import typing
 import argparse
 import logging
+import os
 
 XPP_TIME = 'xpp_time'
 LEMS_TIME = 't'
@@ -592,6 +593,55 @@ def main(args=None):
 
     cli(a=args)
 
+def run_xpp_file(filename, plot):
+    import subprocess as sp
+    cmds = ['%s/xppaut'%os.environ["XPP_HOME"],filename, '-silent']
+    cwd = os.getcwd()
+    try:
+        ret_string = sp.check_output(
+            cmds, cwd=cwd, shell=False, stderr=sp.STDOUT
+        )
+        logger.info(
+            "Commands: %s completed successfully" % (cmds)
+        )
+        if isinstance(ret_string, bytes):
+            ret_string = ret_string.decode("utf-8")  # For Python 3...
+
+    except sp.CalledProcessError as err:
+        logger.error(
+            "CalledProcessError running commands: %s in %s (return code: %s), output:\n%s"
+            % (cmds, cwd, err.returncode, err.output),
+        )
+        raise err
+    except Exception as err:
+        logger.info(
+            "Error running commands: %s in (%s)!" % (cmds, cwd)
+        )
+        logger.info("Error: %s" % (err))
+        raise err
+    
+    if plot:
+        from pyneuroml.pynml import reload_standard_dat_file
+        result_file = 'output.dat'
+        data, indeces = reload_standard_dat_file(result_file)
+        logger.info('Loading %s with %s'%(data, indeces))
+        ts = []
+        xs = []
+        labels = []
+        for i in indeces:
+            ts.append(data['t'])
+            xs.append(data[i])
+            labels.append(i)
+
+        from pyneuroml.plot.Plot import generate_plot
+        ax = generate_plot(ts, xs,
+            "Data from %s after running %s"%(result_file, filename),  # Title
+            labels=labels,
+            xaxis="Time (?)",  # x axis legend
+            yaxis="??",  # y axis legend
+            show_plot_already=True,  # Show or wait for plt.show()?
+            legend_position = "bottom center",
+        )  # Save figure
 
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
@@ -608,19 +658,29 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     lems_model_id = file_path.replace('.ode','').split('/')[-1]
     lems_model_file = file_path.replace('.ode','.model.xml')
 
+    if a.run and not a.lems and not a.xpp and not a.brian2:
+            
+        logger.info("Running %s with XPP (plotting: %s)..." % (a.ode_filename, a.plot))
+
+        run_xpp_file(a.ode_filename, a.plot)
+
+
     if a.lems:
         lems_filename = to_lems(parsed_data, lems_model_id, lems_model_file)
         logger.info("Generated LEMS file: %s" % lems_filename)
         if a.run:
             logger.info("Running %s with jNeuroML (plotting: %s)..." % (lems_filename, a.plot))
+
             from pyneuroml.runners import run_lems_with_jneuroml
             run_lems_with_jneuroml(lems_filename, nogui=True, plot=a.plot, verbose=True, load_saved_data=True)
 
 
     if a.xpp:
-        to_xpp(parsed_data, file_path.replace('.ode','_2.ode'))
-        if a.run or a.plot:
-            raise NotImplementedError("Running XPP not yet implemented!")
+        new_xppfile = file_path.replace('.ode','_2.ode')
+        to_xpp(parsed_data, new_xppfile)
+
+        if a.run:
+            run_xpp_file(new_xppfile, a.plot)
 
     if a.brian2:
         to_brian2(parsed_data, file_path.replace('.ode','_brian2.py'))
