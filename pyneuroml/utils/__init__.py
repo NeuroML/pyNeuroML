@@ -23,7 +23,6 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-import libsedml
 import neuroml
 import numpy
 import pyneuroml.utils.misc
@@ -556,6 +555,7 @@ def get_model_file_list(
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     elif rootfile.endswith(".sedml"):
+        import libsedml
         if pathlib.Path(rootfile).is_absolute():
             rootdoc = libsedml.readSedMLFromFile(rootfile)
         else:

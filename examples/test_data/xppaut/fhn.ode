@@ -1,0 +1,10 @@
+# Forced Fitzhugh-Nagumo fhn.ode 
+dv/dt = f(v)-w+s(t)+I_0
+dw/dt = eps*(v-gamma*w)
+f(v)=v*(1-v)*(v-a)
+s(t)=al*sin(omega*t)
+param a=.25,eps=.05,gamma=1,I_0=.25
+param al=0,omega=2
+@ total=100,dt=.2,xhi=100
+@ nplot=2,xp2=t,yp2=w
+done
