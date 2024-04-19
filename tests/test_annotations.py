@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Test NSGR related methods
+Test annotations related methods
 
-File: tests/utils/test_nsgr.py
+File: tests/test_annotations.py
 
 Copyright 2024 NeuroML contributors
 """
