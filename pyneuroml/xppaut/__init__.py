@@ -14,6 +14,8 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+verbose = False
+
 def _closing_bracket_index(expr, open_bracket_index):
     depth = 0
     logger.debug('Looking for closing bracket of %s from %i, i.e. %s'%(expr, open_bracket_index, expr[open_bracket_index:]))
