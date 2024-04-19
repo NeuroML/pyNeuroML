@@ -1,0 +1,81 @@
+# Excitatory cortical neurons, normal [Ca].
+#
+number Cm=1.0
+number pms=3,pns=4
+number VNa=55.0,t_tauh=-40.5,t_taun=-27.0
+number thetaa=-50.0,sigmaa=20.0,thetab=-80.0,sigmab=-6.0,tauBs=15.0
+number thetam=-30.0,sigmam=9.5,sigmah=-7.0,sigman=10.0,sigmaz=5.0
+number VCa=120
+number thetar=-20.0,sigmar=10.0,thetac=-30,sigmac=7
+number pwrc=1,pwrq=4
+# 
+p gNa=35.0,gKdr=6.0,gL=0.05,Iapp=1.0
+p gA=1.4,gNaP=0.2,gZ=1.0
+p thetaz=-39.0,tauZs=75.0
+p phi=10.0, thetah=-45.0
+p thetan=-35.0,thetap=-41.0,sigmap=3.0
+p VK=-90.0,VL=-70.0
+p gCa=0.08,gKCa=10.0,gKAHP=5
+p tauRs=1.0,aq=2,ac=6,tauq=450,tauCa=13,uuCa=0.13,tauKc=2
+#
+GAMMAF(VV,theta,sigma)=1.0/(1.0+exp(-(VV-theta)/sigma))
+ZFUNC(AA,CA,zz)=1/(1+(AA^zz/CA^zz))
+#
+VVs'=(-gL*(VVs-VL)-INa-INaP-IKdr-IA-Iz-ICa-IKC-IAHP+Iappx)/Cm
+hhs'=phi*(GAMMAF(VVs,thetah,sigmah)-hhs)/(1.0+7.5*GAMMAF(VVs,t_tauh,-6.0))
+nns'=phi*(GAMMAF(VVs,thetan,sigman)-nns)/(1.0+5.0*GAMMAF(VVs,t_taun,-15.0))
+bbs'=(GAMMAF(VVs,thetab,sigmab)-bbs)/tauBs
+zzs'=(GAMMAF(VVs,thetaz,sigmaz)-zzs)/tauZs
+rrs'=(GAMMAF(VVs,thetar,sigmar)-rrs)/tauRs
+ccs'=(GAMMAF(VVs,thetac,sigmac)-ccs)/tauKc
+qqs'=(ZFUNC(aq,Ca,pwrq)-qqs)/tauq
+Ca'=-uuCa*ICa-Ca/tauCa
+#
+Iappx=Iapp
+Minfs=GAMMAF(VVs,thetam,sigmam)
+Pinfs=GAMMAF(VVs,thetap,sigmap)
+Ainfs=GAMMAF(VVs,thetaa,sigmaa)
+mKCa=ZFUNC(ac,Ca,pwrc)
+#
+INa=gNa*(Minfs^pms)*hhs*(VVs-VNa)
+INaP=gNaP*Pinfs*(VVs-VNa)
+IKdr=gKdr*(nns^pns)*(VVs-VK)
+IA=gA*Ainfs^3*bbs*(VVs-VK)
+Iz=gZ*zzs*(VVs-VK)
+ICa=gCa*rrs^2*(VVs-VCa)
+IKC=gKCa*mKCa*ccs*(VVs-VK)
+IAHP=gKAHP*qqs*(VVs-VK) 
+#
+VVs(0)=-71.962
+hhs(0)=0.979199
+nns(0)=0.0242166
+bbs(0)=0.207565
+zzs(0)=0.0013689
+Ca[0]=0.000787
+rrs(0)=0.005507
+ccs(0)=0.002486
+qqs(0)=0.0
+#
+@ MAXSTOR=800000
+@ BACK=Black
+@ XP=T
+@ YP=VVs
+@ AXES=2
+@ TOTAL=500.0
+@ DT=0.05
+@ NJMP=1
+@ T0=0.0
+@ TRANS=0.0
+@ NMESH=40
+@ METH=rungekutta
+@ DTMIN=0.001
+@ DTMAX=1.0
+@ TOLER=0.00001
+@ BOUND=10000.0
+@ DELAY=0
+@ XLO=0.0, XHI=500.0, YLO=-90.0, YHI=30.0
+@ NTST=50,NMAX=2000,NPR=50
+@ DS=0.02,DSMIN=0.001,DSMAX=0.5
+@ PARMIN=-10,PARMAX=50,NORMMIN=0.0,NORMMAX=10000.0
+@ AUTOVAR=VVs1,AUTOXMIN=-10.0,AUTOXMAX=50.0,AUTOYMIN=-90.0,AUTOYMAX=50.0
+done

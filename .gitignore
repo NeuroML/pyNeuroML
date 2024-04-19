@@ -171,3 +171,5 @@ arm64
 .vscode
 /tests/pyneuroml_20*
 /pyneuroml/xppaut/report.txt
+/examples/test_data/xppaut/fhn_2.ode
+/examples/test_data/xppaut/fhn_brain.py

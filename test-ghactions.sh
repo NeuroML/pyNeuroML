@@ -70,6 +70,16 @@ pynml -validate *.channel.nml
 
 echo
 echo "################################################"
+echo "##   Test XPP"
+
+pynml-xpp test_data/xppaut/fhn.ode
+pynml-xpp test_data/xppaut/fhn.ode -xpp
+pynml-xpp test_data/xppaut/fhn.ode -lems -run
+pynml-xpp test_data/xppaut/wc.ode -lems -run
+pynml-xpp test_data/xppaut/nca.ode -lems -run
+
+echo
+echo "################################################"
 echo "##   Test some conversions"
 
 pynml NML2_SingleCompHHCell.nml -svg
@@ -200,9 +210,9 @@ if [ "$run_neuron_examples" == true ]; then
             python tunePyr.py -tune -nogui
         popd
 
-    echo
-    echo "################################################"
-    echo "##   Finished all tests! "
-    echo "################################################"
-
 fi
+
+echo
+echo "################################################"
+echo "##   Finished all tests! "
+echo "################################################"
