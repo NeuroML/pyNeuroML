@@ -19,13 +19,10 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestAnnotations(BaseTestCase):
-    """Test utils module"""
+    """Test annotations module"""
 
     def tests_create_annotation(self):
-        """Test create_annotations
-        :returns: TODO
-
-        """
+        """Test create_annotations"""
         annotation = create_annotation(
             "model.nml",
             "A tests model",
