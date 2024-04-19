@@ -80,6 +80,7 @@ def parse_script(file_path):
             elif line.startswith(('number', 'p', 'par', 'param')):
                 params = line.replace('number ', '').replace('par ', '').replace('p ', '').replace('param ', '')  # Skip the first word ('number', 'p', 'param' or 'par')
                 for pp1 in params.split(','):
+                    pp1 = pp1.replace(' = ','=').replace('= ','=').replace(' =','=') # better solution required...
                     for pp2 in pp1.split(' '):
                         if len(pp2)>0:
                             key, value = pp2.split('=')
@@ -190,7 +191,7 @@ def to_xpp(data, new_xpp_filename):
     xpp_ode+='\n# Parameters\n'
     for k,v in data["parameters"].items():
         if not k in INBUILT.keys():
-            xpp_ode += f'{k} = {v}\n'
+            xpp_ode += f'par {k} = {v}\n'
 
     xpp_ode+='\n# Functions\n'
     for k,v in data["functions"].items():
@@ -621,17 +622,24 @@ def run_xpp_file(filename, plot):
         raise err
     
     if plot:
+
+        parsed_data = parse_script(filename)
+
         from pyneuroml.pynml import reload_standard_dat_file
         result_file = 'output.dat'
         data, indeces = reload_standard_dat_file(result_file)
-        logger.info('Loading %s with %s'%(data, indeces))
+        logger.info('Loading data: %s'%(data.keys()))
         ts = []
         xs = []
         labels = []
+        tds = list(parsed_data['time_derivatives'].keys())
+        cdvs = ['%s??'%c for c in parsed_data['conditional_derived_variables'].keys()]
+        outputs = tds+cdvs
+        logger.info('Loading data: %s, assuming these represent %s (%i values)'%(data.keys(),outputs, len(outputs)))
         for i in indeces:
             ts.append(data['t'])
             xs.append(data[i])
-            labels.append(i)
+            labels.append(outputs[i] if i < len(outputs) else '???')
 
         from pyneuroml.plot.Plot import generate_plot
         ax = generate_plot(ts, xs,
@@ -640,8 +648,7 @@ def run_xpp_file(filename, plot):
             xaxis="Time (?)",  # x axis legend
             yaxis="??",  # y axis legend
             show_plot_already=True,  # Show or wait for plt.show()?
-            legend_position = "bottom center",
-        )  # Save figure
+        )  
 
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
