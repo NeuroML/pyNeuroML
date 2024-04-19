@@ -117,6 +117,8 @@ def create_annotation(
 ):
     """Create an RDF annotation from the provided fields
 
+    .. versionadded:: 1.2.10
+
     This can be used to create an RDF annotation for a subject---a model or a
     file like an OMEX archive file. It supports most qualifiers and will be
     continuously updated to support more as they are added.
@@ -129,6 +131,81 @@ def create_annotation(
     - https://github.com/combine-org/combine-specifications/blob/main/specifications/qualifiers-1.1.md
     - https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
 
+    Note that:
+
+    - not all qualifiers have been included yet
+    - the qualifiers and their representations may change in the future
+
+    For any arguments here that take a dictionary of strings, the key is the
+    resource reference URI, and the value is the string label. For example:
+
+    .. code-block:: python
+
+        encodes_other_biology={
+            "http://identifiers.org/GO:0009653": "anatomical structure morphogenesis",
+            "http://identifiers.org/kegg:ko04111": "Cell cycle - yeast",
+        }
+
+    :param subject: subject/target of the annotation
+        could be a file, a mode component
+    :type subject: str
+    :param title: title of annotation
+        This is required for publishing models on biosimulations.org
+    :type title: str
+    :param abstract: an abstract
+    :type abstract: str
+    :param description: a longer description
+    :type description: str
+    :param keywords: keywords
+    :type keywords: list(str)
+    :param thumbnails: thumbnails
+    :type thumbnails: list(str)
+    :param organisms: of organisms
+    :type organisms: dict(str, str)
+    :param encodes_other_biology:  other biological entities
+    :type encodes_other_biology: dict(str, str)
+    :param has_version: other versions
+    :type has_version: dict(str, str)
+    :param is_version_of: is a version of
+    :type is_version_of: dict(str, str)
+    :param has_part: includes another as a part
+    :type has_part: dict(str, str)
+    :param is_part_of: is a part of another entity
+    :type is_part_of: dict(str, str)
+    :param has_property: has a property
+    :type has_property: dict(str, str)
+    :param is_property_of: is a property of another entity
+    :type is_property_of: dict(str, str)
+    :param sources: links to sources (on GitHub and so on)
+    :type sources: dict(str, str)
+    :param isinstance_of: is an instance of
+    :type isinstance_of: dict(str, str)
+    :param has_instance: has instance of another entity
+    :type has_instance: dict(str, str)
+    :param predecessors: predecessors of this entity
+    :type predecessors: dict(str, str)
+    :param successors: successors of this entity
+    :type successors: dict(str, str)
+    :param see_also: more information
+    :type see_also: dict(str, str)
+    :param references: references
+    :type references: dict(str, str)
+    :param other_ids: other IDs
+    :type other_ids: dict(str, str)
+    :param citations: related citations
+    :type citations: dict(str, str)
+    :param authors: authors
+    :type authors: dict(str, str)
+    :param contributors: other contributors
+    :type contributors: dict(str, str)
+    :param license: license
+    :type license: dict(str, str)
+    :param funders: funders
+    :type funders: dict(str, str)
+    :param creation_date: date in YYYY-MM-DD format when this was created (eg: 2024-04-19)
+    :type creation_date: str
+    :param modified_dates: dates in YYYY-MM-DD format when modifications were made
+    :type modified_dates: list(str)
     :param serialization_format: format to serialize in using `rdflib.serialize`
     :type serialization_format: str
     :param write_to_file: path to file to write to
