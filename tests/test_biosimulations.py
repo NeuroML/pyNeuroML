@@ -30,7 +30,7 @@ class TestBiosimulations(BaseTestCase):
         """Test get_simulators"""
         simulators = get_simulator_versions()
 
-        print(simulators)
+        logging.info(simulators)
 
         for s in [
             "neuron",

@@ -203,7 +203,7 @@ def submit_simulation_archive(
     logger.debug(f"Sim dict is: {sim_dict}")
 
     simulation_run_request = _SimulationRunApiRequest(**sim_dict)
-    print(f"simulation_run_request is {simulation_run_request.json()}")
+    logger.debug(f"simulation_run_request is {simulation_run_request.json()}")
 
     with open(archive_file, "rb") as archive_file_handle:
         multipart_form_data: dict[
@@ -214,12 +214,12 @@ def submit_simulation_archive(
             "simulationRun": (None, simulation_run_request.json()),
         }
 
-        print(f"data is:\n{multipart_form_data}")
+        logger.debug(f"data is:\n{multipart_form_data}")
 
         m = MultipartEncoder(fields=multipart_form_data)
 
-        print(f"multipart encoded data is {m}")
-        print(f"with content type: {m.content_type}")
+        logger.info(f"multipart encoded data is {m}")
+        logger.info(f"with content type: {m.content_type}")
 
         if dry_run is False:
             logger.info("Submitting archive to biosimulations")
@@ -242,7 +242,7 @@ def submit_simulation_archive(
                 )
         else:
             response = True
-            logger.info("Dry run, not submitting")
+            print("Dry run, not submitting")
             print(f"Simulation dictionary: {sim_dict}")
 
     return response
