@@ -8,12 +8,12 @@ Copyright 2024 NeuroML contributors
 """
 
 
-import json
 import logging
 import typing
 from datetime import datetime
 
 import requests
+from pydantic import BaseModel
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 from pyneuroml import __version__
@@ -26,6 +26,27 @@ logger.setLevel(logging.DEBUG)
 
 biosimulators_api_url = "https://api.biosimulators.org"
 biosimulations_api_url = "https://api.biosimulations.org"
+
+
+class _SimulationRunApiRequest(BaseModel):
+    """class for runSimulation data
+
+    Based on
+    https://github.com/biosimulations/biosimulations-runutils/blob/dev/biosimulations_runutils/biosim_pipeline/biosim_api.py
+
+    Once biosimulations-runutils is published, we will use their API instead
+    of replicating it ourselves.
+    """
+
+    name: str
+    simulator: str
+    simulatorVersion: str
+    maxTime: int
+    cpus: typing.Optional[int] = None
+    memory: typing.Optional[int] = None
+    purpose: typing.Optional[str] = "academic"
+    email: typing.Optional[str] = None
+    envVars: typing.Optional[typing.List[str]] = []
 
 
 def get_simulator_versions(
@@ -67,7 +88,9 @@ def get_simulator_versions(
 def submit_simulation(
     rootfile: str,
     metadata_file: typing.Optional[str] = None,
-    sim_dict: typing.Dict[str, typing.Union[int, str, typing.List[typing.Any]]] = {},
+    sim_dict: typing.Dict[
+        str, typing.Optional[typing.Union[int, str, typing.List[typing.Any]]]
+    ] = {},
     dry_run: bool = True,
 ):
     """Submit a simulation to Biosimulations using its REST API
@@ -177,24 +200,49 @@ def submit_simulation_archive(
 
     """
     api_url = f"{biosimulations_api_url}/runs"
-    data_dict = {}  # type: typing.Dict[str, typing.Any]
-    data_dict["file"] = (archive_file, open(archive_file, "rb"))
-    data_dict["simulationRun"] = json.dumps(sim_dict)
-    multipart_data = MultipartEncoder(fields=data_dict)
-    print(f"data is is:\n{multipart_data.to_string()}")
+    logger.debug(f"Sim dict is: {sim_dict}")
 
-    if dry_run is False:
-        logger.info("Submitting archive to biosimulations")
-        response = requests.post(
-            api_url,
-            data=multipart_data,
-            headers={"Content-Type": multipart_data.content_type},
-        )  # type: requests.Response
-        if response.status_code != requests.codes.ok:
-            response.raise_for_status()
-    else:
-        response = True
-        logger.info("Dry run, not submitting")
-        print(f"Simulation dictionary: {sim_dict}")
+    simulation_run_request = _SimulationRunApiRequest(**sim_dict)
+    print(f"simulation_run_request is {simulation_run_request.json()}")
+
+    with open(archive_file, "rb") as archive_file_handle:
+        multipart_form_data: dict[
+            str,
+            typing.Union[typing.Tuple[str, typing.BinaryIO], typing.Tuple[None, str]],
+        ] = {
+            "file": (archive_file, archive_file_handle),
+            "simulationRun": (None, simulation_run_request.json()),
+        }
+
+        print(f"data is:\n{multipart_form_data}")
+
+        m = MultipartEncoder(fields=multipart_form_data)
+
+        print(f"multipart encoded data is {m}")
+        print(f"with content type: {m.content_type}")
+
+        if dry_run is False:
+            logger.info("Submitting archive to biosimulations")
+            response = requests.post(
+                api_url, data=m, headers={"Content-Type": m.content_type}
+            )  # type: requests.Response
+            if response.status_code != requests.codes.CREATED:
+                response.raise_for_status()
+            else:
+                serv_response = response.json()
+                print(
+                    f"Submitted {archive_file} successfully with id: {serv_response['id']}"
+                )
+                print(f"View: {biosimulations_api_url}/runs/{serv_response['id']}")
+                print(
+                    f"Downloads: {biosimulations_api_url}/results/{serv_response['id']}/download"
+                )
+                print(
+                    f"Logs: {biosimulations_api_url}/logs/{serv_response['id']}?includeOutput=true"
+                )
+        else:
+            response = True
+            logger.info("Dry run, not submitting")
+            print(f"Simulation dictionary: {sim_dict}")
 
     return response

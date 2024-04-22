@@ -56,20 +56,18 @@ class TestBiosimulations(BaseTestCase):
 
     def test_submit_simulation_archive(self):
         """Test submit_simulation_archive"""
+        # TODO: we don't want to use the prod instance for testing, so currently
+        # disabled. We'll point it at a dev instance for testingo
+        # Manually set to False to test.
         dry_run = True
         os.chdir("examples")
         sim_dict = {
             "name": "PyNeuroML test simulation",
             "simulator": "neuron",
-            "simulatorVersion": "8.0.2",
-            "cpus": "1",
-            "memory": "8",
+            "simulatorVersion": "latest",
             "maxTime": "20",
-            "purpose": "other",
-            "email": "something@something.com",
-            "envVars": None,
-            "projectId": None,
         }
+
         response = submit_simulation(
             "LEMS_NML2_Ex5_DetCell.xml", sim_dict=sim_dict, dry_run=dry_run
         )
@@ -77,5 +75,5 @@ class TestBiosimulations(BaseTestCase):
         if dry_run:
             pass
         else:
-            print(response.json())
+            logger.debug(response.json())
             self.assertEqual(response.status_code, 201)
