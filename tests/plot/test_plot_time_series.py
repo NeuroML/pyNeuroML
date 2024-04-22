@@ -144,8 +144,8 @@ class TestPlotTimeSeries(BaseTestCase):
         lems_file.flush()
         lems_file.close()
 
-        pyplts.plot_time_series_from_data_files(
-            trace_file.name,
+        pyplts.plot_time_series_from_lems_file(
+            lems_file.name,
             title="",
             offset=False,
             show_plot_already=False,
@@ -153,8 +153,8 @@ class TestPlotTimeSeries(BaseTestCase):
         )
         self.assertIsFile("time-series-test-from-lems-file.png")
 
-        pyplts.plot_time_series_from_data_files(
-            trace_file.name,
+        pyplts.plot_time_series_from_lems_file(
+            lems_file.name,
             title="",
             offset=True,
             show_plot_already=False,
