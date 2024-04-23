@@ -3,4 +3,4 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff.lint]
-ignore = ["E501", "E502", "F403", "F405", "W503", "W504"]
+ignore = ["F403", "F405"]

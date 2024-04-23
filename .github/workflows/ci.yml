@@ -51,7 +51,7 @@ jobs:
 
         ./test-ghactions.sh -neuron
 
-    - name: Lint with flake8
+    - name: Lint with ruff
       run: |
-        pip install flake8
-        flake8 . --count --exit-zero --show-source --max-line-length=127 --statistics
+        pip install ruff
+        ruff . --exit-zero --show-source
