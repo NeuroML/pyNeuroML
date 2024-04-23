@@ -12,5 +12,6 @@
 .BR pynml-sonata (1),
 .BR pynml-summary (1),
 .BR pynml-tune (1),
+.BR pynml-xpp (1),
 .PP
 Please see https://docs.neuroml.org for complete documentation on the NeuroML standard and the software ecosystem.
