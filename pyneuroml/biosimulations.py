@@ -203,7 +203,9 @@ def submit_simulation_archive(
     logger.debug(f"Sim dict is: {sim_dict}")
 
     simulation_run_request = _SimulationRunApiRequest(**sim_dict)
-    logger.debug(f"simulation_run_request is {simulation_run_request.json()}")
+    logger.debug(
+        f"simulation_run_request is {simulation_run_request.model_dump_json()}"
+    )
 
     with open(archive_file, "rb") as archive_file_handle:
         multipart_form_data: dict[
@@ -211,7 +213,7 @@ def submit_simulation_archive(
             typing.Union[typing.Tuple[str, typing.BinaryIO], typing.Tuple[None, str]],
         ] = {
             "file": (archive_file, archive_file_handle),
-            "simulationRun": (None, simulation_run_request.json()),
+            "simulationRun": (None, simulation_run_request.model_dump_json()),
         }
 
         logger.debug(f"data is:\n{multipart_form_data}")

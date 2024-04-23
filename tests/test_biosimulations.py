@@ -10,6 +10,7 @@ Copyright 2024 NeuroML contributors
 
 import logging
 import os
+import pathlib
 
 from pyneuroml.biosimulations import (
     get_simulator_versions,
@@ -46,21 +47,16 @@ class TestBiosimulations(BaseTestCase):
             versions = simulators[s]
             self.assertGreater(len(versions), 0)
 
-    def test_submit_simulation(self):
-        """Test submit_simulation"""
-        os.chdir("examples")
-        response = submit_simulation(
-            "LEMS_NML2_Ex5_DetCell.xml", sim_dict={}, dry_run=True
-        )
-        self.assertTrue(response)
-
     def test_submit_simulation_archive(self):
         """Test submit_simulation_archive"""
         # TODO: we don't want to use the prod instance for testing, so currently
         # disabled. We'll point it at a dev instance for testingo
         # Manually set to False to test.
         dry_run = True
-        os.chdir("examples")
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent)
+        cwd = os.getcwd()
+        os.chdir(dirname + "/examples")
         sim_dict = {
             "name": "PyNeuroML test simulation",
             "simulator": "neuron",
@@ -71,6 +67,7 @@ class TestBiosimulations(BaseTestCase):
         response = submit_simulation(
             "LEMS_NML2_Ex5_DetCell.xml", sim_dict=sim_dict, dry_run=dry_run
         )
+        os.chdir(cwd)
 
         if dry_run:
             pass
