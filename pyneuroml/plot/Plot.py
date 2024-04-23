@@ -12,6 +12,7 @@ import logging
 import typing
 import matplotlib
 import matplotlib.axes
+import matplotlib.animation as animation
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -174,6 +175,7 @@ def generate_plot(
     if not show_yticklabels:
         ax.set_yticklabels([])
 
+    artists = []
     for i in range(len(xvalues)):
         linestyle = rcParams["lines.linestyle"] if not linestyles else linestyles[i]
         label = "" if not labels else labels[i]
@@ -182,7 +184,7 @@ def generate_plot(
         markersize = rcParams["lines.markersize"] if not markersizes else markersizes[i]
 
         if colors:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -193,7 +195,7 @@ def generate_plot(
                 label=label,
             )
         else:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -202,6 +204,7 @@ def generate_plot(
                 linewidth=linewidth,
                 label=label,
             )
+        artists.append(artist)
 
     if labels:
         if legend_position == "outer right":
@@ -240,6 +243,15 @@ def generate_plot(
         logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
+        is_animate = True
+        if is_animate:
+            def update(frame):
+                for i, artist in enumerate(artists):
+                    artist.set_xdata(xvalues[i][:frame*100])
+                    artist.set_ydata(yvalues[i][:frame*100])
+                return artists
+            ani = animation.FuncAnimation(
+                fig=fig, func=update, interval=1, blit=True, cache_frame_data=False)
         plt.show()
 
     if close_plot:
