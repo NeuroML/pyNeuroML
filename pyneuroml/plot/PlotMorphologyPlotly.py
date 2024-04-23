@@ -12,12 +12,17 @@ Copyright 2023 NeuroML contributors
 import os
 import typing
 import logging
-import plotly.graph_objects as go
 from neuroml import Cell, NeuroMLDocument
 from pyneuroml.pynml import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+try:
+    import plotly.graph_objects as go
+except ImportError:
+    logger.warning("Please install optional dependencies to use plotly features:")
+    logger.warning("pip install pyneuroml[plotly]")
 
 
 def plot_3D_cell_morphology_plotly(

@@ -9,7 +9,6 @@ File: pyneuroml/plot/PlotMorphologyVispy.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import logging
 import math
 import random
@@ -28,16 +27,22 @@ from pyneuroml.utils.plot import (
     load_minimal_morphplottable__model,
 )
 from scipy.spatial.transform import Rotation
-from vispy import app, scene, use
-from vispy.geometry.generation import create_sphere
-from vispy.geometry.meshdata import MeshData
-from vispy.scene.visuals import InstancedMesh
-from vispy.util.transforms import rotate
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+try:
+    from vispy import app, scene, use
+    from vispy.geometry.generation import create_sphere
+    from vispy.geometry.meshdata import MeshData
+    from vispy.scene.visuals import InstancedMesh
+    from vispy.util.transforms import rotate
+except ImportError:
+    logger.warning("Please install optional dependencies to use vispy features:")
+    logger.warning("pip install pyneuroml[vispy]")
+    logger.warning("or (for Qt5):")
+    logger.warning("pip install pyneuroml[vispy-qt5]")
 
 VISPY_THEME = {
     "light": {"bg": "white", "fg": "black"},

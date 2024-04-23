@@ -25,13 +25,16 @@ except ImportError:
 from pyneuroml.pynml import validate_neuroml1
 from pyneuroml.pynml import validate_neuroml2
 
-from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
-from neuron import h
-
-
 pp = pprint.PrettyPrinter(depth=4)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+try:
+    from neuron import h
+    from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
+except ImportError:
+    logger.warning("Please install optional dependencies to use NEURON features:")
+    logger.warning("pip install pyneuroml[neuron]")
 
 
 def get_utils_hoc() -> pathlib.Path:
