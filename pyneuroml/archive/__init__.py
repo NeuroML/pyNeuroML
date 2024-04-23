@@ -121,6 +121,7 @@ def create_combine_archive(
     zipfile_name: typing.Optional[str] = None,
     zipfile_extension=".neux",
     filelist: typing.List[str] = [],
+    extra_files: typing.List[str] = [],
 ):
     """Create a combine archive that includes all files referred to (included
     recursively) by the provided rootfile.  If a file list is provided, it will
@@ -143,7 +144,10 @@ def create_combine_archive(
     :param zipfile_extension: extension for zip file, starting with ".".
     :type zipfile_extension: str
     :param filelist: explicit list of files to create archive of
+        if given, the function will not attempt to list model files itself
     :type filelist: list of strings
+    :param extra_files: extra files to include in archive
+    :type extra_files: list of strings
     :returns: None
     :raises ValueError: if a root file is not provided
     """
@@ -169,7 +173,7 @@ def create_combine_archive(
     if len(filelist) == 0:
         lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
 
-    create_combine_archive_manifest(rootfile, filelist, rootdir)
+    create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
     filelist.append("manifest.xml")
 
     # change to directory of rootfile
@@ -177,7 +181,7 @@ def create_combine_archive(
     os.chdir(rootdir)
 
     with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
-        for f in filelist:
+        for f in filelist + extra_files:
             archive.write(f)
     os.chdir(thispath)
 
@@ -216,6 +220,8 @@ def create_combine_archive_manifest(
         )
 
         for f in filelist:
+            format_string = None
+            logger.info(f"Processing file: {f}")
             if f.endswith(".xml") and f.startswith("LEMS"):
                 # TODO: check what the string for LEMS should be
                 format_string = "http://identifiers.org/combine.specifications/neuroml"
@@ -223,14 +229,15 @@ def create_combine_archive_manifest(
                 format_string = "http://identifiers.org/combine.specifications/neuroml"
             elif f.endswith(".sedml"):
                 format_string = "http://identifiers.org/combine.specifications/sed-ml"
-
-            if f == rootfile:
-                master_string = 'master="true"'
-            else:
-                master_string = ""
+            elif f.endswith(".rdf"):
+                format_string = (
+                    "http://identifiers.org/combine.specifications/omex-metadata"
+                )
+            elif f.endswith(".pdf"):
+                format_string = "http://purl.org/NET/mediatypes/application/pdf"
 
             print(
-                f"""\t<content location="{f}" {master_string} format="{format_string}"/>""",
+                f"""\t<content location="{f}" {'master="true"' if f == rootfile else ""} {"format=" if format_string else ""}"{format_string}"/>""",
                 file=mf,
             )
 

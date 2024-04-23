@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Test NSGR related methods
+Test annotations related methods
 
-File: tests/utils/test_nsgr.py
+File: tests/test_annotations.py
 
 Copyright 2024 NeuroML contributors
 """
@@ -19,13 +19,10 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestAnnotations(BaseTestCase):
-    """Test utils module"""
+    """Test annotations module"""
 
-    def tests_create_annotation(self):
-        """Test create_annotations
-        :returns: TODO
-
-        """
+    def test_create_annotation(self):
+        """Test create_annotations"""
         annotation = create_annotation(
             "model.nml",
             "A tests model",
