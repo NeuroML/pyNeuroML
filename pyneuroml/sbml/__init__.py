@@ -5,9 +5,20 @@ based on https://github.com/combine-org/combine-notebooks/blob/main/src/combine_
 
 import os
 import errno
-import libsbml
-from libsbml import SBMLReader
 from typing import List
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    import libsbml
+    from libsbml import SBMLReader
+except ImportError:
+    logger.warning("Please install optional dependencies to use SBML features:")
+    logger.warning("pip install pyneuroml[combine]")
 
 
 def validate_sbml_files(input_files: List[str], strict_units: bool = False) -> bool:

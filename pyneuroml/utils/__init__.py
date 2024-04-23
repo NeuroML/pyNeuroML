@@ -33,6 +33,12 @@ from pyneuroml.errors import UNKNOWN_ERR
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+try:
+    import libsedml
+except ModuleNotFoundError:
+    logger.warning("Please install optional dependencies to use SED-ML features:")
+    logger.warning("pip install pyneuroml[combine]")
+
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
 MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
@@ -121,7 +127,6 @@ def extract_position_info(
         if verbose:
             print(info)
 
-        colour = "b"
         substitute_radius = None
 
         props = []
@@ -555,7 +560,6 @@ def get_model_file_list(
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     elif rootfile.endswith(".sedml"):
-        import libsedml
         if pathlib.Path(rootfile).is_absolute():
             rootdoc = libsedml.readSedMLFromFile(rootfile)
         else:
@@ -577,7 +581,7 @@ def get_model_file_list(
 
 
 def extract_lems_definition_files(
-    path: typing.Union[str, None, tempfile.TemporaryDirectory] = None
+    path: typing.Union[str, None, tempfile.TemporaryDirectory] = None,
 ) -> str:
     """Extract the NeuroML2 LEMS definition files to a directory and return its path.
 
