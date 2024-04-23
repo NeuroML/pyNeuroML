@@ -15,6 +15,7 @@ from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
 from pyneuroml.utils.plot import get_next_hex_color
+from pyneuroml.utils.units import convert_to_units
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -34,8 +35,8 @@ class LEMSSimulation:
     def __init__(
         self,
         sim_id: str,
-        duration: float,
-        dt: float,
+        duration: typing.Union[float, str],
+        dt: typing.Union[float, str],
         target: typing.Optional[str] = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
@@ -47,10 +48,18 @@ class LEMSSimulation:
 
         :param sim_id: id for simulation
         :type sim_id: str
-        :param duration: duration of simulation in ms
-        :type duration: float
-        :param dt: simulation time step in ms
-        :type dt: float
+        :param duration: duration of simulation. This can be:
+            - a float of the magnitude in ms
+            - a string of the magnitude in ms
+            - a string of the value using any time units (that will be
+              converted to ms)
+        :type duration: float or str
+        :param dt: simulation time step. This can be:
+            - a float of the magnitude in ms
+            - a string of the magnitude in ms
+            - a string of the value using any time units (that will be
+              converted to ms)
+        :type dt: float or str
         :param target: id of target component (usually the network)
         :type target: str
         :param comment: comment to add to simulation file
@@ -64,7 +73,7 @@ class LEMSSimulation:
             `simulation_seed` for that.
         :type lems_file_generate_seed:
         :param simulation_seed: simulation seed to set to
-        :type simulation_seed: int
+        :type simulation_seed: int or str
         :param meta: dictionary to set Meta options.
 
             Currently, only supported for the Neuron simulator to use the CVODE
@@ -79,11 +88,29 @@ class LEMSSimulation:
         :type meta: dict
         """
 
+        if type(duration) is str:
+            # is this just the magnitude in the string?
+            try:
+                duration_mag_ms = float(duration)
+            except ValueError:
+                duration_mag_ms = convert_to_units(duration, "ms")
+        else:
+            duration_mag_ms = float(duration)
+
+        if type(dt) is str:
+            # is this just the magnitude in the string?
+            try:
+                dt_mag_ms = float(dt)
+            except ValueError:
+                dt_mag_ms = convert_to_units(dt, "ms")
+        else:
+            dt_mag_ms = float(dt)
+
         self.lems_info["sim_id"] = sim_id
-        self.lems_info["duration"] = duration
-        self.lems_info["dt"] = dt
+        self.lems_info["duration"] = duration_mag_ms
+        self.lems_info["dt"] = dt_mag_ms
         self.lems_info["comment"] = comment
-        self.lems_info["seed"] = simulation_seed
+        self.lems_info["seed"] = int(simulation_seed)
         self.lems_info["report"] = ""
 
         self.lems_info["include_files"] = []
@@ -402,7 +429,7 @@ class LEMSSimulation:
             lems_file.write(self.to_xml())
             lems_file.flush()
             os.fsync(lems_file.fileno())
-        
+
         logger.info(
             "Written LEMS Simulation %s to file: %s"
             % (self.lems_info["sim_id"], file_name)

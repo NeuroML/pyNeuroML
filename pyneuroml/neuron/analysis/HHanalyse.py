@@ -45,6 +45,13 @@ def process_args():
     )
 
     parser.add_argument(
+        "-savePlots",
+        action="store_true",
+        default=False,
+        help="Export image (.png) of plotted figures to device",
+    )
+
+    parser.add_argument(
         "-minV",
         type=int,
         metavar="<min v>",
@@ -534,6 +541,16 @@ def main():
                 file.write("%f\t%f\n" % (volts[i], timeCourseVals[s][i]))
             file.close()
             print("Written info to file: %s" % file_name)
+
+    if args.savePlots:
+        figs = pylab.get_fignums()
+
+        for fig in figs:
+            pylab.figure(fig)
+            window_title = pylab.get_current_fig_manager().get_window_title()
+            file_name = f"{window_title}.png"
+            plt.savefig(file_name)
+            print("Exported img to file: %s" % file_name)
 
     if not args.nogui:
         pylab.show()

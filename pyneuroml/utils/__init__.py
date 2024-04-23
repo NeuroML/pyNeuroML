@@ -8,7 +8,6 @@ Copyright 2024 NeuroML Contributors
 """
 
 import copy
-from datetime import datetime
 import logging
 import math
 import os
@@ -21,14 +20,15 @@ import tempfile
 import time
 import typing
 import zipfile
+from datetime import datetime
 from pathlib import Path
 
 import neuroml
 import numpy
+import pyneuroml.utils.misc
 from lems.model.model import Model
 from neuroml.loaders import read_neuroml2_file
 from pyneuroml.errors import UNKNOWN_ERR
-import pyneuroml.utils.misc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -487,7 +487,7 @@ def get_model_file_list(
     This method will take the rootfile, and recursively resolve all the files
     it uses.
 
-    :param rootfile: main NeuroML or LEMS file to resolve
+    :param rootfile: main NeuroML/LEMS/SED-ML file to resolve
     :type rootfile: str
     :param filelist: list of file paths to append to
     :type filelist: list of strings
@@ -554,8 +554,24 @@ def get_model_file_list(
                 continue
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
+    elif rootfile.endswith(".sedml"):
+        import libsedml
+        if pathlib.Path(rootfile).is_absolute():
+            rootdoc = libsedml.readSedMLFromFile(rootfile)
+        else:
+            rootdoc = libsedml.readSedMLFromFile(rootdir + "/" + rootfile)
+
+        # there should only be one model
+        assert rootdoc.getNumModels() == 1
+        model = rootdoc.getModel(0)
+        lems_file = model.getSource()
+        logger.debug(f"Got {lems_file} from SED-ML file {rootdoc}")
+        lems_def_dir = get_model_file_list(lems_file, filelist, rootdir, lems_def_dir)
+
     else:
-        raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
+        raise ValueError(
+            f"File must have a .xml/.nml/.sedml extension. We got: {rootfile}"
+        )
 
     return lems_def_dir
 
