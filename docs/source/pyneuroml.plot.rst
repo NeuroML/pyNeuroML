@@ -15,7 +15,7 @@ pyneuroml.plot.Plot module
    :show-inheritance:
 
 pyneuroml.plot.PlotTimeSeries module
---------------------------------
+--------------------------------------
 
 .. automodule:: pyneuroml.plot.PlotTimeSeries
    :members:
