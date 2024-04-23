@@ -34,7 +34,6 @@ from pyneuroml.utils.units import *
 from pyneuroml.modelgraphs import *
 from pyneuroml.runners import *
 from pyneuroml.validators import *
-from pyneuroml.annotations import *
 from pyneuroml.io import *
 from pyneuroml.utils.info import *
 from pyneuroml.utils.misc import *
@@ -168,9 +167,7 @@ def _parse_arguments():
         title="Mutually-exclusive options",
         description="Only one of these options can be selected",
     )
-    mut_exc_opts = mut_exc_opts_grp.add_mutually_exclusive_group(
-        required=False
-    )  # noqa: E501
+    mut_exc_opts = mut_exc_opts_grp.add_mutually_exclusive_group(required=False)  # noqa: E501
 
     mut_exc_opts.add_argument(
         "-sedml",
