@@ -13,12 +13,7 @@ import shutil
 import logging
 import pprint
 
-import io
-
-if sys.version_info.major == 2:
-    from StringIO import StringIO
-else:
-    from io import StringIO
+from io import StringIO
 
 from collections import OrderedDict
 import pyneuroml.pynml
@@ -27,7 +22,14 @@ import neuroml
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 pp = pprint.PrettyPrinter(indent=4)
+
+try:
+    from pyelectro import analysis
+except ImportError:
+    logger.warning("Please install optional dependencies to use analysis features:")
+    logger.warning("pip install pyneuroml[analysis]")
 
 
 class NeuroMLController:
@@ -345,22 +347,14 @@ def run_individual(
                     chanDens.cond_density = "%s %s" % (value, units)
                 elif variable == "vShift_channelDensity":
                     chanDens = None
-                    for (
-                        cd
-                    ) in (
-                        cell.biophysical_properties.membrane_properties.channel_density_v_shifts
-                    ):
+                    for cd in cell.biophysical_properties.membrane_properties.channel_density_v_shifts:
                         if cd.id == id2:
                             chanDens = cd
 
                     chanDens.v_shift = "%s %s" % (value, units)
                 elif variable == "channelDensityNernst":
                     chanDens = None
-                    for (
-                        cd
-                    ) in (
-                        cell.biophysical_properties.membrane_properties.channel_density_nernsts
-                    ):
+                    for cd in cell.biophysical_properties.membrane_properties.channel_density_nernsts:
                         if cd.id == id2:
                             chanDens = cd
 
@@ -391,11 +385,7 @@ def run_individual(
                     chanDens.erev = "%s %s" % (value, units)
                 elif variable == "specificCapacitance":
                     specCap = None
-                    for (
-                        sc
-                    ) in (
-                        cell.biophysical_properties.membrane_properties.specific_capacitances
-                    ):
+                    for sc in cell.biophysical_properties.membrane_properties.specific_capacitances:
                         if (
                             sc.segment_groups is None and id2 == "all"
                         ) or sc.segment_groups == id2:
@@ -404,11 +394,7 @@ def run_individual(
                     specCap.value = "%s %s" % (value, units)
                 elif variable == "resistivity":
                     resistivity = None
-                    for (
-                        rs
-                    ) in (
-                        cell.biophysical_properties.intracellular_properties.resistivities
-                    ):
+                    for rs in cell.biophysical_properties.intracellular_properties.resistivities:
                         if (
                             rs.segment_groups is None and id2 == "all"
                         ) or rs.segment_groups == id2:
@@ -522,8 +508,6 @@ if __name__ == "__main__":
         traces = cont.run(candidates, parameters)
     else:
         t, v = cont.run_individual(sim_vars, show=(not nogui))
-
-        from pyelectro import analysis
 
         analysis_var = {
             "peak_delta": 0,

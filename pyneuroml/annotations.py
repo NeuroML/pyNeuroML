@@ -7,19 +7,22 @@ File: pyneuroml/annotations.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import pprint
 import typing
 
 from lxml import etree
-from rdflib import RDF, BNode, Graph, Literal, Namespace, URIRef
-from rdflib.namespace import DC, DCTERMS, FOAF, RDF, RDFS
-
 from pyneuroml.utils.xml import _find_elements, _get_attr_in_element
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+try:
+    from rdflib import BNode, Graph, Literal, Namespace, URIRef
+    from rdflib.namespace import DC, DCTERMS, FOAF, RDFS
+except ImportError:
+    logger.warning("Please install optional dependencies to use annotation features:")
+    logger.warning("pip install pyneuroml[annotations]")
 
 
 # From https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/

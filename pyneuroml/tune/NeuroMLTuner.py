@@ -27,17 +27,29 @@ import logging
 import pprint
 import typing
 
-from pyelectro import analysis
 from matplotlib import pyplot as plt
-from neurotune import optimizers
-from neurotune import evaluators
-from neurotune import utils
-from pyneuroml.tune.NeuroMLController import NeuroMLController
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml import print_v
 
 pp = pprint.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+try:
+    from neurotune import optimizers
+    from neurotune import evaluators
+    from neurotune import utils
+    from pyneuroml.tune.NeuroMLController import NeuroMLController
+except ImportError:
+    logger.warning("Please install optional dependencies to use neurotune features:")
+    logger.warning("pip install pyneuroml[tune]")
+
+try:
+    from pyelectro import analysis
+except ImportError:
+    logger.warning("Please install optional dependencies to use analysis features:")
+    logger.warning("pip install pyneuroml[analysis]")
 
 
 DEFAULTS = {

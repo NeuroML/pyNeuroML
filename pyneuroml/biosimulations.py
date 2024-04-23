@@ -7,14 +7,11 @@ File: pyneuroml/biosimulations.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import typing
 from datetime import datetime
 
 import requests
-from pydantic import BaseModel
-from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 from pyneuroml import __version__
 from pyneuroml.annotations import create_annotation
@@ -23,6 +20,16 @@ from pyneuroml.runners import run_jneuroml
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+try:
+    from pydantic import BaseModel
+    from requests_toolbelt.multipart.encoder import MultipartEncoder
+except ImportError:
+    logger.warning(
+        "Please install optional dependencies to use Biosimulation.org features:"
+    )
+    logger.warning("pip install pyneuroml[combine]")
+
 
 biosimulators_api_url = "https://api.biosimulators.org"
 biosimulations_api_url = "https://api.biosimulations.org"
@@ -59,7 +66,7 @@ def get_simulator_versions(
         "xpp",
         "brian2",
         "copasi",
-    ]
+    ],
 ) -> typing.Dict[str, typing.List[str]]:
     """Get simulator list from biosimulators.
 

@@ -36,7 +36,7 @@ logger.setLevel(logging.INFO)
 try:
     import libsedml
 except ModuleNotFoundError:
-    logger.warning("Please install optional dependencies to use libsedml:")
+    logger.warning("Please install optional dependencies to use SED-ML features:")
     logger.warning("pip install pyneuroml[combine]")
 
 
