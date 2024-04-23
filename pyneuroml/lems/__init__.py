@@ -16,33 +16,110 @@ logger.setLevel(logging.DEBUG)
 
 
 def generate_lems_file_for_neuroml(
-    sim_id,
-    neuroml_file,
-    target,
-    duration,
-    dt,
-    lems_file_name,
-    target_dir,
-    nml_doc=None,  # Use this if the nml doc has already been loaded (to avoid delay in reload)
-    include_extra_files=[],
-    gen_plots_for_all_v=True,
-    plot_all_segments=False,
-    gen_plots_for_quantities={},  # Dict with displays vs lists of quantity paths
-    gen_plots_for_only_populations=[],  # List of populations, all pops if=[]
-    gen_saves_for_all_v=True,
-    save_all_segments=False,
-    gen_saves_for_only_populations=[],  # List of populations, all pops if=[]
-    gen_saves_for_quantities={},  # Dict with file names vs lists of quantity paths
-    gen_spike_saves_for_all_somas=False,
-    gen_spike_saves_for_only_populations=[],  # List of populations, all pops if=[]
-    gen_spike_saves_for_cells={},  # Dict with file names vs lists of quantity paths
-    spike_time_format="ID_TIME",
-    copy_neuroml=True,
-    report_file_name=None,
-    lems_file_generate_seed=None,
-    verbose=False,
-    simulation_seed=12345,
-):
+    sim_id: str,
+    neuroml_file: str,
+    target: str,
+    duration: str,
+    dt: str,
+    lems_file_name: str,
+    target_dir: str,
+    nml_doc: typing.Optional[neuroml.NeuroMLDocument] = None,
+    include_extra_files: typing.List[str] = [],
+    gen_plots_for_all_v: bool = True,
+    plot_all_segments: bool = False,
+    gen_plots_for_quantities: typing.Dict[str, typing.List[str]] = {},
+    gen_plots_for_only_populations: typing.List[str] = [],
+    gen_saves_for_all_v: bool = True,
+    save_all_segments: bool = False,
+    gen_saves_for_only_populations: typing.List[str] = [],
+    gen_saves_for_quantities: typing.Dict[str, typing.List[str]] = {},
+    gen_spike_saves_for_all_somas: bool = False,
+    gen_spike_saves_for_only_populations: typing.List[str] = [],
+    gen_spike_saves_for_cells: typing.Dict[str, typing.List[str]] = {},
+    spike_time_format: str = "ID_TIME",
+    copy_neuroml: bool = True,
+    report_file_name: typing.Optional[str] = None,
+    lems_file_generate_seed: typing.Optional[int] = None,
+    verbose: bool = False,
+    simulation_seed: int = 12345,
+) -> typing.Tuple[typing.List[str], LEMSSimulation]:
+    """Generate a LEMS simulation file for a NeuroML model file. This wraps
+    around the LEMSSimulation class and provides an easy interface for creating
+    the LEMS simulation file.
+
+    :param sim_id: simulation id
+    :type sim_id: str
+    :param neuroml_file: name/path to NeuroML file
+    :type neuroml_file: str
+    :param target: target element
+    :type target: str
+    :param duration: simulation duration
+    :type duration: str
+    :param dt: integration time step
+    :type dt: str
+    :param lems_file_name: name of LEMS file
+    :type lems_file_name: str
+    :param target_dir: directory to place LEMS file in
+    :type target_dir: str
+    :param nml_doc: NeuroMLDocument object containing model for simulation
+        Useful if the NeuroML file has already been loaded as it prevents
+        re-loading of the NeuroMLDocument from the file. If this is not
+        provided, the provided NeuroML file will be assumed to be a
+        NeuroMLDocument and loaded.
+    :type nml_doc: neuroml.Document
+    :param include_extra_files: list of extra files to include in the LEMS
+        simulation file
+    :type include_extra_files: list
+    :param gen_plots_for_all_v: toggle generation of plots for all membrane
+        potentials
+    :type gen_plots_for_all_v: bool
+    :param plot_all_segments: toggle whether values for all segments should be
+        plotted
+    :type plot_all_segments: bool
+    :param gen_plots_for_quantities: dict of quantities to display
+        the key is the "display" and the value will be the list of quantitiy
+        paths
+    :type gen_plots_for_quantities: dict
+    :param gen_plots_for_only_populations: list of populations to limit
+        plotting for, If the list is empty, all populations are considered.
+    :type gen_plots_for_only_populations: list
+    :param gen_saves_for_all_v: toggle whether data files should be saved for
+        all membrane potentials
+    :type gen_saves_for_all_v: bool
+    :param save_all_segments: toggle whether data files should be saved for all
+        segments
+    :type save_all_segments: bool
+    :param gen_saves_for_only_populations: list of populations to save data
+        files for, if list is empty, all populations are considered
+    :type gen_saves_for_only_populations: list of populations to save data
+    :param gen_saves_for_quantities: dict of quantities to save data files for
+        the key is the "display" and the value will be the list of quantitiy
+        paths
+    :type gen_saves_for_quantities: dict
+    :param gen_spike_saves_for_all_somas: toggle if spikes should be saved for
+        all somas
+    :type gen_spike_saves_for_all_somas: bool
+    :param gen_spike_saves_for_only_populations: list of populations spikes
+        should be saved in data files for
+    :type gen_spike_saves_for_only_populations: list
+    :param gen_spike_saves_for_cells: dict of cells to save spikes for
+        the key is the name of the file and the value will be the list of
+        quantitiy paths
+    :type gen_spike_saves_for_cells: dict
+    :param spike_time_format: spike time format
+    :type spike_time_format: str
+    :param copy_neuroml: toggle whether NeuroML files should be copied to
+        target directory
+    :type copy_neuroml: bool
+    :param report_file_name: name of report file
+    :type report_file_name: str
+    :param lems_file_generate_seed: seed to use for LEMS file generation
+    :type lems_file_generate_seed: int
+    :param verbose: toggle verbosity
+    :type verbose: bool
+    :param simulation_seed: simulation seed
+    :type simulation_seed: int
+    """
     my_random = random.Random()
     if lems_file_generate_seed:
         my_random.seed(
@@ -369,6 +446,15 @@ def generate_lems_file_for_neuroml(
 
 # Mainly for NEURON etc.
 def safe_variable(quantity):
+    """Make a variable safe.
+
+    It replaces `[`, `]`, `/`, `.` with `_`.
+
+    :param quantity: quantitiy to make safe
+    :param quantity: str
+    :returns: quantity after it was made safe
+    :rtype: str
+    """
     return (
         quantity.replace(" ", "_")
         .replace("[", "_")
