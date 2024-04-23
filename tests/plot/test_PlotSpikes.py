@@ -6,6 +6,8 @@ import random
 from .. import BaseTestCase
 from collections import defaultdict
 import pyneuroml.plot.PlotSpikes as pyplts
+from pyneuroml.lems import load_sim_data_from_lems_file
+from pyneuroml.plot import get_spike_data_files_from_lems
 
 
 class TestPlotSpikes(BaseTestCase):
