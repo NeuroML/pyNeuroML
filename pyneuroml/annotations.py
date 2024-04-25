@@ -176,8 +176,9 @@ def create_annotation(
         select what style they want to use for the annotation.
     :type annotation_style: str
     :param serialization_format: format to serialize in using `rdflib.serialize`
+        See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
     :type serialization_format: str
-    :param xml_header: toggle inclusion of xml header
+    :param xml_header: toggle inclusion of xml header if serializing in xml format
     :type xml_header: bool
     :param indent: number of spaces to use to indent the annotation block
     :type indent: int
@@ -369,8 +370,9 @@ def create_annotation(
     if indent > 0:
         annotation = textwrap.indent(annotation, " " * indent)
     # remove xml header
-    if xml_header is False:
-        annotation = annotation[annotation.find(">") + 1 :]
+    if "xml" in serialization_format:
+        if xml_header is False:
+            annotation = annotation[annotation.find(">") + 1 :]
 
     if write_to_file:
         with open(write_to_file, "w") as f:
