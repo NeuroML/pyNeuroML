@@ -40,6 +40,14 @@ class TestAnnotations(BaseTestCase):
             predecessors={"http://omex-library.org/BioSim0001.omex/model.xml": "model"},
             creation_date="2024-04-18",
             modified_dates=["2024-04-18", "2024-04-19"],
+            authors={
+                "John Doe": {
+                    "https://someurl.com": "orcid",
+                    "https://anotherurl": "github",
+                },
+                "Jane Smith": {},
+            },
+            contributors={"Jane Doe", "John Smith", "Jane Smith"},
         )
         self.assertIsNotNone(annotation)
         print(annotation)
@@ -63,6 +71,14 @@ class TestAnnotations(BaseTestCase):
             predecessors={"http://omex-library.org/BioSim0001.omex/model.xml": "model"},
             creation_date="2024-04-18",
             modified_dates=["2024-04-18", "2024-04-19"],
+            authors={
+                "John Doe": {
+                    "https://someurl.com": "orcid",
+                    "https://anotherurl": "github",
+                },
+                "Jane Smith": {},
+            },
+            contributors={"Jane Doe", "John Smith", "Jane Smith"},
         )
         self.assertIsNotNone(annotation)
         print(annotation)

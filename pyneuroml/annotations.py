@@ -10,6 +10,7 @@ Copyright 2024 NeuroML contributors
 import logging
 import pprint
 import typing
+import textwrap
 
 from lxml import etree
 from pyneuroml.utils.xml import _find_elements, _get_attr_in_element
@@ -90,6 +91,10 @@ def create_annotation(
     title=None,
     abstract=None,
     annotation_style: typing.Literal["miriam", "biosimulations"] = "biosimulations",
+    serialization_format: str = "pretty-xml",
+    write_to_file: typing.Optional[str] = None,
+    xml_header: bool = True,
+    indent: int = 12,
     description: typing.Optional[str] = None,
     keywords: typing.Optional[typing.List[str]] = None,
     thumbnails: typing.Optional[typing.List[str]] = None,
@@ -110,14 +115,16 @@ def create_annotation(
     references: typing.Optional[typing.Dict[str, str]] = None,
     other_ids: typing.Optional[typing.Dict[str, str]] = None,
     citations: typing.Optional[typing.Dict[str, str]] = None,
-    authors: typing.Optional[typing.Dict[str, str]] = None,
-    contributors: typing.Optional[typing.Dict[str, str]] = None,
+    authors: typing.Optional[
+        typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set]
+    ] = None,
+    contributors: typing.Optional[
+        typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set]
+    ] = None,
     license: typing.Optional[typing.Dict[str, str]] = None,
     funders: typing.Optional[typing.Dict[str, str]] = None,
     creation_date: typing.Optional[str] = None,
     modified_dates: typing.Optional[typing.List[str]] = None,
-    serialization_format: str = "pretty-xml",
-    write_to_file: typing.Optional[str] = None,
 ):
     """Create an RDF annotation from the provided fields
 
@@ -168,6 +175,12 @@ def create_annotation(
         wherewas Biosimulations does not. This argument allows the user to
         select what style they want to use for the annotation.
     :type annotation_style: str
+    :param serialization_format: format to serialize in using `rdflib.serialize`
+    :type serialization_format: str
+    :param xml_header: toggle inclusion of xml header
+    :type xml_header: bool
+    :param indent: number of spaces to use to indent the annotation block
+    :type indent: int
     :param description: a longer description
     :type description: str
     :param keywords: keywords
@@ -209,9 +222,15 @@ def create_annotation(
     :param citations: related citations
     :type citations: dict(str, str)
     :param authors: authors
-    :type authors: dict(str, str)
-    :param contributors: other contributors
-    :type contributors: dict(str, str)
+        This can either be:
+
+        - a set: {"Author A", "Author B"}
+        - a dictionary: {"Author A": {"https://../": "accountname", "..": ".."}}
+
+        All labels apart from "accountname" are ignored
+    :type authors: dict(str, dict(str, str) or set
+    :param contributors: other contributors, follws the same format as authors
+    :type contributors: dict(str, dict(str, str) or set
     :param license: license
     :type license: dict(str, str)
     :param funders: funders
@@ -220,8 +239,6 @@ def create_annotation(
     :type creation_date: str
     :param modified_dates: dates in YYYY-MM-DD format when modifications were made
     :type modified_dates: list(str)
-    :param serialization_format: format to serialize in using `rdflib.serialize`
-    :type serialization_format: str
     :param write_to_file: path to file to write to
     :type write_to_file: str
     :returns: the annotation string in the requested format.
@@ -327,9 +344,9 @@ def create_annotation(
             doc, subjectobj, citations, BQMODEL.isDescribedBy, annotation_style
         )
     if authors:
-        _add_element(doc, subjectobj, authors, DC.creator, annotation_style)
+        _add_humans(doc, subjectobj, authors, DC.creator, annotation_style)
     if contributors:
-        _add_element(doc, subjectobj, contributors, DC.contributor, annotation_style)
+        _add_humans(doc, subjectobj, contributors, DC.contributor, annotation_style)
     if license:
         assert len(license.items()) == 1
         _add_element(doc, subjectobj, license, DCTERMS.license, annotation_style)
@@ -347,6 +364,13 @@ def create_annotation(
             doc.add((ac, DCTERMS.W3CDTF, Literal(d)))
 
     annotation = doc.serialize(format=serialization_format)
+
+    # indent
+    if indent > 0:
+        annotation = textwrap.indent(annotation, " " * indent)
+    # remove xml header
+    if xml_header is False:
+        annotation = annotation[annotation.find(">") + 1 :]
 
     if write_to_file:
         with open(write_to_file, "w") as f:
@@ -375,6 +399,9 @@ def _add_element(
     :param annotation_style: type of annotation
     :type annotation_style: str
     """
+    if annotation_style not in ["biosimulations", "miriam"]:
+        raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
+
     for idf, label in info.items():
         top_node = BNode()
         doc.add((subjectobj, node_type, top_node))
@@ -383,7 +410,65 @@ def _add_element(
             doc.add((top_node, RDFS.label, Literal(label)))
         elif annotation_style == "miriam":
             Bag(doc, top_node, [URIRef(idf)])
-        else:
-            raise ValueError(
-                "Annotation style must either be 'miriam' or 'biosimulations'"
-            )
+
+
+def _add_humans(
+    doc: Graph,
+    subjectobj: typing.Union[URIRef, Literal],
+    info_dict: typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set],
+    node_type: URIRef,
+    annotation_style: str,
+):
+    """Add an new elements related to humans to the RDF annotation.
+
+    This covers authors/contributors where the same person can have multiple
+    annotations related to them.
+
+    :param doc: main rdf document object
+    :type doc: RDF.Graph
+    :param subjectobj: main object being referred to
+    :type subjectobj: URIRef or Literal
+    :param info_dict: dictionary of information
+    :type info_dict: dict
+    :param node_type: node type
+    :type node_type: URIRef
+    :param annotation_style: type of annotation
+    :type annotation_style: str
+    """
+    if annotation_style not in ["biosimulations", "miriam"]:
+        raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
+
+    if isinstance(info_dict, dict):
+        for name, info in info_dict.items():
+            top_node = BNode()
+            doc.add((subjectobj, node_type, top_node))
+
+            # add name
+            if annotation_style == "biosimulations":
+                doc.add((top_node, FOAF.name, Literal(name)))
+                doc.add((top_node, RDFS.label, Literal(name)))
+            elif annotation_style == "miriam":
+                bag = Bag(doc, top_node, [Literal(name)])
+
+            # other fields
+            for idf, label in info.items():
+                if annotation_style == "biosimulations":
+                    if label == "accountname":
+                        doc.add((top_node, FOAF.accountName, URIRef(idf)))
+                    else:
+                        doc.add((top_node, DC.identifier, URIRef(idf)))
+                elif annotation_style == "miriam":
+                    if idf.startswith("http:"):
+                        bag.append(URIRef(idf))
+                    else:
+                        bag.append(Literal(idf))
+    else:
+        for name in info_dict:
+            top_node = BNode()
+            doc.add((subjectobj, node_type, top_node))
+            # add name
+            if annotation_style == "biosimulations":
+                doc.add((top_node, FOAF.name, Literal(name)))
+                doc.add((top_node, RDFS.label, Literal(name)))
+            elif annotation_style == "miriam":
+                bag = Bag(doc, top_node, [Literal(name)])
