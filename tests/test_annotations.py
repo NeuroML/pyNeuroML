@@ -7,7 +7,6 @@ File: tests/test_annotations.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 
 from pyneuroml.annotations import create_annotation
@@ -27,6 +26,30 @@ class TestAnnotations(BaseTestCase):
             "model.nml",
             "A tests model",
             abstract="lol, something nice",
+            annotation_style="miriam",
+            keywords=["something", "and something"],
+            thumbnails=["lol.png"],
+            organisms={
+                "http://identifiers.org/taxonomy/4896": "Schizosaccharomyces pombe"
+            },
+            encodes_other_biology={
+                "http://identifiers.org/GO:0009653": "anatomical structure morphogenesis",
+                "http://identifiers.org/kegg:ko04111": "Cell cycle - yeast",
+            },
+            sources={"https://github.com/lala": "GitHub"},
+            predecessors={"http://omex-library.org/BioSim0001.omex/model.xml": "model"},
+            creation_date="2024-04-18",
+            modified_dates=["2024-04-18", "2024-04-19"],
+        )
+        self.assertIsNotNone(annotation)
+        print(annotation)
+
+        # biosimulations
+        annotation = create_annotation(
+            "model.nml",
+            "A tests model",
+            abstract="lol, something nice",
+            annotation_style="biosimulations",
             keywords=["something", "and something"],
             thumbnails=["lol.png"],
             organisms={

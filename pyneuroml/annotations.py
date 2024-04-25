@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 try:
-    from rdflib import BNode, Graph, Literal, Namespace, URIRef
+    from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag
     from rdflib.namespace import DC, DCTERMS, FOAF, RDFS
 except ImportError:
     logger.warning("Please install optional dependencies to use annotation features:")
@@ -89,6 +89,7 @@ def create_annotation(
     subject,
     title=None,
     abstract=None,
+    annotation_style: typing.Literal["miriam", "biosimulations"] = "biosimulations",
     description: typing.Optional[str] = None,
     keywords: typing.Optional[typing.List[str]] = None,
     thumbnails: typing.Optional[typing.List[str]] = None,
@@ -101,7 +102,7 @@ def create_annotation(
     has_property: typing.Optional[typing.Dict[str, str]] = None,
     is_property_of: typing.Optional[typing.Dict[str, str]] = None,
     sources: typing.Optional[typing.Dict[str, str]] = None,
-    isinstance_of: typing.Optional[typing.Dict[str, str]] = None,
+    is_instance_of: typing.Optional[typing.Dict[str, str]] = None,
     has_instance: typing.Optional[typing.Dict[str, str]] = None,
     predecessors: typing.Optional[typing.Dict[str, str]] = None,
     successors: typing.Optional[typing.Dict[str, str]] = None,
@@ -131,8 +132,10 @@ def create_annotation(
 
     For information on the specifications, see:
 
-    - https://github.com/combine-org/combine-specifications/blob/main/specifications/qualifiers-1.1.md
-    - https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
+    - COMBINE specifications: https://github.com/combine-org/combine-specifications/blob/main/specifications/qualifiers-1.1.md
+    - Biosimulations guidelines: https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
+    - MIRIAM guidelines: https://drive.google.com/file/d/1JqjcH0T0UTWMuBj-scIMwsyt2z38A0vp/view
+
 
     Note that:
 
@@ -157,6 +160,14 @@ def create_annotation(
     :type title: str
     :param abstract: an abstract
     :type abstract: str
+    :param annotation_style: type of annotation: either "miriam" or
+        "biosimulations" (default).
+
+        There's a difference in the annotation "style" suggested by MIRIAM and
+        Biosimulations. MIRIAM suggests the use of RDF containers (bags)
+        wherewas Biosimulations does not. This argument allows the user to
+        select what style they want to use for the annotation.
+    :type annotation_style: str
     :param description: a longer description
     :type description: str
     :param keywords: keywords
@@ -181,8 +192,8 @@ def create_annotation(
     :type is_property_of: dict(str, str)
     :param sources: links to sources (on GitHub and so on)
     :type sources: dict(str, str)
-    :param isinstance_of: is an instance of
-    :type isinstance_of: dict(str, str)
+    :param is_instance_of: is an instance of
+    :type is_instance_of: dict(str, str)
     :param has_instance: has instance of another entity
     :type has_instance: dict(str, str)
     :param predecessors: predecessors of this entity
@@ -253,146 +264,78 @@ def create_annotation(
             doc.add((subjectobj, COLLEX.thumbnail, URIRef(f"{fileprefix}/{t}")))
     if organisms:
         doc.bind("bqbiol:hasTaxon", BQBIOL + "/hasTaxon")
-        for idf, label in organisms.items():
-            hasTaxon = BNode()
-            doc.add((subjectobj, BQBIOL.hasTaxon, hasTaxon))
-            doc.add((hasTaxon, DC.identifier, URIRef(idf)))
-            doc.add((hasTaxon, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, organisms, BQBIOL.hasTaxon, annotation_style)
     if encodes_other_biology:
         doc.bind("bqbiol:encodes", BQBIOL + "/encodes")
-        for idf, label in encodes_other_biology.items():
-            encodes = BNode()
-            doc.add((subjectobj, BQBIOL.encodes, encodes))
-            doc.add((encodes, DC.identifier, URIRef(idf)))
-            doc.add((encodes, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, encodes_other_biology, BQBIOL.encodes, annotation_style
+        )
     if has_version:
         doc.bind("bqbiol:hasVersion", BQBIOL + "/hasVersion")
-        for idf, label in has_version.items():
-            hasVersion = BNode()
-            doc.add((subjectobj, BQBIOL.hasVersion, hasVersion))
-            doc.add((hasVersion, DC.identifier, URIRef(idf)))
-            doc.add((hasVersion, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, has_version, BQBIOL.hasVersion, annotation_style)
     if is_version_of:
         doc.bind("bqbiol:isVersionOf", BQBIOL + "/isVersionOf")
-        for idf, label in is_version_of.items():
-            isVersionOf = BNode()
-            doc.add((subjectobj, BQBIOL.isVersionOf, isVersionOf))
-            doc.add((isVersionOf, DC.identifier, URIRef(idf)))
-            doc.add((isVersionOf, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, is_version_of, BQBIOL.isVersionOf, annotation_style
+        )
     if has_part:
         doc.bind("bqbiol:hasPart", BQBIOL + "/hasPart")
-        for idf, label in has_part.items():
-            hasPart = BNode()
-            doc.add((subjectobj, BQBIOL.hasPart, hasPart))
-            doc.add((hasPart, DC.identifier, URIRef(idf)))
-            doc.add((hasPart, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, has_part, BQBIOL.hasPart, annotation_style)
     if is_part_of:
         doc.bind("bqbiol:isPartOf", BQBIOL + "/isPartOf")
-        for idf, label in is_part_of.items():
-            isPartOf = BNode()
-            doc.add((subjectobj, BQBIOL.isPartOf, isPartOf))
-            doc.add((isPartOf, DC.identifier, URIRef(idf)))
-            doc.add((isPartOf, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, is_part_of, BQBIOL.isPartOf, annotation_style)
     if has_property:
         doc.bind("bqbiol:hasProperty", BQBIOL + "/hasProperty")
-        for idf, label in has_property.items():
-            hasProperty = BNode()
-            doc.add((subjectobj, BQBIOL.hasProperty, hasProperty))
-            doc.add((hasProperty, DC.identifier, URIRef(idf)))
-            doc.add((hasProperty, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, has_property, BQBIOL.hasProperty, annotation_style
+        )
     if is_property_of:
         doc.bind("bqbiol:isPropertyOf", BQBIOL + "/isPropertyOf")
-        for idf, label in is_property_of.items():
-            isPropertyOf = BNode()
-            doc.add((subjectobj, BQBIOL.isPropertyOf, isPropertyOf))
-            doc.add((isPropertyOf, DC.identifier, URIRef(idf)))
-            doc.add((isPropertyOf, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, is_property_of, BQBIOL.isPropertyOf, annotation_style
+        )
     if sources:
-        for idf, label in sources.items():
-            s = BNode()
-            doc.add((subjectobj, DC.source, s))
-            doc.add((s, DC.identifier, URIRef(idf)))
-            doc.add((s, RDFS.label, Literal(label)))
-    if isinstance_of:
+        _add_element(doc, subjectobj, sources, DC.source, annotation_style)
+    if is_instance_of:
         doc.bind("bqmodel:isInstanceOf", BQMODEL + "/isInstanceOf")
-        for idf, label in isinstance_of.items():
-            isInstanceOf = BNode()
-            doc.add((subjectobj, BQMODEL.isInstanceOf, isInstanceOf))
-            doc.add((isInstanceOf, DC.identifier, URIRef(idf)))
-            doc.add((isInstanceOf, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, is_instance_of, BQMODEL.isInstanceOf, annotation_style
+        )
     if has_instance:
         doc.bind("bqmodel:hasInstance", BQMODEL + "/hasInstance")
-        for idf, label in has_instance.items():
-            hasInstance = BNode()
-            doc.add((subjectobj, BQMODEL.hasInstance, hasInstance))
-            doc.add((hasInstance, DC.identifier, URIRef(idf)))
-            doc.add((hasInstance, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, has_instance, BQMODEL.hasInstance, annotation_style
+        )
     if predecessors:
         doc.bind("bqmodel:isDerivedFrom", BQMODEL + "/isDerivedFrom")
-        for idf, label in predecessors.items():
-            isDerivedFrom = BNode()
-            doc.add((subjectobj, BQMODEL.isDerivedFrom, isDerivedFrom))
-            doc.add((isDerivedFrom, DC.identifier, URIRef(idf)))
-            doc.add((isDerivedFrom, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, predecessors, BQMODEL.isDerivedFrom, annotation_style
+        )
     if successors:
         doc.bind("scoro:successor", SCORO + "/successor")
-        for idf, label in successors.items():
-            succ = BNode()
-            doc.add((subjectobj, SCORO.successor, succ))
-            doc.add((succ, DC.identifier, URIRef(idf)))
-            doc.add((succ, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, successors, SCORO.successor, annotation_style)
     if see_also:
-        for idf, label in see_also.items():
-            sa = BNode()
-            doc.add((subjectobj, RDFS.seeAlso, sa))
-            doc.add((sa, DC.identifier, URIRef(idf)))
-            doc.add((sa, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, see_also, RDFS.seeAlso, annotation_style)
     if references:
-        for idf, label in references.items():
-            r = BNode()
-            doc.add((subjectobj, DCTERMS.references, sa))
-            doc.add((r, DC.identifier, URIRef(idf)))
-            doc.add((r, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, references, DCTERMS.references, annotation_style)
     if other_ids:
         doc.bind("bqmodel:is", BQMODEL + "/is")
-        for idf, label in other_ids.items():
-            oi = BNode()
-            doc.add((subjectobj, BQMODEL.IS, oi))
-            doc.add((oi, DC.identifier, URIRef(idf)))
-            doc.add((oi, RDFS.label, Literal(label)))
+        _add_element(doc, subjectobj, other_ids, BQMODEL.IS, annotation_style)
     if citations:
         doc.bind("bqmodel:isDescribedBy", BQMODEL + "/isDescribedBy")
-        for idf, label in citations.items():
-            cit = BNode()
-            doc.add((subjectobj, BQMODEL.isDescribedBy, cit))
-            doc.add((cit, DC.identifier, URIRef(idf)))
-            doc.add((cit, RDFS.label, Literal(label)))
+        _add_element(
+            doc, subjectobj, citations, BQMODEL.isDescribedBy, annotation_style
+        )
     if authors:
-        for idf, label in authors.items():
-            ac = BNode()
-            doc.add((subjectobj, DC.creator, ac))
-            doc.add((ac, FOAF.name, Literal(idf)))
-            doc.add((ac, FOAF.label, Literal(label)))
+        _add_element(doc, subjectobj, authors, DC.creator, annotation_style)
     if contributors:
-        for idf, label in contributors.items():
-            ac = BNode()
-            doc.add((subjectobj, DC.contributor, ac))
-            doc.add((ac, FOAF.name, Literal(idf)))
-            doc.add((ac, FOAF.label, Literal(label)))
+        _add_element(doc, subjectobj, contributors, DC.contributor, annotation_style)
     if license:
         assert len(license.items()) == 1
-        for idf, label in license.items():
-            ac = BNode()
-            doc.add((subjectobj, DCTERMS.license, ac))
-            doc.add((ac, FOAF.name, Literal(idf)))
-            doc.add((ac, FOAF.label, Literal(label)))
+        _add_element(doc, subjectobj, license, DCTERMS.license, annotation_style)
     if funders:
         doc.bind("scoro:funder", SCORO + "/funder")
-        for idf, label in funders.items():
-            ac = BNode()
-            doc.add((subjectobj, SCORO.funder, ac))
-            doc.add((ac, FOAF.name, Literal(idf)))
-            doc.add((ac, FOAF.label, Literal(label)))
+        _add_element(doc, subjectobj, funders, SCORO.funder, annotation_style)
     if creation_date:
         ac = BNode()
         doc.add((subjectobj, DCTERMS.created, ac))
@@ -410,3 +353,37 @@ def create_annotation(
             print(annotation, file=f)
 
     return annotation
+
+
+def _add_element(
+    doc: Graph,
+    subjectobj: typing.Union[URIRef, Literal],
+    info: typing.Dict[str, str],
+    node_type: URIRef,
+    annotation_style: str,
+):
+    """Add an new element to the RDF annotation
+
+    :param doc: main rdf document object
+    :type doc: RDF.Graph
+    :param subjectobj: main object being referred to
+    :type subjectobj: URIRef or Literal
+    :param info: dictionary of entries and their labels
+    :type info: dict
+    :param node_type: node type
+    :type node_type: URIRef
+    :param annotation_style: type of annotation
+    :type annotation_style: str
+    """
+    for idf, label in info.items():
+        top_node = BNode()
+        doc.add((subjectobj, node_type, top_node))
+        if annotation_style == "biosimulations":
+            doc.add((top_node, DC.identifier, URIRef(idf)))
+            doc.add((top_node, RDFS.label, Literal(label)))
+        elif annotation_style == "miriam":
+            Bag(doc, top_node, [URIRef(idf)])
+        else:
+            raise ValueError(
+                "Annotation style must either be 'miriam' or 'biosimulations'"
+            )
