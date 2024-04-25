@@ -10,6 +10,7 @@ Copyright 2024 NeuroML contributors
 import logging
 
 from pyneuroml.annotations import create_annotation
+import neuroml
 
 from . import BaseTestCase
 
@@ -29,6 +30,7 @@ class TestAnnotations(BaseTestCase):
             annotation_style="miriam",
             keywords=["something", "and something"],
             thumbnails=["lol.png"],
+            xml_header=False,
             organisms={
                 "http://identifiers.org/taxonomy/4896": "Schizosaccharomyces pombe"
             },
@@ -52,6 +54,11 @@ class TestAnnotations(BaseTestCase):
         self.assertIsNotNone(annotation)
         print(annotation)
 
+        newdoc = neuroml.NeuroMLDocument(id="test")
+        newdoc.annotation = neuroml.Annotation([annotation])
+        self.assertIsNone(newdoc.annotation.validate())
+        self.assertIsNone(newdoc.validate(recursive=True))
+
         # biosimulations
         annotation = create_annotation(
             "model.nml",
@@ -60,6 +67,7 @@ class TestAnnotations(BaseTestCase):
             annotation_style="biosimulations",
             keywords=["something", "and something"],
             thumbnails=["lol.png"],
+            xml_header=False,
             organisms={
                 "http://identifiers.org/taxonomy/4896": "Schizosaccharomyces pombe"
             },
