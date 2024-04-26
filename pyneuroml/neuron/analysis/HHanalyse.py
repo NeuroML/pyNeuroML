@@ -482,6 +482,8 @@ def main():
             "Steady state(s) of activation variables in %s at %s degC"
             % (chanToTest, h.celsius)
         )
+        plRates.xlabel("Membrane potential (mV)")
+        plRates.ylabel("Steady state - inf")
         pylab.grid("on")
 
         figTau = pylab.figure()
@@ -490,6 +492,8 @@ def main():
             % (chanToTest, h.celsius)
         )
         plTau = figTau.add_subplot(111, autoscale_on=True)
+        plTau.xlabel("Membrane potential (mV)")
+        plTau.ylabel("Time Course - tau (ms)")
         pylab.grid("on")
 
         for s in states:

@@ -447,7 +447,7 @@ def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
 
 
 def get_channel_gates(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> typing.List[
     typing.Union[
         neuroml.GateHHUndetermined,
@@ -476,7 +476,7 @@ def get_channel_gates(
 
 
 def get_conductance_expression(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> str:
     """Get expression of conductance in channel.
 
@@ -549,7 +549,7 @@ def plot_channel(channel, a, results, iv_data=None, grid=True):
 def plot_kinetics(channel, a, results, grid=True):
     fig = plt.figure()
     plt.get_current_fig_manager().set_window_title(
-        ("Time Course(s) of activation variables of " "%s from %s at %s degC")
+        ("Time course(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
 
