@@ -43,6 +43,7 @@ def generate_plot(
     cols_in_legend_box: int = 3,
     legend_position: typing.Optional[str] = "best",
     show_plot_already: bool = True,
+    animate: bool = False,
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
@@ -125,6 +126,8 @@ def generate_plot(
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean
+    :param animate: if shown plot should be animated. show_splot_already should be True (default: False)
+    :type animate: boolean
     :param save_figure_to: location to save generated figure to (default: None)
     :type save_figure_to: str
     :param title_above_plot: enable/disable title above the plot (default: False)
@@ -243,15 +246,21 @@ def generate_plot(
         logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
-        is_animate = True
-        if is_animate:
+        if animate:
+            duration = 5
+            num_frames = len(xvalues[0])
+            interval = duration * 1000 / num_frames
+            max_points_per_frame = 500
+            skip = max(num_frames // max_points_per_frame, 1)
+            logger.info(
+                "Animation hyperparameters : duration=%s, interval=%s, skip=%s" % (duration, interval, skip))
             def update(frame):
                 for i, artist in enumerate(artists):
-                    artist.set_xdata(xvalues[i][:frame*100])
-                    artist.set_ydata(yvalues[i][:frame*100])
+                    artist.set_xdata(xvalues[i][:frame*skip])
+                    artist.set_ydata(yvalues[i][:frame*skip])
                 return artists
             ani = animation.FuncAnimation(
-                fig=fig, func=update, interval=1, blit=True, cache_frame_data=False)
+                fig=fig, func=update, interval=interval, blit=True, cache_frame_data=False)
         plt.show()
 
     if close_plot:
