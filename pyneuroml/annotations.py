@@ -7,6 +7,7 @@ File: pyneuroml/annotations.py
 Copyright 2024 NeuroML contributors
 """
 
+import re
 import logging
 import pprint
 import typing
@@ -369,8 +370,20 @@ def create_annotation(
     # indent
     if indent > 0:
         annotation = textwrap.indent(annotation, " " * indent)
-    # remove xml header
+
+    # xml issues
     if "xml" in serialization_format:
+        # replace rdf:_1 etc with rdf:li
+        # our LEMS definitions only know rdf:li
+        # https://github.com/RDFLib/rdflib/issues/1374#issuecomment-885656850
+        rdfli_pattern = re.compile(r"\brdf:_\d+\b")
+        annotation = rdfli_pattern.sub("rdf:li", annotation)
+
+        # remove nodeids for rdflib BNodes: these aren't required
+        rdfbnode_pattern = re.compile(r' rdf:nodeID="\S+"')
+        annotation = rdfbnode_pattern.sub("", annotation)
+
+        # remove xml header, not used when embedding into other NeuroML files
         if xml_header is False:
             annotation = annotation[annotation.find(">") + 1 :]
 
