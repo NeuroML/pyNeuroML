@@ -897,7 +897,7 @@ def reload_standard_dat_file(file_name: str) -> typing.Tuple[dict, list]:
     """
     with open(file_name) as dat_file:
         data = {}  # type: dict
-        indeces = []  # type: list
+        indices = []  # type: list
         for line in dat_file:
             words = line.split()
 
@@ -905,13 +905,13 @@ def reload_standard_dat_file(file_name: str) -> typing.Tuple[dict, list]:
                 data["t"] = []
                 for i in range(len(words) - 1):
                     data[i] = []
-                    indeces.append(i)
+                    indices.append(i)
             data["t"].append(float(words[0]))
             for i in range(len(words) - 1):
                 data[i].append(float(words[i + 1]))
 
-        logger.info("Loaded data from %s; columns: %s" % (file_name, indeces))
-    return data, indeces
+        logger.info("Loaded data from %s; columns: %s" % (file_name, indices))
+    return data, indices
 
 
 def evaluate_component(comp_type, req_variables={}, parameter_values={}):

@@ -594,7 +594,7 @@ def main(args=None):
 
     cli(a=args)
 
-def run_xpp_file(filename, plot):
+def run_xpp_file(filename, plot, show_plot_already=True):
     import subprocess as sp
     cmds = ['%s/xppaut'%os.environ["XPP_HOME"],filename, '-silent']
     cwd = os.getcwd()
@@ -627,7 +627,7 @@ def run_xpp_file(filename, plot):
 
         from pyneuroml.pynml import reload_standard_dat_file
         result_file = 'output.dat'
-        data, indeces = reload_standard_dat_file(result_file)
+        data, indices = reload_standard_dat_file(result_file)
         logger.info('Loading data: %s'%(data.keys()))
         ts = []
         xs = []
@@ -636,7 +636,7 @@ def run_xpp_file(filename, plot):
         cdvs = ['%s??'%c for c in parsed_data['conditional_derived_variables'].keys()]
         outputs = tds+cdvs
         logger.info('Loading data: %s, assuming these represent %s (%i values)'%(data.keys(),outputs, len(outputs)))
-        for i in indeces:
+        for i in indices:
             ts.append(data['t'])
             xs.append(data[i])
             labels.append(outputs[i] if i < len(outputs) else '???')
@@ -647,7 +647,7 @@ def run_xpp_file(filename, plot):
             labels=labels,
             xaxis="Time (?)",  # x axis legend
             yaxis="??",  # y axis legend
-            show_plot_already=True,  # Show or wait for plt.show()?
+            show_plot_already=show_plot_already,  # Show or wait for plt.show()?
         )  
 
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
