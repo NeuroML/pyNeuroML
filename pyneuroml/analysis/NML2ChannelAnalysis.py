@@ -469,9 +469,17 @@ def get_channel_gates(
         "gate_hh_rates",
         "gate_hh_tau_infs",
         "gate_hh_instantaneouses",
+        "gate_fractionals",
     ]:
         if hasattr(channel, gates):
-            channel_gates += [g.id for g in getattr(channel, gates)]
+            if gates == "gate_fractionals":
+                for g in getattr(channel, gates):
+                    for sg in g.sub_gates:
+                        channel_gates.append(str('%s/%s'%(g.id, sg.id)))
+            else:
+                for g in getattr(channel, gates):
+                    channel_gates.append(g.id)
+    #print('- Found gates: %s'%channel_gates)
     return channel_gates
 
 
