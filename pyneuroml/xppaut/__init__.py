@@ -594,7 +594,7 @@ def main(args=None):
 
     cli(a=args)
 
-def run_xpp_file(filename, plot, show_plot_already=True):
+def run_xpp_file(filename, plot, show_plot_already=True, plot_separately={}):
     import subprocess as sp
     cmds = ['%s/xppaut'%os.environ["XPP_HOME"],filename, '-silent']
     cwd = os.getcwd()
@@ -629,26 +629,44 @@ def run_xpp_file(filename, plot, show_plot_already=True):
         result_file = 'output.dat'
         data, indices = reload_standard_dat_file(result_file)
         logger.info('Loading data: %s'%(data.keys()))
-        ts = []
-        xs = []
-        labels = []
+        default_figure = "Data loaded from: %s after running %s"%(result_file, filename)  # Title
+        ts = {default_figure:[]}
+        xs = {default_figure:[]}
+        labels = {default_figure:[]}
+        for new_fig in plot_separately:
+            ts[new_fig] = []
+            xs[new_fig] = []
+            labels[new_fig] = []
+
         tds = list(parsed_data['time_derivatives'].keys())
         cdvs = ['%s??'%c for c in parsed_data['conditional_derived_variables'].keys()]
         outputs = tds+cdvs
         logger.info('Loading data: %s, assuming these represent %s (%i values)'%(data.keys(),outputs, len(outputs)))
         for i in indices:
-            ts.append(data['t'])
-            xs.append(data[i])
-            labels.append(outputs[i] if i < len(outputs) else '???')
+            label = outputs[i] if i < len(outputs) else '???'
+            
+            fig = default_figure
+            for new_fig in plot_separately:
+                if label in plot_separately[new_fig]:
+                    fig = new_fig
+            ts[fig].append(data['t'])
+            xs[fig].append(data[i])
+            labels[fig].append(label)
 
         from pyneuroml.plot.Plot import generate_plot
-        ax = generate_plot(ts, xs,
-            "Data from %s after running %s"%(result_file, filename),  # Title
-            labels=labels,
-            xaxis="Time (?)",  # x axis legend
-            yaxis="??",  # y axis legend
-            show_plot_already=show_plot_already,  # Show or wait for plt.show()?
-        )  
+        axes = {}
+        for fig_title in ts:
+
+            ax = generate_plot(ts[fig_title], xs[fig_title],
+                title = fig_title,
+                labels=labels[fig_title],
+                xaxis="Time (?)",  # x axis legend
+                yaxis="??",  # y axis legend
+                show_plot_already=show_plot_already,  # Show or wait for plt.show()?
+            )  
+            axes[fig_title] = ax
+        return axes
+
 
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
