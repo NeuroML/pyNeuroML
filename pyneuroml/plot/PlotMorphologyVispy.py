@@ -125,14 +125,6 @@ def create_new_vispy_canvas(
     """
     # vispy: full gl+ context is required for instanced rendering
     use(gl="gl+")
-    canvas_name = "My 3D Visualization"
-    canvas, scene_canvas, view = create_new_vispy_canvas(canvas_name)
-    canvas = vispy.app.Canvas(keys="interactive", size=(800, 600), title=canvas_name)
-    scene_canvas = SceneCanvas(keys="interactive", show=True)
-    view = scene_canvas.central_widget.add_view()
-
-    camera = scene_canvas.central_widget.camera
-    view.camera = camera
 
     canvas = scene.SceneCanvas(
         keys="interactive",
@@ -250,36 +242,8 @@ def create_new_vispy_canvas(
         # quit
         elif event.text == "9":
             canvas.app.quit()
-        if event.key == "r":
-            # Start recording video
-            output_file = "output.mp4"
-            duration = 10  # Video duration in seconds
-            fps = 24  # Frames per second
-        record_video(output_file, duration, fps)
 
-        def record_video(output_file, duration, fps):
-            """
-            Record a video of the vispy canvas content for a specified duration.
-
-            Args:
-                output_file (str): The output file path for the video.
-                duration (int): The duration of the video in seconds (default: 5).
-                fps (int): The frames per second for the video (default: 30).
-            """
-
-        frames = []
-        for _ in range(duration * fps):
-            canvas.app.flush_commands()
-            frame = util._screenshot((canvas.size[0], canvas.size[1]))
-            frames.append(frame)
-
-        imageio.mimwrite(output_file, frames, fps=fps)
-        print(f"Video saved to {output_file}")
-
-    # Additional setup and event handling for the vispy canvas
-    canvas.events.key_press.connect(vispy_on_key_press)
-
-    return canvas, scene_canvas, view
+    return canvas, view
 
 
 def plot_interactive_3D(
@@ -783,7 +747,6 @@ def plot_3D_cell_morphology(
     :raises: ValueError if `cell` is None
 
     """
-
     if cell is None:
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
