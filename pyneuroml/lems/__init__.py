@@ -587,11 +587,16 @@ def load_sim_data_from_lems_file(
                     elif format == "ID_TIME":
                         id = int(values[0])
                         t = float(values[1])
-                    logger.debug(
-                        "Found a event in cell %s (%s) at t = %s"
-                        % (id, selections[id], t)
-                    )
-                    events[selections[id]].append(t)
+                    if id in selections:
+                        logger.debug(
+                            "Found a event in cell %s (%s) at t = %s"
+                            % (id, selections[id], t)
+                        )
+                        events[selections[id]].append(t)
+
+                    else:
+                        logger.warning("ID %s not found in selections dictionary" % id)
+                        continue  # skip this event
 
     if get_traces:
         output_files = sim.findall(ns_prefix + "OutputFile")
@@ -631,17 +636,11 @@ def load_sim_data_from_lems_file(
                     for vi in range(len(values)):
                         traces[cols[vi]].append(float(values[vi]))
 
-    if get_traces and get_events:
-        if len(traces) == 0:
-            raise ValueError("No traces found")
-        if len(events) == 0:
-            raise ValueError("No events found")
-        return traces, events
-    elif get_events:
+    if get_events:
         if len(events) == 0:
             raise ValueError("No events found")
         return events
-    else:
+    elif get_traces:
         if len(traces) == 0:
             raise ValueError("No traces found")
         return traces
