@@ -234,7 +234,6 @@ def plot_spikes(
     max_time = 0
     max_id = 0
     unique_ids = []
-    unique_ids = []
     for data in spike_data:
         unique_ids.extend(data["ids"])
     unique_ids = list(set(unique_ids))
@@ -265,7 +264,7 @@ def plot_spikes(
     ylim = [min_id - 1, max_id + 1]
 
     markersizes = [
-        50 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
+        3 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
     ]
     if max_image_size is not None:
         plt.figure(figsize=(max_image_size[0] / 100, max_image_size[1] / 100))
@@ -397,17 +396,26 @@ def plot_spikes_from_data_files(
                 if not line.startswith("#") and not (
                     line.startswith("sender") and format == "id_time_nest_dat"
                 ):
-                    if format == "id_t" or format == "id_time_nest_dat":
-                        id, t = line.split()
-                    elif format == "t_id":
-                        t, id = line.split()
-                    times.append(float(t))
-                    ids.append(int(float(id)))
-
+                    parts = line.split()
+                if len(parts) != 2:
+                    logger.warning("Invalid line format: %s" % line)
+                    continue
+                if format == "id_t" or format == "id_time_nest_dat":
+                    id, t = parts
+                elif format == "t_id":
+                    t, id = parts
+                elif format == "TIME_ID":
+                    t, id = parts
+                else:
+                    logger.error("Unknown format: %s" % format)
+                    raise ValueError("Unknown format: %s" % format)
+                times.append(float(t))
+                ids.append(int(id))
             spike_data.append({"name": name, "times": times, "ids": ids})
 
     plot_spikes(
         spike_data,
+        spiketime_files,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
         rates=rates,
@@ -434,10 +442,10 @@ def get_spike_data_files_from_lems(
 
     spike_data_files = []
     spike_data_format = None
-    for data_file in sim_data.data_files:
-        if data_file.type == "spike_times":
-            spike_data_files.append(os.path.join(base_dir, data_file.file_path))
-            spike_data_format = data_file.format
+    for select, events in sim_data.items():
+        file_path = os.path.join(base_dir, select + ".dat")
+        spike_data_files.append(file_path)
+        spike_data_format = "TIME_ID"
 
     return spike_data_files, spike_data_format
 
