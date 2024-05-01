@@ -14,11 +14,6 @@ import logging
 import math
 import random
 import typing
-import imageio
-from vispy.gloo import util
-import vispy.app
-from vispy.scene import SceneCanvas
-from vispy.visuals import MeshVisual
 
 import numpy
 import progressbar
