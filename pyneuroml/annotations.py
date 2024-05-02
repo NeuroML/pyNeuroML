@@ -417,14 +417,20 @@ def _add_element(
     if annotation_style not in ["biosimulations", "miriam"]:
         raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
 
-    for idf, label in info.items():
-        top_node = BNode()
-        doc.add((subjectobj, node_type, top_node))
-        if annotation_style == "biosimulations":
+    # for biosimulations, we do not use bags
+    if annotation_style == "biosimulations":
+        for idf, label in info.items():
+            # add a top level node
+            top_node = BNode()
+            doc.add((subjectobj, node_type, top_node))
             doc.add((top_node, DC.identifier, URIRef(idf)))
             doc.add((top_node, RDFS.label, Literal(label)))
-        elif annotation_style == "miriam":
-            Bag(doc, top_node, [URIRef(idf)])
+    elif annotation_style == "miriam":
+        top_node = BNode()
+        doc.add((subjectobj, node_type, top_node))
+        bag = Bag(doc, top_node, [])
+        for idf, label in info.items():
+            bag.append(URIRef(idf))
 
 
 def _add_humans(
