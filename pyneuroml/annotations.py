@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 try:
-    from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag
+    from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag, Container
     from rdflib.namespace import DC, DCTERMS, FOAF, RDFS, RDF
 except ImportError:
     logger.warning("Please install optional dependencies to use annotation features:")
@@ -520,8 +520,47 @@ class Annotation(object):
                 logger.debug(contents)
                 self.doc.parse(data=contents, format="application/rdf+xml")
 
-                # for s, p, o in g:
-                # print(f"{s}: {p}: {o}")
+                for desc, pred in self.ARG_MAP.items():
+                    annotations[desc] = []
+                    objs = self.doc.objects(predicate=pred)
+                    for obj in objs:
+                        print(f"Iterating: {desc}: {obj} ({type(obj)})")
+                        if isinstance(obj, Literal):
+                            annotations[desc] = str(obj)
+                        if isinstance(obj, BNode):
+                            for cobj in self.doc.objects(obj):
+                                print(f"Iterating BNode: {desc}: {cobj} ({type(cobj)})")
+                                if isinstance(cobj, URIRef):
+                                    # a bag, ignore
+                                    if str(cobj).endswith("ns#Bag"):
+                                        continue
+
+                                    # check if it's a subject for other triples
+                                    # (authors/contributors)
+                                    gen = self.doc.predicate_objects(subject=cobj)
+                                    lenitems = sum(1 for _ in gen)
+                                    print(f"Len items is {lenitems}")
+
+                                    # a "plain" URIRef
+                                    if lenitems == 0:
+                                        annotations[desc].append(str(cobj))
+
+                                    # local reference
+                                    if lenitems > 0:
+                                        gen = self.doc.predicate_objects(subject=cobj)
+                                        bits = []
+                                        for pred, pobj in gen:
+                                            print(
+                                                f"Found: {desc}: {pred} {pobj} ({type(pobj)})"
+                                            )
+                                            bits.append(str(pobj))
+                                        annotations[desc].append(bits)
+
+                                elif isinstance(cobj, Literal):
+                                    annotations[desc].append(str(cobj))
+                                # another bnode: parse it again (recurse?)
+                                else:
+                                    print(f"BNod else: {desc}: {cobj} ({type(cobj)})")
 
             # for r in _find_elements(a, "Description", rdf=True):
             #     desc = _get_attr_in_element(r, "about", rdf=True)
