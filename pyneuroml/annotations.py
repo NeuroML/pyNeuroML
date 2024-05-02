@@ -14,7 +14,7 @@ import typing
 import textwrap
 
 from lxml import etree
-from pyneuroml.utils.xml import _find_elements, _get_attr_in_element
+from pyneuroml.utils.xml import _find_elements
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -28,11 +28,6 @@ except ImportError:
 
 
 # From https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
-PREDICATES_MAP = {
-    "keyword": "http://prismstandard.org/namespaces/basic/2.0/keyword",
-    "thumbnail": "http://www.collex.org/schema#thumbnail",
-}
-
 # From https://doi.org/10.1515/jib-2021-0020 (page 3)
 # rdf, foaf, dc already included in rdflib
 NAMESPACES_MAP = {
@@ -53,467 +48,503 @@ NAMESPACES_MAP = {
 }
 
 
-def extract_annotations(nml2_file: str) -> None:
-    """Extract and print annotations from a NeuroML 2 file.
-
-    :param nml2_file: name of NeuroML2 file to parse
-    :type nml2_file: str
-    """
-    pp = pprint.PrettyPrinter()
-    test_file = open(nml2_file)
-    root = etree.parse(test_file).getroot()
-    annotations = {}  # type: dict
-
-    for a in _find_elements(root, "annotation"):
-        for r in _find_elements(a, "Description", rdf=True):
-            desc = _get_attr_in_element(r, "about", rdf=True)
-            annotations[desc] = []
-
-            for info in r:
-                if isinstance(info.tag, str):
-                    kind = info.tag.replace(
-                        "{http://biomodels.net/biology-qualifiers/}", "bqbiol:"
-                    )
-                    kind = kind.replace(
-                        "{http://biomodels.net/model-qualifiers/}", "bqmodel:"
-                    )
-
-                    for li in _find_elements(info, "li", rdf=True):
-                        attr = _get_attr_in_element(li, "resource", rdf=True)
-                        if attr:
-                            annotations[desc].append({kind: attr})
-
-    logger.info("Annotations in %s: " % (nml2_file))
-    pp.pprint(annotations)
+# create namespaces not included in rdflib
+PRISM = Namespace(NAMESPACES_MAP["prism"])
+COLLEX = Namespace(NAMESPACES_MAP["collex"])
+BQBIOL = Namespace(NAMESPACES_MAP["bqbiol"])
+BQMODEL = Namespace(NAMESPACES_MAP["bqmodel"])
+SCORO = Namespace(NAMESPACES_MAP["scoro"])
 
 
-def create_annotation(
-    subject,
-    title=None,
-    abstract=None,
-    annotation_style: typing.Literal["miriam", "biosimulations"] = "biosimulations",
-    serialization_format: str = "pretty-xml",
-    write_to_file: typing.Optional[str] = None,
-    xml_header: bool = True,
-    indent: int = 12,
-    description: typing.Optional[str] = None,
-    keywords: typing.Optional[typing.List[str]] = None,
-    thumbnails: typing.Optional[typing.List[str]] = None,
-    organisms: typing.Optional[typing.Dict[str, str]] = None,
-    encodes_other_biology: typing.Optional[typing.Dict[str, str]] = None,
-    has_version: typing.Optional[typing.Dict[str, str]] = None,
-    is_version_of: typing.Optional[typing.Dict[str, str]] = None,
-    has_part: typing.Optional[typing.Dict[str, str]] = None,
-    is_part_of: typing.Optional[typing.Dict[str, str]] = None,
-    has_property: typing.Optional[typing.Dict[str, str]] = None,
-    is_property_of: typing.Optional[typing.Dict[str, str]] = None,
-    sources: typing.Optional[typing.Dict[str, str]] = None,
-    is_instance_of: typing.Optional[typing.Dict[str, str]] = None,
-    has_instance: typing.Optional[typing.Dict[str, str]] = None,
-    predecessors: typing.Optional[typing.Dict[str, str]] = None,
-    successors: typing.Optional[typing.Dict[str, str]] = None,
-    see_also: typing.Optional[typing.Dict[str, str]] = None,
-    references: typing.Optional[typing.Dict[str, str]] = None,
-    other_ids: typing.Optional[typing.Dict[str, str]] = None,
-    citations: typing.Optional[typing.Dict[str, str]] = None,
-    authors: typing.Optional[
-        typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set]
-    ] = None,
-    contributors: typing.Optional[
-        typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set]
-    ] = None,
-    license: typing.Optional[typing.Dict[str, str]] = None,
-    funders: typing.Optional[typing.Dict[str, str]] = None,
-    creation_date: typing.Optional[str] = None,
-    modified_dates: typing.Optional[typing.List[str]] = None,
-):
-    """Create an RDF annotation from the provided fields
+class Annotation(object):
+    """For handling NeuroML annotations"""
 
-    .. versionadded:: 1.2.10
+    # extra mappings
+    P_MAP_EXTRA = {
+        "hasTaxon": "bqbiol",
+        "encodes": "bqbiol",
+        "hasVersion": "bqbiol",
+        "isVersionOf": "bqbiol",
+        "hasPart": "bqbiol",
+        "isPartOf": "bqbiol",
+        "hasProperty": "bqbiol",
+        "isPropertyOf": "bqbiol",
+        "isInstanceOf": "bqmodel",
+        "hasInstance": "bqmodel",
+        "isDerivedFrom": "bqmodel",
+        "successor": "scoro",
+        "is": "bqmodel",
+        "isDescribedBy": "bqmodel",
+        "funder": "scoro",
+    }
 
-    This can be used to create an RDF annotation for a subject---a model or a
-    file like an OMEX archive file. It supports most qualifiers and will be
-    continuously updated to support more as they are added.
+    def __init__(self):
+        self.doc = Graph()
 
-    It merely uses rdflib to make life easier for users to create annotations
-    by coding in the various predicates for each subject.
+        # namespaces not in rdflib
+        self.doc.bind("prism", PRISM)
+        self.doc.bind("collex", COLLEX)
+        self.doc.bind("bqbiol", BQBIOL)
+        self.doc.bind("bqmodel", BQMODEL)
+        self.doc.bind("scoro", SCORO)
 
-    For information on the specifications, see:
+        for k, v in self.P_MAP_EXTRA.items():
+            self.doc.bind(f"{v}:{k}", f"v.upper()/{k}")
 
-    - COMBINE specifications: https://github.com/combine-org/combine-specifications/blob/main/specifications/qualifiers-1.1.md
-    - Biosimulations guidelines: https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
-    - MIRIAM guidelines: https://drive.google.com/file/d/1JqjcH0T0UTWMuBj-scIMwsyt2z38A0vp/view
-
-
-    Note that:
-
-    - not all qualifiers have been included yet
-    - the qualifiers and their representations may change in the future
-
-    For any arguments here that take a dictionary of strings, the key is the
-    resource reference URI, and the value is the string label. For example:
-
-    .. code-block:: python
-
-        encodes_other_biology={
-            "http://identifiers.org/GO:0009653": "anatomical structure morphogenesis",
-            "http://identifiers.org/kegg:ko04111": "Cell cycle - yeast",
+        self.ARG_MAP = {
+            "title": DC.title,
+            "abstract": DCTERMS.abstract,
+            "description": DC.description,
+            "keyword": PRISM.keyword,
+            "thumbnail": COLLEX.thumbnail,
+            "organisms": BQBIOL.hasTaxon,
+            "encodes_other_biology": BQBIOL.encodes,
+            "has_version": BQBIOL.hasVersion,
+            "is_version_of": BQBIOL.isVersionOf,
+            "has_part": BQBIOL.hasPart,
+            "is_part_of": BQBIOL.isPartOf,
+            "has_property": BQBIOL.hasProperty,
+            "is_property_of": BQBIOL.isPropertyOf,
+            "sources": DC.source,
+            "is_instance_of": BQMODEL.isInstanceOf,
+            "has_instance": BQMODEL.hasInstance,
+            "predecessors": BQMODEL.isDerivedFrom,
+            "successors": SCORO.successor,
+            "see_also": RDFS.seeAlso,
+            "references": DCTERMS.references,
+            "other_ids": BQMODEL.IS,
+            "citations": BQMODEL.isDescribedBy,
+            "license": DCTERMS.license,
+            "funders": SCORO.funder,
+            "authors": DC.creator,
+            "contributors": DC.contributor,
+            "creation_date": DCTERMS.created,
+            "modified_dates": DCTERMS.modified,
         }
 
-    :param subject: subject/target of the annotation
-        could be a file, a mode component
-    :type subject: str
-    :param title: title of annotation
-        This is required for publishing models on biosimulations.org
-    :type title: str
-    :param abstract: an abstract
-    :type abstract: str
-    :param annotation_style: type of annotation: either "miriam" or
-        "biosimulations" (default).
+    def create_annotation(
+        self,
+        subject: str,
+        title: typing.Optional[str] = None,
+        abstract: typing.Optional[str] = None,
+        annotation_style: typing.Literal["miriam", "biosimulations"] = "biosimulations",
+        serialization_format: str = "pretty-xml",
+        write_to_file: typing.Optional[str] = None,
+        xml_header: bool = True,
+        indent: int = 12,
+        description: typing.Optional[str] = None,
+        keywords: typing.Optional[typing.List[str]] = None,
+        thumbnails: typing.Optional[typing.List[str]] = None,
+        organisms: typing.Optional[typing.Dict[str, str]] = None,
+        encodes_other_biology: typing.Optional[typing.Dict[str, str]] = None,
+        has_version: typing.Optional[typing.Dict[str, str]] = None,
+        is_version_of: typing.Optional[typing.Dict[str, str]] = None,
+        has_part: typing.Optional[typing.Dict[str, str]] = None,
+        is_part_of: typing.Optional[typing.Dict[str, str]] = None,
+        has_property: typing.Optional[typing.Dict[str, str]] = None,
+        is_property_of: typing.Optional[typing.Dict[str, str]] = None,
+        sources: typing.Optional[typing.Dict[str, str]] = None,
+        is_instance_of: typing.Optional[typing.Dict[str, str]] = None,
+        has_instance: typing.Optional[typing.Dict[str, str]] = None,
+        predecessors: typing.Optional[typing.Dict[str, str]] = None,
+        successors: typing.Optional[typing.Dict[str, str]] = None,
+        see_also: typing.Optional[typing.Dict[str, str]] = None,
+        references: typing.Optional[typing.Dict[str, str]] = None,
+        other_ids: typing.Optional[typing.Dict[str, str]] = None,
+        citations: typing.Optional[typing.Dict[str, str]] = None,
+        authors: typing.Optional[
+            typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set]
+        ] = None,
+        contributors: typing.Optional[
+            typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set]
+        ] = None,
+        license: typing.Optional[typing.Dict[str, str]] = None,
+        funders: typing.Optional[typing.Dict[str, str]] = None,
+        creation_date: typing.Optional[str] = None,
+        modified_dates: typing.Optional[typing.List[str]] = None,
+    ):
+        """Create an RDF annotation from the provided fields
 
-        There's a difference in the annotation "style" suggested by MIRIAM and
-        Biosimulations. MIRIAM suggests the use of RDF containers (bags)
-        wherewas Biosimulations does not. This argument allows the user to
-        select what style they want to use for the annotation.
-    :type annotation_style: str
-    :param serialization_format: format to serialize in using `rdflib.serialize`
-        See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
-    :type serialization_format: str
-    :param xml_header: toggle inclusion of xml header if serializing in xml format
-    :type xml_header: bool
-    :param indent: number of spaces to use to indent the annotation block
-    :type indent: int
-    :param description: a longer description
-    :type description: str
-    :param keywords: keywords
-    :type keywords: list(str)
-    :param thumbnails: thumbnails
-    :type thumbnails: list(str)
-    :param organisms: of organisms
-    :type organisms: dict(str, str)
-    :param encodes_other_biology:  other biological entities
-    :type encodes_other_biology: dict(str, str)
-    :param has_version: other versions
-    :type has_version: dict(str, str)
-    :param is_version_of: is a version of
-    :type is_version_of: dict(str, str)
-    :param has_part: includes another as a part
-    :type has_part: dict(str, str)
-    :param is_part_of: is a part of another entity
-    :type is_part_of: dict(str, str)
-    :param has_property: has a property
-    :type has_property: dict(str, str)
-    :param is_property_of: is a property of another entity
-    :type is_property_of: dict(str, str)
-    :param sources: links to sources (on GitHub and so on)
-    :type sources: dict(str, str)
-    :param is_instance_of: is an instance of
-    :type is_instance_of: dict(str, str)
-    :param has_instance: has instance of another entity
-    :type has_instance: dict(str, str)
-    :param predecessors: predecessors of this entity
-    :type predecessors: dict(str, str)
-    :param successors: successors of this entity
-    :type successors: dict(str, str)
-    :param see_also: more information
-    :type see_also: dict(str, str)
-    :param references: references
-    :type references: dict(str, str)
-    :param other_ids: other IDs
-    :type other_ids: dict(str, str)
-    :param citations: related citations
-    :type citations: dict(str, str)
-    :param authors: authors
-        This can either be:
+        .. versionadded:: 1.2.10
 
-        - a set: {"Author A", "Author B"}
-        - a dictionary: {"Author A": {"https://../": "accountname", "..": ".."}}
+        This can be used to create an RDF annotation for a subject---a model or a
+        file like an OMEX archive file. It supports most qualifiers and will be
+        continuously updated to support more as they are added.
 
-        All labels apart from "accountname" are ignored
-    :type authors: dict(str, dict(str, str) or set
-    :param contributors: other contributors, follws the same format as authors
-    :type contributors: dict(str, dict(str, str) or set
-    :param license: license
-    :type license: dict(str, str)
-    :param funders: funders
-    :type funders: dict(str, str)
-    :param creation_date: date in YYYY-MM-DD format when this was created (eg: 2024-04-19)
-    :type creation_date: str
-    :param modified_dates: dates in YYYY-MM-DD format when modifications were made
-    :type modified_dates: list(str)
-    :param write_to_file: path to file to write to
-    :type write_to_file: str
-    :returns: the annotation string in the requested format.
+        It merely uses rdflib to make life easier for users to create annotations
+        by coding in the various predicates for each subject.
 
-    """
-    doc = Graph()
+        For information on the specifications, see:
 
-    # namespaces not in rdflib
-    PRISM = Namespace(NAMESPACES_MAP["prism"])
-    doc.bind("prism", PRISM)
-    COLLEX = Namespace(NAMESPACES_MAP["collex"])
-    doc.bind("collex", COLLEX)
-    BQBIOL = Namespace(NAMESPACES_MAP["bqbiol"])
-    doc.bind("bqbiol", BQBIOL)
-    BQMODEL = Namespace(NAMESPACES_MAP["bqmodel"])
-    doc.bind("bqmodel", BQMODEL)
-    SCORO = Namespace(NAMESPACES_MAP["scoro"])
-    doc.bind("scoro", SCORO)
-
-    # if subject is a file
-    if subject.endswith(".omex"):
-        fileprefix = f"http://omex-library.org/{subject}"
-        subjectobj = URIRef(fileprefix)
-    elif subject.endswith(".nml"):
-        fileprefix = "http://omex-library.org/ArchiveName.omex"
-        subjectobj = URIRef(f"{fileprefix}/{subject}")
-    else:
-        subjectobj = Literal(subject)
-
-    doc.add((subjectobj, DC.title, Literal(title)))
-    if abstract:
-        doc.add((subjectobj, DCTERMS.abstract, Literal(abstract)))
-    if description:
-        doc.add((subjectobj, DC.description, Literal(description)))
-    if keywords:
-        _add_element(doc, subjectobj, keywords, PRISM.keyword, annotation_style)
-    if thumbnails:
-        prefixed = [
-            f"{fileprefix}/{t}" if (not t.startswith("http")) else t for t in thumbnails
-        ]
-        _add_element(doc, subjectobj, prefixed, COLLEX.thumbnail, annotation_style)
-    if organisms:
-        doc.bind("bqbiol:hasTaxon", BQBIOL + "/hasTaxon")
-        _add_element(doc, subjectobj, organisms, BQBIOL.hasTaxon, annotation_style)
-    if encodes_other_biology:
-        doc.bind("bqbiol:encodes", BQBIOL + "/encodes")
-        _add_element(
-            doc, subjectobj, encodes_other_biology, BQBIOL.encodes, annotation_style
-        )
-    if has_version:
-        doc.bind("bqbiol:hasVersion", BQBIOL + "/hasVersion")
-        _add_element(doc, subjectobj, has_version, BQBIOL.hasVersion, annotation_style)
-    if is_version_of:
-        doc.bind("bqbiol:isVersionOf", BQBIOL + "/isVersionOf")
-        _add_element(
-            doc, subjectobj, is_version_of, BQBIOL.isVersionOf, annotation_style
-        )
-    if has_part:
-        doc.bind("bqbiol:hasPart", BQBIOL + "/hasPart")
-        _add_element(doc, subjectobj, has_part, BQBIOL.hasPart, annotation_style)
-    if is_part_of:
-        doc.bind("bqbiol:isPartOf", BQBIOL + "/isPartOf")
-        _add_element(doc, subjectobj, is_part_of, BQBIOL.isPartOf, annotation_style)
-    if has_property:
-        doc.bind("bqbiol:hasProperty", BQBIOL + "/hasProperty")
-        _add_element(
-            doc, subjectobj, has_property, BQBIOL.hasProperty, annotation_style
-        )
-    if is_property_of:
-        doc.bind("bqbiol:isPropertyOf", BQBIOL + "/isPropertyOf")
-        _add_element(
-            doc, subjectobj, is_property_of, BQBIOL.isPropertyOf, annotation_style
-        )
-    if sources:
-        _add_element(doc, subjectobj, sources, DC.source, annotation_style)
-    if is_instance_of:
-        doc.bind("bqmodel:isInstanceOf", BQMODEL + "/isInstanceOf")
-        _add_element(
-            doc, subjectobj, is_instance_of, BQMODEL.isInstanceOf, annotation_style
-        )
-    if has_instance:
-        doc.bind("bqmodel:hasInstance", BQMODEL + "/hasInstance")
-        _add_element(
-            doc, subjectobj, has_instance, BQMODEL.hasInstance, annotation_style
-        )
-    if predecessors:
-        doc.bind("bqmodel:isDerivedFrom", BQMODEL + "/isDerivedFrom")
-        _add_element(
-            doc, subjectobj, predecessors, BQMODEL.isDerivedFrom, annotation_style
-        )
-    if successors:
-        doc.bind("scoro:successor", SCORO + "/successor")
-        _add_element(doc, subjectobj, successors, SCORO.successor, annotation_style)
-    if see_also:
-        _add_element(doc, subjectobj, see_also, RDFS.seeAlso, annotation_style)
-    if references:
-        _add_element(doc, subjectobj, references, DCTERMS.references, annotation_style)
-    if other_ids:
-        doc.bind("bqmodel:is", BQMODEL + "/is")
-        _add_element(doc, subjectobj, other_ids, BQMODEL.IS, annotation_style)
-    if citations:
-        doc.bind("bqmodel:isDescribedBy", BQMODEL + "/isDescribedBy")
-        _add_element(
-            doc, subjectobj, citations, BQMODEL.isDescribedBy, annotation_style
-        )
-    if authors:
-        _add_humans(doc, subjectobj, authors, DC.creator, annotation_style)
-    if contributors:
-        _add_humans(doc, subjectobj, contributors, DC.contributor, annotation_style)
-    if license:
-        assert len(license.items()) == 1
-        _add_element(doc, subjectobj, license, DCTERMS.license, annotation_style)
-    if funders:
-        doc.bind("scoro:funder", SCORO + "/funder")
-        _add_element(doc, subjectobj, funders, SCORO.funder, annotation_style)
-    if creation_date:
-        ac = BNode()
-        doc.add((subjectobj, DCTERMS.created, ac))
-        doc.add((ac, DCTERMS.W3CDTF, Literal(creation_date)))
-    if modified_dates:
-        ac = BNode()
-        doc.add((subjectobj, DCTERMS.modified, ac))
-        for d in modified_dates:
-            doc.add((ac, DCTERMS.W3CDTF, Literal(d)))
-
-    annotation = doc.serialize(format=serialization_format)
-
-    # indent
-    if indent > 0:
-        annotation = textwrap.indent(annotation, " " * indent)
-
-    # xml issues
-    if "xml" in serialization_format:
-        # replace rdf:_1 etc with rdf:li
-        # our LEMS definitions only know rdf:li
-        # https://github.com/RDFLib/rdflib/issues/1374#issuecomment-885656850
-        rdfli_pattern = re.compile(r"\brdf:_\d+\b")
-        annotation = rdfli_pattern.sub("rdf:li", annotation)
-
-        # remove nodeids for rdflib BNodes: these aren't required
-        rdfbnode_pattern = re.compile(r' rdf:nodeID="\S+"')
-        annotation = rdfbnode_pattern.sub("", annotation)
-
-        # remove xml header, not used when embedding into other NeuroML files
-        if xml_header is False:
-            annotation = annotation[annotation.find(">") + 1 :]
-
-    if write_to_file:
-        with open(write_to_file, "w") as f:
-            print(annotation, file=f)
-
-    return annotation
+        - COMBINE specifications: https://github.com/combine-org/combine-specifications/blob/main/specifications/qualifiers-1.1.md
+        - Biosimulations guidelines: https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
+        - MIRIAM guidelines: https://drive.google.com/file/d/1JqjcH0T0UTWMuBj-scIMwsyt2z38A0vp/view
 
 
-def _add_element(
-    doc: Graph,
-    subjectobj: typing.Union[URIRef, Literal],
-    info_dict: typing.Union[typing.Iterable[str], typing.Dict[str, str]],
-    node_type: URIRef,
-    annotation_style: str,
-):
-    """Add an new element to the RDF annotation
+        Note that:
 
-    :param doc: main rdf document object
-    :type doc: RDF.Graph
-    :param subjectobj: main object being referred to
-    :type subjectobj: URIRef or Literal
-    :param info_dict: dictionary of entries and their labels, or Iterable if no labels
-    :type info_dict: dict or Iterable
-    :param node_type: node type
-    :type node_type: URIRef
-    :param annotation_style: type of annotation
-    :type annotation_style: str
-    """
-    if annotation_style not in ["biosimulations", "miriam"]:
-        raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
+        - not all qualifiers have been included yet
+        - the qualifiers and their representations may change in the future
 
-    # if not a dict, try to create a dict with blank values
-    if not isinstance(info_dict, dict):
-        copy_dict = {}  # type: typing.Dict[str, str]
-        for i in info_dict:
-            copy_dict[i] = ""
-        info_dict = copy_dict
+        For any arguments here that take a dictionary of strings, the key is the
+        resource reference URI, and the value is the string label. For example:
 
-    # for biosimulations, we do not use bags
-    if annotation_style == "biosimulations":
-        for idf, label in info_dict.items():
-            # add a top level node
+        .. code-block:: python
+
+            encodes_other_biology={
+                "http://identifiers.org/GO:0009653": "anatomical structure morphogenesis",
+                "http://identifiers.org/kegg:ko04111": "Cell cycle - yeast",
+            }
+
+        :param subject: subject/target of the annotation
+            could be a file, a mode component
+        :type subject: str
+        :param title: title of annotation
+            This is required for publishing models on biosimulations.org
+        :type title: str
+        :param abstract: an abstract
+        :type abstract: str
+        :param annotation_style: type of annotation: either "miriam" or
+            "biosimulations" (default).
+
+            There's a difference in the annotation "style" suggested by MIRIAM and
+            Biosimulations. MIRIAM suggests the use of RDF containers (bags)
+            wherewas Biosimulations does not. This argument allows the user to
+            select what style they want to use for the annotation.
+        :type annotation_style: str
+        :param serialization_format: format to serialize in using `rdflib.serialize`
+            See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
+        :type serialization_format: str
+        :param xml_header: toggle inclusion of xml header if serializing in xml format
+        :type xml_header: bool
+        :param indent: number of spaces to use to indent the annotation block
+        :type indent: int
+        :param description: a longer description
+        :type description: str
+        :param keywords: keywords
+        :type keywords: list(str)
+        :param thumbnails: thumbnails
+        :type thumbnails: list(str)
+        :param organisms: of organisms
+        :type organisms: dict(str, str)
+        :param encodes_other_biology:  other biological entities
+        :type encodes_other_biology: dict(str, str)
+        :param has_version: other versions
+        :type has_version: dict(str, str)
+        :param is_version_of: is a version of
+        :type is_version_of: dict(str, str)
+        :param has_part: includes another as a part
+        :type has_part: dict(str, str)
+        :param is_part_of: is a part of another entity
+        :type is_part_of: dict(str, str)
+        :param has_property: has a property
+        :type has_property: dict(str, str)
+        :param is_property_of: is a property of another entity
+        :type is_property_of: dict(str, str)
+        :param sources: links to sources (on GitHub and so on)
+        :type sources: dict(str, str)
+        :param is_instance_of: is an instance of
+        :type is_instance_of: dict(str, str)
+        :param has_instance: has instance of another entity
+        :type has_instance: dict(str, str)
+        :param predecessors: predecessors of this entity
+        :type predecessors: dict(str, str)
+        :param successors: successors of this entity
+        :type successors: dict(str, str)
+        :param see_also: more information
+        :type see_also: dict(str, str)
+        :param references: references
+        :type references: dict(str, str)
+        :param other_ids: other IDs
+        :type other_ids: dict(str, str)
+        :param citations: related citations
+        :type citations: dict(str, str)
+        :param authors: authors
+            This can either be:
+
+            - a set: {"Author A", "Author B"}
+            - a dictionary where the keys are author names and values are
+              dictionaries of more metadata:
+
+              {"Author A": {"https://../": "accountname", "..": ".."}}
+
+            The inner dictionary should have the reference or literal as key, and
+            can take a "label", which can be any of the FOAF attributes:
+
+            http://xmlns.com/foaf/spec/#sec-glance
+
+        :type authors: dict(str, dict(str, str) or set
+        :param contributors: other contributors, follows the same format as authors
+        :type contributors: dict(str, dict(str, str) or set
+        :param license: license
+        :type license: dict(str, str)
+        :param funders: funders
+        :type funders: dict(str, str)
+        :param creation_date: date in YYYY-MM-DD format when this was created (eg: 2024-04-19)
+        :type creation_date: str
+        :param modified_dates: dates in YYYY-MM-DD format when modifications were made
+        :type modified_dates: list(str)
+        :param write_to_file: path to file to write to
+        :type write_to_file: str
+        :returns: the annotation string in the requested format.
+
+        """
+        # if subject is a file
+        if subject.endswith(".omex"):
+            fileprefix = f"http://omex-library.org/{subject}"
+            subjectobj = URIRef(fileprefix)
+        elif subject.endswith(".nml"):
+            fileprefix = "http://omex-library.org/ArchiveName.omex"
+            subjectobj = URIRef(f"{fileprefix}/{subject}")
+        else:
+            subjectobj = Literal(subject)
+
+        # get the args passed to this function
+        mylocals = locals()
+
+        self.doc.add((subjectobj, self.ARG_MAP["title"], Literal(title)))
+
+        # loop over the rest
+        for arg, val in mylocals.items():
+            if arg in self.ARG_MAP.keys():
+                # handle any special cases
+                if arg == "abstract" or arg == "description":
+                    self.doc.add((subjectobj, self.ARG_MAP[arg], Literal(val)))
+
+                elif arg == "thumbnails":
+                    prefixed = [
+                        f"{fileprefix}/{t}" if (not t.startswith("http")) else t
+                        for t in val
+                    ]
+                    self._add_element(
+                        subjectobj, prefixed, self.ARG_MAP[arg], annotation_style
+                    )
+
+                elif arg == "license":
+                    assert len(val.items()) == 1
+                    self._add_element(
+                        subjectobj, val, self.ARG_MAP[arg], annotation_style
+                    )
+
+                elif arg == "authors" or arg == "contributors":
+                    self._add_humans(
+                        subjectobj, val, self.ARG_MAP[arg], annotation_style
+                    )
+                elif arg == "creation_date":
+                    ac = BNode()
+                    self.doc.add((subjectobj, self.ARG_MAP[arg], ac))
+                    self.doc.add((ac, DCTERMS.W3CDTF, Literal(val)))
+
+                elif arg == "modified_dates":
+                    ac = BNode()
+                    self.doc.add((subjectobj, self.ARG_MAP[arg], ac))
+                    if annotation_style == "biosimulations":
+                        for d in val:
+                            self.doc.add((ac, DCTERMS.W3CDTF, Literal(d)))
+                    else:
+                        another = BNode()
+                        self.doc.add((ac, DCTERMS.W3CDTF, another))
+                        newbag = Bag(self.doc, another)
+                        for d in val:
+                            newbag.append(Literal(d))
+                else:
+                    self._add_element(
+                        subjectobj, val, self.ARG_MAP[arg], annotation_style
+                    )
+
+        annotation = self.doc.serialize(format=serialization_format)
+
+        # indent
+        if indent > 0:
+            annotation = textwrap.indent(annotation, " " * indent)
+
+        # xml issues
+        if "xml" in serialization_format:
+            # replace rdf:_1 etc with rdf:li
+            # our LEMS definitions only know rdf:li
+            # https://github.com/RDFLib/rdflib/issues/1374#issuecomment-885656850
+            rdfli_pattern = re.compile(r"\brdf:_\d+\b")
+            annotation = rdfli_pattern.sub("rdf:li", annotation)
+
+            # remove nodeids for rdflib BNodes: these aren't required
+            rdfbnode_pattern = re.compile(r' rdf:nodeID="\S+"')
+            annotation = rdfbnode_pattern.sub("", annotation)
+
+            # remove xml header, not used when embedding into other NeuroML files
+            if xml_header is False:
+                annotation = annotation[annotation.find(">") + 1 :]
+
+        if write_to_file:
+            with open(write_to_file, "w") as f:
+                print(annotation, file=f)
+
+        return annotation
+
+    def _add_element(
+        self,
+        subjectobj: typing.Union[URIRef, Literal],
+        info_dict: typing.Union[typing.Iterable[str], typing.Dict[str, str]],
+        node_type: URIRef,
+        annotation_style: str,
+    ):
+        """Add an new element to the RDF annotation
+
+        :param subjectobj: main object being referred to
+        :type subjectobj: URIRef or Literal
+        :param info_dict: dictionary of entries and their labels, or Iterable if no labels
+        :type info_dict: dict or Iterable
+        :param node_type: node type
+        :type node_type: URIRef
+        :param annotation_style: type of annotation
+        :type annotation_style: str
+        """
+        if annotation_style not in ["biosimulations", "miriam"]:
+            raise ValueError(
+                "Annotation style must either be 'miriam' or 'biosimulations'"
+            )
+
+        # do nothing if an empty dict is passed
+        if info_dict is None:
+            return
+
+        # if not a dict, try to create a dict with blank values
+        if not isinstance(info_dict, dict):
+            copy_dict = {}  # type: typing.Dict[str, str]
+            for i in info_dict:
+                copy_dict[i] = ""
+            info_dict = copy_dict
+
+        # for biosimulations, we do not use bags
+        if annotation_style == "biosimulations":
+            for idf, label in info_dict.items():
+                # add a top level node
+                top_node = BNode()
+                self.doc.add((subjectobj, node_type, top_node))
+                self.doc.add((top_node, DC.identifier, URIRef(idf)))
+                if len(label) > 0:
+                    self.doc.add((top_node, RDFS.label, Literal(label)))
+        elif annotation_style == "miriam":
+            # even if there's only one entry, we still create a bag.
+            # this seems to be the norm in the SBML examples
+            # https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf
             top_node = BNode()
-            doc.add((subjectobj, node_type, top_node))
-            doc.add((top_node, DC.identifier, URIRef(idf)))
-            if len(label) > 0:
-                doc.add((top_node, RDFS.label, Literal(label)))
-    elif annotation_style == "miriam":
-        # even if there's only one entry, we still create a bag.
-        # this seems to be the norm in the SBML examples
-        # https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf
-        top_node = BNode()
-        doc.add((subjectobj, node_type, top_node))
-        bag = Bag(doc, top_node, [])
-        for idf, label in info_dict.items():
-            bag.append(_URIRef_or_Literal(idf))
+            self.doc.add((subjectobj, node_type, top_node))
+            bag = Bag(self.doc, top_node, [])
+            for idf, label in info_dict.items():
+                bag.append(_URIRef_or_Literal(idf))
 
+    def _add_humans(
+        self,
+        subjectobj: typing.Union[URIRef, Literal],
+        info_dict: typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set],
+        node_type: URIRef,
+        annotation_style: str,
+    ):
+        """Add an new elements related to humans to the RDF annotation.
 
-def _add_humans(
-    doc: Graph,
-    subjectobj: typing.Union[URIRef, Literal],
-    info_dict: typing.Union[typing.Dict[str, typing.Dict[str, str]], typing.Set],
-    node_type: URIRef,
-    annotation_style: str,
-):
-    """Add an new elements related to humans to the RDF annotation.
+        This covers authors/contributors where the same person can have multiple
+        annotations related to them.
 
-    This covers authors/contributors where the same person can have multiple
-    annotations related to them.
+        :param subjectobj: main object being referred to
+        :type subjectobj: URIRef or Literal
+        :param info_dict: dictionary of information
+        :type info_dict: dict
+        :param node_type: node type
+        :type node_type: URIRef
+        :param annotation_style: type of annotation
+        :type annotation_style: str
+        """
+        if annotation_style not in ["biosimulations", "miriam"]:
+            raise ValueError(
+                "Annotation style must either be 'miriam' or 'biosimulations'"
+            )
 
-    :param doc: main rdf document object
-    :type doc: RDF.Graph
-    :param subjectobj: main object being referred to
-    :type subjectobj: URIRef or Literal
-    :param info_dict: dictionary of information
-    :type info_dict: dict
-    :param node_type: node type
-    :type node_type: URIRef
-    :param annotation_style: type of annotation
-    :type annotation_style: str
-    """
-    if annotation_style not in ["biosimulations", "miriam"]:
-        raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
+        # if not a dict, create a dict with blank values
+        if not isinstance(info_dict, dict):
+            copy_dict = {}  # type: typing.Dict[str, typing.Dict]
+            for i in info_dict:
+                copy_dict[i] = {}
+            info_dict = copy_dict
 
-    # if not a dict, create a dict with blank values
-    if not isinstance(info_dict, dict):
-        copy_dict = {}  # type: typing.Dict[str, typing.Dict]
-        for i in info_dict:
-            copy_dict[i] = {}
-        info_dict = copy_dict
+        if annotation_style == "biosimulations":
+            for name, info in info_dict.items():
+                top_node = BNode()
+                self.doc.add((subjectobj, node_type, top_node))
 
-    if annotation_style == "biosimulations":
-        for name, info in info_dict.items():
+                self.doc.add((top_node, FOAF.name, Literal(name)))
+                self.doc.add((top_node, RDFS.label, Literal(name)))
+
+                # other fields
+                for idf, label in info.items():
+                    try:
+                        foaf_type = getattr(FOAF, label)
+                    except AttributeError:
+                        logger.info("Not a FOAF attribute, using DC.identifier")
+                        foaf_type = DC.identifier
+                    self.doc.add((top_node, foaf_type, _URIRef_or_Literal(idf)))
+        elif annotation_style == "miriam":
+            # top level node: creator/contributor etc.
             top_node = BNode()
-            doc.add((subjectobj, node_type, top_node))
+            self.doc.add((subjectobj, node_type, top_node))
 
-            doc.add((top_node, FOAF.name, Literal(name)))
-            doc.add((top_node, RDFS.label, Literal(name)))
+            for name, info in info_dict.items():
+                # individual references in a list
+                ref = URIRef(f"#{name.replace(' ', '_')}")
+                bag = Bag(self.doc, top_node, [])
+                bag.append(ref)
 
-            # other fields
-            for idf, label in info.items():
-                try:
-                    foaf_type = getattr(FOAF, label)
-                except AttributeError:
-                    logger.info("Not a FOAF attribute, using DC.identifier")
-                    foaf_type = DC.identifier
-                doc.add((top_node, foaf_type, _URIRef_or_Literal(idf)))
-    elif annotation_style == "miriam":
-        # top level node: creator/contributor etc.
-        top_node = BNode()
-        doc.add((subjectobj, node_type, top_node))
+                # individual nodes for details
+                self.doc.add((ref, FOAF.name, Literal(name)))
+                for idf, label in info.items():
+                    try:
+                        foaf_type = getattr(FOAF, label)
+                    except AttributeError:
+                        logger.info("Not a FOAF attribute, using DC.identifier")
+                        foaf_type = DC.identifier
+                    self.doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
 
-        for name, info in info_dict.items():
-            # individual references in a list
-            ref = URIRef(f"#{name.replace(' ', '_')}")
-            bag = Bag(doc, top_node, [])
-            bag.append(ref)
+    def extract_annotations(self, nml2_file: str) -> None:
+        """Extract and print annotations from a NeuroML 2 file.
 
-            # individual nodes for details
-            doc.add((ref, FOAF.name, Literal(name)))
-            for idf, label in info.items():
-                try:
-                    foaf_type = getattr(FOAF, label)
-                except AttributeError:
-                    logger.info("Not a FOAF attribute, using DC.identifier")
-                    foaf_type = DC.identifier
-                doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
+        :param nml2_file: name of NeuroML2 file to parse
+        :type nml2_file: str
+        """
+        pp = pprint.PrettyPrinter()
+        test_file = open(nml2_file)
+        root = etree.parse(test_file).getroot()
+        annotations = {}  # type: dict
+
+        for a in _find_elements(root, "annotation"):
+            for r in _find_elements(a, "RDF", rdf=True):
+                contents = etree.tostring(r, pretty_print=True).decode("utf-8")
+                logger.debug(contents)
+                self.doc.parse(data=contents, format="application/rdf+xml")
+
+                # for s, p, o in g:
+                # print(f"{s}: {p}: {o}")
+
+            # for r in _find_elements(a, "Description", rdf=True):
+            #     desc = _get_attr_in_element(r, "about", rdf=True)
+            #     annotations[desc] = []
+            #
+            #     annotations[desc] = g.serialize(format="turtle2")
+            #
+            # for info in r:
+            #     if isinstance(info.tag, str):
+            #         kind = info.tag.replace(
+            #             "{http://biomodels.net/biology-qualifiers/}", "bqbiol:"
+            #         )
+            #         kind = kind.replace(
+            #             "{http://biomodels.net/model-qualifiers/}", "bqmodel:"
+            #         )
+            #
+            #         for li in _find_elements(info, "li", rdf=True):
+            #             attr = _get_attr_in_element(li, "resource", rdf=True)
+            #             if attr:
+            #                 annotations[desc].append({kind: attr})
+
+        logger.info("Annotations in %s: " % (nml2_file))
+        pp.pprint(annotations)
 
 
 def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
@@ -528,3 +559,26 @@ def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
         return URIRef(astr)
     else:
         return Literal(astr)
+
+
+def create_annotation(*args, **kwargs):
+    """Wrapper around the Annotations.create_annotation method.
+
+    :param **kwargs: TODO
+    :returns: TODO
+
+    """
+    new_annotation = Annotation()
+    return new_annotation.create_annotation(*args, **kwargs)
+
+
+def extract_annotations(nml2_file: str):
+    """Wrapper around the Annotations.extract_annotations method.
+
+    :param *args: TODO
+    :param **kwargs: TODO
+    :returns: TODO
+
+    """
+    new_annotation = Annotation()
+    return new_annotation.extract_annotations(nml2_file)
