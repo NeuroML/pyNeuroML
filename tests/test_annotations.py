@@ -45,7 +45,7 @@ class TestAnnotations(BaseTestCase):
             "modified_dates": ["2024-04-18", "2024-04-19"],
             "authors": {
                 "John Doe": {
-                    "https://someurl.com": "orcid",
+                    "https://someurl.com": "homepage",
                     "https://anotherurl": "github",
                 },
                 "Jane Smith": {},

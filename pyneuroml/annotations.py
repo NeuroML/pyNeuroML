@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 try:
     from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag
-    from rdflib.namespace import DC, DCTERMS, FOAF, RDFS
+    from rdflib.namespace import DC, DCTERMS, FOAF, RDFS, RDF
 except ImportError:
     logger.warning("Please install optional dependencies to use annotation features:")
     logger.warning("pip install pyneuroml[annotations]")
@@ -276,11 +276,12 @@ def create_annotation(
     if description:
         doc.add((subjectobj, DC.description, Literal(description)))
     if keywords:
-        for k in keywords:
-            doc.add((subjectobj, PRISM.keyword, Literal(k)))
+        _add_element(doc, subjectobj, keywords, PRISM.keyword, annotation_style)
     if thumbnails:
-        for t in thumbnails:
-            doc.add((subjectobj, COLLEX.thumbnail, URIRef(f"{fileprefix}/{t}")))
+        prefixed = [
+            f"{fileprefix}/{t}" if (not t.startswith("http")) else t for t in thumbnails
+        ]
+        _add_element(doc, subjectobj, prefixed, COLLEX.thumbnail, annotation_style)
     if organisms:
         doc.bind("bqbiol:hasTaxon", BQBIOL + "/hasTaxon")
         _add_element(doc, subjectobj, organisms, BQBIOL.hasTaxon, annotation_style)
@@ -397,7 +398,7 @@ def create_annotation(
 def _add_element(
     doc: Graph,
     subjectobj: typing.Union[URIRef, Literal],
-    info: typing.Dict[str, str],
+    info_dict: typing.Union[typing.Iterable[str], typing.Dict[str, str]],
     node_type: URIRef,
     annotation_style: str,
 ):
@@ -407,8 +408,8 @@ def _add_element(
     :type doc: RDF.Graph
     :param subjectobj: main object being referred to
     :type subjectobj: URIRef or Literal
-    :param info: dictionary of entries and their labels
-    :type info: dict
+    :param info_dict: dictionary of entries and their labels, or Iterable if no labels
+    :type info_dict: dict or Iterable
     :param node_type: node type
     :type node_type: URIRef
     :param annotation_style: type of annotation
@@ -417,20 +418,31 @@ def _add_element(
     if annotation_style not in ["biosimulations", "miriam"]:
         raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
 
+    # if not a dict, try to create a dict with blank values
+    if not isinstance(info_dict, dict):
+        copy_dict = {}  # type: typing.Dict[str, str]
+        for i in info_dict:
+            copy_dict[i] = ""
+        info_dict = copy_dict
+
     # for biosimulations, we do not use bags
     if annotation_style == "biosimulations":
-        for idf, label in info.items():
+        for idf, label in info_dict.items():
             # add a top level node
             top_node = BNode()
             doc.add((subjectobj, node_type, top_node))
             doc.add((top_node, DC.identifier, URIRef(idf)))
-            doc.add((top_node, RDFS.label, Literal(label)))
+            if len(label) > 0:
+                doc.add((top_node, RDFS.label, Literal(label)))
     elif annotation_style == "miriam":
+        # even if there's only one entry, we still create a bag.
+        # this seems to be the norm in the SBML examples
+        # https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf
         top_node = BNode()
         doc.add((subjectobj, node_type, top_node))
         bag = Bag(doc, top_node, [])
-        for idf, label in info.items():
-            bag.append(URIRef(idf))
+        for idf, label in info_dict.items():
+            bag.append(_URIRef_or_Literal(idf))
 
 
 def _add_humans(
@@ -459,37 +471,60 @@ def _add_humans(
     if annotation_style not in ["biosimulations", "miriam"]:
         raise ValueError("Annotation style must either be 'miriam' or 'biosimulations'")
 
-    if isinstance(info_dict, dict):
+    # if not a dict, create a dict with blank values
+    if not isinstance(info_dict, dict):
+        copy_dict = {}  # type: typing.Dict[str, typing.Dict]
+        for i in info_dict:
+            copy_dict[i] = {}
+        info_dict = copy_dict
+
+    if annotation_style == "biosimulations":
         for name, info in info_dict.items():
             top_node = BNode()
             doc.add((subjectobj, node_type, top_node))
 
-            # add name
-            if annotation_style == "biosimulations":
-                doc.add((top_node, FOAF.name, Literal(name)))
-                doc.add((top_node, RDFS.label, Literal(name)))
-            elif annotation_style == "miriam":
-                bag = Bag(doc, top_node, [Literal(name)])
+            doc.add((top_node, FOAF.name, Literal(name)))
+            doc.add((top_node, RDFS.label, Literal(name)))
 
             # other fields
             for idf, label in info.items():
-                if annotation_style == "biosimulations":
-                    if label == "accountname":
-                        doc.add((top_node, FOAF.accountName, URIRef(idf)))
-                    else:
-                        doc.add((top_node, DC.identifier, URIRef(idf)))
-                elif annotation_style == "miriam":
-                    if idf.startswith("http:"):
-                        bag.append(URIRef(idf))
-                    else:
-                        bag.append(Literal(idf))
+                try:
+                    foaf_type = getattr(FOAF, label)
+                except AttributeError:
+                    logger.info("Not a FOAF attribute, using DC.identifier")
+                    foaf_type = DC.identifier
+                doc.add((top_node, foaf_type, _URIRef_or_Literal(idf)))
+    elif annotation_style == "miriam":
+        # top level node: creator/contributor etc.
+        top_node = BNode()
+        doc.add((subjectobj, node_type, top_node))
+
+        for name, info in info_dict.items():
+            # individual references in a list
+            ref = URIRef(f"#{name.replace(' ', '_')}")
+            bag = Bag(doc, top_node, [])
+            bag.append(ref)
+
+            # individual nodes for details
+            doc.add((ref, FOAF.name, Literal(name)))
+            for idf, label in info.items():
+                try:
+                    foaf_type = getattr(FOAF, label)
+                except AttributeError:
+                    logger.info("Not a FOAF attribute, using DC.identifier")
+                    foaf_type = DC.identifier
+                doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
+
+
+def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
+    """Create a URIRef or Literal depending on string.
+
+    :param astr: a string to create URIRef or Literal for
+    :type astr: str
+    :returns: a URIRef or Literal
+
+    """
+    if astr.startswith("http:"):
+        return URIRef(astr)
     else:
-        for name in info_dict:
-            top_node = BNode()
-            doc.add((subjectobj, node_type, top_node))
-            # add name
-            if annotation_style == "biosimulations":
-                doc.add((top_node, FOAF.name, Literal(name)))
-                doc.add((top_node, RDFS.label, Literal(name)))
-            elif annotation_style == "miriam":
-                bag = Bag(doc, top_node, [Literal(name)])
+        return Literal(astr)
