@@ -12,6 +12,7 @@ import logging
 import os
 
 import neuroml
+
 from pyneuroml.annotations import create_annotation, extract_annotations
 from pyneuroml.io import write_neuroml2_file
 
@@ -24,13 +25,11 @@ logger.setLevel(logging.DEBUG)
 class TestAnnotations(BaseTestCase):
     """Test annotations module"""
 
-    common = {
-        "subject": "model.nml",
+    annotation_args = {
         "description": "A tests model",
         "abstract": "lol, something nice",
         "keywords": ["something", "and something"],
         "thumbnails": ["lol.png"],
-        "xml_header": False,
         "organisms": {
             "http://identifiers.org/taxonomy/4896": "Schizosaccharomyces pombe"
         },
@@ -55,11 +54,16 @@ class TestAnnotations(BaseTestCase):
         "funders": {"http://afundingbody.org": "a funding body"},
         "license": {"https://identifiers.org/spdx:CC0": "CC0"},
     }
+    func_args = {
+        "xml_header": False,
+        "subject": "model.nml",
+    }
 
     def test_create_annotation_miriam(self):
         """Test create_annotations: MIRIAM"""
-        common1 = copy.deepcopy(self.common)
-        annotation = create_annotation(**common1, annotation_style="miriam")
+        annotation = create_annotation(
+            **self.annotation_args, **self.func_args, annotation_style="miriam"
+        )
         self.assertIsNotNone(annotation)
         print(annotation)
 
@@ -70,8 +74,9 @@ class TestAnnotations(BaseTestCase):
 
     def test_create_annotation_biosimulations(self):
         """Test create_annotations: biosimulations"""
-        common2 = copy.deepcopy(self.common)
-        annotation2 = create_annotation(**common2, annotation_style="biosimulations")
+        annotation2 = create_annotation(
+            **self.annotation_args, **self.func_args, annotation_style="biosimulations"
+        )
         self.assertIsNotNone(annotation2)
         print(annotation2)
 
@@ -79,7 +84,8 @@ class TestAnnotations(BaseTestCase):
         """Test the extract_annotations function."""
         fname = "TestAnnotationMiriam.xml"
         annotation = create_annotation(
-            **self.common,
+            **self.annotation_args,
+            **self.func_args,
             annotation_style="miriam",
         )
         self.assertIsNotNone(annotation)
@@ -87,17 +93,21 @@ class TestAnnotations(BaseTestCase):
         newdoc.annotation = neuroml.Annotation([annotation])
         write_neuroml2_file(newdoc, fname)
         extracted = extract_annotations(fname)
-        for key, val in extracted["test"].items():
-            if val is not None and len(val) != 0:
-                print(f"{key}: {val} vs {self.common[key]}")
-                self.assertEqual(len(val), len(self.common[key]))
+        for key, val in self.annotation_args.items():
+            print(f"{key}: {val} vs {extracted['test'][key]}")
+            # miriam only has keys
+            if isinstance(val, dict):
+                self.assertEqual(len(val), len(extracted["test"][key]))
+            elif isinstance(val, str):
+                self.assertEqual(val, extracted["test"][key])
         os.unlink(fname)
 
     def test_extract_annotations_biosimulations(self):
         """Test the extract_annotations function."""
         fname = "TestAnnotationBiosimulations.xml"
         annotation = create_annotation(
-            **self.common,
+            **self.annotation_args,
+            **self.func_args,
             annotation_style="biosimulations",
         )
         self.assertIsNotNone(annotation)
@@ -106,9 +116,8 @@ class TestAnnotations(BaseTestCase):
         newdoc.annotation = neuroml.Annotation([annotation])
         write_neuroml2_file(newdoc, fname)
         extracted = extract_annotations(fname)
-        for key, val in extracted["test"].items():
-            if val is not None and len(val) != 0:
-                print(f"{key}: {val} vs {self.common[key]}")
-                self.assertEqual(len(val), len(self.common[key]))
+        for key, val in self.annotation_args.items():
+            print(f"{key}: {val} vs {extracted['test'][key]}")
+            self.assertEqual(len(val), len(extracted["test"][key]))
 
         os.unlink(fname)
