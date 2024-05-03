@@ -74,8 +74,9 @@ class TestAnnotations(BaseTestCase):
         self.assertIsNotNone(annotation2)
         print(annotation2)
 
-    def test_extract_annotations(self):
+    def test_extract_annotations_miriam(self):
         """Test the extract_annotations function."""
+        fname = "TestAnnotationMiriam.xml"
         annotation = create_annotation(
             **self.common,
             annotation_style="miriam",
@@ -83,5 +84,27 @@ class TestAnnotations(BaseTestCase):
         self.assertIsNotNone(annotation)
         newdoc = neuroml.NeuroMLDocument(id="test")
         newdoc.annotation = neuroml.Annotation([annotation])
-        write_neuroml2_file(newdoc, "TestAnnotation.xml")
-        extract_annotations("TestAnnotation.xml")
+        write_neuroml2_file(newdoc, fname)
+        extracted = extract_annotations(fname)
+        for key, val in extracted["test"].items():
+            if val is not None and len(val) != 0:
+                print(f"{key}: {val} vs {self.common[key]}")
+                self.assertEqual(len(val), len(self.common[key]))
+
+    def test_extract_annotations_biosimulations(self):
+        """Test the extract_annotations function."""
+        fname = "TestAnnotationBiosimulations.xml"
+        annotation = create_annotation(
+            **self.common,
+            annotation_style="biosimulations",
+        )
+        self.assertIsNotNone(annotation)
+
+        newdoc = neuroml.NeuroMLDocument(id="test")
+        newdoc.annotation = neuroml.Annotation([annotation])
+        write_neuroml2_file(newdoc, fname)
+        extracted = extract_annotations(fname)
+        for key, val in extracted["test"].items():
+            if val is not None and len(val) != 0:
+                print(f"{key}: {val} vs {self.common[key]}")
+                self.assertEqual(len(val), len(self.common[key]))
