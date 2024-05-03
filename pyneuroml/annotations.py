@@ -32,20 +32,13 @@ except ImportError:
 # From https://doi.org/10.1515/jib-2021-0020 (page 3)
 # rdf, foaf, dc already included in rdflib
 NAMESPACES_MAP = {
-    "orcid": "https://orcid.org/",
     "bqmodel": "http://biomodels.net/model-qualifiers/",
     "bqbiol": "http://biomodels.net/biology-qualifiers/",
-    "pubmed": "https://identifiers.org/pubmed:",
-    "NCBI_Taxon": "https://identifiers.org/taxonomy:",
-    "biomod": "https://identifiers.org/biomodels.db:",
-    "chebi": "https://identifiers.org/CHEBI:",
-    "uniprot": "https://identifiers.org/uniprot:",
-    "obp": "https://identifiers.org/opb:",
-    "fma": "https://identifiers.org/FMA:",
     "semsim": "http://bime.uw.edu/semsim/",
     "prism": "http://prismstandard.org/namespaces/basic/2.0/",
     "collex": "http://www.collex.org/schema",
     "scoro": "http://purl.org/spar/scoro",
+    "orcid": "https://orcid.org/",
 }
 
 
@@ -55,6 +48,7 @@ COLLEX = Namespace(NAMESPACES_MAP["collex"])
 BQBIOL = Namespace(NAMESPACES_MAP["bqbiol"])
 BQMODEL = Namespace(NAMESPACES_MAP["bqmodel"])
 SCORO = Namespace(NAMESPACES_MAP["scoro"])
+ORCID = Namespace(NAMESPACES_MAP["orcid"])
 
 
 class Annotation(object):
@@ -88,6 +82,7 @@ class Annotation(object):
         self.doc.bind("bqbiol", BQBIOL)
         self.doc.bind("bqmodel", BQMODEL)
         self.doc.bind("scoro", SCORO)
+        self.doc.bind("orcid", ORCID)
 
         for k, v in self.P_MAP_EXTRA.items():
             self.doc.bind(f"{v}:{k}", f"v.upper()/{k}")
@@ -495,9 +490,12 @@ class Annotation(object):
 
                 # other fields
                 for idf, label in info.items():
-                    try:
-                        foaf_type = getattr(FOAF, label)
-                    except AttributeError:
+                    if label == "orcid":
+                        foaf_type = ORCID.id
+                    else:
+                        foaf_type = getattr(FOAF, label, None)
+
+                    if foaf_type is None:
                         logger.info("Not a FOAF attribute, using DC.identifier")
                         foaf_type = DC.identifier
                     self.doc.add((top_node, foaf_type, _URIRef_or_Literal(idf)))
@@ -515,9 +513,12 @@ class Annotation(object):
                 # individual nodes for details
                 self.doc.add((ref, FOAF.name, Literal(name)))
                 for idf, label in info.items():
-                    try:
-                        foaf_type = getattr(FOAF, label)
-                    except AttributeError:
+                    if label == "orcid":
+                        foaf_type = ORCID.id
+                    else:
+                        foaf_type = getattr(FOAF, label, None)
+
+                    if foaf_type is None:
                         logger.info("Not a FOAF attribute, using DC.identifier")
                         foaf_type = DC.identifier
                     self.doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
