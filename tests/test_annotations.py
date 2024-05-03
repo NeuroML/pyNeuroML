@@ -45,6 +45,7 @@ class TestAnnotations(BaseTestCase):
             "John Doe": {
                 "https://someurl.com": "homepage",
                 "https://anotherurl": "github",
+                "https://orcid.org/0000-0001-7568-7167": "orcid",
             },
             "Jane Smith": {},
         },
