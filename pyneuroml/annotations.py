@@ -95,8 +95,8 @@ class Annotation(object):
             "title": DC.title,
             "abstract": DCTERMS.abstract,
             "description": DC.description,
-            "keyword": PRISM.keyword,
-            "thumbnail": COLLEX.thumbnail,
+            "keywords": PRISM.keyword,
+            "thumbnails": COLLEX.thumbnail,
             "organisms": BQBIOL.hasTaxon,
             "encodes_other_biology": BQBIOL.encodes,
             "has_version": BQBIOL.hasVersion,
@@ -308,10 +308,7 @@ class Annotation(object):
         for arg, val in mylocals.items():
             if arg in self.ARG_MAP.keys():
                 # handle any special cases
-                if arg == "abstract" or arg == "description":
-                    self.doc.add((subjectobj, self.ARG_MAP[arg], Literal(val)))
-
-                elif arg == "thumbnails":
+                if arg == "thumbnails":
                     prefixed = [
                         f"{fileprefix}/{t}" if (not t.startswith("http")) else t
                         for t in val
@@ -403,35 +400,48 @@ class Annotation(object):
                 "Annotation style must either be 'miriam' or 'biosimulations'"
             )
 
+        logger.debug(f"Processing element {node_type}: {info_dict} ({type(info_dict)})")
+
         # do nothing if an empty dict is passed
         if info_dict is None:
             return
 
-        # if not a dict, try to create a dict with blank values
-        if not isinstance(info_dict, dict):
-            copy_dict = {}  # type: typing.Dict[str, str]
-            for i in info_dict:
-                copy_dict[i] = ""
-            info_dict = copy_dict
-
         # for biosimulations, we do not use bags
         if annotation_style == "biosimulations":
-            for idf, label in info_dict.items():
-                # add a top level node
-                top_node = BNode()
-                self.doc.add((subjectobj, node_type, top_node))
-                self.doc.add((top_node, DC.identifier, URIRef(idf)))
-                if len(label) > 0:
-                    self.doc.add((top_node, RDFS.label, Literal(label)))
+            if isinstance(info_dict, dict):
+                for idf, label in info_dict.items():
+                    # add a top level node
+                    top_node = BNode()
+                    self.doc.add((subjectobj, node_type, top_node))
+                    self.doc.add((top_node, DC.identifier, URIRef(idf)))
+                    if len(label) > 0:
+                        self.doc.add((top_node, RDFS.label, Literal(label)))
+            elif isinstance(info_dict, list):
+                for it in info_dict:
+                    self.doc.add((subjectobj, node_type, _URIRef_or_Literal(it)))
+            elif isinstance(info_dict, str):
+                self.doc.add((subjectobj, node_type, _URIRef_or_Literal(info_dict)))
+            else:
+                raise ValueError(f"Could not parse: {node_type}: {info_dict}")
+
         elif annotation_style == "miriam":
             # even if there's only one entry, we still create a bag.
             # this seems to be the norm in the SBML examples
             # https://raw.githubusercontent.com/combine-org/combine-specifications/main/specifications/files/sbml.level-3.version-2.core.release-2.pdf
-            top_node = BNode()
-            self.doc.add((subjectobj, node_type, top_node))
-            bag = Bag(self.doc, top_node, [])
-            for idf, label in info_dict.items():
-                bag.append(_URIRef_or_Literal(idf))
+            if isinstance(info_dict, str):
+                self.doc.add((subjectobj, node_type, _URIRef_or_Literal(info_dict)))
+            else:
+                top_node = BNode()
+                self.doc.add((subjectobj, node_type, top_node))
+                bag = Bag(self.doc, top_node, [])
+                if isinstance(info_dict, list):
+                    for idf in info_dict:
+                        bag.append(_URIRef_or_Literal(idf))
+                elif isinstance(info_dict, dict):
+                    for idf, label in info_dict.items():
+                        bag.append(_URIRef_or_Literal(idf))
+                else:
+                    raise ValueError(f"Could not parse: {node_type}: {info_dict}")
 
     def _add_humans(
         self,
