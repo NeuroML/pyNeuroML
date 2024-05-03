@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 try:
-    from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag, Container
-    from rdflib.namespace import DC, DCTERMS, FOAF, RDFS, RDF
+    from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag
+    from rdflib.namespace import DC, DCTERMS, FOAF, RDFS
 except ImportError:
     logger.warning("Please install optional dependencies to use annotation features:")
     logger.warning("pip install pyneuroml[annotations]")
@@ -302,8 +302,6 @@ class Annotation(object):
         # get the args passed to this function
         mylocals = locals()
 
-        self.doc.add((subjectobj, self.ARG_MAP["title"], Literal(title)))
-
         # loop over the rest
         for arg, val in mylocals.items():
             if arg in self.ARG_MAP.keys():
@@ -513,87 +511,264 @@ class Annotation(object):
                         foaf_type = DC.identifier
                     self.doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
 
-    def extract_annotations(self, nml2_file: str) -> None:
+    def extract_annotations(
+        self, nml2_file: str
+    ) -> typing.Dict[str, typing.Dict[typing.Any, typing.Any]]:
         """Extract and print annotations from a NeuroML 2 file.
 
         :param nml2_file: name of NeuroML2 file to parse
         :type nml2_file: str
+        :returns: dictionaries with annotations information
+        :rtype: dict
+        """
+        pp = pprint.PrettyPrinter(width=100)
+        annotations = {}  # type: typing.Dict
+
+        with open(nml2_file, "r") as f:
+            root = etree.parse(f).getroot()
+
+            for a in _find_elements(root, "annotation"):
+                parent = a.getparent()
+                logger.debug(f"Parent is {parent}")
+                # TODO: debug
+                # _get_attr_in_element doesn't quite work correctly
+                try:
+                    obj_id = parent.attrib["id"]
+                except KeyError:
+                    obj_id = ""
+                annotations[obj_id] = self.parse_rdf(a)
+
+            logger.info("Annotations in %s: " % (nml2_file))
+            pp.pprint(annotations)
+        return annotations
+
+    def extract_annotations_from_string(
+        self, xml_string: str
+    ) -> typing.Dict[str, typing.Dict[typing.Any, typing.Any]]:
+        """Extract and print annotations from a NeuroML 2 string.
+
+        :param xml_string: XML string to parse
+        :type xml_string: str
+        :returns: list of dictionaries with annotations information
+        :rtype: list of dict
         """
         pp = pprint.PrettyPrinter()
-        test_file = open(nml2_file)
-        root = etree.parse(test_file).getroot()
-        annotations = {}  # type: dict
+        annotations = {}  # type: typing.Dict
 
+        root = etree.fromstring(xml_string).getroot()
         for a in _find_elements(root, "annotation"):
-            for r in _find_elements(a, "RDF", rdf=True):
+            parent = a.getparent()
+            logger.debug(f"Parent is {parent}")
+            try:
+                obj_id = parent.attrib["id"]
+            except KeyError:
+                obj_id = ""
+            annotations[obj_id] = self.parse_rdf(a)
+
+        logger.info("Annotations:")
+        pp.pprint(annotations)
+        return annotations
+
+    def parse_rdf(
+        self, annotation_element: etree.Element
+    ) -> typing.Dict[str, typing.Any]:
+        """Parse RDF from an <annotation> element.
+
+        Note that this is not a general purpose RDF parser.
+        It is a specific parser for the RDF annotations that are used in
+        NeuroML (which the py:func:`create_annotation` method can write).
+
+        :param annotation_element: an <annotation> element
+        :type annotation_element: etree.Element
+        :returns: annotation dictionary
+
+        """
+        annotations = {}  # type: typing.Dict
+        # guess if it's biosimulations format or MIRIAM
+        # biosimulations does not use bags
+        bags = _find_elements(annotation_element, "Bag", rdf=True)
+
+        if len(list(bags)) > 0:
+            logger.debug("Parsing MIRIAM style annotation")
+            # MIRIAM annotations, as written by create_annotation can be of a
+            # few forms:
+
+            # 1. elements without any nesting, that contain literals as the
+            # objects (the root node is the subject, ex: title, description,
+            # abstract)
+
+            # 2. elements that may contain multiple objects and are so contained
+            # in containers (bags)
+            # for these, the top level node is a "blank node" that includes the
+            # bag, which includes the items.
+            # note that the objects here may refer to other local subjects,
+            # eg: creators/contributors will contain a list of local reference
+            # to other elements
+
+            # 3. elements that may contain multiple objects contained in another
+            # element (modification date)
+            # for these, there are two levels of blank nodes before the
+            # bags/items.
+            for r in _find_elements(annotation_element, "RDF", rdf=True):
                 contents = etree.tostring(r, pretty_print=True).decode("utf-8")
                 logger.debug(contents)
                 self.doc.parse(data=contents, format="application/rdf+xml")
 
                 for desc, pred in self.ARG_MAP.items():
                     annotations[desc] = []
+                    # get all objects that use the predicate and iterate over
+                    # them
                     objs = self.doc.objects(predicate=pred)
                     for obj in objs:
-                        print(f"Iterating: {desc}: {obj} ({type(obj)})")
+                        logger.debug(
+                            f"Iterating {pred} objects: {desc}: {obj} ({type(obj)})"
+                        )
+                        # Literals: description, title, abstract
                         if isinstance(obj, Literal):
                             annotations[desc] = str(obj)
-                        if isinstance(obj, BNode):
+                        # nested elements: ones with blank nodes that contain
+                        # bags with lists; the lists can contain local
+                        # references to other elements
+
+                        elif isinstance(obj, BNode):
+                            # the objects for the top level BNode subject will
+                            # be the bags, and the items in the bags, all
+                            # returned as a list
                             for cobj in self.doc.objects(obj):
-                                print(f"Iterating BNode: {desc}: {cobj} ({type(cobj)})")
+                                logger.debug(
+                                    f"Iterating BNode objects: {desc}: {cobj} ({type(cobj)})"
+                                )
                                 if isinstance(cobj, URIRef):
                                     # a bag, ignore
+                                    bagged = False
                                     if str(cobj).endswith("ns#Bag"):
+                                        bagged = True
+                                        logger.debug("Ignoring Bag")
                                         continue
 
-                                    # check if it's a subject for other triples
+                                    # the list item can be a local reference to
+                                    # another triple (authors/contributors)
+                                    # so, check if it's a subject for other triples
                                     # (authors/contributors)
                                     gen = self.doc.predicate_objects(subject=cobj)
                                     lenitems = sum(1 for _ in gen)
-                                    print(f"Len items is {lenitems}")
+                                    logger.debug(f"Len items is {lenitems}")
 
-                                    # a "plain" URIRef
+                                    # no: it's a "plain" URIRef
                                     if lenitems == 0:
                                         annotations[desc].append(str(cobj))
 
-                                    # local reference
+                                    # yes, it's a local reference
                                     if lenitems > 0:
                                         gen = self.doc.predicate_objects(subject=cobj)
                                         bits = []
                                         for pred, pobj in gen:
-                                            print(
+                                            logger.debug(
                                                 f"Found: {desc}: {pred} {pobj} ({type(pobj)})"
                                             )
                                             bits.append(str(pobj))
-                                        annotations[desc].append(bits)
+                                        if len(bits) == 1:
+                                            annotations[desc].append(bits[0])
+                                        else:
+                                            annotations[desc].append(bits)
 
+                                # a literal, eg: creation date
                                 elif isinstance(cobj, Literal):
-                                    annotations[desc].append(str(cobj))
-                                # another bnode: parse it again (recurse?)
+                                    if bagged:
+                                        annotations[desc].append(str(cobj))
+                                    else:
+                                        annotations[desc] = str(cobj)
+                                # another bnode: eg: modification date
                                 else:
-                                    print(f"BNod else: {desc}: {cobj} ({type(cobj)})")
+                                    logger.debug(
+                                        f"BNode nested in BNode: {desc}: {cobj} ({type(cobj)})"
+                                    )
+                                    for ccobj in self.doc.objects(cobj):
+                                        logger.debug(
+                                            f"Iterating nested BNode: {desc}: {ccobj} ({type(ccobj)})"
+                                        )
+                                        if str(ccobj).endswith("ns#Bag"):
+                                            logger.debug("Ignoring Bag")
+                                            continue
+                                        # a literal, eg: creation date
+                                        elif isinstance(ccobj, Literal):
+                                            annotations[desc].append(str(ccobj))
 
-            # for r in _find_elements(a, "Description", rdf=True):
-            #     desc = _get_attr_in_element(r, "about", rdf=True)
-            #     annotations[desc] = []
-            #
-            #     annotations[desc] = g.serialize(format="turtle2")
-            #
-            # for info in r:
-            #     if isinstance(info.tag, str):
-            #         kind = info.tag.replace(
-            #             "{http://biomodels.net/biology-qualifiers/}", "bqbiol:"
-            #         )
-            #         kind = kind.replace(
-            #             "{http://biomodels.net/model-qualifiers/}", "bqmodel:"
-            #         )
-            #
-            #         for li in _find_elements(info, "li", rdf=True):
-            #             attr = _get_attr_in_element(li, "resource", rdf=True)
-            #             if attr:
-            #                 annotations[desc].append({kind: attr})
+        # biosimulations has a flat structure, since no containers (bags) are
+        # used.
+        else:
+            logger.debug("Parsing biosimulations style annotation")
+            for r in _find_elements(annotation_element, "RDF", rdf=True):
+                contents = etree.tostring(r, pretty_print=True).decode("utf-8")
+                logger.debug(contents)
+                self.doc.parse(data=contents, format="application/rdf+xml")
 
-        logger.info("Annotations in %s: " % (nml2_file))
-        pp.pprint(annotations)
+                for desc, pred in self.ARG_MAP.items():
+                    # Since containers are not used, we cannot tell if there
+                    # are multiple objects of the same predicate
+                    # Even if we count them, a multi-element object could just
+                    # have one element, which will be equivalent to an object
+                    # that should not have multiple elements
+                    # So, we initialize manually
+                    if desc in ["title", "abstract", "description", "creation_date"]:
+                        annotations[desc] = None
+                    # Everything else is an iterable
+                    # Most are dicts, others are lists
+                    else:
+                        annotations[desc] = {}
+
+                    for obj in self.doc.objects(predicate=pred):
+                        logger.debug(f"Iterating: {desc}: {obj} ({type(obj)})")
+                        if isinstance(obj, BNode):
+                            idfs = []
+                            labels = []
+                            for pred_, cobj in self.doc.predicate_objects(obj):
+                                logger.debug(
+                                    f"Iterating BNode objects: {desc}: {pred_}: {cobj} ({type(cobj)})"
+                                )
+                                if pred_ == RDFS.label:
+                                    labels.append(str(cobj))
+                                else:
+                                    idfs.append(str(cobj))
+
+                            logger.debug(f"idfs: {idfs}")
+                            logger.debug(f"labels: {labels}")
+                            # id/label pairs
+                            if len(idfs) == 1 and len(labels) == 1:
+                                # using dict(zip..) splits the space separated
+                                # strings into different labels
+                                biosim_bits = dict(zip(idfs, labels))
+                                # predicate with single entry
+                                if annotations[desc] is None:
+                                    annotations[desc] = biosim_bits
+                                else:
+                                    annotations[desc].update(biosim_bits)
+                            # label with multiple idfs
+                            if len(idfs) > 1 and len(labels) == 1:
+                                annotations[desc].update({labels[0]: set(idfs)})
+                            # no label, nested data
+                            if len(idfs) == 1 and len(labels) == 0:
+                                if annotations[desc] is None:
+                                    annotations[desc] = idfs[0]
+                                else:
+                                    annotations[desc].append(idfs)
+                            if len(idfs) > 1 and len(labels) == 0:
+                                if len(annotations[desc]) == 0:
+                                    annotations[desc] = idfs
+                                else:
+                                    annotations[desc].extend(idfs)
+                        # not bnodes, top level objects
+                        else:
+                            # text objects (literals)
+                            if annotations[desc] is None:
+                                annotations[desc] = str(obj)
+                            # objects that may be lists: keywords, thumbnails
+                            else:
+                                if len(annotations[desc]) == 0:
+                                    annotations[desc] = [str(obj)]
+                                else:
+                                    annotations[desc].append(str(obj))
+        return annotations
 
 
 def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
@@ -628,10 +803,10 @@ def create_annotation(*args, **kwargs):
 
 def extract_annotations(nml2_file: str):
     """Wrapper around the Annotations.extract_annotations method.
-
-    :param *args: TODO
-    :param **kwargs: TODO
-    :returns: TODO
+    :param nml2_file: name of NeuroML2 file to parse
+    :type nml2_file: str
+    :returns: dictionaries with annotations information
+    :rtype: dict
 
     """
     new_annotation = Annotation()
