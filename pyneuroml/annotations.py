@@ -320,8 +320,12 @@ class Annotation(object):
 
                 elif arg == "license":
                     assert len(val.items()) == 1
+                    if annotation_style == "miriam":
+                        l_string = list(val.keys())[0]
+                    else:
+                        l_string = val
                     self._add_element(
-                        subjectobj, val, self.ARG_MAP[arg], annotation_style
+                        subjectobj, l_string, self.ARG_MAP[arg], annotation_style
                     )
 
                 elif arg == "authors" or arg == "contributors":
@@ -630,9 +634,17 @@ class Annotation(object):
                         logger.debug(
                             f"Iterating {pred} objects: {desc}: {obj} ({type(obj)})"
                         )
-                        # Literals: description, title, abstract
-                        if isinstance(obj, Literal):
+
+                        # handle specially to return in the form supplied to
+                        # create_annotation
+                        if desc == "license":
+                            annotations[desc] = {str(obj)}
+                            continue
+
+                        # top level Literals or URIRefs: description, title, abstract
+                        if isinstance(obj, Literal) or isinstance(obj, URIRef):
                             annotations[desc] = str(obj)
+
                         # nested elements: ones with blank nodes that contain
                         # bags with lists; the lists can contain local
                         # references to other elements
@@ -700,6 +712,9 @@ class Annotation(object):
                                         # a literal, eg: creation date
                                         elif isinstance(ccobj, Literal):
                                             annotations[desc].append(str(ccobj))
+
+                        else:
+                            raise ValueError(f"Unrecognised element type: {obj}")
 
         # biosimulations has a flat structure, since no containers (bags) are
         # used.
