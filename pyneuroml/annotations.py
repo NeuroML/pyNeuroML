@@ -306,6 +306,8 @@ class Annotation(object):
         # loop over the rest
         for arg, val in mylocals.items():
             if arg in self.ARG_MAP.keys():
+                if val is None:
+                    continue
                 # handle any special cases
                 if arg == "thumbnails":
                     prefixed = [
@@ -467,6 +469,10 @@ class Annotation(object):
             raise ValueError(
                 "Annotation style must either be 'miriam' or 'biosimulations'"
             )
+
+        # do nothing if an empty dict is passed
+        if info_dict is None:
+            return
 
         # if not a dict, create a dict with blank values
         if not isinstance(info_dict, dict):
