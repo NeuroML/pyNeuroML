@@ -52,11 +52,11 @@ class TestAnnotations(BaseTestCase):
         "see_also": {"http://link.com": "a link"},
         "references": {"http://reference.com": "a reference"},
         "funders": {"http://afundingbody.org": "a funding body"},
-        "license": {"CC0": "license"},
+        "license": {"https://identifiers.org/spdx:CC0": "CC0"},
     }
 
-    def test_create_annotation(self):
-        """Test create_annotations"""
+    def test_create_annotation_miriam(self):
+        """Test create_annotations: MIRIAM"""
         common1 = copy.deepcopy(self.common)
         annotation = create_annotation(**common1, annotation_style="miriam")
         self.assertIsNotNone(annotation)
@@ -67,7 +67,8 @@ class TestAnnotations(BaseTestCase):
         self.assertIsNone(newdoc.annotation.validate())
         self.assertIsNone(newdoc.validate(recursive=True))
 
-        # biosimulations
+    def test_create_annotation_biosimulations(self):
+        """Test create_annotations: biosimulations"""
         common2 = copy.deepcopy(self.common)
         annotation2 = create_annotation(**common2, annotation_style="biosimulations")
         self.assertIsNotNone(annotation2)
