@@ -589,15 +589,20 @@ class Annotation(object):
 def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
     """Create a URIRef or Literal depending on string.
 
+    If a string begins with http:, https:, or file:, it is assumed to be a
+    URIRef.
+
     :param astr: a string to create URIRef or Literal for
     :type astr: str
     :returns: a URIRef or Literal
 
     """
-    if astr.startswith("http:"):
-        return URIRef(astr)
-    else:
-        return Literal(astr)
+    prefixes = ["http:", "https:", "file:"]
+    for p in prefixes:
+        if astr.startswith(p):
+            return URIRef(astr)
+
+    return Literal(astr)
 
 
 def create_annotation(*args, **kwargs):
