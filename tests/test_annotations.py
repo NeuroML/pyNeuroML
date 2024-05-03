@@ -7,12 +7,13 @@ File: tests/test_annotations.py
 Copyright 2024 NeuroML contributors
 """
 
+import copy
 import logging
+import os
 
+import neuroml
 from pyneuroml.annotations import create_annotation, extract_annotations
 from pyneuroml.io import write_neuroml2_file
-import neuroml
-import copy
 
 from . import BaseTestCase
 
@@ -90,6 +91,7 @@ class TestAnnotations(BaseTestCase):
             if val is not None and len(val) != 0:
                 print(f"{key}: {val} vs {self.common[key]}")
                 self.assertEqual(len(val), len(self.common[key]))
+        os.unlink(fname)
 
     def test_extract_annotations_biosimulations(self):
         """Test the extract_annotations function."""
@@ -108,3 +110,5 @@ class TestAnnotations(BaseTestCase):
             if val is not None and len(val) != 0:
                 print(f"{key}: {val} vs {self.common[key]}")
                 self.assertEqual(len(val), len(self.common[key]))
+
+        os.unlink(fname)

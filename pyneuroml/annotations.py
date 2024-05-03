@@ -7,20 +7,21 @@ File: pyneuroml/annotations.py
 Copyright 2024 NeuroML contributors
 """
 
-import re
 import logging
 import pprint
-import typing
+import re
 import textwrap
+import typing
 
 from lxml import etree
+
 from pyneuroml.utils.xml import _find_elements
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 try:
-    from rdflib import BNode, Graph, Literal, Namespace, URIRef, Bag
+    from rdflib import Bag, BNode, Graph, Literal, Namespace, URIRef
     from rdflib.namespace import DC, DCTERMS, FOAF, RDFS
 except ImportError:
     logger.warning("Please install optional dependencies to use annotation features:")
