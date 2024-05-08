@@ -816,8 +816,12 @@ def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
 def create_annotation(*args, **kwargs):
     """Wrapper around the Annotations.create_annotation method.
 
-    :param **kwargs: TODO
-    :returns: TODO
+    Please see py:func:`Annotations.create_annotations` for detailed
+    documentation.
+
+    .. versionadded:: 1.2.13
+
+    :returns: annotation string
 
     """
     new_annotation = Annotation()
@@ -826,6 +830,12 @@ def create_annotation(*args, **kwargs):
 
 def extract_annotations(nml2_file: str):
     """Wrapper around the Annotations.extract_annotations method.
+
+    Please see py:func:`Annotations.extract_annotations` for detailed
+    documentation.
+
+    .. versionadded:: 1.2.13
+
     :param nml2_file: name of NeuroML2 file to parse
     :type nml2_file: str
     :returns: dictionaries with annotations information
