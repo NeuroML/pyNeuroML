@@ -366,15 +366,25 @@ def get_channels_from_channel_file(
     :type channel_file: str
     :returns: list of channels
     :rtype: list
+    :raises ValueError: if no channels were found in the file
     """
     doc = read_neuroml2_file(
         channel_file, include_includes=True, verbose=False, already_included=[]
     )
-    channels = list(doc.ion_channel_hhs.__iter__()) + list(doc.ion_channel.__iter__())
+    channels = (
+        list(doc.ion_channel_hhs.__iter__())
+        + list(doc.ion_channel.__iter__())
+        + list(doc.ion_channel_v_shifts.__iter__())
+    )
+
+    if len(channels) == 0:
+        raise ValueError(f"No channels found in {channel_file}")
+
     for channel in channels:
         setattr(channel, "file", channel_file)
         if not hasattr(channel, "notes"):
             setattr(channel, "notes", "")
+
     return channels
 
 
@@ -447,7 +457,7 @@ def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
 
 
 def get_channel_gates(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> typing.List[
     typing.Union[
         neuroml.GateHHUndetermined,
@@ -476,7 +486,7 @@ def get_channel_gates(
 
 
 def get_conductance_expression(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> str:
     """Get expression of conductance in channel.
 
