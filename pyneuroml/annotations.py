@@ -209,7 +209,9 @@ class Annotation(object):
             select what style they want to use for the annotation.
         :type annotation_style: str
         :param serialization_format: format to serialize in using `rdflib.serialize`
+
             See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
+
         :type serialization_format: str
         :param xml_header: toggle inclusion of xml header if serializing in xml format
         :type xml_header: bool
@@ -256,13 +258,14 @@ class Annotation(object):
         :param citations: related citations
         :type citations: dict(str, str)
         :param authors: authors
+
             This can either be:
 
-            - a set: {"Author A", "Author B"}
+            - a set: :code:`{"Author A", "Author B"}`
             - a dictionary where the keys are author names and values are
               dictionaries of more metadata:
 
-              {"Author A": {"https://../": "accountname", "..": ".."}}
+              :code:`{"Author A": {"https://../": "accountname", "..": ".."}}`
 
             The inner dictionary should have the reference or literal as key, and
             can take a "label", which can be any of the FOAF attributes:
@@ -584,11 +587,11 @@ class Annotation(object):
     def parse_rdf(
         self, annotation_element: etree.Element
     ) -> typing.Dict[str, typing.Any]:
-        """Parse RDF from an <annotation> element.
+        """Parse RDF from an :code:`<annotation>` element.
 
         Note that this is not a general purpose RDF parser.
         It is a specific parser for the RDF annotations that are used in
-        NeuroML (which the py:func:`create_annotation` method can write).
+        NeuroML (which the :py:func:`pyneuroml.annotations.Annotation.create_annotation` method can write).
 
         :param annotation_element: an <annotation> element
         :type annotation_element: etree.Element
@@ -816,7 +819,7 @@ def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
 def create_annotation(*args, **kwargs):
     """Wrapper around the Annotations.create_annotation method.
 
-    Please see py:func:`Annotations.create_annotations` for detailed
+    Please see :py:func:`pyneuroml.annotations.Annotation.create_annotation` for detailed
     documentation.
 
     .. versionadded:: 1.2.13
@@ -831,7 +834,7 @@ def create_annotation(*args, **kwargs):
 def extract_annotations(nml2_file: str):
     """Wrapper around the Annotations.extract_annotations method.
 
-    Please see py:func:`Annotations.extract_annotations` for detailed
+    Please see :py:func:`pyneuroml.annotations.Annotation.extract_annotations` for detailed
     documentation.
 
     .. versionadded:: 1.2.13
