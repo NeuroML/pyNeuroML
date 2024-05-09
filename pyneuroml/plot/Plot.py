@@ -45,6 +45,7 @@ def generate_plot(
     show_plot_already: bool = True,
     animate: bool = False,
     save_figure_to: typing.Optional[str] = None,
+    save_animation_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
     close_plot: bool = False,
@@ -130,6 +131,8 @@ def generate_plot(
     :type animate: boolean
     :param save_figure_to: location to save generated figure to (default: None)
     :type save_figure_to: str
+    :param save_animation_to: location to save generated animation to (default: None)
+    :type save_animation_to: str
     :param title_above_plot: enable/disable title above the plot (default: False)
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
@@ -271,13 +274,12 @@ def generate_plot(
                 cache_frame_data=False
             )
 
-            # is save_figure_to just file name or path ?
-            if len(xvalues[0] < 1000) and save_figure_to:
-                
+            frame_length_threshold = 5000
+            if len(xvalues[0]) < frame_length_threshold and save_animation_to:
                 logger.info("Saving animation to %s" %
-                            (save_figure_to))
+                            (save_animation_to))
                 ani.save(
-                    filename=save_figure_to,
+                    filename=save_animation_to,
                     writer="pillow",
                     progress_callback=lambda i, n: print(
                         f'Saving frame {i}/{n}')

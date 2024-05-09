@@ -34,8 +34,8 @@ class TestPlot(BaseTestCase):
         except FileNotFoundError:
             pass
 
-        numpoints = 1000
-        xs = range(0, numpoints)
+        numpoints = 100
+        xs = list(range(0, numpoints))
         ys = random.choices(list(range(0, 1000)), k=numpoints)
         ys2 = random.choices(list(range(0, 1500)), k=numpoints)
 
@@ -49,13 +49,10 @@ class TestPlot(BaseTestCase):
             show_plot_already=True,
             animate=True,
             legend_position="right",
+            save_animation_to=filename
         )
-
-        """
-        TODO: used when testing file save
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
-        """
 
     def test_generate_plot(self):
         """Test generate_plot function."""
