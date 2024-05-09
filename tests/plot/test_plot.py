@@ -7,6 +7,8 @@ File: tests/plot/test_plot.py
 Copyright 2023 NeuroML contributors
 """
 
+import random
+import pytest
 import unittest
 import logging
 import pathlib as pl
@@ -19,8 +21,41 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestPlot(BaseTestCase):
-
     """Test Plot module"""
+
+    @pytest.mark.localonly
+    def test_generate_plot_animated(self):
+        """Test generate_plot function."""
+        filename = "tests/plot/test_generate_plot.gif"
+
+        # remove the file first
+        try:
+            pl.Path(filename).unlink()
+        except FileNotFoundError:
+            pass
+
+        numpoints = 1000
+        xs = range(0, numpoints)
+        ys = random.choices(list(range(0, 1000)), k=numpoints)
+        ys2 = random.choices(list(range(0, 1500)), k=numpoints)
+
+        generate_plot(
+            [xs, xs],
+            [ys, ys2],
+            "Test plot",
+            xaxis="x",
+            yaxis="y",
+            grid=False,
+            show_plot_already=True,
+            animate=True,
+            legend_position="right",
+        )
+
+        """
+        TODO: used when testing file save
+        self.assertIsFile(filename)
+        pl.Path(filename).unlink()
+        """
 
     def test_generate_plot(self):
         """Test generate_plot function."""
