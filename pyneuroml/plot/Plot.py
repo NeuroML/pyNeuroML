@@ -247,20 +247,41 @@ def generate_plot(
 
     if show_plot_already:
         if animate:
-            duration = 5
-            num_frames = len(xvalues[0])
-            interval = duration * 1000 / num_frames
-            max_points_per_frame = 500
-            skip = max(num_frames // max_points_per_frame, 1)
+            d = 5
+            duration = d * 1000 # in ms
+            size = len(xvalues[0])
+            interval = 50  # Delay between frames in milliseconds
+            pockets = duration // interval
+            skip = max(size // pockets, 1)
             logger.info(
-                "Animation hyperparameters : duration=%s, interval=%s, skip=%s" % (duration, interval, skip))
+                "Animation hyperparameters : duration=%s, size=%s, interval=%s, pockets=%s, skip=%s" % (duration, size, interval, pockets,  skip))
+
             def update(frame):
                 for i, artist in enumerate(artists):
                     artist.set_xdata(xvalues[i][:frame*skip])
                     artist.set_ydata(yvalues[i][:frame*skip])
                 return artists
+            
             ani = animation.FuncAnimation(
-                fig=fig, func=update, interval=interval, blit=True, cache_frame_data=False)
+                fig=fig,
+                frames=size-1,
+                func=update,
+                interval=interval,
+                blit=True,
+                cache_frame_data=False
+            )
+
+            # is save_figure_to just file name or path ?
+            if len(xvalues[0] < 1000) and save_figure_to:
+                
+                logger.info("Saving animation to %s" %
+                            (save_figure_to))
+                ani.save(
+                    filename=save_figure_to,
+                    writer="pillow",
+                    progress_callback=lambda i, n: print(
+                        f'Saving frame {i}/{n}')
+                )
         plt.show()
 
     if close_plot:
