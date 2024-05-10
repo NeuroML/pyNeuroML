@@ -327,6 +327,11 @@ def get_state_color(s: str) -> str:
     if s.startswith("u"):
         col = "#880088"
 
+    if '/' in s: # e.g. for sub gates
+        from pyneuroml.utils.plot import get_next_hex_color
+        col = get_next_hex_color()
+
+
     return col
 
 
