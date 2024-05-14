@@ -45,6 +45,7 @@ def generate_plot(
     show_plot_already: bool = True,
     animate: bool = False,
     animate_duration: int = 5,
+    animate_writer: typing.Tuple[str, typing.List[str]] = ("pillow", []),
     save_figure_to: typing.Optional[str] = None,
     save_animation_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
@@ -128,10 +129,15 @@ def generate_plot(
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean
-    :param animate: if shown plot should be animated. show_splot_already should be True (default: False)
+    :param animate: if shown plot should be animated. show_splot_already should be True (default: False). Recommended to pass close_plt as True
     :type animate: boolean
     :param animate_duration: approx duration (seconds) of the animation. animate should be True (default: 5)
     :type animate: int
+    :param animate_writer: specify different writer for saving animation (default: ("pillow", [])) :
+                See: https://matplotlib.org/stable/users/explain/animations/animations.html#saving-animations
+                format : writer=( "writer name", ["extra args list"] )
+                example : writer=( "imagemagick", ["-quality", "100"] )
+    :type animate_writer: tuple
     :param save_figure_to: location to save generated figure to (default: None)
     :type save_figure_to: str
     :param save_animation_to: location to save generated animation to (default: None)
@@ -285,12 +291,28 @@ def generate_plot(
 
                 logger.info("Saving animation to %s" %
                             (save_animation_to))
-                ani.save(
-                    filename=save_animation_to,
-                    writer="pillow",  # todo : writer will be passed as argument
-                    progress_callback=lambda i, n: print(
-                        f'Saving frame {i+1}/{n}')
-                )
+                writers = ["pillow", "html", "ffmpeg", "imagemagick"]
+                writer_name, writer_extra = animate_writer
+                if writer_name not in writers:
+                    writer_name = "pillow"
+                    writer_extra = []
+
+                try:
+                    ani.save(
+                        filename=save_animation_to,
+                        writer=writer_name,
+                        extra_args=writer_extra,  # pillow does not support extra_args
+                        progress_callback=lambda i, n: print(
+                            f'Saving frame {i+1}/{n}')
+                    )
+                except:
+                    ani.save(
+                        filename=save_animation_to,
+                        writer=writer_name,
+                        progress_callback=lambda i, n: print(
+                            f'Saving frame {i+1}/{n}')
+                    )
+                    
         plt.show()
 
     if close_plot:
