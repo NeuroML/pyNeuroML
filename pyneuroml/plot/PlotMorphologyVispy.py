@@ -375,7 +375,8 @@ def plot_interactive_3D(
         else:
             nml_model = read_neuroml2_file(
                 nml_file,
-                include_includes=False,
+                include_includes=True,
+                critical_includes=False,
                 check_validity_pre_include=False,
                 verbose=False,
                 optimized=True,
