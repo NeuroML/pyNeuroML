@@ -42,7 +42,7 @@ class TestPlot(BaseTestCase):
         generate_plot(
             [xs, xs],
             [ys, ys2],
-            "Test plot",
+            "Test plot animated",
             xaxis="x",
             yaxis="y",
             grid=False,

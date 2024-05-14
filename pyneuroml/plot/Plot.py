@@ -44,6 +44,7 @@ def generate_plot(
     legend_position: typing.Optional[str] = "best",
     show_plot_already: bool = True,
     animate: bool = False,
+    animate_duration: int = 5,
     save_figure_to: typing.Optional[str] = None,
     save_animation_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
@@ -129,6 +130,8 @@ def generate_plot(
     :type show_plot_already: boolean
     :param animate: if shown plot should be animated. show_splot_already should be True (default: False)
     :type animate: boolean
+    :param animate_duration: approx duration (seconds) of the animation. animate should be True (default: 5)
+    :type animate: int
     :param save_figure_to: location to save generated figure to (default: None)
     :type save_figure_to: str
     :param save_animation_to: location to save generated animation to (default: None)
@@ -250,21 +253,20 @@ def generate_plot(
 
     if show_plot_already:
         if animate:
-            d = 5
-            duration = d * 1000 # in ms
-            size = len(xvalues[0])
-            interval = 50  # Delay between frames in milliseconds
+            duration = animate_duration * 1000      # in ms
+            size = max(len(val) for val in xvalues) # maximum length
+            interval = 50                           # Delay between frames in milliseconds
             pockets = duration // interval
             skip = max(size // pockets, 1)
             logger.info(
-                "Animation hyperparameters : duration=%s, size=%s, interval=%s, pockets=%s, skip=%s" % (duration, size, interval, pockets,  skip))
+                "Animation hyperparameters : duration=%sms, size=%s, interval=%s, pockets=%s, skip=%s" % (duration, size, interval, pockets,  skip))
 
             def update(frame):
                 for i, artist in enumerate(artists):
                     artist.set_xdata(xvalues[i][:frame*skip])
                     artist.set_ydata(yvalues[i][:frame*skip])
                 return artists
-            
+
             ani = animation.FuncAnimation(
                 fig=fig,
                 frames=size-1,
@@ -274,15 +276,20 @@ def generate_plot(
                 cache_frame_data=False
             )
 
-            frame_length_threshold = 5000
-            if len(xvalues[0]) < frame_length_threshold and save_animation_to:
+            if save_animation_to:
+                frame_length_threshold = 1500
+                if size > frame_length_threshold:
+                    minute = 1000
+                    logger.warning( # (approx 1 minute for 1000 frames)
+                        "Large Plot found!!! Saving animation will take approx %.2f minutes" % (size/minute))
+
                 logger.info("Saving animation to %s" %
                             (save_animation_to))
                 ani.save(
                     filename=save_animation_to,
-                    writer="pillow",
+                    writer="pillow",  # todo : writer will be passed as argument
                     progress_callback=lambda i, n: print(
-                        f'Saving frame {i}/{n}')
+                        f'Saving frame {i+1}/{n}')
                 )
         plt.show()
 
