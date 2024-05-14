@@ -331,9 +331,6 @@ def get_state_color(s: str) -> str:
     else:
         col = get_next_hex_color()
 
-    if "/" in s:  # e.g. for sub gates
-        col = get_next_hex_color()
-
     return col
 
 
