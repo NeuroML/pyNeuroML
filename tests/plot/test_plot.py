@@ -89,7 +89,7 @@ class TestPlot(BaseTestCase):
         pl.Path(filename).unlink()
 
     @pytest.mark.localonly
-    def test_generate_plot_animated_specify_writer(self):
+    def test_generate_plot_animated_should_default_pillow_when_writer_invalid(self):
         """Test generate_plot function does not fail when writer is invalid."""
         filename1 = "tests/plot/test_generate_plot_writer1.gif"
         filename2 = "tests/plot/test_generate_plot_writer2.gif"
