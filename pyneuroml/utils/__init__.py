@@ -25,12 +25,12 @@ from pathlib import Path
 
 import neuroml
 import numpy
-import pyneuroml.utils.misc
 from lems.model.model import Model
 from neuroml.loaders import read_neuroml2_file
+
+import pyneuroml.utils.misc
 from pyneuroml.errors import UNKNOWN_ERR
 from pyneuroml.utils.plot import get_next_hex_color
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -333,11 +333,6 @@ def get_state_color(s: str) -> str:
 
     if "/" in s:  # e.g. for sub gates
         col = get_next_hex_color()
-
-    if '/' in s: # e.g. for sub gates
-        from pyneuroml.utils.plot import get_next_hex_color
-        col = get_next_hex_color()
-
 
     return col
 
