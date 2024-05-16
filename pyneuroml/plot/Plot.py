@@ -7,13 +7,15 @@ File: pyneuroml/plot/Plot.py
 Copyright 2023 NeuroML contributors
 """
 
-import os
 import logging
+import os
 import typing
-import matplotlib
-import matplotlib.axes
-import matplotlib.animation as animation
 from typing import Optional
+
+import matplotlib
+import matplotlib.animation as animation
+import matplotlib.axes
+import progressbar
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -257,65 +259,75 @@ def generate_plot(
         plt.savefig(save_figure_to, bbox_inches="tight")
         logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
-    if show_plot_already:
-        if animate:
-            duration = animate_duration * 1000      # in ms
-            size = max(len(val) for val in xvalues) # maximum length
-            interval = 50                           # Delay between frames in milliseconds
-            pockets = duration // interval
-            skip = max(size // pockets, 1)
-            logger.info(
-                "Animation hyperparameters : duration=%sms, size=%s, interval=%s, pockets=%s, skip=%s" % (duration, size, interval, pockets,  skip))
+    if animate:
+        duration = animate_duration * 1000  # in ms
+        size = max(len(val) for val in xvalues)  # maximum length
+        interval = 50  # Delay between frames in milliseconds
+        pockets = duration // interval
+        skip = max(size // pockets, 1)
+        logger.debug(
+            "Animation hyperparameters : duration=%sms, size=%s, interval=%s, pockets=%s, skip=%s"
+            % (duration, size, interval, pockets, skip)
+        )
 
-            def update(frame):
-                for i, artist in enumerate(artists):
-                    artist.set_xdata(xvalues[i][:frame*skip])
-                    artist.set_ydata(yvalues[i][:frame*skip])
-                return artists
+        def update(frame):
+            for i, artist in enumerate(artists):
+                artist.set_xdata(xvalues[i][: frame * skip])
+                artist.set_ydata(yvalues[i][: frame * skip])
+            return artists
 
-            ani = animation.FuncAnimation(
-                fig=fig,
-                frames=size-1,
-                func=update,
-                interval=interval,
-                blit=True,
-                cache_frame_data=False
+        ani = animation.FuncAnimation(
+            fig=fig,
+            frames=size - 1,
+            func=update,
+            interval=interval,
+            blit=True,
+            cache_frame_data=False,
+        )
+
+        if save_animation_to:
+            pbar = progressbar.ProgressBar(
+                max_value=size - 1,
+                widgets=[
+                    progressbar.SimpleProgress(),
+                    progressbar.Bar(),
+                    progressbar.Timer(),
+                ],
+                redirect_stdout=True,
             )
 
-            if save_animation_to:
-                frame_length_threshold = 1500
-                if size > frame_length_threshold:
-                    minute = 1000
-                    logger.warning( # (approx 1 minute for 1000 frames)
-                        "Large Plot found!!! Saving animation will take approx %.2f minutes" % (size/minute))
+            writers = ["pillow", "html", "ffmpeg", "imagemagick"]
+            writer_name, writer_extra = animate_writer
+            if writer_name not in writers:
+                writer_name = "pillow"
+                writer_extra = []
 
-                logger.info("Saving animation to %s" %
-                            (save_animation_to))
-                writers = ["pillow", "html", "ffmpeg", "imagemagick"]
-                writer_name, writer_extra = animate_writer
-                if writer_name not in writers:
-                    writer_name = "pillow"
-                    writer_extra = []
+            logger.info(
+                f"Saving animation of {duration}ms to {save_animation_to} using {writer_name}"
+            )
+            logger.info("This could take a while..")
 
-                try:
-                    ani.save(
-                        filename=save_animation_to,
-                        writer=writer_name,
-                        extra_args=writer_extra,  # pillow does not support extra_args
-                        progress_callback=lambda i, n: print(
-                            f'Saving frame {i+1}/{n}')
-                    )
-                except:
-                    ani.save(
-                        filename=save_animation_to,
-                        writer=writer_name,
-                        progress_callback=lambda i, n: print(
-                            f'Saving frame {i+1}/{n}')
-                    )
-                    
+            try:
+                ani.save(
+                    filename=save_animation_to,
+                    writer=writer_name,
+                    extra_args=writer_extra,
+                    progress_callback=lambda i, n: pbar.update(i),
+                )
+            # pillow doesn't take extra_args, throws TypeError
+            except TypeError:
+                ani.save(
+                    filename=save_animation_to,
+                    writer=writer_name,
+                    progress_callback=lambda i, n: pbar.update(i),
+                )
+
+            pbar.finish(dirty=False)
+
+    if show_plot_already:
         plt.show()
 
-    if close_plot:
+    if close_plot or animate:
         logger.info("Closing plot")
         plt.close()
     else:
