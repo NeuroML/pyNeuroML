@@ -197,7 +197,7 @@ More closely tied to PyNN?
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/AdityaBITMESRA"><img src="https://avatars.githubusercontent.com/u/147182147?v=4?s=100" width="100px;" alt="AdityaBITMESRA"/><br /><sub><b>AdityaBITMESRA</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3AAdityaBITMESRA" title="Bug reports">🐛</a> <a href="#ideas-AdityaBITMESRA" title="Ideas, Planning, & Feedback">🤔</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/YBCS"><img src="https://avatars.githubusercontent.com/u/29734619?v=4?s=100" width="100px;" alt="Y. Budhachandra"/><br /><sub><b>Y. Budhachandra</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/YBCS"><img src="https://avatars.githubusercontent.com/u/29734619?v=4?s=100" width="100px;" alt="Y. Budhachandra"/><br /><sub><b>Y. Budhachandra</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Tests">⚠️</a></td>
     </tr>
   </tbody>
   <tfoot>
