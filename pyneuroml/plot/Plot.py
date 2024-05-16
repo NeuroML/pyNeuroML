@@ -49,7 +49,6 @@ def generate_plot(
     animate_duration: int = 5,
     animate_writer: typing.Tuple[str, typing.List[str]] = ("pillow", []),
     save_figure_to: typing.Optional[str] = None,
-    save_animation_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
     close_plot: bool = False,
