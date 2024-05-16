@@ -7,12 +7,15 @@ File: pyneuroml/plot/Plot.py
 Copyright 2023 NeuroML contributors
 """
 
-import os
 import logging
+import os
 import typing
-import matplotlib
-import matplotlib.axes
 from typing import Optional
+
+import matplotlib
+import matplotlib.animation as animation
+import matplotlib.axes
+import progressbar
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -42,6 +45,9 @@ def generate_plot(
     cols_in_legend_box: int = 3,
     legend_position: typing.Optional[str] = "best",
     show_plot_already: bool = True,
+    animate: bool = False,
+    animate_duration: int = 5,
+    animate_writer: typing.Tuple[str, typing.List[str]] = ("pillow", []),
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
@@ -89,11 +95,15 @@ def generate_plot(
     :param yaxis: label of Y axis (default: None)
     :type yaxis: str
     :param xlim: left and right extents of x axis (default: None)
-    :type xlim: tuple of (float, float) or individual arguments: (left=float), (right=float)
+
                 See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.xlim.html
+
+    :type xlim: tuple of (float, float) or individual arguments: (left=float), (right=float)
     :param ylim: top and bottom extents of y axis (default: None)
-    :type ylim: tuple of (float, float) or individual arguments: (top=float), (bottom=float)
+
                 See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.ylim.html
+
+    :type ylim: tuple of (float, float) or individual arguments: (top=float), (bottom=float)
     :param show_xticklabels: whether labels should be shown on xtics (default: True)
     :type show_xticklabels: boolean
     :param show_yticklabels: whether labels should be shown on ytics (default: True)
@@ -113,6 +123,7 @@ def generate_plot(
     :type cols_in_legend_box: float
     :param legend_position: position of legend:
                 See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
+
                 Extra options:
 
                 - "outer right" places the legend on the right, but outside the axes box
@@ -124,13 +135,26 @@ def generate_plot(
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean
-    :param save_figure_to: location to save generated figure to (default: None)
+    :param animate: if plot should be animated (default: False)
+    :type animate: boolean
+    :param animate_duration: approx duration (seconds) of the animation. animate should be True (default: 5)
+    :type animate_duration: int
+    :param animate_writer: writer for saving animation (default: :code:`("pillow", []))`
+
+        See: https://matplotlib.org/stable/users/explain/animations/animations.html#saving-animations
+
+        - format : :code:`writer=( "writer name", ["extra args list"])`
+        - example : :code:`writer=( "imagemagick", ["-quality", "100"])`
+
+    :type animate_writer: tuple
+    :param save_figure_to: location to save generated figure/animation to (default: None)
     :type save_figure_to: str
     :param title_above_plot: enable/disable title above the plot (default: False)
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
-    :param close_plot: call pyplot.close() to close plot after plotting
+    :param close_plot: call :code:`pyplot.close()` to close plot after
+        plotting, this is always done if using animation
     :type close_plot: bool
     :returns: matplotlib.axes.Axes object if plot is not closed, else None
     """
@@ -174,6 +198,8 @@ def generate_plot(
     if not show_yticklabels:
         ax.set_yticklabels([])
 
+    artists = []
+
     for i in range(len(xvalues)):
         linestyle = rcParams["lines.linestyle"] if not linestyles else linestyles[i]
         label = "" if not labels else labels[i]
@@ -182,7 +208,7 @@ def generate_plot(
         markersize = rcParams["lines.markersize"] if not markersizes else markersizes[i]
 
         if colors:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -193,7 +219,7 @@ def generate_plot(
                 label=label,
             )
         else:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -202,6 +228,7 @@ def generate_plot(
                 linewidth=linewidth,
                 label=label,
             )
+        artists.append(artist)
 
     if labels:
         if legend_position == "outer right":
@@ -232,17 +259,84 @@ def generate_plot(
     if ylim:
         plt.ylim(ylim)
 
-    if save_figure_to:
-        logger.info(
-            "Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title)
+    if animate:
+        duration = animate_duration * 1000  # in ms
+        size = max(len(val) for val in xvalues)  # maximum length
+        interval = 50  # Delay between frames in milliseconds
+        pockets = duration // interval
+        skip = max(size // pockets, 1)
+        logger.debug(
+            "Animation hyperparameters : duration=%sms, size=%s, interval=%s, pockets=%s, skip=%s"
+            % (duration, size, interval, pockets, skip)
         )
-        plt.savefig(save_figure_to, bbox_inches="tight")
-        logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
+
+        def update(frame):
+            for i, artist in enumerate(artists):
+                artist.set_xdata(xvalues[i][: frame * skip])
+                artist.set_ydata(yvalues[i][: frame * skip])
+            return artists
+
+        ani = animation.FuncAnimation(
+            fig=fig,
+            frames=size - 1,
+            func=update,
+            interval=interval,
+            blit=True,
+            cache_frame_data=False,
+        )
+
+        if save_figure_to:
+            pbar = progressbar.ProgressBar(
+                max_value=size - 1,
+                widgets=[
+                    progressbar.SimpleProgress(),
+                    progressbar.Bar(),
+                    progressbar.Timer(),
+                ],
+                redirect_stdout=True,
+            )
+
+            writers = ["pillow", "html", "ffmpeg", "imagemagick"]
+            writer_name, writer_extra = animate_writer
+            if writer_name not in writers:
+                writer_name = "pillow"
+                writer_extra = []
+
+            logger.info(
+                f"Saving animation of {duration}ms to {save_figure_to} using {writer_name}"
+            )
+            logger.info("This could take a while..")
+
+            try:
+                ani.save(
+                    filename=save_figure_to,
+                    writer=writer_name,
+                    extra_args=writer_extra,
+                    progress_callback=lambda i, n: pbar.update(i),
+                )
+            # pillow doesn't take extra_args, throws TypeError
+            except TypeError:
+                ani.save(
+                    filename=save_figure_to,
+                    writer=writer_name,
+                    progress_callback=lambda i, n: pbar.update(i),
+                )
+
+            pbar.finish(dirty=False)
+            logger.info("Saved animation to %s" % (save_figure_to))
+    else:
+        if save_figure_to:
+            logger.info(
+                "Saving image to %s of plot: %s"
+                % (os.path.abspath(save_figure_to), title)
+            )
+            plt.savefig(save_figure_to, bbox_inches="tight")
+            logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
         plt.show()
 
-    if close_plot:
+    if close_plot or animate:
         logger.info("Closing plot")
         plt.close()
     else:
