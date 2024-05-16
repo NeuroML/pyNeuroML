@@ -12,6 +12,7 @@ import logging
 import typing
 import matplotlib
 import matplotlib.axes
+import matplotlib.animation as animation
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,11 @@ def generate_plot(
     cols_in_legend_box: int = 3,
     legend_position: typing.Optional[str] = "best",
     show_plot_already: bool = True,
+    animate: bool = False,
+    animate_duration: int = 5,
+    animate_writer: typing.Tuple[str, typing.List[str]] = ("pillow", []),
     save_figure_to: typing.Optional[str] = None,
+    save_animation_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
     close_plot: bool = False,
@@ -124,8 +129,19 @@ def generate_plot(
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean
+    :param animate: if shown plot should be animated. show_splot_already should be True (default: False). Recommended to pass close_plt as True
+    :type animate: boolean
+    :param animate_duration: approx duration (seconds) of the animation. animate should be True (default: 5)
+    :type animate: int
+    :param animate_writer: specify different writer for saving animation (default: ("pillow", [])) :
+                See: https://matplotlib.org/stable/users/explain/animations/animations.html#saving-animations
+                format : writer=( "writer name", ["extra args list"] )
+                example : writer=( "imagemagick", ["-quality", "100"] )
+    :type animate_writer: tuple
     :param save_figure_to: location to save generated figure to (default: None)
     :type save_figure_to: str
+    :param save_animation_to: location to save generated animation to (default: None)
+    :type save_animation_to: str
     :param title_above_plot: enable/disable title above the plot (default: False)
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
@@ -174,6 +190,7 @@ def generate_plot(
     if not show_yticklabels:
         ax.set_yticklabels([])
 
+    artists = []
     for i in range(len(xvalues)):
         linestyle = rcParams["lines.linestyle"] if not linestyles else linestyles[i]
         label = "" if not labels else labels[i]
@@ -182,7 +199,7 @@ def generate_plot(
         markersize = rcParams["lines.markersize"] if not markersizes else markersizes[i]
 
         if colors:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -193,7 +210,7 @@ def generate_plot(
                 label=label,
             )
         else:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -202,6 +219,7 @@ def generate_plot(
                 linewidth=linewidth,
                 label=label,
             )
+        artists.append(artist)
 
     if labels:
         if legend_position == "outer right":
@@ -240,6 +258,61 @@ def generate_plot(
         logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
+        if animate:
+            duration = animate_duration * 1000      # in ms
+            size = max(len(val) for val in xvalues) # maximum length
+            interval = 50                           # Delay between frames in milliseconds
+            pockets = duration // interval
+            skip = max(size // pockets, 1)
+            logger.info(
+                "Animation hyperparameters : duration=%sms, size=%s, interval=%s, pockets=%s, skip=%s" % (duration, size, interval, pockets,  skip))
+
+            def update(frame):
+                for i, artist in enumerate(artists):
+                    artist.set_xdata(xvalues[i][:frame*skip])
+                    artist.set_ydata(yvalues[i][:frame*skip])
+                return artists
+
+            ani = animation.FuncAnimation(
+                fig=fig,
+                frames=size-1,
+                func=update,
+                interval=interval,
+                blit=True,
+                cache_frame_data=False
+            )
+
+            if save_animation_to:
+                frame_length_threshold = 1500
+                if size > frame_length_threshold:
+                    minute = 1000
+                    logger.warning( # (approx 1 minute for 1000 frames)
+                        "Large Plot found!!! Saving animation will take approx %.2f minutes" % (size/minute))
+
+                logger.info("Saving animation to %s" %
+                            (save_animation_to))
+                writers = ["pillow", "html", "ffmpeg", "imagemagick"]
+                writer_name, writer_extra = animate_writer
+                if writer_name not in writers:
+                    writer_name = "pillow"
+                    writer_extra = []
+
+                try:
+                    ani.save(
+                        filename=save_animation_to,
+                        writer=writer_name,
+                        extra_args=writer_extra,  # pillow does not support extra_args
+                        progress_callback=lambda i, n: print(
+                            f'Saving frame {i+1}/{n}')
+                    )
+                except:
+                    ani.save(
+                        filename=save_animation_to,
+                        writer=writer_name,
+                        progress_callback=lambda i, n: print(
+                            f'Saving frame {i+1}/{n}')
+                    )
+                    
         plt.show()
 
     if close_plot:
