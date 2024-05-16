@@ -49,8 +49,8 @@ class TestPlot(BaseTestCase):
             show_plot_already=True,
             animate=True,
             legend_position="right",
-            save_animation_to=filename,
-            close_plot=True
+            save_figure_to=filename,
+            close_plot=True,
         )
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
@@ -81,9 +81,9 @@ class TestPlot(BaseTestCase):
             show_plot_already=True,
             animate=True,
             legend_position="right",
-            save_animation_to=filename,
+            save_figure_to=filename,
             animate_writer=("ffmpeg", []),
-            close_plot=True
+            close_plot=True,
         )
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
@@ -116,10 +116,10 @@ class TestPlot(BaseTestCase):
             show_plot_already=True,
             animate=True,
             legend_position="right",
-            save_animation_to=filename1,
+            save_figure_to=filename1,
             # imagemagick is not a requirement in pyNeuroML
             animate_writer=("imagemagick", ["-quality", "100"]),
-            close_plot=True  # without this, all plots not closed will also be plotted
+            close_plot=True,  # without this, all plots not closed will also be plotted
         )
 
         generate_plot(
@@ -132,10 +132,10 @@ class TestPlot(BaseTestCase):
             show_plot_already=True,
             animate=True,
             legend_position="right",
-            save_animation_to=filename2,
+            save_figure_to=filename2,
             # tests will use pillow by default
             animate_writer=("imaginary_writer", [""]),
-            close_plot=True  # without this, all plots not closed will also be plotted
+            close_plot=True,  # without this, all plots not closed will also be plotted
         )
 
         self.assertIsFile(filename1)
@@ -171,7 +171,7 @@ class TestPlot(BaseTestCase):
             show_plot_already=False,
             save_figure_to=filename,
             legend_position="right",
-            close_plot=True
+            close_plot=True,
         )
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
