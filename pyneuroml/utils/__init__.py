@@ -341,6 +341,7 @@ def rotate_cell(
     z: float = 0,
     order: str = "xyz",
     relative_to_soma: bool = False,
+    inplace: bool = False,
 ) -> neuroml.Cell:
     """Return a new cell object rotated in the provided order along the
     provided angles (in radians) relative to the soma position.
@@ -357,6 +358,10 @@ def rotate_cell(
     :type order: str
     :param relative_to_soma: whether rotation is relative to soma
     :type relative_to_soma: bool
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+
+    :type inplace: bool
     :returns: new neuroml.Cell object
     :rtype: neuroml.Cell
 
@@ -373,7 +378,12 @@ def rotate_cell(
     cell_origin = numpy.array(
         [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
     )
-    newcell = copy.deepcopy(cell)
+
+    if not inplace:
+        newcell = copy.deepcopy(cell)
+    else:
+        newcell = cell
+
     print(f"Rotating {newcell.id} by {x}, {y}, {z}")
 
     # calculate rotations
