@@ -4,20 +4,35 @@
 Implementation of the pynml-modchananalysis command
 """
 
-#   TODO: clean up and refactor to allow usage from Python API
-
+import typing
 import argparse
+import logging
 import re
 import subprocess
 import sys
 from math import log
-import neuron
+
 import matplotlib.pyplot as pylab
+import neuron
 from pylab import *
-from pyneuroml.analysis.NML2ChannelAnalysis import get_state_color
+from pyneuroml.utils import get_state_color
+from pyneuroml.utils.cli import build_namespace
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
-print("\n\n")
+DEFAULTS = {
+    "v": False,
+    "nogui": False,
+    "minV": -100,
+    "maxV": 100,
+    "temperature": 6.3,
+    "duration": 10000,
+    "caConc": 5e-5,
+    "dt": 0.01,
+    "stepV": 10,
+}
 
 
 def process_args():
@@ -40,7 +55,7 @@ def process_args():
     parser.add_argument(
         "-nogui",
         action="store_true",
-        default=False,
+        default=DEFAULTS["nogui"],
         help="Supress plotting of variables and only save to file",
     )
 
@@ -55,7 +70,7 @@ def process_args():
         "-minV",
         type=int,
         metavar="<min v>",
-        default=-100,
+        default=DEFAULTS["minV"],
         help="Minimum voltage to test (integer, mV)",
     )
 
@@ -63,7 +78,7 @@ def process_args():
         "-maxV",
         type=int,
         metavar="<max v>",
-        default=100,
+        default=DEFAULTS["maxV"],
         help="Maximum voltage to test (integer, mV)",
     )
 
@@ -71,7 +86,7 @@ def process_args():
         "-stepV",
         type=int,
         metavar="<step v>",
-        default=10,
+        default=DEFAULTS["stepV"],
         help="Voltage step to use (integer, mV)",
     )
 
@@ -79,7 +94,7 @@ def process_args():
         "-dt",
         type=float,
         metavar="<time step>",
-        default=0.01,
+        default=DEFAULTS["dt"],
         help="Timestep for simulations, dt, in ms",
     )  # OR -1 for variable time step')
 
@@ -87,7 +102,7 @@ def process_args():
         "-duration",
         type=float,
         metavar="<duration>",
-        default=10000,
+        default=DEFAULTS["duration"],
         help="Maximum duration of simulations, in ms",
     )
 
@@ -95,7 +110,7 @@ def process_args():
         "-temperature",
         type=str,
         metavar="<temperature>",
-        default=6.3,
+        default=DEFAULTS["temperature"],
         help="Temperature (float or list, e.g. [22,34], celsius)",
     )
 
@@ -103,7 +118,7 @@ def process_args():
         "-caConc",
         type=float,
         metavar="<Ca2+ concentration>",
-        default=5e-5,
+        default=DEFAULTS["caConc"],
         help="Internal concentration of Ca2+ (float, concentration in mM)",
     )
 
@@ -122,40 +137,61 @@ def remove_comments(txt):
     return clear_txt
 
 
-def get_states(txt):
+def get_states(txt: str) -> typing.List[str]:
+    """Get list of states from mod file text.
+
+    :param txt: mod file text
+    :type txt: str
+    :returns: list of states (or empty list if no states found)
+    :rtype: list(str)
+    """
+    state_list = []
     clear_txt = remove_comments(txt)
     state_grp = re.search(r"(?<=STATE)\s*\{(?P<st_txt>[^}]+)(?=\})", clear_txt)
-    state_txt = state_grp.group("st_txt")
-    state_list = []
-    for state in re.finditer(r"(\w+)", state_txt):
-        state_list.append(state.group(0))
-    state_list = [x for x in state_list if x not in ["FROM", "0", "TO", "1"]]
+    if state_grp is not None:
+        state_txt = state_grp.group("st_txt")
+        for state in re.finditer(r"(\w+)", state_txt):
+            state_list.append(state.group(0))
+        state_list = [x for x in state_list if x not in ["FROM", "0", "TO", "1"]]
+
     return state_list
 
 
-def get_suffix(txt):
+def get_suffix(txt: str) -> typing.Optional[str]:
+    """Get suffix mod file text
+
+    :param txt: mod file text
+    :type txt: str
+    :returns: suffix string or None if not found
+    :rtype: str
+    """
     clear_txt = remove_comments(txt)
-    nrn_str = re.search(r"NEURON\s*\{(\s*[\w+,]\s*)*\s\}?", clear_txt).group()
-    try:
-        sfx_str = re.search(r"(?<=SUFFIX)\s*(\w+)", nrn_str).group(1)
-    except AttributeError:
-        print("Not a distributed channel mechanism: SUFFIX not in NEURON")
-    return sfx_str
+    res = re.search(r"NEURON\s*\{(\s*[\w+,]\s*)*\s\}?", clear_txt)
+    if res is not None:
+        nrn_str = res.group()
+
+        res2 = re.search(r"(?<=SUFFIX)\s*(\w+)", nrn_str)
+        if res2 is not None:
+            sfx_str = res2.group(1)
+            return sfx_str
+
+    return None
 
 
-def main():
-    args = process_args()
+def run(a=None, **kwargs):
+    args = build_namespace(DEFAULTS, a, **kwargs)
     verbose = args.v
 
     # Get name of channel mechanism to test
 
     chanToTest = args.channel
     if verbose:
-        print("Going to test channel: " + chanToTest)
+        logger.setLevel(logging.DEBUG)
+    logger.info("Going to test channel: " + chanToTest)
 
     # Create the standard vars h, p for accessing hoc from Python & vice versa
 
-    print("Starting NEURON in Python mode...")
+    logger.info("Starting NEURON in Python mode...")
     h = neuron.h
     h.load_file("stdrun.hoc")
     h(
@@ -189,7 +225,7 @@ def main():
     ca_present = True
     try:
         sec.insert("ca_ion")
-        sec(0.5).cai = args.caConc
+        sec(0.5).cai = args.ca_conc
     except ValueError:
         print("No Ca mechanism present...")
         ca_present = False
@@ -199,41 +235,47 @@ def main():
     # Read state variables from mod file
 
     modFileName = chanToTest + ".mod"
-    if args.modFile:
-        modFileName = args.modFile
+    if args.mod_file:
+        modFileName = args.mod_file
     with open(modFileName, "r") as handle:
         modFileTxt = handle.read()
     states = get_states(modFileTxt)
-    print("States found in mod file: " + str(states))
-    assert chanToTest == get_suffix(modFileTxt), "Channel name could be wrong"
+    logger.info("States found in mod file: " + str(states))
+
+    if chanToTest != get_suffix(modFileTxt):
+        logger.error("Channel name does not match suffix")
+        quit()
+
     try:
         sec.insert(str(chanToTest))
     except ValueError:
-        print(
+        logger.info(
             f"{chanToTest} mechanism has not been compiled yet. Trying to run `nrnivmodl`."
         )
         try:
             subprocess.run("nrnivmodl", check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
-            print(f"Could not compile {modFileName}. nrivmodl returned {e.returncode}.")
+            logger.error(
+                f"Could not compile {modFileName}. nrivmodl returned {e.returncode}."
+            )
             # print(e.stderr.decode())
-            print("Try running nrnivmodl manually and checking its output.")
-            print("Exiting...")
+            logger.error("Try running nrnivmodl manually and checking its output.")
+            logger.error("Exiting...")
             return 1
         h.nrn_load_dll("x86_64/.libs/libnrnmech.so")
         sec.insert(str(chanToTest))
 
     for temperature in temperatures:
         h.celsius = temperature
-        print("Set temperature for simulation to: %s" % h.celsius)
+        logger.info("Set temperature for simulation to: %s" % h.celsius)
         if ca_present:
-            print("[Ca2+] in section: %s" % sec(0.5).cai)
+            logger.info("[Ca2+] in section: %s" % sec(0.5).cai)
 
         # Settings for the voltage clamp test
 
-        minV = args.minV
-        maxV = args.maxV
-        interval = args.stepV
+        minV = args.min_v
+        maxV = args.max_v
+        interval = args.step_v
         volts = range(minV, maxV + interval, interval)
 
         v0 = -0.5  # Pre holding potential
@@ -286,7 +328,7 @@ def main():
             for s in states:
                 rateRec[s] = []
 
-            print(
+            logger.info(
                 "Starting simulation with channel %s of max time: %f, with holding potential: %f"
                 % (chanToTest, tstopMax, vh)
             )
@@ -305,7 +347,7 @@ def main():
 
             while len(foundInf) < len(states) or len(foundTau) < len(states):
                 if h.t > tstopMax:
-                    print(
+                    logger.error(
                         "\n**************************************\n*  Error! End of simulation reached before variable %s reached steady state!\n*  Consider using a longer duration (currently %s) with option: -duration\n**************************************\n"
                         % (s, args.duration)
                     )
@@ -314,12 +356,10 @@ def main():
                 h.fadvance()
                 tRec.append(h.t)
                 vRec.append(sec(0.5).v)
-                vverbose = verbose
-                if vverbose:
-                    print(
-                        "--- Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"
-                        % (h.t, h.dt, vh, foundTau, foundInf)
-                    )
+                logger.debug(
+                    "--- Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"
+                    % (h.t, h.dt, vh, foundTau, foundInf)
+                )
                 for s in states:
                     rateVal = eval("sec(0.5)." + s + "_" + chanToTest)
                     rateRec[s].append(float(rateVal))
@@ -330,79 +370,73 @@ def main():
                             if initSlopeVal[s] == 0:
                                 # print("\n**************************************\n*  Error! Initial slope of curve for state %s is 0\n*  Consider using a smaller dt (currently %s) with option: -dt\n**************************************\n"%(s, h.dt))
                                 tau = 0
-                                if vverbose:
-                                    print(
-                                        "        Found tau! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log: %s; tau: %s"
-                                        % (
-                                            s,
-                                            slope,
-                                            initSlopeVal[s],
-                                            rateVal,
-                                            h.t - timeToCheckTau,
-                                            fractOfInit,
-                                            log(fractOfInit),
-                                            tau,
-                                        )
+                                logger.debug(
+                                    "        Found tau! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log: %s; tau: %s"
+                                    % (
+                                        s,
+                                        slope,
+                                        initSlopeVal[s],
+                                        rateVal,
+                                        h.t - timeToCheckTau,
+                                        fractOfInit,
+                                        log(fractOfInit),
+                                        tau,
                                     )
+                                )
                                 foundTau.append(s)
                                 timeCourseVals[s].append(tau)
                             else:
                                 fractOfInit = slope / initSlopeVal[s]
-                                if vverbose:
-                                    print(
-                                        "        Slope of %s: %s (%s -> %s); init slope: %s; fractOfInit: %s; rateVal: %s"
-                                        % (
-                                            s,
-                                            slope,
-                                            rateRec[s][-2],
-                                            rateRec[s][-1],
-                                            initSlopeVal[s],
-                                            fractOfInit,
-                                            rateVal,
-                                        )
+                                logger.debug(
+                                    "        Slope of %s: %s (%s -> %s); init slope: %s; fractOfInit: %s; rateVal: %s"
+                                    % (
+                                        s,
+                                        slope,
+                                        rateRec[s][-2],
+                                        rateRec[s][-1],
+                                        initSlopeVal[s],
+                                        fractOfInit,
+                                        rateVal,
                                     )
+                                )
 
                                 if initSlopeVal[s] == 1e9 and h.t >= timeToCheckTau:
                                     initSlopeVal[s] = slope
-                                    if vverbose:
-                                        print(
-                                            "        Init slope of %s: %s at val: %s; timeToCheckTau: %s"
-                                            % (s, slope, rateVal, timeToCheckTau)
-                                        )
+                                    logger.debug(
+                                        "        Init slope of %s: %s at val: %s; timeToCheckTau: %s"
+                                        % (s, slope, rateVal, timeToCheckTau)
+                                    )
                                 elif initSlopeVal[s] != 1e9:
                                     if fractOfInit < 0.367879441:
                                         tau = (
                                             h.t - timeToCheckTau
                                         )  # / (-1*log(fractOfInit))
-                                        if vverbose:
-                                            print(
-                                                "        Found tau! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log: %s; tau: %s"
-                                                % (
-                                                    s,
-                                                    slope,
-                                                    initSlopeVal[s],
-                                                    rateVal,
-                                                    h.t - timeToCheckTau,
-                                                    fractOfInit,
-                                                    log(fractOfInit),
-                                                    tau,
-                                                )
+                                        logger.debug(
+                                            "        Found tau! Slope %s: %s, init: %s; at val: %s; time diff %s; fractOfInit: %s; log: %s; tau: %s"
+                                            % (
+                                                s,
+                                                slope,
+                                                initSlopeVal[s],
+                                                rateVal,
+                                                h.t - timeToCheckTau,
+                                                fractOfInit,
+                                                log(fractOfInit),
+                                                tau,
                                             )
+                                        )
                                         foundTau.append(s)
                                         timeCourseVals[s].append(tau)
                                     else:
-                                        if vverbose:
-                                            print(
-                                                "        Not yet fallen by 1/e: %s"
-                                                % fractOfInit
-                                            )
+                                        logger.debug(
+                                            "        Not yet fallen by 1/e: %s"
+                                            % fractOfInit
+                                        )
 
                 if h.t >= preHold and h.t >= lastCheckTime + postHoldStep:
-                    if verbose:
-                        print(
-                            "  - Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"
-                            % (h.t, h.dt, vh, foundTau, foundInf)
-                        )
+                    logger.debug(
+                        "  - Time: %s; dt: %s; voltage %f; found Tau %s; found Inf %s"
+                        % (h.t, h.dt, vh, foundTau, foundInf)
+                    )
 
                     lastCheckTime = h.t
 
@@ -416,34 +450,32 @@ def main():
                                 else lastCheckVal[s]
                             )
                             if abs(rel_dif) > tolerance:
-                                if verbose:
-                                    print(
-                                        "  State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"
-                                        % (
-                                            s,
-                                            val,
-                                            lastCheckVal[s],
-                                            rel_dif,
-                                            tolerance,
-                                        )
+                                logger.debug(
+                                    "  State %s has failed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"
+                                    % (
+                                        s,
+                                        val,
+                                        lastCheckVal[s],
+                                        rel_dif,
+                                        tolerance,
                                     )
+                                )
                             else:
-                                if verbose:
-                                    print(
-                                        "  State %s has passed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"
-                                        % (
-                                            s,
-                                            val,
-                                            lastCheckVal[s],
-                                            rel_dif,
-                                            tolerance,
-                                        )
+                                logger.debug(
+                                    "  State %s has passed at %f; lastCheckVal[s] = %f; fract = %f; tolerance = %f"
+                                    % (
+                                        s,
+                                        val,
+                                        lastCheckVal[s],
+                                        rel_dif,
+                                        tolerance,
                                     )
+                                )
                                 foundInf.append(s)
 
                             lastCheckVal[s] = val
 
-            print(
+            logger.info(
                 "    Finished run; t: %f, v: %f, vhold: %f, initSlopeVal: %s, timeCourses: %s ---  \n"
                 % (h.t, sec(0.5).v, vh, str(initSlopeVal), str(timeCourseVals))
             )
@@ -482,6 +514,8 @@ def main():
             "Steady state(s) of activation variables in %s at %s degC"
             % (chanToTest, h.celsius)
         )
+        plRates.set_xlabel("Membrane potential (mV)")
+        plRates.set_ylabel("Steady state - inf")
         pylab.grid("on")
 
         figTau = pylab.figure()
@@ -490,6 +524,8 @@ def main():
             % (chanToTest, h.celsius)
         )
         plTau = figTau.add_subplot(111, autoscale_on=True)
+        plTau.set_xlabel("Membrane potential (mV)")
+        plTau.set_ylabel("Time Course - tau (ms)")
         pylab.grid("on")
 
         for s in states:
@@ -533,16 +569,16 @@ def main():
             for i in range(len(volts)):
                 file.write("%f\t%f\n" % (volts[i], steadyStateVals[s][i]))
             file.close()
-            print("Written info to file: %s" % file_name)
+            logger.info("Written info to file: %s" % file_name)
 
             file_name = "%s.%s.tau%s.dat" % (chanToTest, s, temp_info)
             file = open(file_name, "w")
             for i in range(len(volts)):
                 file.write("%f\t%f\n" % (volts[i], timeCourseVals[s][i]))
             file.close()
-            print("Written info to file: %s" % file_name)
+            logger.info("Written info to file: %s" % file_name)
 
-    if args.savePlots:
+    if args.save_plots:
         figs = pylab.get_fignums()
 
         for fig in figs:
@@ -550,12 +586,18 @@ def main():
             window_title = pylab.get_current_fig_manager().get_window_title()
             file_name = f"{window_title}.png"
             plt.savefig(file_name)
-            print("Exported img to file: %s" % file_name)
+            logger.info("Exported img to file: %s" % file_name)
 
     if not args.nogui:
         pylab.show()
 
-    print("Done!")
+    logger.info("Done!")
+
+
+def main(args=None):
+    if args is None:
+        args = process_args()
+    run(a=args)
 
 
 if __name__ == "__main__":
