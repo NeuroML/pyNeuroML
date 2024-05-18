@@ -432,6 +432,60 @@ def rotate_cell(
 
     return newcell
 
+def translate_cell(
+    cell: neuroml.Cell,
+    inplace: bool = False,
+) -> neuroml.Cell:
+    """Return a new cell object translated so that the some is at the origin.
+
+    :param cell: cell object to rotate
+    :type cell: neuroml.Cell
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+    :type inplace: bool
+    :returns: new neuroml.Cell object
+    :rtype: neuroml.Cell
+
+    """
+    soma_seg_id = cell.get_morphology_root()
+    soma_seg = cell.get_segment(soma_seg_id)
+    cell_origin = numpy.array(
+        [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
+    )
+
+    if cell_origin[0] == cell_origin[1] == cell_origin[2] == 0:
+        return cell
+    
+    if not inplace:
+        newcell = copy.deepcopy(cell)
+    else:
+        newcell = cell
+
+
+    print(f"Translating {newcell.id} by x:{cell_origin[0]}, y:{cell_origin[1]}, z:{cell_origin[2]}")
+    
+    # translate each segment
+    for aseg in newcell.morphology.segments:
+        prox = dist = numpy.array([])
+        # may not have a proximal
+        try:
+            prox = numpy.array([aseg.proximal.x, aseg.proximal.y, aseg.proximal.z])
+        except AttributeError:
+            pass
+
+        if prox.any():
+            aseg.proximal.x -= cell_origin[0]
+            aseg.proximal.y -= cell_origin[1]
+            aseg.proximal.z -= cell_origin[2]
+
+        aseg.distal.x -= cell_origin[0]
+        aseg.distal.y -= cell_origin[1]
+        aseg.distal.z -= cell_origin[2]
+
+        logger.debug(f"prox is: {aseg.proximal}")
+        logger.debug(f"distal is: {aseg.distal}")
+
+    return newcell
 
 def get_pyneuroml_tempdir(rootdir: str = ".", prefix: str = "pyneuroml"):
     """Generate a pyneuroml directory name that can be used for various
