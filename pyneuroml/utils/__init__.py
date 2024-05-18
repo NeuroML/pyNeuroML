@@ -479,7 +479,7 @@ def translate_cell(
 ) -> neuroml.Cell:
     """Return a new cell object translated so that the some is at the origin.
 
-    :param cell: cell object to rotate
+    :param cell: cell object to translate
     :type cell: neuroml.Cell
     :param inplace: toggle whether the cell object should be modified inplace
         or a copy created (creates and returns a copy by default)
