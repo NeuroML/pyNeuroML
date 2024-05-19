@@ -194,6 +194,7 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
 def plot_spikes(
     spike_data: List[Dict[str, Union[List[float], List[int]]]],
     spiketime_files: List[str],
+    offset: int = 0,
     show_plots_already: bool = True,
     save_spike_plot_to: Optional[str] = None,
     rates: bool = False,
@@ -229,10 +230,9 @@ def plot_spikes(
     markers = []
     linestyles = []
 
-    offset_id = 0
-
     max_time = 0
     max_id = 0
+    min_id = float("inf")
     unique_ids = []
     for data in spike_data:
         unique_ids.extend(data["ids"])
@@ -240,19 +240,23 @@ def plot_spikes(
     times = OrderedDict()
     ids_in_file = OrderedDict()
 
+    current_offset = offset
+
     for data in spike_data:
         x = [t for t in data["times"]]
-        y = [id_shifted for id_shifted in data["ids"]]
+        y = [id_shifted + current_offset for id_shifted in data["ids"]]
 
         name = data["name"]
         times[name] = data["times"]
-        ids_in_file[name] = data["ids"]
-        max_id_here = max(data["ids"])
+        ids_in_file[name] = [id_shifted + current_offset for id_shifted in data["ids"]]
+        max_id_here = max(ids_in_file[name])
 
         max_time = max(max_time, max(x))
+        max_id = max(max_id, max_id_here + current_offset)
+        min_id = min(min_id, min(ids_in_file[name]) + current_offset)
 
-        labels.append("%s (%i)" % (name, max_id_here - offset_id))
-        offset_id = max_id_here + 1
+        labels.append("%s (%i)" % (name, max_id_here))
+
         xs.append(x)
         ys.append(y)
         markers.append(".")
@@ -261,7 +265,7 @@ def plot_spikes(
     xlim = [0, max_time * 1.05]
     max_id = max([max(ids_in_file[name]) for name in ids_in_file])
     min_id = min([min(ids_in_file[name]) for name in ids_in_file])
-    ylim = [min_id - 1, max_id + 1]
+    ylim = [min_id - 1 + offset, max_id + 1]
 
     markersizes = [
         3 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
