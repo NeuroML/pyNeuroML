@@ -193,7 +193,7 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
 
 def plot_spikes(
     spike_data: List[Dict[str, Union[List[float], List[int]]]],
-    spiketime_files: List[str],
+    title: str = "",
     offset: int = 0,
     show_plots_already: bool = True,
     save_spike_plot_to: Optional[str] = None,
@@ -276,7 +276,7 @@ def plot_spikes(
     generate_plot(
         xs,
         ys,
-        "Spike times from: %s" % ", ".join(spiketime_files),
+        title=" ",
         labels=labels,
         linestyles=linestyles,
         markers=markers,
