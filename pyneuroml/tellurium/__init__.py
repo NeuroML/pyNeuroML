@@ -2,13 +2,28 @@
 run a model using the tellurium engine
 """
 
-from pyneuroml.sedml import validate_sedml_files
-import tellurium as te
-
-te.setDefaultPlottingEngine("matplotlib")
-
 import os
-import libsedml
+import logging
+from pyneuroml.sedml import validate_sedml_files
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    import tellurium as te
+
+    te.setDefaultPlottingEngine("matplotlib")
+except ImportError:
+    logger.warning("Please install optional dependencies to use Tellurium features:")
+    logger.warning("pip install pyneuroml[tellurium]")
+
+try:
+    import libsedml
+except ImportError:
+    logger.warning("Please install optional dependencies to use SED-ML features:")
+    logger.warning("pip install pyneuroml[combine]")
+
 
 # # For technical reasons, any software which uses libSEDML
 # # must provide a custom build - Tellurium uses tesedml

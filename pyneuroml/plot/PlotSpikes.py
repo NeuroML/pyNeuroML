@@ -6,6 +6,7 @@ File: pyneuroml/plot/PlotSpikes.py
 
 Copyright 2023 NeuroML contributors
 """
+
 import argparse
 import logging
 import os
@@ -24,6 +25,13 @@ from typing import Tuple
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    import tables  # pytables for HDF5 support
+except ImportError:
+    logger.warning("Please install optional dependencies to use hdf5 features:")
+    logger.warning("pip install pyneuroml[hdf5]")
 
 FORMAT_ID_T = "id_t"
 FORMAT_ID_TIME_NEST_DAT = "id_t_nest_dat"
@@ -124,8 +132,6 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
     """
     full_path = os.path.abspath(file_name)
     logger.info("Loading SONATA spike times from: %s (%s)" % (file_name, full_path))
-
-    import tables  # pytables for HDF5 support
 
     h5file = tables.open_file(file_name, mode="r")
 

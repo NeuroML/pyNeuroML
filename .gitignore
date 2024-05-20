@@ -173,3 +173,5 @@ arm64
 /pyneuroml/xppaut/report.txt
 /examples/test_data/xppaut/fhn_2.ode
 /examples/test_data/xppaut/fhn_brain.py
+/examples/test_data/xppaut/nca_2.ode
+/examples/test_data/xppaut/wc_2.ode

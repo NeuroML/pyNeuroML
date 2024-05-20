@@ -7,7 +7,6 @@ File: pyneuroml/plot/PlotTimeSeries.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import argparse
 import logging
 import math
@@ -191,7 +190,7 @@ def plot_time_series_from_lems_file(
     :type lems_file_name: str
     :param base_dir: directory where LEMS file resides
     :type base_dir: str
-    :param **kwargs: other arguments passed to `plot_time_series`
+    :param kwargs: other arguments passed to `plot_time_series`
     :returns: None
 
     """
