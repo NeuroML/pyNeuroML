@@ -644,3 +644,5 @@ def load_sim_data_from_lems_file(
         if len(traces) == 0:
             raise ValueError("No traces found")
         return traces
+    elif get_events and get_traces:
+        raise ValueError("Set get_traces to False if you are not reading any traces")
