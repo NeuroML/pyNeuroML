@@ -395,31 +395,30 @@ def plot_spikes_from_data_files(
             name = os.path.basename(file_name)
             times = []
             ids = []
-
-            for line in spikes_file:
-                if not line.startswith("#") and not (
-                    line.startswith("sender") and format == "id_time_nest_dat"
-                ):
-                    parts = line.split()
-                if len(parts) != 2:
-                    logger.warning("Invalid line format: %s" % line)
-                    continue
-                if format == "id_t" or format == "id_time_nest_dat":
-                    id, t = parts
-                elif format == "t_id":
-                    t, id = parts
-                elif format == "TIME_ID":
-                    t, id = parts
-                else:
-                    logger.error("Unknown format: %s" % format)
-                    raise ValueError("Unknown format: %s" % format)
-                times.append(float(t))
-                ids.append(int(id))
+            with open(file_name) as spikes_file:
+                for line in spikes_file:
+                    if not line.startswith("#") and not (
+                        line.startswith("sender") and format == "id_time_nest_dat"
+                    ):
+                        parts = line.split()
+                        if len(parts) != 2:
+                            logger.warning("Invalid line format: %s" % line)
+                            continue
+                        if format == "id_t" or format == "id_time_nest_dat":
+                            id, t = parts
+                        elif format == "t_id":
+                            t, id = parts
+                        elif format == "TIME_ID":
+                            t, id = parts
+                        else:
+                            logger.error("Unknown format: %s" % format)
+                            raise ValueError("Unknown format: %s" % format)
+                        times.append(float(t))
+                        ids.append(int(id))
             spike_data.append({"name": name, "times": times, "ids": ids})
 
     plot_spikes(
         spike_data,
-        spiketime_files,
         offset=0,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
