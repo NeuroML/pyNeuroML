@@ -499,9 +499,9 @@ def translate_cell_to_coords(
         [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
     )
 
-    translation_x = cell_origin[0] - x
-    translation_y = cell_origin[1] - y
-    translation_z = cell_origin[2] - z
+    translation_x = cell_origin[0] - dest[0]
+    translation_y = cell_origin[1] - dest[1]
+    translation_z = cell_origin[2] - dest[2]
 
     if translation_x == translation_y == translation_z == 0:
         return cell
@@ -512,7 +512,7 @@ def translate_cell_to_coords(
         newcell = cell
 
 
-    logger.info(f"Translating {newcell.id} by x:{translation_x}, y:{translation_y}, z:{translation_z}")
+    logger.info(f"Translating {newcell.id} by x:{-translation_x}, y:{-translation_y}, z:{-translation_z}")
     
     # translate each segment
     for aseg in newcell.morphology.segments:
