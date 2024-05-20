@@ -473,7 +473,7 @@ def rotate_cell(
 
     return newcell
 
-def translate_cell(
+def translate_cell_to_origin(
     cell: neuroml.Cell,
     inplace: bool = False,
 ) -> neuroml.Cell:
