@@ -15,7 +15,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 from pyneuroml.plot import generate_plot
-from pyneuroml.lems import load_sim_data_from_lems_file
+import pyneuroml.lems as pynmll
 from pyneuroml.utils.cli import build_namespace
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
@@ -420,6 +420,7 @@ def plot_spikes_from_data_files(
     plot_spikes(
         spike_data,
         spiketime_files,
+        offset=0,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
         rates=rates,
@@ -442,7 +443,7 @@ def get_spike_data_files_from_lems(
     :rtype: Tuple[List[str], str]
     """
     # Code to read the LEMS file and extract the spike data file paths and format
-    sim_data = load_sim_data_from_lems_file(lems_file_name)
+    sim_data = pynmll.load_sim_data_from_lems_file(lems_file_name)
 
     spike_data_files = []
     spike_data_format = None
