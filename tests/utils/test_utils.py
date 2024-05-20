@@ -18,6 +18,7 @@ from pyneuroml.utils import (
     extract_position_info,
     get_files_generated_after,
     rotate_cell,
+    translate_cell_to_coords,
 )
 
 from .. import BaseTestCase
@@ -156,3 +157,92 @@ class TestUtils(BaseTestCase):
 
         newdoc.validate(recursive=True)
         write_neuroml2_file(newdoc, "tests/utils/test_rotation.net.nml", validate=True)
+
+def test_translate_cell_to_coords(self):
+        """Test translate_cell_to_coords"""
+        acell = neuroml.utils.component_factory(
+            "Cell", id="test_cell", validate=False
+        )  # type: neuroml.Cell
+
+        soma = acell.add_segment(
+            prox=[10, 10, 10, 15],
+            dist=[10, 10, 10, 15],
+            seg_id=0,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+        )
+
+        acell.add_segment(
+            prox=[10, 10, 10, 12],
+            dist=[110, 10, 10, 12],
+            seg_id=1,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        acell.add_segment(
+            prox=[10, 10, 10, 7],
+            dist=[10, 160, 10, 7],
+            seg_id=2,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        acell.add_segment(
+            prox=[10, 10, 10, 4],
+            dist=[10, 10, 210, 4],
+            seg_id=3,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        print(f'cell before: {acell}')
+
+        translated_cell = translate_cell_to_coords(acell)
+        translated_cell.id = "test_translated_cell"
+        print(f'cell after translation: {translated_cell}')
+
+        newdoc = neuroml.utils.component_factory(
+            "NeuroMLDocument", id="test_doc"
+        )  # type: neuroml.NeuroMLDocument
+        newdoc.add(acell)
+        newdoc.add(translated_cell)
+
+        net = newdoc.add("Network", id="test_net", validate=False)
+        pop1 = net.add(
+            "Population",
+            id="test_pop1",
+            size=1,
+            component=acell.id,
+            type="populationList",
+            validate=False,
+        )
+        pop1.add(
+            "Instance", id=0, location=pop1.component_factory("Location", x=0, y=0, z=0)
+        )
+
+        pop2 = net.add(
+            "Population",
+            id="test_pop2",
+            size=1,
+            component=translated_cell.id,
+            type="populationList",
+            validate=False,
+        )
+        pop2.add(
+            "Instance",
+            id=0,
+            location=pop1.component_factory("Location", x=200, y=0, z=0),
+        )
+
+        newdoc.validate(recursive=True)
+        write_neuroml2_file(newdoc, "tests/utils/test_translation.net.nml", validate=True)
+
+
