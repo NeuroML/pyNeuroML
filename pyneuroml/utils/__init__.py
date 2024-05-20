@@ -384,7 +384,7 @@ def rotate_cell(
     else:
         newcell = cell
 
-    print(f"Rotating {newcell.id} by {x}, {y}, {z}")
+    logger.info(f"Rotating {newcell.id} by {x}, {y}, {z}")
 
     # calculate rotations
     if x != 0:
@@ -473,17 +473,28 @@ def rotate_cell(
 
     return newcell
 
-def translate_cell(
+def translate_cell_to_coords(
     cell: neuroml.Cell,
     inplace: bool = False,
+    x: float = 0,
+    y: float = 0,
+    z: float = 0,
 ) -> neuroml.Cell:
-    """Return a new cell object translated so that the some is at the origin.
+    """Translate cell so that its soma moves to given coordinates
 
-    :param cell: cell object to rotate
+    .. versionadded:: 1.2.13
+    
+    :param cell: cell object to translate
     :type cell: neuroml.Cell
     :param inplace: toggle whether the cell object should be modified inplace
         or a copy created (creates and returns a copy by default)
     :type inplace: bool
+    :param x: x axis point destination of soma
+    :type x: float
+    :param y: y axis point destination of soma
+    :type y: float
+    :param z: z axis point destination of soma
+    :type z: float
     :returns: new neuroml.Cell object
     :rtype: neuroml.Cell
 
@@ -494,7 +505,11 @@ def translate_cell(
         [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
     )
 
-    if cell_origin[0] == cell_origin[1] == cell_origin[2] == 0:
+    translation_x = cell_origin[0] - x
+    translation_y = cell_origin[1] - y
+    translation_z = cell_origin[2] - z
+
+    if translation_x == translation_y == translation_z == 0:
         return cell
     
     if not inplace:
@@ -503,11 +518,11 @@ def translate_cell(
         newcell = cell
 
 
-    print(f"Translating {newcell.id} by x:{cell_origin[0]}, y:{cell_origin[1]}, z:{cell_origin[2]}")
+    logger.info(f"Translating {newcell.id} by x:{translation_x}, y:{translation_y}, z:{translation_z}")
     
     # translate each segment
     for aseg in newcell.morphology.segments:
-        prox = dist = numpy.array([])
+        prox = numpy.array([])
         # may not have a proximal
         try:
             prox = numpy.array([aseg.proximal.x, aseg.proximal.y, aseg.proximal.z])
@@ -515,13 +530,13 @@ def translate_cell(
             pass
 
         if prox.any():
-            aseg.proximal.x -= cell_origin[0]
-            aseg.proximal.y -= cell_origin[1]
-            aseg.proximal.z -= cell_origin[2]
+            aseg.proximal.x -= translation_x
+            aseg.proximal.y -= translation_y
+            aseg.proximal.z -= translation_z
 
-        aseg.distal.x -= cell_origin[0]
-        aseg.distal.y -= cell_origin[1]
-        aseg.distal.z -= cell_origin[2]
+        aseg.distal.x -= translation_x
+        aseg.distal.y -= translation_y
+        aseg.distal.z -= translation_z
 
         logger.debug(f"prox is: {aseg.proximal}")
         logger.debug(f"distal is: {aseg.distal}")
