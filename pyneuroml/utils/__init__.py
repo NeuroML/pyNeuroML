@@ -476,25 +476,19 @@ def rotate_cell(
 def translate_cell_to_coords(
     cell: neuroml.Cell,
     inplace: bool = False,
-    x: float = 0,
-    y: float = 0,
-    z: float = 0,
+    dest : typing.List[float] = [0,0,0],
 ) -> neuroml.Cell:
     """Translate cell so that its soma moves to given coordinates
 
     .. versionadded:: 1.2.13
-    
+
     :param cell: cell object to translate
     :type cell: neuroml.Cell
     :param inplace: toggle whether the cell object should be modified inplace
         or a copy created (creates and returns a copy by default)
     :type inplace: bool
-    :param x: x axis point destination of soma
-    :type x: float
-    :param y: y axis point destination of soma
-    :type y: float
-    :param z: z axis point destination of soma
-    :type z: float
+    :param dest: destination coordinates (x,y,z) for cell's soma
+    :type dest: list[x,y,z]
     :returns: new neuroml.Cell object
     :rtype: neuroml.Cell
 
