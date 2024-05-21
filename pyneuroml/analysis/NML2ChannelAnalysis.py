@@ -366,15 +366,25 @@ def get_channels_from_channel_file(
     :type channel_file: str
     :returns: list of channels
     :rtype: list
+    :raises ValueError: if no channels were found in the file
     """
     doc = read_neuroml2_file(
         channel_file, include_includes=True, verbose=False, already_included=[]
     )
-    channels = list(doc.ion_channel_hhs.__iter__()) + list(doc.ion_channel.__iter__())
+    channels = (
+        list(doc.ion_channel_hhs.__iter__())
+        + list(doc.ion_channel.__iter__())
+        + list(doc.ion_channel_v_shifts.__iter__())
+    )
+
+    if len(channels) == 0:
+        raise ValueError(f"No channels found in {channel_file}")
+
     for channel in channels:
         setattr(channel, "file", channel_file)
         if not hasattr(channel, "notes"):
             setattr(channel, "notes", "")
+
     return channels
 
 
@@ -447,7 +457,7 @@ def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
 
 
 def get_channel_gates(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> typing.List[
     typing.Union[
         neuroml.GateHHUndetermined,
@@ -469,14 +479,22 @@ def get_channel_gates(
         "gate_hh_rates",
         "gate_hh_tau_infs",
         "gate_hh_instantaneouses",
+        "gate_fractionals",
     ]:
         if hasattr(channel, gates):
-            channel_gates += [g.id for g in getattr(channel, gates)]
+            if gates == "gate_fractionals":
+                for g in getattr(channel, gates):
+                    for sg in g.sub_gates:
+                        channel_gates.append(str('%s/%s'%(g.id, sg.id)))
+            else:
+                for g in getattr(channel, gates):
+                    channel_gates.append(g.id)
+    #print('- Found gates: %s'%channel_gates)
     return channel_gates
 
 
 def get_conductance_expression(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> str:
     """Get expression of conductance in channel.
 
@@ -549,7 +567,7 @@ def plot_channel(channel, a, results, iv_data=None, grid=True):
 def plot_kinetics(channel, a, results, grid=True):
     fig = plt.figure()
     plt.get_current_fig_manager().set_window_title(
-        ("Time Course(s) of activation variables of " "%s from %s at %s degC")
+        ("Time course(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
 
