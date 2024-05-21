@@ -391,30 +391,21 @@ def plot_spikes_from_data_files(
     else:
         for file_name in spiketime_files:
             logger.info("Loading spike times from: %s" % file_name)
-            spikes_file = open(file_name)
             name = os.path.basename(file_name)
-            times = []
-            ids = []
-            with open(file_name) as spikes_file:
-                for line in spikes_file:
-                    if not line.startswith("#") and not (
-                        line.startswith("sender") and format == "id_time_nest_dat"
-                    ):
-                        parts = line.split()
-                        if len(parts) != 2:
-                            logger.warning("Invalid line format: %s" % line)
-                            continue
-                        if format == "id_t" or format == "id_time_nest_dat":
-                            id, t = parts
-                        elif format == "t_id":
-                            t, id = parts
-                        elif format == "TIME_ID":
-                            t, id = parts
-                        else:
-                            logger.error("Unknown format: %s" % format)
-                            raise ValueError("Unknown format: %s" % format)
-                        times.append(float(t))
-                        ids.append(int(id))
+
+            try:
+                spike_data_array = np.loadtxt(file_name, comments="#", unpack=True)
+
+            except ValueError:
+                logger.warning(f"Invalid line format in file: {file_name}")
+                continue
+            if format == "id_t" or format == "id_time_nest_dat":
+                ids, times = spike_data_array
+            elif format == "t_id" or format == "TIME_ID":
+                times, ids = spike_data_array
+            else:
+                logger.error("Unknown format: %s" % format)
+                raise ValueError("Unknown format: %s" % format)
             spike_data.append({"name": name, "times": times, "ids": ids})
 
     plot_spikes(
