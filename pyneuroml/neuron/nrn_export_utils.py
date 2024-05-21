@@ -6,9 +6,17 @@ updated accordingly.
 
 """
 
+import logging
 
-from neuron import h
-from nrn import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    from neuron import h
+    from nrn import *
+except ImportError:
+    logger.warning("Please install optional dependencies to use NEURON features:")
+    logger.warning("pip install pyneuroml[neuron]")
 
 
 def clear_neuron() -> None:

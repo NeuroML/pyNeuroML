@@ -7,7 +7,6 @@ File: pyneuroml/nsgr.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import os
 import pathlib
@@ -15,10 +14,15 @@ import typing
 from zipfile import ZipFile
 
 from pyneuroml.runners import generate_sim_scripts_in_folder
-from pynsgr.commands.nsgr_submit import nsgr_submit
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+try:
+    from pynsgr.commands.nsgr_submit import nsgr_submit
+except ImportError:
+    logger.warning("Please install optional dependencies to use NSG features:")
+    logger.warning("pip install pyneuroml[nsgr]")
 
 
 def run_on_nsg(
