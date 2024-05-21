@@ -10,12 +10,19 @@ from pyneuroml.lems import generate_lems_file_for_neuroml
 from pyneuroml.utils.plot import get_next_hex_color
 from pyneuroml.plot import generate_plot
 import neuroml as nml
-from pyelectro.analysis import max_min
-from pyelectro.analysis import mean_spike_frequency
+
 from typing import Optional
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    from pyelectro.analysis import max_min
+    from pyelectro.analysis import mean_spike_frequency
+except ImportError:
+    logger.warning("Please install optional dependencies to use analysis features:")
+    logger.warning("pip install pyneuroml[analysis]")
 
 
 def generate_current_vs_frequency_curve(
@@ -202,9 +209,7 @@ def generate_current_vs_frequency_curve(
     stims = []
     if len(custom_amps_nA) > 0:
         stims = [float(a) for a in custom_amps_nA]
-        stim_info = [
-            "%snA" % float(a) for a in custom_amps_nA
-        ]  # type: typing.Union[str, typing.List[str]]
+        stim_info = ["%snA" % float(a) for a in custom_amps_nA]  # type: typing.Union[str, typing.List[str]]
     else:
         # else generate a list using the provided arguments
         amp = start_amp_nA

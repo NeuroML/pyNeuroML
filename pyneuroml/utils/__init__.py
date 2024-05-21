@@ -29,9 +29,17 @@ import pyneuroml.utils.misc
 from lems.model.model import Model
 from neuroml.loaders import read_neuroml2_file
 from pyneuroml.errors import UNKNOWN_ERR
+from pyneuroml.utils.plot import get_next_hex_color
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+try:
+    import libsedml
+except ModuleNotFoundError:
+    logger.warning("Please install optional dependencies to use SED-ML features:")
+    logger.warning("pip install pyneuroml[combine]")
 
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
@@ -121,7 +129,6 @@ def extract_position_info(
         if verbose:
             print(info)
 
-        colour = "b"
         substitute_radius = None
 
         props = []
@@ -290,37 +297,39 @@ def get_state_color(s: str) -> str:
     :returns: colour in hex format
     :rtype: str
     """
-    col = "#000000"
+
     if s.startswith("m"):
         col = "#FF0000"
-    if s.startswith("k"):
+    elif s.startswith("k"):
         col = "#FF0000"
-    if s.startswith("r"):
+    elif s.startswith("r"):
         col = "#FF0000"
-    if s.startswith("h"):
+    elif s.startswith("h"):
         col = "#00FF00"
-    if s.startswith("l"):
+    elif s.startswith("l"):
         col = "#00FF00"
-    if s.startswith("n"):
+    elif s.startswith("n"):
         col = "#0000FF"
-    if s.startswith("a"):
+    elif s.startswith("a"):
         col = "#FF0000"
-    if s.startswith("b"):
+    elif s.startswith("b"):
         col = "#00FF00"
-    if s.startswith("c"):
+    elif s.startswith("c"):
         col = "#0000FF"
-    if s.startswith("q"):
+    elif s.startswith("q"):
         col = "#FF00FF"
-    if s.startswith("e"):
+    elif s.startswith("e"):
         col = "#00FFFF"
-    if s.startswith("f"):
+    elif s.startswith("f"):
         col = "#DDDD00"
-    if s.startswith("p"):
+    elif s.startswith("p"):
         col = "#880000"
-    if s.startswith("s"):
+    elif s.startswith("s"):
         col = "#888800"
-    if s.startswith("u"):
+    elif s.startswith("u"):
         col = "#880088"
+    else:
+        col = get_next_hex_color()
 
     return col
 
@@ -332,6 +341,7 @@ def rotate_cell(
     z: float = 0,
     order: str = "xyz",
     relative_to_soma: bool = False,
+    inplace: bool = False,
 ) -> neuroml.Cell:
     """Return a new cell object rotated in the provided order along the
     provided angles (in radians) relative to the soma position.
@@ -348,6 +358,10 @@ def rotate_cell(
     :type order: str
     :param relative_to_soma: whether rotation is relative to soma
     :type relative_to_soma: bool
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+
+    :type inplace: bool
     :returns: new neuroml.Cell object
     :rtype: neuroml.Cell
 
@@ -364,7 +378,12 @@ def rotate_cell(
     cell_origin = numpy.array(
         [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
     )
-    newcell = copy.deepcopy(cell)
+
+    if not inplace:
+        newcell = copy.deepcopy(cell)
+    else:
+        newcell = cell
+
     print(f"Rotating {newcell.id} by {x}, {y}, {z}")
 
     # calculate rotations
@@ -555,7 +574,6 @@ def get_model_file_list(
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     elif rootfile.endswith(".sedml"):
-        import libsedml
         if pathlib.Path(rootfile).is_absolute():
             rootdoc = libsedml.readSedMLFromFile(rootfile)
         else:
@@ -577,7 +595,7 @@ def get_model_file_list(
 
 
 def extract_lems_definition_files(
-    path: typing.Union[str, None, tempfile.TemporaryDirectory] = None
+    path: typing.Union[str, None, tempfile.TemporaryDirectory] = None,
 ) -> str:
     """Extract the NeuroML2 LEMS definition files to a directory and return its path.
 

@@ -7,7 +7,6 @@ File: tests/utils/test_utils.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import logging
 import math
 import pathlib as pl
@@ -72,9 +71,9 @@ class TestUtils(BaseTestCase):
 
     def test_rotate_cell(self):
         """Test rotate_cell"""
-        acell = neuroml.utils.component_factory(
-            "Cell", id="test_cell", validate=False
-        )  # type: neuroml.Cell
+        acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
+
+        acell.set_spike_thresh("10mV")
 
         soma = acell.add_segment(
             prox=[0, 0, 0, 15],
@@ -121,9 +120,7 @@ class TestUtils(BaseTestCase):
         rotated_cell.id = "test_rotated_cell"
         print(rotated_cell)
 
-        newdoc = neuroml.utils.component_factory(
-            "NeuroMLDocument", id="test_doc"
-        )  # type: neuroml.NeuroMLDocument
+        newdoc = neuroml.utils.component_factory("NeuroMLDocument", id="test_doc")  # type: neuroml.NeuroMLDocument
         newdoc.add(acell)
         newdoc.add(rotated_cell)
 
