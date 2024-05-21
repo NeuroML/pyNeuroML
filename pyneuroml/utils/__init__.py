@@ -487,7 +487,7 @@ def translate_cell_to_coords(
     :param inplace: toggle whether the cell object should be modified inplace
         or a copy created (creates and returns a copy by default)
     :type inplace: bool
-    :param dest: destination coordinates (x,y,z) for cell's soma
+    :param dest: destination coordinates (x,y,z) for cell's root
     :type dest: list[x,y,z]
     :returns: new neuroml.Cell object
     :rtype: neuroml.Cell
@@ -495,9 +495,8 @@ def translate_cell_to_coords(
     """
     soma_seg_id = cell.get_morphology_root()
     soma_seg = cell.get_segment(soma_seg_id)
-    cell_origin = numpy.array(
-        [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
-    )
+    cell_origin = [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
+    
 
     translation_x = cell_origin[0] - dest[0]
     translation_y = cell_origin[1] - dest[1]

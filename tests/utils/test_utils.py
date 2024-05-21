@@ -163,7 +163,7 @@ class TestUtils(BaseTestCase):
             acell = neuroml.utils.component_factory(
                 "Cell", id="test_cell", validate=False
             )  # type: neuroml.Cell
-
+            acell.set_spike_thresh("10mV")
             soma = acell.add_segment(
                 prox=[10, 10, 10, 15],
                 dist=[10, 10, 10, 15],
@@ -208,7 +208,26 @@ class TestUtils(BaseTestCase):
             translated_cell = translate_cell_to_coords(acell, False, [30,30,30])
             translated_cell.id = "test_translated_cell"
             print(f'cell after translation: {translated_cell}')
+            
+            #Get translated root and assert it
+            translated_soma_seg = translated_cell.get_segment(0)
+            translated_cell_origin = [translated_soma_seg.proximal.x, translated_soma_seg.proximal.y, translated_soma_seg.proximal.z, translated_soma_seg.proximal.diameter]
+            self.assertEqual([30, 30, 30, 15], translated_cell_origin)
 
+            #Get translated segments and assert them
+            translated_seg1 = translated_cell.get_segment(1)
+            translated_seg1_distal = [translated_seg1.distal.x, translated_seg1.distal.y, translated_seg1.distal.z, translated_seg1.distal.diameter]
+            self.assertEqual([130, 30, 30, 12], translated_seg1_distal)
+
+            translated_seg2 = translated_cell.get_segment(2)
+            translated_seg2_distal = [translated_seg2.distal.x, translated_seg2.distal.y, translated_seg2.distal.z, translated_seg2.distal.diameter]
+            self.assertEqual([30, 180, 30, 7], translated_seg2_distal)
+
+            translated_seg3 = translated_cell.get_segment(3)
+            translated_seg3_distal = [translated_seg3.distal.x, translated_seg3.distal.y, translated_seg3.distal.z, translated_seg3.distal.diameter]
+            self.assertEqual([30, 30, 230, 4], translated_seg3_distal)
+            
+            
             newdoc = neuroml.utils.component_factory(
                 "NeuroMLDocument", id="test_doc"
             )  # type: neuroml.NeuroMLDocument
