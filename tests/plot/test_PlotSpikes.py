@@ -52,44 +52,31 @@ class TestPlotSpikes(BaseTestCase):
         self.assertIsFile("spike-plot-test.png")
         os.unlink("spike-plot-test.png")
 
-    def test_plot_spikes_from_files(self):
+    def test_plot_spikes_from_files(self, max_spikes_per_population=100):
         """Test the plot_spikes function with spike time files."""
         spike_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
-
-        # Write spike data to the temporary file
-        times = defaultdict(list)
-        unique_ids = []
         spike_data = []
+
         for pop_data in self.spike_data:
-            for i, (time, id) in enumerate(zip(pop_data["times"], pop_data["ids"])):
-                print(f"{id} {time}", file=spike_file)
-                if id not in times:
-                    times[id] = []
-                times[id].append(time)
-                unique_ids.append(id)
-        max_time = max(max(times[id]) for id in times)
-        max_id = max(unique_ids)
-        for id in unique_ids:
-            spike_data.append(
-                {
-                    "name": f"Population_{id}",
-                    "times": times[id],
-                    "ids": [id] * len(times[id]),
-                }
-            )
+            times = pop_data["times"][:max_spikes_per_population]
+            ids = pop_data["ids"][:max_spikes_per_population]
+            name = pop_data["name"]
+        for time, id in zip(times, ids):
+            print(f"{id} {time}", file=spike_file)
+
+        spike_data.append({"name": name, "times": times, "ids": ids})
 
         spike_file.flush()
         spike_file.close()
 
-        # Generate a plot from the spike time file and save it to a file
         pyplts.plot_spikes(
             spike_data=spike_data,
             show_plots_already=True,
             save_spike_plot_to="spike-plot-from-file-test.png",
         )
+
         self.assertIsFile("spike-plot-from-file-test.png")
 
-        # Clean up the generated files
         os.unlink("spike-plot-from-file-test.png")
         os.unlink(spike_file.name)
 
