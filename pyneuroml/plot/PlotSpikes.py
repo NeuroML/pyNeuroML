@@ -415,7 +415,7 @@ def plot_spikes_from_data_files(
             spike_data.append({"name": name, "times": times, "ids": ids})
 
     plot_spikes(
-        spike_data,
+        spike_data=spike_data,
         offset=0,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
