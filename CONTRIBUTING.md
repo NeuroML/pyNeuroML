@@ -40,7 +40,7 @@ The dependencies are broken down in the `setup.cfg` file. To get a complete deve
    You can set up type checkers such as [mypy](https://mypy.readthedocs.io/) to use type hints in your development environment/IDE.
 
 
-    pip install mypy
+        pip install mypy
 
 
 ### Pre-commit
