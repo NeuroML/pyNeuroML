@@ -216,6 +216,10 @@ def plot_spikes(
                         - "times" (List[float]): List of spike times in seconds.
                         - "ids" (List[int]): List of cell IDs corresponding to each spike time.
     :type spike_data: List[Dict[str, Union[List[float], List[int]]]]
+    :param title: Title of the plot. Defaults to an empty string.
+    :type title: str
+    :param offset: Initial offset value for cell indices. Used to vertically separate spike plots of different populations. Defaults to 0.
+    :type offset: int
     :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
     :type show_plots_already: bool
     :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
@@ -267,6 +271,8 @@ def plot_spikes(
         ys.append(y)
         markers.append(".")
         linestyles.append("")
+
+        current_offset = max_id + 1
 
     xlim = [0, max_time * 1.05]
     max_id = max([max(ids_in_file[name]) for name in ids_in_file])
