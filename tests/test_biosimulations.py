@@ -7,7 +7,6 @@ File: tests/test_biosimulations.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import os
 import pathlib

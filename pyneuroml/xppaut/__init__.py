@@ -17,6 +17,14 @@ logger.setLevel(logging.INFO)
 
 verbose = False
 
+temp_var_count = 0
+
+def get_new_temp_var():
+    global temp_var_count
+    tv = 'TMP__%i'%temp_var_count
+    temp_var_count+=1
+    return tv
+
 def _closing_bracket_index(expr, open_bracket_index):
     depth = 0
     logger.debug('Looking for closing bracket of %s from %i, i.e. %s'%(expr, open_bracket_index, expr[open_bracket_index:]))
@@ -123,8 +131,35 @@ def parse_script(file_path):
                 else:
                     # "Normal" variable...
                     expr = value.strip()
+
+                    #### This should be refactored to make it 'infinitely' recursive... 
                     if 'if' in expr and 'else' in expr:
-                        data["conditional_derived_variables"][key.strip()] = _split_if_then_else(expr)
+                        var_0 = key.strip()
+                        ite_0 = _split_if_then_else(expr)
+
+                        if 'if' in ite_0['value_true']:
+                            ite_1 = _split_if_then_else(ite_0['value_true'])
+                            new_var_name1 = get_new_temp_var()
+
+                            if 'if' in ite_1['value_false']:
+                                ite_2 = _split_if_then_else(ite_1['value_false'])
+                                new_var_name2 = get_new_temp_var()
+
+                                if 'if' in ite_2['value_true']:
+                                    ite_3 = _split_if_then_else(ite_2['value_true'])
+                                    new_var_name3 = get_new_temp_var()
+
+                                    data["conditional_derived_variables"][new_var_name3] = ite_3
+                                    ite_2['value_true'] = new_var_name3
+                                
+                                data["conditional_derived_variables"][new_var_name2] = ite_2
+                                ite_1['value_false'] = new_var_name2
+
+                            data["conditional_derived_variables"][var_0] = ite_0
+                            data["conditional_derived_variables"][new_var_name1] = ite_1
+                            ite_0['value_true'] = new_var_name1
+
+                        data["conditional_derived_variables"][var_0] = ite_0
                     else:
                         k = key.strip()
                         if ' ' in k:
@@ -601,7 +636,12 @@ def run_xpp_file(filename, plot, show_plot_already=True, plot_separately={}):
     try:
         ret_string = sp.check_output(
             cmds, cwd=cwd, shell=False, stderr=sp.STDOUT
-        )
+        ).decode("utf-8")
+
+        xpp_error_phrases = ['Error allocating', 'illegal expression']
+        for err in xpp_error_phrases:
+            if err in ret_string:
+                raise Exception("Command: %s failed! Full output from XPP: \n==========================\n%s\n==========================" % (cmds, ret_string))
         logger.info(
             "Commands: %s completed successfully" % (cmds)
         )

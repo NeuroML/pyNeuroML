@@ -384,7 +384,7 @@ def rotate_cell(
     else:
         newcell = cell
 
-    print(f"Rotating {newcell.id} by {x}, {y}, {z}")
+    logger.info(f"Rotating {newcell.id} by {x}, {y}, {z}")
 
     # calculate rotations
     if x != 0:
@@ -467,6 +467,70 @@ def rotate_cell(
         aseg.distal.x = dist[0]
         aseg.distal.y = dist[1]
         aseg.distal.z = dist[2]
+
+        logger.debug(f"prox is: {aseg.proximal}")
+        logger.debug(f"distal is: {aseg.distal}")
+
+    return newcell
+
+
+def translate_cell_to_coords(
+    cell: neuroml.Cell,
+    inplace: bool = False,
+    dest: typing.List[float] = [0, 0, 0],
+) -> neuroml.Cell:
+    """Translate cell so that its soma moves to given coordinates
+
+    .. versionadded:: 1.2.13
+
+    :param cell: cell object to translate
+    :type cell: neuroml.Cell
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+    :type inplace: bool
+    :param dest: destination coordinates (x,y,z) for cell's root
+    :type dest: list[x,y,z]
+    :returns: new neuroml.Cell object
+    :rtype: neuroml.Cell
+
+    """
+    soma_seg_id = cell.get_morphology_root()
+    soma_seg = cell.get_segment(soma_seg_id)
+    cell_origin = [soma_seg.proximal.x, soma_seg.proximal.y, soma_seg.proximal.z]
+
+    translation_x = cell_origin[0] - dest[0]
+    translation_y = cell_origin[1] - dest[1]
+    translation_z = cell_origin[2] - dest[2]
+
+    if translation_x == translation_y == translation_z == 0:
+        return cell
+
+    if not inplace:
+        newcell = copy.deepcopy(cell)
+    else:
+        newcell = cell
+
+    logger.info(
+        f"Translating {newcell.id} by x:{-translation_x}, y:{-translation_y}, z:{-translation_z}"
+    )
+
+    # translate each segment
+    for aseg in newcell.morphology.segments:
+        prox = numpy.array([])
+        # may not have a proximal
+        try:
+            prox = numpy.array([aseg.proximal.x, aseg.proximal.y, aseg.proximal.z])
+        except AttributeError:
+            pass
+
+        if prox.any():
+            aseg.proximal.x -= translation_x
+            aseg.proximal.y -= translation_y
+            aseg.proximal.z -= translation_z
+
+        aseg.distal.x -= translation_x
+        aseg.distal.y -= translation_y
+        aseg.distal.z -= translation_z
 
         logger.debug(f"prox is: {aseg.proximal}")
         logger.debug(f"distal is: {aseg.distal}")
