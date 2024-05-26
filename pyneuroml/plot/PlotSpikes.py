@@ -262,8 +262,8 @@ def plot_spikes(
         max_id_here = max(ids_in_file[name])
 
         max_time = max(max_time, max(x))
-        max_id = max(max_id, max_id_here + current_offset)
-        min_id = min(min_id, min(ids_in_file[name]) + current_offset)
+        max_id = max(max_id, max_id_here)
+        min_id = min(min_id, min(ids_in_file[name]))
 
         labels.append("%s (%i)" % (name, max_id_here))
 
@@ -273,6 +273,7 @@ def plot_spikes(
         linestyles.append("")
 
         current_offset = max_id + 1
+        ids_in_file[name].sort()
 
     xlim = [0, max_time * 1.05]
     max_id = max([max(ids_in_file[name]) for name in ids_in_file])
