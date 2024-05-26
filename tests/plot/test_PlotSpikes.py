@@ -28,7 +28,7 @@ class TestPlotSpikes(BaseTestCase):
         )
 
         num_neurons_pop2 = 500
-        num_spikes_pop2 = 2000
+        num_spikes_pop2 = 1000
         population2_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop2)]
         population2_ids = [
             random.randint(0, num_neurons_pop2 - 1) for _ in range(num_spikes_pop2)
@@ -46,6 +46,7 @@ class TestPlotSpikes(BaseTestCase):
         pyplts.plot_spikes(
             title="",
             spike_data=self.spike_data,
+            offset=0,
             show_plots_already=True,
             save_spike_plot_to="spike-plot-test.png",
         )
