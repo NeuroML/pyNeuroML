@@ -1,13 +1,16 @@
 import os
-import unittest
-import tempfile
-import numpy as np
 import random
-from .. import BaseTestCase
+import tempfile
+import unittest
 from collections import defaultdict
+
+import numpy as np
+
 import pyneuroml.plot.PlotSpikes as pyplts
 from pyneuroml.lems import load_sim_data_from_lems_file
 from pyneuroml.plot import get_spike_data_files_from_lems
+
+from .. import BaseTestCase
 
 
 class TestPlotSpikes(BaseTestCase):
@@ -17,9 +20,12 @@ class TestPlotSpikes(BaseTestCase):
         """Set up test data for the test suite."""
         self.spike_data = []
 
+        spike_time_end = 1000
         num_neurons_pop1 = 1000
         num_spikes_pop1 = 5000
-        population1_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop1)]
+        population1_times = [
+            random.uniform(0, spike_time_end) for _ in range(num_spikes_pop1)
+        ]
         population1_ids = [
             random.randint(0, num_neurons_pop1 - 1) for _ in range(num_spikes_pop1)
         ]
@@ -28,50 +34,68 @@ class TestPlotSpikes(BaseTestCase):
         )
 
         num_neurons_pop2 = 500
-        num_spikes_pop2 = 1000
-        population2_times = [random.uniform(0, 1000) for _ in range(num_spikes_pop2)]
+        num_spikes_pop2 = 5000
+        population2_times = [
+            random.uniform(0, spike_time_end) for _ in range(num_spikes_pop2)
+        ]
         population2_ids = [
             random.randint(0, num_neurons_pop2 - 1) for _ in range(num_spikes_pop2)
         ]
         self.spike_data.append(
-            {
-                "name": "Population2",
-                "times": population2_times,
-                "ids": [id + num_neurons_pop1 for id in population2_ids],
-            }
+            {"name": "Population2", "times": population2_times, "ids": population2_ids}
         )
 
-    def test_plot_spikes_from_data(self):
+    def test_plot_spikes_from_data_single(self):
         """Test the plot_spikes function with spike data."""
+        # plot individuals
+        for data in self.spike_data:
+            pyplts.plot_spikes(
+                title=f"spikes from data - {data['name']}",
+                spike_data=[data],
+                show_plots_already=True,
+                save_spike_plot_to=f"spike-plot-test-{data['name']}.png",
+            )
+            self.assertIsFile(f"spike-plot-test-{data['name']}.png")
+            os.unlink(f"spike-plot-test-{data['name']}.png")
+
+    def test_plot_spikes_from_data_multi(self):
+        """Test the plot_spikes function with spike data."""
+        # plot individuals
+        # plot together
         pyplts.plot_spikes(
-            title="",
+            title="spikes from data",
             spike_data=self.spike_data,
-            offset=0,
             show_plots_already=True,
-            save_spike_plot_to="spike-plot-test.png",
+            save_spike_plot_to="spike-plot-test-multi.png",
         )
-        self.assertIsFile("spike-plot-test.png")
-        os.unlink("spike-plot-test.png")
+        self.assertIsFile("spike-plot-test-multi.png")
+        os.unlink("spike-plot-test-multi.png")
 
     def test_plot_spikes_from_files(self, max_spikes_per_population=100):
         """Test the plot_spikes function with spike time files."""
-        spike_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
-        spike_data = []
 
+        filelist = []
         for pop_data in self.spike_data:
-            times = pop_data["times"][:max_spikes_per_population]
-            ids = pop_data["ids"][:max_spikes_per_population]
-            name = pop_data["name"]
-        for time, id in zip(times, ids):
-            print(f"{id} {time}", file=spike_file)
+            spike_file = tempfile.NamedTemporaryFile(
+                mode="w",
+                delete=False,
+                dir=".",
+                prefix=f"{pop_data['name']}_",
+                suffix=".spikes",
+            )
+            filelist.append(spike_file.name)
+            times = pop_data["times"]
+            ids = pop_data["ids"]
+            for time, gid in zip(times, ids):
+                print(f"{gid} {time}", file=spike_file)
 
-        spike_data.append({"name": name, "times": times, "ids": ids})
+            spike_file.flush()
+            spike_file.close()
 
-        spike_file.flush()
-        spike_file.close()
-
-        pyplts.plot_spikes(
-            spike_data=spike_data,
+        pyplts.plot_spikes_from_data_files(
+            filelist,
+            format_="id_t",
+            title="spikes from data files",
             show_plots_already=True,
             save_spike_plot_to="spike-plot-from-file-test.png",
         )
@@ -79,7 +103,8 @@ class TestPlotSpikes(BaseTestCase):
         self.assertIsFile("spike-plot-from-file-test.png")
 
         os.unlink("spike-plot-from-file-test.png")
-        os.unlink(spike_file.name)
+        for f in filelist:
+            os.unlink(f)
 
     def test_plot_spikes_from_lems_file(self):
         """Test plot_spikes_from_lems_file function"""
@@ -224,7 +249,7 @@ class TestPlotSpikes(BaseTestCase):
         # Generate a plot from the SONATA HDF5 file and save it to a file
         pyplts.plot_spikes(
             spiketime_files=[hdf5_file.name],
-            format="sonata",
+            format_="sonata",
             show_plots_already=False,
             save_figure_to="spike-plot-from-sonata-test.png",
         )

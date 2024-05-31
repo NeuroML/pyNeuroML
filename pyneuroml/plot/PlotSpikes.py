@@ -11,18 +11,16 @@ import argparse
 import logging
 import os
 import sys
+import textwrap
 from collections import OrderedDict
+from typing import Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pyneuroml.plot import generate_plot
-import pyneuroml.lems as pynmll
-from pyneuroml.utils.cli import build_namespace
-from matplotlib import pyplot as plt
-from matplotlib_scalebar.scalebar import ScaleBar
-from typing import Dict, List, Optional, Union
-from typing import Tuple
 
+import pyneuroml.lems as pynmll
+from pyneuroml.plot import generate_plot
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -37,7 +35,7 @@ FORMAT_ID_T = "id_t"
 FORMAT_ID_TIME_NEST_DAT = "id_t_nest_dat"
 FORMAT_T_ID = "t_id"
 
-DEFAULTS = {
+SPIKE_PLOTTER_DEFAULTS = {
     "format": FORMAT_ID_T,
     "rates": False,
     "save_spike_plot_to": None,
@@ -49,7 +47,7 @@ DEFAULTS = {
 POP_NAME_SPIKEFILE_WITH_GIDS = "Spiketimes for GIDs"
 
 
-def _process_args() -> argparse.Namespace:
+def _process_spike_plotter_args() -> argparse.Namespace:
     """
     Parse command line arguments.
 
@@ -57,7 +55,8 @@ def _process_args() -> argparse.Namespace:
     :rtype: argparse.Namespace
     """
     parser = argparse.ArgumentParser(
-        description="A script for plotting files containing spike time data"
+        description="A script for plotting files containing spike time data",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
     parser.add_argument(
@@ -72,26 +71,29 @@ def _process_args() -> argparse.Namespace:
         "-format",
         type=str,
         metavar="<format>",
-        default=DEFAULTS["format"],
-        help="How the spiketimes are represented on each line of file: \n"
-        + "%s: id of cell, space(s) / tab(s), time of spike (default);\n" % FORMAT_ID_T
-        + "%s: id of cell, space(s) / tab(s), time of spike, allowing NEST dat file comments/metadata;\n"
-        % FORMAT_ID_TIME_NEST_DAT
-        + "%s: time of spike, space(s) / tab(s), id of cell;\n" % FORMAT_T_ID
-        + "sonata: SONATA format HDF5 file containing spike times",
+        default=SPIKE_PLOTTER_DEFAULTS["format"],
+        help=textwrap.dedent(f"""\
+        How the spiketimes are represented on each line of file:
+
+        - {FORMAT_ID_T}: id of cell, space(s) / tab(s), time of spike (default);
+        - {FORMAT_ID_TIME_NEST_DAT}: id of cell, space(s) / tab(s), time of spike, allowing NEST dat file comments/metadata
+        - {FORMAT_T_ID}: time of spike, space(s) / tab(s), id of cell
+        - sonata: SONATA format HDF5 file containing spike times
+
+        """),
     )
 
     parser.add_argument(
         "-rates",
         action="store_true",
-        default=DEFAULTS["rates"],
+        default=SPIKE_PLOTTER_DEFAULTS["rates"],
         help="Show a plot of rates",
     )
 
     parser.add_argument(
         "-showPlotsAlready",
         action="store_true",
-        default=DEFAULTS["show_plots_already"],
+        default=SPIKE_PLOTTER_DEFAULTS["show_plots_already"],
         help="Show plots once generated",
     )
 
@@ -99,7 +101,7 @@ def _process_args() -> argparse.Namespace:
         "-saveSpikePlotTo",
         type=str,
         metavar="<spiketime plot filename>",
-        default=DEFAULTS["save_spike_plot_to"],
+        default=SPIKE_PLOTTER_DEFAULTS["save_spike_plot_to"],
         help="Name of file in which to save spiketime plot",
     )
 
@@ -107,7 +109,7 @@ def _process_args() -> argparse.Namespace:
         "-rateWindow",
         type=int,
         metavar="<rate window>",
-        default=DEFAULTS["rate_window"],
+        default=SPIKE_PLOTTER_DEFAULTS["rate_window"],
         help="Window for rate calculation in ms",
     )
 
@@ -115,7 +117,7 @@ def _process_args() -> argparse.Namespace:
         "-rateBins",
         type=int,
         metavar="<rate bins>",
-        default=DEFAULTS["rate_bins"],
+        default=SPIKE_PLOTTER_DEFAULTS["rate_bins"],
         help="Number of bins for rate histogram",
     )
 
@@ -208,22 +210,23 @@ def plot_spikes(
     rate_bins: int = 500,
     max_image_size: Optional[Tuple[int, int]] = None,
 ) -> None:
-    """
-    Plot spike times from data.
+    """Plot spike times from data.
 
     :param spike_data: List of dictionaries containing spike time data. Each dictionary should have the following keys:
                         - "name" (str): Name of the population or file.
                         - "times" (List[float]): List of spike times in seconds.
                         - "ids" (List[int]): List of cell IDs corresponding to each spike time.
-    :type spike_data: List[Dict[str, Union[List[float], List[int]]]]
+    :type spike_data: list of dictionaries
     :param title: Title of the plot. Defaults to an empty string.
     :type title: str
-    :param offset: Initial offset value for cell indices. Used to vertically separate spike plots of different populations. Defaults to 0.
+    :param offset: Initial offset value for cell indices.
+        Used to separate spike plots of different populations.
+        Defaults to 0
     :type offset: int
     :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
     :type show_plots_already: bool
     :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
-    :type save_spike_plot_to: Optional[str]
+    :type save_spike_plot_to: str
     :param rates: Whether to plot rates in addition to spike times. Defaults to False.
     :type rates: bool
     :param rate_window: Window size for rate calculation in ms. Defaults to 50.
@@ -240,32 +243,36 @@ def plot_spikes(
     markers = []
     linestyles = []
 
-    max_time = 0
+    max_time = 0.0
     max_id = 0
     min_id = float("inf")
-    unique_ids = []
+    unique_ids = []  # type: List[int]
     for data in spike_data:
         unique_ids.extend(data["ids"])
     unique_ids = list(set(unique_ids))
+
     times = OrderedDict()
     ids_in_file = OrderedDict()
 
     current_offset = offset
 
     for data in spike_data:
-        x = [t for t in data["times"]]
-        y = [id_shifted + current_offset for id_shifted in data["ids"]]
+        x = data["times"]
+        y = [id_ + current_offset for id_ in data["ids"]]
 
-        name = data["name"]
-        times[name] = data["times"]
-        ids_in_file[name] = [id_shifted + current_offset for id_shifted in data["ids"]]
-        max_id_here = max(ids_in_file[name])
+        name = data["name"]  # type: str
+        times[name] = x
+
+        ids_in_file[name] = y
+        max_id_here = max(y)
 
         max_time = max(max_time, max(x))
         max_id = max(max_id, max_id_here)
-        min_id = min(min_id, min(ids_in_file[name]))
+        min_id = min(min_id, min(y))
 
-        labels.append("%s (%i)" % (name, max_id_here))
+        # only show population name: since we cannot ascertain the number of
+        # cells in the population simply from the data
+        labels.append(name)
 
         xs.append(x)
         ys.append(y)
@@ -276,20 +283,20 @@ def plot_spikes(
         ids_in_file[name].sort()
 
     xlim = [0, max_time * 1.05]
-    max_id = max([max(ids_in_file[name]) for name in ids_in_file])
-    min_id = min([min(ids_in_file[name]) for name in ids_in_file])
     ylim = [min_id - 1 + offset, max_id + 1]
 
     markersizes = [
-        3 if len(unique_ids) <= 50 else 2 if len(unique_ids) <= 200 else 1 for _ in xs
+        "3" if len(unique_ids) <= 50 else "2" if len(unique_ids) <= 200 else "1"
+        for _ in xs
     ]
     if max_image_size is not None:
         plt.figure(figsize=(max_image_size[0] / 100, max_image_size[1] / 100))
 
+    # do not show plot here, generate all plots and show at end
     generate_plot(
         xs,
         ys,
-        title=" ",
+        title=title,
         labels=labels,
         linestyles=linestyles,
         markers=markers,
@@ -354,25 +361,28 @@ def plot_spikes(
 
 def plot_spikes_from_data_files(
     spiketime_files: List[str],
-    format: str,
+    format_: str,
     show_plots_already: bool = True,
     save_spike_plot_to: Optional[str] = None,
     rates: bool = False,
     rate_window: int = 50,
     rate_bins: int = 500,
+    title: str = "",
 ) -> None:
     """
     Plot spike times from data files.
 
     :param spiketime_files: List of spike time files to be plotted.
     :type spiketime_files: List[str]
-    :param format: Format of the spike time data in the files. Can be one of the following:
+    :param title: optional title for plot, empty string disables it
+    :type title: str
+    :param format_: Format of the spike time data in the files. Can be one of the following:
                    - "id_t": Each line contains a cell ID (int) followed by a spike time (float).
                    - "id_time_nest_dat": Each line contains a cell ID (int) followed by a spike time (float),
                                          with NEST-style comments allowed.
                    - "t_id": Each line contains a spike time (float) followed by a cell ID (int).
                    - "sonata": SONATA-style HDF5 file.
-    :type format: str
+    :type format_: str
     :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
     :type show_plots_already: bool
     :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
@@ -388,7 +398,7 @@ def plot_spikes_from_data_files(
     """
     spike_data = []
 
-    if format == "sonata":
+    if format_ == "sonata":
         for file_name in spiketime_files:
             ids_times_pops = read_sonata_spikes_hdf5_file(file_name)
 
@@ -404,26 +414,27 @@ def plot_spikes_from_data_files(
     else:
         for file_name in spiketime_files:
             logger.info("Loading spike times from: %s" % file_name)
-            name = os.path.basename(file_name)
+            logger.debug(f"format is: {format_}")
 
+            name = os.path.basename(file_name)
             try:
                 spike_data_array = np.loadtxt(file_name, comments="#", unpack=True)
 
             except ValueError:
                 logger.warning(f"Invalid line format in file: {file_name}")
                 continue
-            if format == "id_t" or format == "id_time_nest_dat":
+            if format_ == "id_t" or format_ == "id_time_nest_dat":
                 ids, times = spike_data_array
-            elif format == "t_id" or format == "TIME_ID":
+            elif format_ == "t_id" or format_ == "TIME_ID":
                 times, ids = spike_data_array
             else:
-                logger.error("Unknown format: %s" % format)
-                raise ValueError("Unknown format: %s" % format)
+                logger.error("Unknown format: %s" % format_)
+                raise ValueError("Unknown format: %s" % format_)
             spike_data.append({"name": name, "times": times, "ids": ids})
 
     plot_spikes(
+        title=title,
         spike_data=spike_data,
-        offset=0,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
         rates=rates,
@@ -515,34 +526,35 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
     :rtype: None
     """
     if args is None:
-        args = _process_args()
+        args = _process_spike_plotter_args()
 
-    lems_files = [f for f in args.spiketimeFiles if f.startswith("LEMS_")]
+    a = build_namespace(SPIKE_PLOTTER_DEFAULTS, a=args)
+    logger.debug(a)
 
-    spike_data_files = [f for f in args.spiketimeFiles if not f.startswith("LEMS_")]
-
-    if lems_files:
-        for lems_file in lems_files:
-            plot_spikes_from_lems_file(
-                lems_file,
-                show_plots_already=args.showPlotsAlready,
-                save_spike_plot_to=args.saveSpikePlotTo,
-                rates=args.rates,
-                rate_window=args.rateWindow,
-                rate_bins=args.rateBins,
-            )
-    elif spike_data_files:
-        plot_spikes_from_data_files(
-            args.spiketimeFiles,
-            args.format,
-            show_plots_already=args.showPlotsAlready,
-            save_spike_plot_to=args.saveSpikePlotTo,
-            rates=args.rates,
-            rate_window=args.rateWindow,
-            rate_bins=args.rateBins,
+    if len(a.spiketime_files) == 1 and a.spiketime_files[0].startswith("LEMS_"):
+        plot_spikes_from_lems_file(
+            a.spiketime_files[0],
+            show_plots_already=a.show_plots_already,
+            save_spike_plot_to=a.save_spike_plot_to,
+            rates=a.rates,
+            rate_window=a.rate_window,
+            rate_bins=a.rate_bins,
         )
     else:
-        print("Please provide either spike data files or a LEMS simulation file.")
+        title = ""
+        if len(a.spiketime_files) == 1:
+            title = a.spiketime_files[0]
+
+        plot_spikes_from_data_files(
+            spiketime_files=a.spiketime_files,
+            format_=a.format,
+            show_plots_already=a.show_plots_already,
+            save_spike_plot_to=a.save_spike_plot_to,
+            rates=a.rates,
+            rate_window=a.rate_window,
+            rate_bins=a.rate_bins,
+            title=title,
+        )
 
 
 if __name__ == "__main__":
