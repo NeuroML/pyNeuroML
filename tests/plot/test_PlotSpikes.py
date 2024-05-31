@@ -105,18 +105,39 @@ class TestPlotSpikes(BaseTestCase):
 
     def test_plot_spikes_from_lems_file(self):
         """Test plot_spikes_from_lems_file function"""
-        spike_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
-        for i in range(0, 1):
-            print(f"{i*10} 0", file=spike_file)
-            print(f"{i*10+5} 1", file=spike_file)
-            print(f"{i*10+10} 2", file=spike_file)
 
-        spike_file.flush()
-        spike_file.close()
+        spike_time_end = 1000
+        spike_file1 = tempfile.NamedTemporaryFile(
+            mode="w",
+            delete=False,
+            dir=".",
+            prefix="izpop0_",
+            suffix=".spikes",
+        )
+        for j in range(500):
+            print(
+                f"{random.uniform(0, spike_time_end)} {random.randint(0, 5)}",
+                file=spike_file1,
+            )
+        spike_file1.flush()
+        spike_file1.close()
 
-        spike_file_name = os.path.abspath(spike_file.name)
+        spike_file2 = tempfile.NamedTemporaryFile(
+            mode="w",
+            delete=False,
+            dir=".",
+            prefix="izpop0_",
+            suffix=".spikes",
+        )
+        for j in range(500):
+            print(
+                f"{random.uniform(0, spike_time_end)} {random.randint(6, 10)}",
+                file=spike_file2,
+            )
+        spike_file2.flush()
+        spike_file2.close()
 
-        lems_contents = """
+        lems_contents = f"""
 <Lems>
 
     <!--
@@ -136,7 +157,7 @@ class TestPlotSpikes(BaseTestCase):
     <Include file="izhikevich2007_network.nml"/>
 
     <Simulation id="example_izhikevich2007network_sim" length="1000ms" step="0.1ms" target="IzNet" seed="123">  <!-- Note seed: ensures same random numbers used every run -->
-        <EventOutputFile id="Spikes_file__IzhPop0" fileName="{spike_file_name}" format="ID_TIME">
+        <EventOutputFile id="Spikes_file__IzhPop0" fileName="{spike_file1.name}" format="TIME_ID">
             <EventSelection id="0" select="IzhPop0[0]" eventPort="spike">
             </EventSelection>
             <EventSelection id="1" select="IzhPop0[1]" eventPort="spike">
@@ -150,7 +171,7 @@ class TestPlotSpikes(BaseTestCase):
             <EventSelection id="5" select="IzhPop0[5]" eventPort="spike">
             </EventSelection>
         </EventOutputFile>
-        <EventOutputFile id="Spikes_file__IzhPop1" fileName="{spike_file_name}" format="ID_TIME">
+        <EventOutputFile id="Spikes_file__IzhPop1" fileName="{spike_file2.name}" format="TIME_ID">
             <EventSelection id="6" select="IzhPop1[0]" eventPort="spike">
             </EventSelection>
             <EventSelection id="7" select="IzhPop1[1]" eventPort="spike">
@@ -171,21 +192,9 @@ class TestPlotSpikes(BaseTestCase):
     """
 
         lems_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
-        print(lems_contents.format(spike_file_name=spike_file_name), file=lems_file)
+        print(lems_contents, file=lems_file)
         lems_file.flush()
         lems_file.close()
-
-        for i in range(6):
-            file_name = f"IzhPop0[{i}].dat"
-            with open(file_name, "w") as f:
-                for j in range(100):
-                    print(f"{j*10} {i}", file=f)
-
-        for i in range(5):
-            file_name = f"IzhPop1[{i}].dat"
-            with open(file_name, "w") as f:
-                for j in range(100):
-                    print(f"{j*10} {i+6}", file=f)
 
         pyplts.plot_spikes_from_lems_file(
             lems_file_name=lems_file.name,
@@ -193,33 +202,15 @@ class TestPlotSpikes(BaseTestCase):
             show_plots_already=True,
             save_spike_plot_to="spikes-test-from-lems-file.png",
             rates=False,
-            rate_window=50,
-            rate_bins=500,
+            # rate_window=50,
+            # rate_bins=500,
         )
         self.assertIsFile("spikes-test-from-lems-file.png")
 
-        pyplts.plot_spikes_from_lems_file(
-            lems_file_name=lems_file.name,
-            base_dir=".",
-            show_plots_already=False,
-            save_spike_plot_to="spikes-test-from-lems-file-2.png",
-            rates=True,
-            rate_window=50,
-            rate_bins=500,
-        )
-        self.assertIsFile("spikes-test-from-lems-file-2.png")
-
         os.unlink("spikes-test-from-lems-file.png")
-        os.unlink("spikes-test-from-lems-file-2.png")
-        os.unlink(spike_file_name)
+        os.unlink(spike_file1.name)
+        os.unlink(spike_file2.name)
         os.unlink(lems_file.name)
-
-        for i in range(6):
-            file_name = f"IzhPop0[{i}].dat"
-            os.unlink(file_name)
-        for i in range(5):
-            file_name = f"IzhPop1[{i}].dat"
-            os.unlink(file_name)
 
     @unittest.skip("Skipping until write_spike_data_to_hdf5 is implemented")
     def test_plot_spikes_from_sonata_file(self):

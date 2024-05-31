@@ -13,7 +13,7 @@ from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def generate_lems_file_for_neuroml(
@@ -78,7 +78,7 @@ def generate_lems_file_for_neuroml(
         plotted
     :type plot_all_segments: bool
     :param gen_plots_for_quantities: dict of quantities to display
-        the key is the "display" and the value will be the list of quantitiy
+        the key is the "display" and the value will be the list of quantity
         paths
     :type gen_plots_for_quantities: dict
     :param gen_plots_for_only_populations: list of populations to limit
@@ -483,7 +483,7 @@ def load_sim_data_from_lems_file(
     base_dir: str = ".",
     get_events: bool = True,
     get_traces: bool = True,
-) -> typing.Union[typing.Tuple[typing.Dict, typing.Dict], typing.Dict]:
+) -> typing.Optional[typing.Union[typing.Tuple[typing.Dict, typing.Dict], typing.Dict]]:
     """Load simulation outputs using the LEMS simulation file
 
     .. versionadded:: 1.2.2
@@ -502,7 +502,7 @@ def load_sim_data_from_lems_file(
         .. code-block:: python
 
             {
-                '<value of select attribute>': [<events>]
+                '<value of select attribute>': { 'cell id': [<events>] }
             }
 
         The traces dictionary has the following format:
@@ -512,6 +512,7 @@ def load_sim_data_from_lems_file(
             {
                 't': [<values>],
                 'col 1': [<values>]
+                'col 2': [<values>]
             }
 
     :raises ValueError: if neither traces nor events are selected for loading
@@ -568,35 +569,35 @@ def load_sim_data_from_lems_file(
                 raise OSError(
                     ("Could not find simulation output " "file %s" % file_name)
                 )
-            format = of.attrib["format"]
+            format_ = of.attrib["format"]
             logger.info(
-                "Loading saved events from %s (format: %s)" % (file_name, format)
+                "Loading saved events from %s (format: %s)" % (file_name, format_)
             )
             selections = {}
             for col in of.findall(ns_prefix + "EventSelection"):
-                id = int(col.attrib["id"])
+                id_ = int(col.attrib["id"])
                 select = col.attrib["select"]
                 events[select] = []
-                selections[id] = select
+                selections[id_] = select
 
             with open(file_name) as f:
                 for line in f:
                     values = line.split()
-                    if format == "TIME_ID":
+                    if format_ == "TIME_ID":
                         t = float(values[0])
-                        id = int(values[1])
-                    elif format == "ID_TIME":
-                        id = int(values[0])
+                        id_ = int(values[1])
+                    elif format_ == "ID_TIME":
+                        id_ = int(values[0])
                         t = float(values[1])
-                    if id in selections:
+                    if id_ in selections:
                         logger.debug(
                             "Found a event in cell %s (%s) at t = %s"
-                            % (id, selections[id], t)
+                            % (id_, selections[id_], t)
                         )
-                        events[selections[id]].append(t)
+                        events[selections[id_]].append(t)
 
                     else:
-                        logger.warning("ID %s not found in selections dictionary" % id)
+                        logger.warning("ID %s not found in selections dictionary" % id_)
                         continue  # skip this event
 
     if get_traces:
@@ -637,13 +638,22 @@ def load_sim_data_from_lems_file(
                     for vi in range(len(values)):
                         traces[cols[vi]].append(float(values[vi]))
 
-    if get_events:
+    if get_events is True and get_traces is True:
         if len(events) == 0:
             raise ValueError("No events found")
-        return events
-    elif get_traces:
         if len(traces) == 0:
             raise ValueError("No traces found")
-        return traces
-    elif get_events and get_traces:
-        raise ValueError("Set get_traces to False if you are not reading any traces")
+        logger.debug("Returning both traces and events")
+        return traces, events
+    else:
+        if get_events is True:
+            if len(events) == 0:
+                raise ValueError("No events found")
+            logger.debug("Returning events")
+            return events
+        elif get_traces is True:
+            if len(traces) == 0:
+                raise ValueError("No traces found")
+            logger.debug("Returning traces")
+            return traces
+    return None

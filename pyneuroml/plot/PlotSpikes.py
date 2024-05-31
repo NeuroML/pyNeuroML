@@ -42,6 +42,7 @@ SPIKE_PLOTTER_DEFAULTS = {
     "rate_window": 50,
     "rate_bins": 500,
     "show_plots_already": True,
+    "offset": True,
 }
 
 POP_NAME_SPIKEFILE_WITH_GIDS = "Spiketimes for GIDs"
@@ -81,6 +82,13 @@ def _process_spike_plotter_args() -> argparse.Namespace:
         - sonata: SONATA format HDF5 file containing spike times
 
         """),
+    )
+
+    parser.add_argument(
+        "-offset",
+        action="store_true",
+        default=SPIKE_PLOTTER_DEFAULTS["offset"],
+        help=("Toggle whether plots are overlaid or offset"),
     )
 
     parser.add_argument(
@@ -202,7 +210,7 @@ def read_sonata_spikes_hdf5_file(file_name: str) -> dict:
 def plot_spikes(
     spike_data: List[Dict[str, Union[List[float], List[int]]]],
     title: str = "",
-    offset: int = 0,
+    offset: bool = True,
     show_plots_already: bool = True,
     save_spike_plot_to: Optional[str] = None,
     rates: bool = False,
@@ -219,10 +227,9 @@ def plot_spikes(
     :type spike_data: list of dictionaries
     :param title: Title of the plot. Defaults to an empty string.
     :type title: str
-    :param offset: Initial offset value for cell indices.
-        Used to separate spike plots of different populations.
-        Defaults to 0
-    :type offset: int
+    :param offset: toggle whether different spike_data items should be offset
+        along the y axis for clarity
+    :type offset: bool
     :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
     :type show_plots_already: bool
     :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
@@ -254,16 +261,17 @@ def plot_spikes(
     times = OrderedDict()
     ids_in_file = OrderedDict()
 
-    current_offset = offset
+    current_offset = 0
 
     for data in spike_data:
-        x = data["times"]
-        y = [id_ + current_offset for id_ in data["ids"]]
-
         name = data["name"]  # type: str
+        x = data["times"]
+        y = [int(id_ + current_offset) for id_ in data["ids"]]
+
         times[name] = x
 
-        ids_in_file[name] = y
+        # create a copy otherwise the sort action below sorts y also!
+        ids_in_file[name] = y.copy()
         max_id_here = max(y)
 
         max_time = max(max_time, max(x))
@@ -279,11 +287,13 @@ def plot_spikes(
         markers.append(".")
         linestyles.append("")
 
-        current_offset = max_id + 1
+        if offset is True:
+            current_offset = max_id + 1
+            logger.debug(f"offset is now {current_offset}")
         ids_in_file[name].sort()
 
     xlim = [0, max_time * 1.05]
-    ylim = [min_id - 1 + offset, max_id + 1]
+    ylim = [min_id - 1, max_id + 1]
 
     markersizes = [
         "3" if len(unique_ids) <= 50 else "2" if len(unique_ids) <= 200 else "1"
@@ -404,8 +414,8 @@ def plot_spikes_from_data_files(
 
             for pop in ids_times_pops:
                 ids_times = ids_times_pops[pop]
-                times = [t for id, times_list in ids_times.items() for t in times_list]
-                ids = [id for id, times_list in ids_times.items() for _ in times_list]
+                times = [t for id_, times_list in ids_times.items() for t in times_list]
+                ids = [id_ for id_, times_list in ids_times.items() for _ in times_list]
 
                 spike_data.append(
                     {"name": f"{pop} ({file_name})", "times": times, "ids": ids}
@@ -419,6 +429,7 @@ def plot_spikes_from_data_files(
             name = os.path.basename(file_name)
             try:
                 spike_data_array = np.loadtxt(file_name, comments="#", unpack=True)
+                logger.debug(f"Dimensions of spike array are {spike_data_array.shape}")
 
             except ValueError:
                 logger.warning(f"Invalid line format in file: {file_name}")
@@ -430,7 +441,9 @@ def plot_spikes_from_data_files(
             else:
                 logger.error("Unknown format: %s" % format_)
                 raise ValueError("Unknown format: %s" % format_)
-            spike_data.append({"name": name, "times": times, "ids": ids})
+            spike_data.append(
+                {"name": name, "times": times.tolist(), "ids": ids.tolist()}
+            )
 
     plot_spikes(
         title=title,
@@ -440,33 +453,8 @@ def plot_spikes_from_data_files(
         rates=rates,
         rate_window=rate_window,
         rate_bins=rate_bins,
+        offset=True,
     )
-
-
-def get_spike_data_files_from_lems(
-    lems_file_name: str, base_dir: str
-) -> Tuple[List[str], str]:
-    """
-    Read a LEMS simulation file and get the paths of the spike data files and their format.
-
-    :param lems_file_name: Path to the LEMS simulation file.
-    :type lems_file_name: str
-    :param base_dir: Directory where the LEMS file resides.
-    :type base_dir: str
-    :return: A tuple containing a list of spike data file paths and the format of the spike data files.
-    :rtype: Tuple[List[str], str]
-    """
-    # Code to read the LEMS file and extract the spike data file paths and format
-    sim_data = pynmll.load_sim_data_from_lems_file(lems_file_name)
-
-    spike_data_files = []
-    spike_data_format = None
-    for select, events in sim_data.items():
-        file_path = os.path.join(base_dir, select + ".dat")
-        spike_data_files.append(file_path)
-        spike_data_format = "TIME_ID"
-
-    return spike_data_files, spike_data_format
 
 
 def plot_spikes_from_lems_file(
@@ -501,14 +489,24 @@ def plot_spikes_from_lems_file(
     :return: None
     :rtype: None
     """
-    # Code to read the LEMS simulation file and get the spike data file paths and format
-    spike_data_files, spike_data_format = get_spike_data_files_from_lems(
-        lems_file_name, base_dir
+    event_data = pynmll.load_sim_data_from_lems_file(
+        lems_file_name, get_events=True, get_traces=False
     )
 
-    plot_spikes_from_data_files(
-        spike_data_files,
-        spike_data_format,
+    spike_data = []  # type: List[Dict]
+    for select, times in event_data.items():
+        new_dict = {"name": select}
+        new_dict["times"] = times
+        # the plot_spikes function will add an offset for each data entry, so
+        # we set the ids to 0 here
+        new_dict["ids"] = [0] * len(times)
+
+        spike_data.append(new_dict)
+
+    print(spike_data)
+
+    plot_spikes(
+        spike_data,
         show_plots_already=show_plots_already,
         save_spike_plot_to=save_spike_plot_to,
         rates=rates,
@@ -529,7 +527,7 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
         args = _process_spike_plotter_args()
 
     a = build_namespace(SPIKE_PLOTTER_DEFAULTS, a=args)
-    logger.debug(a)
+    print(a)
 
     if len(a.spiketime_files) == 1 and a.spiketime_files[0].startswith("LEMS_"):
         plot_spikes_from_lems_file(
