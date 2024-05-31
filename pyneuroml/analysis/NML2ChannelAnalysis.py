@@ -4,22 +4,21 @@
 #   of channels in NeuroML 2
 #
 
-import sys
+import argparse
+import logging
 import os
 import os.path
-import argparse
 import pprint
-import logging
+import sys
 import typing
 
 import airspeed
 import matplotlib.pyplot as plt
-
 import neuroml
-from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
-from pyneuroml.utils import get_ion_color, get_colour_hex, get_state_color
-from pyneuroml.utils.cli import build_namespace
 
+from pyneuroml.pynml import read_neuroml2_file, run_lems_with_jneuroml
+from pyneuroml.utils import get_colour_hex, get_ion_color, get_state_color
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(depth=4)
@@ -485,12 +484,32 @@ def get_channel_gates(
             if gates == "gate_fractionals":
                 for g in getattr(channel, gates):
                     for sg in g.sub_gates:
-                        channel_gates.append(str('%s/%s'%(g.id, sg.id)))
+                        channel_gates.append(str("%s/%s" % (g.id, sg.id)))
             else:
                 for g in getattr(channel, gates):
                     channel_gates.append(g.id)
-    #print('- Found gates: %s'%channel_gates)
+    # print('- Found gates: %s'%channel_gates)
     return channel_gates
+
+
+def get_ks_channel_states(
+    channel: neuroml.IonChannelKS,
+) -> typing.Dict[str, typing.List[str]]:
+    """Get states for a kinetic state style ion channel
+
+    .. versionadded:: 1.2.15
+
+    :param channel: kinetic state style channel to get states from
+    :type channel: neuroml.IonChannelKS
+    :returns: dict with gate id as key, and list of states as value
+    """
+    info = {}
+    for gate_ks in channel.gate_kses:
+        info[gate_ks.id] = [s.id for s in gate_ks.closed_states] + [
+            s.id for s in gate_ks.open_states
+        ]
+
+    return info
 
 
 def get_conductance_expression(

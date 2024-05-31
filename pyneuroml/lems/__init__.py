@@ -7,6 +7,7 @@ import typing
 
 import neuroml
 from lxml import etree
+
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
@@ -93,8 +94,8 @@ def generate_lems_file_for_neuroml(
         files for, if list is empty, all populations are considered
     :type gen_saves_for_only_populations: list of populations to save data
     :param gen_saves_for_quantities: dict of quantities to save data files for
-        the key is the "display" and the value will be the list of quantitiy
-        paths
+        the key is the filename and the value will be the list of quantitiy
+        paths to save to it
     :type gen_saves_for_quantities: dict
     :param gen_spike_saves_for_all_somas: toggle if spikes should be saved for
         all somas
