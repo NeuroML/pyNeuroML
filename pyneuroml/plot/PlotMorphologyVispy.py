@@ -721,6 +721,8 @@ def plot_3D_cell_morphology(
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    x_angle: float = None,
+    y_angle: float = None
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -827,6 +829,9 @@ def plot_3D_cell_morphology(
         axon_segs = cell.get_all_segments_in_group("axon_group")
     except Exception:
         axon_segs = []
+
+    cell = rotate_cell(cell, x_angle, y_angle, 0, 'yxz', False, False)
+    cell = translate_cell_to_coords(cell, False, [0,0,0])
 
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
