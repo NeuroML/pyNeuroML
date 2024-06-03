@@ -23,7 +23,7 @@ from pyneuroml.plot import generate_plot
 from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 try:
     import tables  # pytables for HDF5 support
@@ -503,7 +503,8 @@ def plot_spikes_from_lems_file(
 
         spike_data.append(new_dict)
 
-    print(spike_data)
+    logger.debug("Spike data is:")
+    logger.debug(spike_data)
 
     plot_spikes(
         spike_data,
@@ -527,7 +528,7 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
         args = _process_spike_plotter_args()
 
     a = build_namespace(SPIKE_PLOTTER_DEFAULTS, a=args)
-    print(a)
+    logger.debug(a)
 
     if len(a.spiketime_files) == 1 and a.spiketime_files[0].startswith("LEMS_"):
         plot_spikes_from_lems_file(
