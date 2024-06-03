@@ -539,7 +539,7 @@ def plot_interactive_3D(
             view_max = list(numpy.array(pos))
 
     current_canvas, current_view = create_new_vispy_canvas(
-        view_min, view_max, title, theme=theme
+        view_min, view_max, title, theme=theme, rotatedy_pca=rotated_pca, rotatedx_pca=rotated_pca2
     )
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
