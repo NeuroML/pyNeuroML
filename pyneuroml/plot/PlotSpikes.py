@@ -315,10 +315,10 @@ def plot_spikes(
         xlim=xlim,
         ylim=ylim,
         markersizes=markersizes,
-        grid=True,
+        grid=False,
         show_plot_already=False,
         save_figure_to=save_spike_plot_to,
-        legend_position="right",
+        legend_position="bottom center",
     )
 
     if rates:
