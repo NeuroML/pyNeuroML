@@ -74,3 +74,37 @@ class Morphology:
             if swc_type in self.SWC_TO_GROUP:
                 group_name, _ = self.SWC_TO_GROUP[swc_type]
                 self.segment_groups[group_name].add_member(segment.id)
+
+
+def load_swc(filename):
+    morphology = Morphology()
+    try:
+        with open(filename, "r") as file:
+            for line in file:
+                if line.startswith("#") or not line.strip():
+                    continue
+                parts = line.strip().split()
+                if len(parts) != 7:
+                    continue
+
+                node_id, type_id, x, y, z, radius, parent_id = parts
+                segment = Segment(node_id, f"Segment_{type_id}")
+                segment.set_distal(x, y, z, float(radius) * 2)
+                segment.parent_id = int(parent_id)
+
+                if segment.parent_id != -1 and segment.parent_id in morphology.segments:
+                    parent = morphology.segments[segment.parent_id]
+                    segment.set_proximal(
+                        parent.distal.x,
+                        parent.distal.y,
+                        parent.distal.z,
+                        parent.distal.diameter,
+                    )
+
+                morphology.add_segment(segment)
+
+    except (FileNotFoundError, IOError) as e:
+        print(f"Error reading file {filename}: {e}")
+
+    morphology.create_segment_groups()
+    return morphology
