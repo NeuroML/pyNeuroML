@@ -99,6 +99,7 @@ def add_text_to_vispy_3D_plot(
 def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
     view_max: typing.Optional[typing.List[float]] = None,
+    view_center: typing.Optional[typing.List[float]] = None,
     title: str = "",
     axes_pos: typing.Optional[typing.List] = None,
     axes_length: float = 100,
@@ -113,6 +114,8 @@ def create_new_vispy_canvas(
     :type view_min: [float, float, float]
     :param view_max: max view co-ordinates
     :type view_max: [float, float, float]
+    :param view_center: center view co-ordinates
+    :type view_center: [float, float, float]
     :param title: title of plot
     :type title: str
     :param axes_pos: position to draw axes at
@@ -160,7 +163,9 @@ def create_new_vispy_canvas(
     view.camera = cams[cam_index]
 
     if view_min is not None and view_max is not None:
-        view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
+        #Calculate view center if it is None
+        if view_center is None:
+            view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
         logger.debug(f"Center is {view_center}")
         cam1.center = [view_center[0], view_center[1]]
         cam2.center = view_center
