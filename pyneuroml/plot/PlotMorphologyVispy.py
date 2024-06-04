@@ -486,49 +486,7 @@ def plot_interactive_3D(
 
     else:
         cell = list(pop_id_vs_cell.values())[0]
-        #Get all segments' distal points
-        segment_points = []
-        segments_all = cell.morphology.segments
-        for segment in segments_all:
-            segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
         
-
-        coords = numpy.array(segment_points)
-        from sklearn.decomposition import PCA
-
-        #Get the PCA components
-        pca = PCA()
-        pca.fit(coords)
-
-        # Get the principal component axes
-        principal_axes = pca.components_
-        #Get the first principal component axis
-        first_pca = principal_axes[0]
-        #y angle needed to eliminate x component
-        y_angle = math.atan(-first_pca[0]/first_pca[2])
-        rotation_y = numpy.array(
-                [
-                    [math.cos(y_angle), 0, math.sin(y_angle)],
-                    [0, 1, 0],
-                    [-math.sin(y_angle), 0, math.cos(y_angle)],
-                ]
-            )
-        rotated_pca = numpy.dot(rotation_y,first_pca)
-
-        #x angle needed to eliminate y component
-        x_angle = math.atan(rotated_pca[1]/rotated_pca[2])
-
-        rotation_x = numpy.array(
-            [
-                [1, 0, 0],
-                [0, math.cos(x_angle), -math.sin(x_angle)],
-                [0, math.sin(x_angle), math.cos(x_angle)],
-            ]
-        )
-        rotated_pca2 = numpy.dot(rotation_x, rotated_pca)
-        if rotated_pca2[2] < 0:
-            x_angle += numpy.pi
-            rotated_pca2[2] = -rotated_pca2[2]
 
         if cell is not None:
             view_min, view_max = get_cell_bound_box(cell)
@@ -707,6 +665,73 @@ def plot_interactive_3D(
         app.run()
 
 
+def PCA_transformation(
+    cell: Optional[Cell] = None,
+    inplace: bool = False,
+
+)-> Cell:
+    """ Use cell's PCA to make it upright
+
+    .. versionadded:: 1.2.13
+
+    :param cell: cell object to translate
+    :type cell: neuroml.Cell
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+    :type inplace: bool
+    :returns: new neuroml.Cell object
+    :rtype: neuroml.Cell
+    """
+        
+    #Get all segments' distal points
+    segment_points = []
+    segments_all = cell.morphology.segments
+    for segment in segments_all:
+        segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
+    
+
+    coords = numpy.array(segment_points)
+    from sklearn.decomposition import PCA
+
+    #Get the PCA components
+    pca = PCA()
+    pca.fit(coords)
+
+    # Get the principal component axes
+    principal_axes = pca.components_
+    #Get the first principal component axis
+    first_pca = principal_axes[0]
+    #y angle needed to eliminate x component
+    y_angle = math.atan(-first_pca[0]/first_pca[2])
+    rotation_y = numpy.array(
+            [
+                [math.cos(y_angle), 0, math.sin(y_angle)],
+                [0, 1, 0],
+                [-math.sin(y_angle), 0, math.cos(y_angle)],
+            ]
+        )
+    rotated_pca = numpy.dot(rotation_y,first_pca)
+
+    #x angle needed to eliminate y component
+    x_angle = math.atan(rotated_pca[1]/rotated_pca[2])
+
+    rotation_x = numpy.array(
+        [
+            [1, 0, 0],
+            [0, math.cos(x_angle), -math.sin(x_angle)],
+            [0, math.sin(x_angle), math.cos(x_angle)],
+        ]
+    )
+    rotated_pca2 = numpy.dot(rotation_x, rotated_pca)
+    if rotated_pca2[2] < 0:
+        x_angle += numpy.pi
+        rotated_pca2[2] = -rotated_pca2[2]
+
+    cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0,0,0])
+    cell = rotate_cell(cell, x_angle, y_angle, 0, 'yxz', relative_to_soma=False, inplace=inplace)
+    return cell
+        
+
 def plot_3D_cell_morphology(
     offset: typing.List[float] = [0, 0, 0],
     cell: Optional[Cell] = None,
@@ -832,8 +857,7 @@ def plot_3D_cell_morphology(
     except Exception:
         axon_segs = []
 
-    cell = rotate_cell(cell, x_angle, y_angle, 0, 'yxz', False, False)
-    cell = translate_cell_to_coords(cell, False, [0,0,0])
+    #Placeholder for pca_
 
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
