@@ -39,7 +39,7 @@ try:
 except KeyError:
     java_max_memory = "400M"
 
-DEFAULTS: dict[str, typing.Any] = {
+DEFAULTS: typing.Dict[str, typing.Any] = {
     "v": False,
     "default_java_max_memory": java_max_memory,
     "nogui": False,
