@@ -15,3 +15,9 @@ class Segment:
         self.parent_id = None
         self.parent = None
         self.children = []
+
+    def set_proximal(self, x, y, z, diameter):
+        self.proximal = Point(x, y, z, diameter)
+
+    def set_distal(self, x, y, z, diameter):
+        self.distal = Point(x, y, z, diameter)
