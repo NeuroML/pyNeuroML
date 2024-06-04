@@ -99,12 +99,13 @@ def add_text_to_vispy_3D_plot(
 def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
     view_max: typing.Optional[typing.List[float]] = None,
-    view_center: typing.Optional[typing.List[float]] = None,
     title: str = "",
     axes_pos: typing.Optional[typing.List] = None,
     axes_length: float = 100,
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
+    view_center: typing.Optional[typing.List[float]] = None,
+
 ):
     """Create a new vispy scene canvas with a view and optional axes lines
 
@@ -163,15 +164,6 @@ def create_new_vispy_canvas(
     view.camera = cams[cam_index]
 
     if view_min is not None and view_max is not None:
-        #Calculate view center if it is None
-        if view_center is None:
-            view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
-        logger.debug(f"Center is {view_center}")
-        cam1.center = [view_center[0], view_center[1]]
-        cam2.center = view_center
-        cam3.center = view_center
-        cam4.center = view_center
-
         for acam in cams:
             x_width = abs(view_min[0] - view_max[0])
             y_width = abs(view_min[1] - view_max[1])
@@ -195,6 +187,15 @@ def create_new_vispy_canvas(
             logger.debug(f"{xrange}, {yrange}, {zrange}")
 
             acam.set_range(x=xrange, y=yrange, z=zrange)
+        
+        #Calculate view center if it is None
+        if view_center is None:
+            view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
+        logger.debug(f"Center is {view_center}")
+        cam1.center = [view_center[0], view_center[1]]
+        cam2.center = view_center
+        cam3.center = view_center
+        cam4.center = view_center
 
     for acam in cams:
         acam.set_default_state()
