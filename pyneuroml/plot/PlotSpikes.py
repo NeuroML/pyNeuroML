@@ -386,12 +386,16 @@ def plot_spikes_from_data_files(
     :type spiketime_files: List[str]
     :param title: optional title for plot, empty string disables it
     :type title: str
-    :param format_: Format of the spike time data in the files. Can be one of the following:
-                   - "id_t": Each line contains a cell ID (int) followed by a spike time (float).
-                   - "id_time_nest_dat": Each line contains a cell ID (int) followed by a spike time (float),
-                                         with NEST-style comments allowed.
-                   - "t_id": Each line contains a spike time (float) followed by a cell ID (int).
-                   - "sonata": SONATA-style HDF5 file.
+    :param format_: Format of the spike time data in the files.
+
+        Can be one of the following:
+
+        - :code:`id_t`: Each line contains a cell ID (int) followed by a spike time (float).
+        - :code:`id_time_nest_dat`: Each line contains a cell ID (int) followed by a spike time (float),
+          with NEST-style comments allowed.
+        - :code:`t_id`: Each line contains a spike time (float) followed by a cell ID (int).
+        - :code:`sonata`: SONATA-style HDF5 file.
+
     :type format_: str
     :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
     :type show_plots_already: bool
