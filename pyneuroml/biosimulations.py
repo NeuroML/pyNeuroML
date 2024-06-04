@@ -77,7 +77,7 @@ def get_simulator_versions(
     :returns: json response from API
     :rtype: str
     """
-    if type(simulators) is str:
+    if isinstance(simulators, str):
         simulators = [simulators]
     all_siminfo = {}  # type: typing.Dict[str, typing.List[str]]
     for sim in simulators:

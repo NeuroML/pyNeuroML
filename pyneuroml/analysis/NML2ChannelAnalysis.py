@@ -584,7 +584,7 @@ def plot_channel(channel, a, results, iv_data=None, grid=True):
 
 
 def plot_kinetics(channel, a, results, grid=True):
-    fig = plt.figure()
+    plt.figure()
     plt.get_current_fig_manager().set_window_title(
         ("Time course(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
@@ -627,7 +627,7 @@ def plot_kinetics(channel, a, results, grid=True):
 
 
 def plot_steady_state(channel, a, results, grid=True):
-    fig = plt.figure()
+    plt.figure()
     plt.get_current_fig_manager().set_window_title(
         ("Steady state(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
@@ -748,7 +748,7 @@ def plot_iv_curves(channel, a, iv_data, grid=True):
 
 def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
     # Holding potentials
-    fig = plt.figure()
+    plt.figure()
     ax = plt.subplot(111)
     plt.get_current_fig_manager().set_window_title(
         ("Currents through voltage clamp for %s " "from %s at %s degC, erev: %s V")
@@ -775,7 +775,7 @@ def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
 
 
 def make_iv_curve_fig(a, grid=True):
-    fig = plt.figure()
+    plt.figure()
     plt.get_current_fig_manager().set_window_title(
         "Currents vs. holding potentials at erev = %s V" % a.erev
     )
@@ -794,7 +794,7 @@ def plot_iv_curve(a, hold_v, i, *plt_args, **plt_kwargs):
         plt_kwargs["label"] = "Current"
     if not same_fig:
         make_iv_curve_fig(a, grid=grid)
-    if type(i) is dict:
+    if isinstance(i, dict):
         i = [i[v] for v in hold_v]
     plt.plot(
         [v * 1e3 for v in hold_v], [ii * 1e12 for ii in i], *plt_args, **plt_kwargs

@@ -6,14 +6,15 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 
 """
 
-import os
-import logging
-import warnings
-import typing
-import pathlib
 import json
+import logging
 import math
+import os
+import pathlib
 import pprint
+import typing
+import warnings
+
 import airspeed
 import yaml
 
@@ -22,8 +23,7 @@ try:
 except ImportError:
     from yaml import Dumper
 
-from pyneuroml.pynml import validate_neuroml1
-from pyneuroml.pynml import validate_neuroml2
+from pyneuroml.pynml import validate_neuroml1, validate_neuroml2
 
 pp = pprint.PrettyPrinter(depth=4)
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ logger.setLevel(logging.INFO)
 
 try:
     from neuron import h
+
     from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
 except ImportError:
     logger.warning("Please install optional dependencies to use NEURON features:")
@@ -468,8 +469,8 @@ def getinfo(seclist: list, doprint: str = "", listall: bool = False):
                         ms.name(pname, j)
                         totParamVal[j] += ms.get(pname)
                         if (
-                            not replace_brackets(str(sec))
-                            in paramsectiondict[rm_NML_str(pname[0])].keys()
+                            replace_brackets(str(sec))
+                            not in paramsectiondict[rm_NML_str(pname[0])].keys()
                         ):
                             paramsectiondict[rm_NML_str(pname[0])][
                                 replace_brackets(str(sec))

@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
-from neuroml import Cell, NeuroMLDocument, Segment
+from neuroml import Cell, NeuroMLDocument
 from neuroml.loaders import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
