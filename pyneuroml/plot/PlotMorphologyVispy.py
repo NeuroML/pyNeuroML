@@ -104,8 +104,6 @@ def create_new_vispy_canvas(
     axes_length: float = 100,
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
-    rotatedy_pca: typing.List[float] = None,
-    rotatedx_pca: typing.List[float] = None,
 ):
     """Create a new vispy scene canvas with a view and optional axes lines
 
@@ -211,19 +209,6 @@ def create_new_vispy_canvas(
             color=VISPY_THEME[theme]["fg"],
             width=axes_width,
         )
-
-        pca_points = [
-            axes_pos,  # origin
-            [rotatedy_pca[0]*100 , rotatedy_pca[1]*100, rotatedy_pca[2]*100],
-            [rotatedx_pca[0]*100, rotatedx_pca[1]*100, rotatedx_pca[2]*100]
-        ]
-        scene.Line(
-                pca_points,
-                connect=numpy.array([[0, 1], [0, 2]]),
-                parent=view.scene,
-                color='orange',
-                width=axes_width+5,
-            )
 
     def vispy_rotate(self):
         view.camera.orbit(azim=1, elev=0)
@@ -497,7 +482,7 @@ def plot_interactive_3D(
             view_max = list(numpy.array(pos))
 
     current_canvas, current_view = create_new_vispy_canvas(
-        view_min, view_max, title, axes_pos=[0,0,0], theme=theme, rotatedy_pca=rotated_pca, rotatedx_pca=rotated_pca2
+        view_min, view_max, title, axes_pos=[0,0,0], theme=theme
     )
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
@@ -630,8 +615,6 @@ def plot_interactive_3D(
                         meshdata=meshdata,
                         mesh_precision=precision[0],
                         highlight_spec=cell_highlight_spec,
-                        y_angle=y_angle,
-                        x_angle=x_angle
                     )
 
             # if too many meshes, reduce precision and retry, recursively
