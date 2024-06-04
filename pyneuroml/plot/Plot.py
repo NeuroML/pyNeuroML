@@ -275,9 +275,12 @@ def generate_plot(
         artists.append(artist)
 
     if labels:
+        legend_position = (
+            rcParams["legend.loc"] if not legend_position else legend_position
+        )
         if legend_position == "outer right":
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            ax.set_position((box.x0, box.y0, box.width * 0.8, box.height))
             # Put a legend to the right of the current axis
             ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
