@@ -4,3 +4,14 @@ class Point:
         self.y = float(y)
         self.z = float(z)
         self.diameter = float(diameter)
+
+
+class Segment:
+    def __init__(self, segment_id, name=None):
+        self.id = int(segment_id)
+        self.name = name or f"Segment_{segment_id}"
+        self.proximal = None
+        self.distal = None
+        self.parent_id = None
+        self.parent = None
+        self.children = []
