@@ -1,3 +1,5 @@
+import re
+
 import networkx as nx
 
 
@@ -31,6 +33,7 @@ class SWCNode:
             self.z = float(z)
             self.radius = float(radius)
             self.parent_id = int(parent_id)
+            self.children = []
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid data types in SWC line: {e}")
 
@@ -121,3 +124,43 @@ class SWCTree:
         for type_id in types:
             nodes.extend(self.get_nodes_with_multiple_children(type_id))
         return nodes
+
+
+def parse_header(line):
+    for field in SWCTree.HEADER_FIELDS:
+        match = re.match(rf"{field}\s+(.+)", line, re.IGNORECASE)
+        if match:
+            return field, match.group(1).strip()
+    return None, None
+
+
+def load_swc(filename):
+    tree = SWCTree()
+    try:
+        with open(filename, "r") as file:
+            for line in file:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith("#"):
+                    key, value = parse_header(line[1:].strip())
+                    if key:
+                        tree.add_metadata(key, value)
+                    continue
+
+                parts = line.split()
+                if len(parts) != 7:
+                    print(f"Warning: Skipping invalid line: {line}")
+                    continue
+
+                node_id, type_id, x, y, z, radius, parent_id = parts
+                try:
+                    node = SWCNode(node_id, type_id, x, y, z, radius, parent_id)
+                    tree.add_node(node)
+                except ValueError as e:
+                    print(f"Warning: {e} in line: {line}")
+
+    except (FileNotFoundError, IOError) as e:
+        print(f"Error reading file {filename}: {e}")
+
+    return tree
