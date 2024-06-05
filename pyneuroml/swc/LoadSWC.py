@@ -1,7 +1,5 @@
 import re
 
-import networkx as nx
-
 
 class SWCNode:
     UNDEFINED = 0
