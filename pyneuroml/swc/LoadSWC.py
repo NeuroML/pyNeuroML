@@ -39,47 +39,85 @@ class SWCNode:
         return f"SWCNode(id={self.id}, type={type_name}, x={self.x:.2f}, y={self.y:.2f}, z={self.z:.2f}, radius={self.radius:.2f}, parent_id={self.parent_id})"
 
 
-class SWCGraph:
+class SWCTree:
+    HEADER_FIELDS = [
+        "ORIGINAL_SOURCE",
+        "CREATURE",
+        "REGION",
+        "FIELD/LAYER",
+        "TYPE",
+        "CONTRIBUTOR",
+        "REFERENCE",
+        "RAW",
+        "EXTRAS",
+        "SOMA_AREA",
+        "SHRINKAGE_CORRECTION",
+        "VERSION_NUMBER",
+        "VERSION_DATE",
+        "SCALE",
+    ]
+
     def __init__(self):
-        self.graph = nx.DiGraph()
+        self.nodes = {}
         self.root = None
+        self.metadata = {}
 
     def add_node(self, node):
-        if node.id in self.graph:
+        if node.id in self.nodes:
             raise ValueError(f"Duplicate node ID: {node.id}")
-        self.graph.add_node(node.id, data=node)
+        self.nodes[node.id] = node
         if node.parent_id == -1:
             if self.root is not None:
                 raise ValueError("Multiple root nodes found")
-            self.root = node.id
-        elif node.parent_id not in self.graph:
-            raise ValueError(f"Parent {node.parent_id} not found for node {node.id}")
+            self.root = node
+        elif node.parent_id in self.nodes:
+            parent = self.nodes[node.parent_id]
+            parent.children.append(node.id)
         else:
-            self.graph.add_edge(node.parent_id, node.id)
+            print(f"Warning: Parent {node.parent_id} not found for node {node.id}")
 
-    def get_node(self, node_id):
-        return self.graph.nodes[node_id]["data"]
+    def add_metadata(self, key, value):
+        if key in self.HEADER_FIELDS:
+            self.metadata[key] = value
 
     def get_parent(self, node_id):
-        node = self.get_node(node_id)
-        return self.get_node(node.parent_id) if node.parent_id != -1 else None
+        """Get the parent of a given node."""
+        node = self.nodes.get(node_id)
+        if node is None:
+            raise ValueError(f"Node {node_id} not found")
+        return self.nodes.get(node.parent_id) if node.parent_id != -1 else None
 
     def get_descendants(self, node_id):
-        node = self.get_node(node_id)
+        """Get all descendants of a given node."""
+        node = self.nodes.get(node_id)
+        if node is None:
+            raise ValueError(f"Node {node_id} not found")
+
         descendants = []
-        queue = [node_id]
+        queue = node.children.copy()
         while queue:
-            node_id = queue.pop(0)
-            node = self.get_node(node_id)
-            queue.extend(self.graph.successors(node_id))
-            descendants.append(node)
+            child_id = queue.pop(0)
+            child = self.nodes[child_id]
+            descendants.append(child)
+            queue.extend(child.children)
         return descendants
 
     def get_nodes_with_multiple_children(self, type_id=None):
+        """Get all nodes that have more than one child, optionally filtering by type."""
         nodes = []
-        for node_id, out_degree in self.graph.out_degree():
-            if out_degree > 1:
-                node = self.get_node(node_id)
+        for node in self.nodes.values():
+            if len(node.children) > 1:
                 if type_id is None or node.type == type_id:
                     nodes.append(node)
+        return nodes
+
+    def get_nodes_by_type(self, type_id):
+        """Get all nodes of a specific type."""
+        return [node for node in self.nodes.values() if node.type == type_id]
+
+    def get_branch_points(self, *types):
+        """Get all branch points (nodes with multiple children) of the given types."""
+        nodes = []
+        for type_id in types:
+            nodes.extend(self.get_nodes_with_multiple_children(type_id))
         return nodes
