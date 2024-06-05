@@ -7,19 +7,20 @@ File: pyneuroml/plot/PlotMorphology.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import argparse
 import logging
 import os
 import random
 import sys
 import typing
+from typing import Optional
 
 import matplotlib
 import numpy
 from matplotlib import pyplot as plt
-from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
+from neuroml import Cell, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.cli import build_namespace
@@ -34,7 +35,6 @@ from pyneuroml.utils.plot import (
     get_next_hex_color,
     load_minimal_morphplottable__model,
 )
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

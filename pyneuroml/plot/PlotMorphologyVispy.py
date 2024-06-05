@@ -13,11 +13,14 @@ import logging
 import math
 import random
 import typing
+from typing import Optional
 
 import numpy
 import progressbar
-from neuroml import Cell, NeuroMLDocument, SegmentGroup, Segment
+from neuroml import Cell, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+from scipy.spatial.transform import Rotation
+
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.plot import (
@@ -26,8 +29,6 @@ from pyneuroml.utils.plot import (
     get_next_hex_color,
     load_minimal_morphplottable__model,
 )
-from scipy.spatial.transform import Rotation
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
