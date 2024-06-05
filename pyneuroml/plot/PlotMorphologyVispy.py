@@ -149,7 +149,7 @@ def create_new_vispy_canvas(
     # https://vispy.org/gallery/scene/flipped_axis.html
     cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
 
-    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
+    cam2 = scene.cameras.TurntableCamera(parent=view.scene, azimuth=0.0, elevation=0.0, name="Turntable")
 
     cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
 
@@ -445,6 +445,8 @@ def plot_interactive_3D(
     # not used later, clear up
     del cell_id_vs_cell
 
+    singleCell = False
+
     if len(positions) > 1:
         only_pos = []
         for posdict in positions.values():
@@ -476,6 +478,7 @@ def plot_interactive_3D(
         logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
 
     else:
+        singleCell = True
         cell = list(pop_id_vs_cell.values())[0]
         
 
@@ -487,8 +490,12 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_max = list(numpy.array(pos))
 
+    if singleCell:
+        view_center=[0,0,0]
+    else:
+        view_center=None
     current_canvas, current_view = create_new_vispy_canvas(
-        view_min, view_max, title, axes_pos=[0,0,0], theme=theme
+        view_min, view_max, title, axes_pos=[0,0,0], theme=theme, view_center=view_center
     )
 
     logger.debug(f"figure extents are: {view_min}, {view_max}")
@@ -847,6 +854,8 @@ def plot_3D_cell_morphology(
         axon_segs = []
 
     #Placeholder for pca_
+    cell = PCA_transformation(cell)
+    current_canvas = current_view = None
 
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
