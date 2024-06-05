@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 def _get_lines_for_seg_group(cell, sg, type):
-
     global line_count
     global line_index_vs_distals
     global line_index_vs_proximals
@@ -125,8 +124,10 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
     lines = []
     comment_lines = []
 
-    for cell in nml_doc.cells:
+    if len(nml_doc.cells) == 0:
+        return False
 
+    for cell in nml_doc.cells:
         swc_file_name = "%s/%s.swc" % (target_dir, cell.id)
         swc_file = open(swc_file_name, "w")
 
@@ -185,12 +186,14 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
         for i in range(len(lines)):
             line = lines[i]
             swc_line = "%s" % (line)
-            print(swc_line)
+            logger.debug(swc_line)
             swc_file.write("%s\n" % swc_line)
 
         swc_file.close()
 
         print("Written to %s" % swc_file_name)
+
+    return True
 
 
 if __name__ == "__main__":

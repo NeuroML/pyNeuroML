@@ -4,22 +4,21 @@
 #   of channels in NeuroML 2
 #
 
-import sys
+import argparse
+import logging
 import os
 import os.path
-import argparse
 import pprint
-import logging
+import sys
 import typing
 
 import airspeed
 import matplotlib.pyplot as plt
-
 import neuroml
-from pyneuroml.pynml import run_lems_with_jneuroml, read_neuroml2_file
-from pyneuroml.utils import get_ion_color, get_colour_hex, get_state_color
-from pyneuroml.utils.cli import build_namespace
 
+from pyneuroml.pynml import read_neuroml2_file, run_lems_with_jneuroml
+from pyneuroml.utils import get_colour_hex, get_ion_color, get_state_color
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(depth=4)
@@ -366,15 +365,25 @@ def get_channels_from_channel_file(
     :type channel_file: str
     :returns: list of channels
     :rtype: list
+    :raises ValueError: if no channels were found in the file
     """
     doc = read_neuroml2_file(
         channel_file, include_includes=True, verbose=False, already_included=[]
     )
-    channels = list(doc.ion_channel_hhs.__iter__()) + list(doc.ion_channel.__iter__())
+    channels = (
+        list(doc.ion_channel_hhs.__iter__())
+        + list(doc.ion_channel.__iter__())
+        + list(doc.ion_channel_v_shifts.__iter__())
+    )
+
+    if len(channels) == 0:
+        raise ValueError(f"No channels found in {channel_file}")
+
     for channel in channels:
         setattr(channel, "file", channel_file)
         if not hasattr(channel, "notes"):
             setattr(channel, "notes", "")
+
     return channels
 
 
@@ -447,7 +456,7 @@ def process_channel_file(channel_file: str, a) -> typing.List[typing.Any]:
 
 
 def get_channel_gates(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> typing.List[
     typing.Union[
         neuroml.GateHHUndetermined,
@@ -469,14 +478,42 @@ def get_channel_gates(
         "gate_hh_rates",
         "gate_hh_tau_infs",
         "gate_hh_instantaneouses",
+        "gate_fractionals",
     ]:
         if hasattr(channel, gates):
-            channel_gates += [g.id for g in getattr(channel, gates)]
+            if gates == "gate_fractionals":
+                for g in getattr(channel, gates):
+                    for sg in g.sub_gates:
+                        channel_gates.append(str("%s/%s" % (g.id, sg.id)))
+            else:
+                for g in getattr(channel, gates):
+                    channel_gates.append(g.id)
+    # print('- Found gates: %s'%channel_gates)
     return channel_gates
 
 
+def get_ks_channel_states(
+    channel: neuroml.IonChannelKS,
+) -> typing.Dict[str, typing.List[str]]:
+    """Get states for a kinetic state style ion channel
+
+    .. versionadded:: 1.2.15
+
+    :param channel: kinetic state style channel to get states from
+    :type channel: neuroml.IonChannelKS
+    :returns: dict with gate id as key, and list of states as value
+    """
+    info = {}
+    for gate_ks in channel.gate_kses:
+        info[gate_ks.id] = [s.id for s in gate_ks.closed_states] + [
+            s.id for s in gate_ks.open_states
+        ]
+
+    return info
+
+
 def get_conductance_expression(
-    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH]
+    channel: typing.Union[neuroml.IonChannel, neuroml.IonChannelHH],
 ) -> str:
     """Get expression of conductance in channel.
 
@@ -547,9 +584,9 @@ def plot_channel(channel, a, results, iv_data=None, grid=True):
 
 
 def plot_kinetics(channel, a, results, grid=True):
-    fig = plt.figure()
+    plt.figure()
     plt.get_current_fig_manager().set_window_title(
-        ("Time Course(s) of activation variables of " "%s from %s at %s degC")
+        ("Time course(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
 
@@ -590,7 +627,7 @@ def plot_kinetics(channel, a, results, grid=True):
 
 
 def plot_steady_state(channel, a, results, grid=True):
-    fig = plt.figure()
+    plt.figure()
     plt.get_current_fig_manager().set_window_title(
         ("Steady state(s) of activation variables of " "%s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
@@ -711,7 +748,7 @@ def plot_iv_curves(channel, a, iv_data, grid=True):
 
 def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
     # Holding potentials
-    fig = plt.figure()
+    plt.figure()
     ax = plt.subplot(111)
     plt.get_current_fig_manager().set_window_title(
         ("Currents through voltage clamp for %s " "from %s at %s degC, erev: %s V")
@@ -738,7 +775,7 @@ def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
 
 
 def make_iv_curve_fig(a, grid=True):
-    fig = plt.figure()
+    plt.figure()
     plt.get_current_fig_manager().set_window_title(
         "Currents vs. holding potentials at erev = %s V" % a.erev
     )
@@ -757,7 +794,7 @@ def plot_iv_curve(a, hold_v, i, *plt_args, **plt_kwargs):
         plt_kwargs["label"] = "Current"
     if not same_fig:
         make_iv_curve_fig(a, grid=grid)
-    if type(i) is dict:
+    if isinstance(i, dict):
         i = [i[v] for v in hold_v]
     plt.plot(
         [v * 1e3 for v in hold_v], [ii * 1e12 for ii in i], *plt_args, **plt_kwargs

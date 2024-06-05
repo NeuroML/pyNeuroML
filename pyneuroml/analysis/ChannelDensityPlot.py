@@ -4,6 +4,7 @@
 #   ion channel densities in NeuroML2 cells
 #
 
+import argparse
 import logging
 import math
 import os
@@ -12,9 +13,9 @@ import typing
 from collections import OrderedDict
 
 import matplotlib
-from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
 import numpy
+from matplotlib.colors import LinearSegmentedColormap
 from neuroml import (
     Cell,
     Cell2CaPools,
@@ -29,13 +30,13 @@ from neuroml import (
     ChannelDensityVShift,
     VariableParameter,
 )
+from sympy import sympify
+
 from pyneuroml.plot.Plot import generate_plot
 from pyneuroml.plot.PlotMorphology import plot_2D_cell_morphology
 from pyneuroml.pynml import get_value_in_si, read_neuroml2_file
 from pyneuroml.utils import get_ion_color
 from pyneuroml.utils.cli import build_namespace
-from sympy import sympify
-import argparse
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -495,7 +496,7 @@ def get_conductance_density_for_segments(
 
     # filter to seg_ids
     if seg_ids is not None:
-        if type(seg_ids) == str:
+        if isinstance(seg_ids, str):
             segments = [seg_ids]
         else:
             segments = list(set(seg_ids) & set(segments))
@@ -510,7 +511,7 @@ def get_conductance_density_for_segments(
                     data[seg.id] = value
     else:
         # get the inhomogeneous param/value from the channel density
-        param = channel_density.variable_parameters[0]  # type: VariableParameter
+        param: VariableParameter = channel_density.variable_parameters[0]
         inhom_val = param.inhomogeneous_value.value
         # H(x) -> Heaviside(x, 0)
         if "H" in inhom_val:
@@ -631,7 +632,7 @@ def plot_channel_densities(
         }
 
     if channel_density_ids is not None:
-        if type(channel_density_ids) == str:
+        if isinstance(channel_density_ids, str):
             channel_density_ids_list = []
             channel_density_ids_list.append(channel_density_ids)
             channel_density_ids = channel_density_ids_list
@@ -725,7 +726,7 @@ def plot_channel_densities(
                 plt.close()
 
     elif ion_channels is not None:
-        if type(ion_channels) == str:
+        if isinstance(ion_channels, str):
             ion_channel_list = []
             ion_channel_list.append(ion_channels)
             ion_channels = ion_channel_list

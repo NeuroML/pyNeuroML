@@ -17,13 +17,13 @@ from pyneuroml.archive import (
     create_combine_archive_manifest,
     get_model_file_list,
 )
+from pyneuroml.runners import run_jneuroml
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
 class TestArchiveModule(unittest.TestCase):
-
     """Test the pyneuroml.archive module."""
 
     def test_get_model_file_list(self):
@@ -42,6 +42,22 @@ class TestArchiveModule(unittest.TestCase):
             "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
         )
         self.assertEqual(5, len(filelist))
+
+        # a SEDML file in the examples directory
+        dirname = str(thispath.parent.parent.parent)
+        run_jneuroml(
+            "",
+            "LEMS_NML2_Ex5_DetCell.xml",
+            "-sedml",
+            exec_in_dir="examples",
+            max_memory="1G",
+            exit_on_fail=True,
+        )
+        filelist = []
+        get_model_file_list(
+            "LEMS_NML2_Ex5_DetCell.sedml", filelist, dirname + "/examples"
+        )
+        self.assertEqual(6, len(filelist))
 
         # NeuroML file in examples directory
         dirname = str(thispath.parent.parent.parent)

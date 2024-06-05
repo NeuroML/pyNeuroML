@@ -6,7 +6,6 @@ File: pyneuroml/archive/__init__.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import argparse
 import logging
 import os
@@ -15,32 +14,18 @@ import shutil
 import typing
 from zipfile import ZipFile
 
-from lems.model.model import Model
-from neuroml.loaders import read_neuroml2_file
-from pyneuroml.pynml import extract_lems_definition_files
+from pyneuroml.utils import get_model_file_list
 from pyneuroml.utils.cli import build_namespace
+from pyneuroml.runners import run_jneuroml
+from pyneuroml.sedml import validate_sedml_files
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-STANDARD_LEMS_FILES = [
-    "Cells.xml",
-    "Channels.xml",
-    "Inputs.xml",
-    "Networks.xml",
-    "NeuroML2CoreTypes.xml",
-    "NeuroMLCoreCompTypes.xml",
-    "NeuroMLCoreDimensions.xml",
-    "PyNN.xml",
-    "Simulation.xml",
-    "Synapses.xml",
-]
-
-
 DEFAULTS = {
     "zipfileName": None,
-    "zipfileExtension": ".neux",
+    "zipfileExtension": None,
     "filelist": [],
 }  # type: typing.Dict[str, typing.Any]
 
@@ -56,8 +41,8 @@ def process_args():
     parser.add_argument(
         "rootfile",
         type=str,
-        metavar="<NeuroML 2/LEMS file>",
-        help="Name of the NeuroML 2/LEMS main file",
+        metavar="<NeuroML 2/LEMS file/SED-ML file>",
+        help="Name of the NeuroML 2/LEMS/SED-ML main file",
     )
 
     parser.add_argument(
@@ -72,7 +57,7 @@ def process_args():
         type=str,
         metavar="<zip file extension>",
         default=DEFAULTS["zipfileExtension"],
-        help="Extension to use for archive.",
+        help="Extension to use for archive: .neux by default",
     )
     parser.add_argument(
         "-filelist",
@@ -80,6 +65,11 @@ def process_args():
         metavar="<explicit list of files to create archive of>",
         default=DEFAULTS["filelist"],
         help="Explicit list of files to create archive of.",
+    )
+    parser.add_argument(
+        "-sedml",
+        action="store_true",
+        help=("Generate SED-ML file from main LEMS file and use as master file."),
     )
 
     return parser.parse_args()
@@ -96,96 +86,34 @@ def main(args=None):
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
     a = build_namespace(DEFAULTS, a, **kwargs)
+
+    rootfile = a.rootfile
+    zipfile_extension = None
+
+    # first generate SED-ML file
+    # use .omex as extension
+    if (
+        a.rootfile.startswith("LEMS") and a.rootfile.endswith(".xml")
+    ) and a.sedml is True:
+        logger.debug("Generating SED-ML file from LEMS file")
+        run_jneuroml("", a.rootfile, "-sedml")
+
+        rootfile = a.rootfile.replace(".xml", ".sedml")
+        zipfile_extension = ".omex"
+
+        # validate the generated file
+        validate_sedml_files([rootfile])
+
+    # if explicitly given, use that
+    if a.zipfile_extension is not None:
+        zipfile_extension = a.zipfile_extension
+
     create_combine_archive(
         zipfile_name=a.zipfile_name,
-        rootfile=a.rootfile,
-        zipfile_extension=a.zipfile_extension,
+        rootfile=rootfile,
+        zipfile_extension=zipfile_extension,
         filelist=a.filelist,
     )
-
-
-def get_model_file_list(
-    rootfile: str,
-    filelist: typing.List[str],
-    rootdir: str = ".",
-    lems_def_dir: typing.Optional[str] = None,
-) -> typing.Optional[str]:
-    """Get the list of files to archive.
-
-    This method will take the rootfile, and recursively resolve all the files
-    it uses.
-
-    :param rootfile: main NeuroML or LEMS file to resolve
-    :type rootfile: str
-    :param filelist: list of file paths to append to
-    :type filelist: list of strings
-    :param rootdir: directory holding the root file
-    :type rootdir: str
-    :param lems_def_dir: path to directory holding lems definition files
-    :type lems_def_dir: str
-    :returns: value of lems_def_dir so that the temporary directory can be
-        cleaned up. strings are immuatable in Python so the variable cannot be
-        modified in the function.
-    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
-    """
-    logger.debug(f"Processing {rootfile}")
-
-    fullrootdir = pathlib.Path(rootdir).absolute()
-
-    # Only store path of file relative to the rootdir, if it's a descendent of
-    # rootdir
-    if rootfile.startswith(str(fullrootdir)):
-        relrootfile = rootfile.replace(str(fullrootdir), "")
-        if relrootfile.startswith("/"):
-            relrootfile = relrootfile[1:]
-    else:
-        relrootfile = rootfile
-
-    if relrootfile in filelist:
-        logger.debug(f"Already processed {rootfile}. No op.")
-        return lems_def_dir
-
-    logger.debug(f"Appending: {relrootfile}")
-    filelist.append(relrootfile)
-
-    if rootfile.endswith(".nml"):
-        if pathlib.Path(rootfile).is_absolute():
-            rootdoc = read_neuroml2_file(rootfile)
-        else:
-            rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
-        logger.debug(f"Has includes: {rootdoc.includes}")
-        for inc in rootdoc.includes:
-            lems_def_dir = get_model_file_list(
-                inc.href, filelist, rootdir, lems_def_dir
-            )
-
-    elif rootfile.endswith(".xml"):
-        # extract the standard NeuroML2 LEMS definitions into a directory
-        # so that the LEMS parser can find them
-        if lems_def_dir is None:
-            lems_def_dir = extract_lems_definition_files()
-
-        if pathlib.Path(rootfile).is_absolute():
-            fullrootfilepath = rootfile
-        else:
-            fullrootfilepath = rootdir + "/" + rootfile
-
-        model = Model(include_includes=True, fail_on_missing_includes=True)
-        model.add_include_directory(lems_def_dir)
-        model.import_from_file(fullrootfilepath)
-
-        for inc in model.included_files:
-            incfile = pathlib.Path(inc).name
-            logger.debug(f"Processing include file {incfile} ({inc})")
-            if incfile in STANDARD_LEMS_FILES:
-                logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
-                continue
-            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
-
-    else:
-        raise ValueError(f"File must have a .xml or .nml extension. We got: {rootfile}")
-
-    return lems_def_dir
 
 
 def create_combine_archive(
@@ -193,6 +121,7 @@ def create_combine_archive(
     zipfile_name: typing.Optional[str] = None,
     zipfile_extension=".neux",
     filelist: typing.List[str] = [],
+    extra_files: typing.List[str] = [],
 ):
     """Create a combine archive that includes all files referred to (included
     recursively) by the provided rootfile.  If a file list is provided, it will
@@ -210,12 +139,15 @@ def create_combine_archive(
 
     :param zipfile_name: name of zip file without extension: rootfile if not provided
     :type zipfile_name: str
-    :param rootfile: full path to main root file
+    :param rootfile: full path to main root file (SED-ML/LEMS/NeuroML2)
     :type rootfile: str
     :param zipfile_extension: extension for zip file, starting with ".".
     :type zipfile_extension: str
     :param filelist: explicit list of files to create archive of
+        if given, the function will not attempt to list model files itself
     :type filelist: list of strings
+    :param extra_files: extra files to include in archive
+    :type extra_files: list of strings
     :returns: None
     :raises ValueError: if a root file is not provided
     """
@@ -241,7 +173,7 @@ def create_combine_archive(
     if len(filelist) == 0:
         lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
 
-    create_combine_archive_manifest(rootfile, filelist, rootdir)
+    create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
     filelist.append("manifest.xml")
 
     # change to directory of rootfile
@@ -249,7 +181,7 @@ def create_combine_archive(
     os.chdir(rootdir)
 
     with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
-        for f in filelist:
+        for f in filelist + extra_files:
             archive.write(f)
     os.chdir(thispath)
 
@@ -278,43 +210,39 @@ def create_combine_archive_manifest(
     with open(manifest, "w") as mf:
         print('<?xml version="1.0" encoding="utf-8"?>', file=mf)
         print(
-            """
-            <omexManifest
-            xmlns="http://identifiers.org/combine.specifications/omex-manifest">
-            """,
+            """<omexManifest xmlns="http://identifiers.org/combine.specifications/omex-manifest">""",
             file=mf,
         )
 
         print(
-            """
-            <content location="."
-                format="http://identifiers.org/combine.specifications/omex"/>
-            """,
+            """\t<content location="." format="http://identifiers.org/combine.specifications/omex"/>""",
             file=mf,
         )
 
         for f in filelist:
-            if f == rootfile:
-                print(
-                    f"""
-                    <content location="{f}" master="true"
-                        format="http://identifiers.org/combine.specifications/neuroml"/>
-                    """,
-                    file=mf,
+            format_string = None
+            logger.info(f"Processing file: {f}")
+            if f.endswith(".xml") and f.startswith("LEMS"):
+                # TODO: check what the string for LEMS should be
+                format_string = "http://identifiers.org/combine.specifications/neuroml"
+            elif f.endswith(".nml"):
+                format_string = "http://identifiers.org/combine.specifications/neuroml"
+            elif f.endswith(".sedml"):
+                format_string = "http://identifiers.org/combine.specifications/sed-ml"
+            elif f.endswith(".rdf"):
+                format_string = (
+                    "http://identifiers.org/combine.specifications/omex-metadata"
                 )
-            else:
-                print(
-                    f"""
-                    <content location="{f}"
-                        format="http://identifiers.org/combine.specifications/neuroml"/>
-                    """,
-                    file=mf,
-                )
+            elif f.endswith(".pdf"):
+                format_string = "http://purl.org/NET/mediatypes/application/pdf"
+
+            print(
+                f"""\t<content location="{f}" {'master="true"' if f == rootfile else ""} {"format=" if format_string else ""}"{format_string}"/>""",
+                file=mf,
+            )
 
         print(
-            """
-            </omexManifest>
-            """,
+            """</omexManifest>""",
             file=mf,
             flush=True,
         )

@@ -7,6 +7,7 @@ import os.path
 import logging
 import typing
 import random
+import os
 
 import airspeed
 from pyneuroml import __version__ as pynml_ver
@@ -14,6 +15,8 @@ from neuroml import __version__ as libnml_ver
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.pynml import read_lems_file
 from pyneuroml.utils.plot import get_next_hex_color
+from pyneuroml.utils.units import convert_to_units
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -32,22 +35,31 @@ class LEMSSimulation:
     def __init__(
         self,
         sim_id: str,
-        duration: float,
-        dt: float,
-        target: str = None,
+        duration: typing.Union[float, str],
+        dt: typing.Union[float, str],
+        target: typing.Optional[str] = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
-        lems_file_generate_seed: typing.Any = None,
+        lems_file_generate_seed: Optional[typing.Any] = None,
         simulation_seed: int = 12345,
+        meta: typing.Optional[typing.Dict[str, str]] = None,
     ) -> None:
         """Init a new LEMSSimulation object.
 
         :param sim_id: id for simulation
         :type sim_id: str
-        :param duration: duration of simulation in ms
-        :type duration: float
-        :param dt: simulation time step in ms
-        :type dt: float
+        :param duration: duration of simulation. This can be:
+            - a float of the magnitude in ms
+            - a string of the magnitude in ms
+            - a string of the value using any time units (that will be
+              converted to ms)
+        :type duration: float or str
+        :param dt: simulation time step. This can be:
+            - a float of the magnitude in ms
+            - a string of the magnitude in ms
+            - a string of the value using any time units (that will be
+              converted to ms)
+        :type dt: float or str
         :param target: id of target component (usually the network)
         :type target: str
         :param comment: comment to add to simulation file
@@ -61,20 +73,51 @@ class LEMSSimulation:
             `simulation_seed` for that.
         :type lems_file_generate_seed:
         :param simulation_seed: simulation seed to set to
-        :type simulation_seed: int
+        :type simulation_seed: int or str
+        :param meta: dictionary to set Meta options.
+
+            Currently, only supported for the Neuron simulator to use the CVODE
+            solver. A dict needs to be passed:
+            {
+                "for": "neuron",
+                "method": "cvode",
+                "abs_tolerance" = "0.001",
+                "rel_tolerance": "0.001"
+            }
+
+        :type meta: dict
         """
 
+        if type(duration) is str:
+            # is this just the magnitude in the string?
+            try:
+                duration_mag_ms = float(duration)
+            except ValueError:
+                duration_mag_ms = convert_to_units(duration, "ms")
+        else:
+            duration_mag_ms = float(duration)
+
+        if type(dt) is str:
+            # is this just the magnitude in the string?
+            try:
+                dt_mag_ms = float(dt)
+            except ValueError:
+                dt_mag_ms = convert_to_units(dt, "ms")
+        else:
+            dt_mag_ms = float(dt)
+
         self.lems_info["sim_id"] = sim_id
-        self.lems_info["duration"] = duration
-        self.lems_info["dt"] = dt
+        self.lems_info["duration"] = duration_mag_ms
+        self.lems_info["dt"] = dt_mag_ms
         self.lems_info["comment"] = comment
-        self.lems_info["seed"] = simulation_seed
+        self.lems_info["seed"] = int(simulation_seed)
         self.lems_info["report"] = ""
 
         self.lems_info["include_files"] = []
         self.lems_info["displays"] = []
         self.lems_info["output_files"] = []
         self.lems_info["event_output_files"] = []
+        self.lems_info["meta"] = meta
 
         if target:
             self.lems_info["target"] = target
@@ -251,7 +294,7 @@ class LEMSSimulation:
         line_id: str,
         quantity: str,
         scale: str = "1",
-        color: str = None,
+        color: typing.Optional[str] = None,
         timeScale: str = "1ms",
     ) -> None:
         """Add a new line to the display
@@ -364,21 +407,29 @@ class LEMSSimulation:
             templ = airspeed.Template(f.read())
         return templ.merge(self.lems_info)
 
-    def save_to_file(self, file_name: str = None):
+    def save_to_file(self, file_name: typing.Optional[str] = None):
         """Save LEMSSimulation to a file.
 
         :param file_name: name of file to store to.
             `LEMS_<some id string>.xml` is the suggested format. Leave empty
-            to use `LEMS_<sim_id>.xml` :type file_name: str
+            to use `LEMS_<sim_id>.xml`
+        :type file_name: str
         :returns: name of file
         :rtype: str
         """
+
         if file_name is None:
             file_name = "LEMS_%s.xml" % self.lems_info["sim_id"]
 
-        lems_file = open(file_name, "w")
-        lems_file.write(self.to_xml())
-        lems_file.close()
+        logger.info(
+            "Writing LEMS Simulation %s to file: %s..."
+            % (self.lems_info["sim_id"], file_name)
+        )
+        with open(file_name, "w") as lems_file:
+            lems_file.write(self.to_xml())
+            lems_file.flush()
+            os.fsync(lems_file.fileno())
+
         logger.info(
             "Written LEMS Simulation %s to file: %s"
             % (self.lems_info["sim_id"], file_name)

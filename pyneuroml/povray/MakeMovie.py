@@ -1,10 +1,8 @@
-import cv2
 import colorsys
 import argparse
 import sys
 import os.path
 import logging
-
 
 """
 
@@ -18,6 +16,15 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    import cv2
+except ImportError:
+    logger.warning("Please install optional dependencies to use povray features:")
+    logger.warning("pip install pyneuroml[povray]")
+
+
 scale_font = 1
 
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL
@@ -134,7 +141,6 @@ def main(argv):
     pref = args.prefix
 
     if gen_images:
-
         for i in range(args.frames):
             index = str(i + 1)
             while len(index) < (len(str(args.frames))):

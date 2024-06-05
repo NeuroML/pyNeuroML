@@ -12,7 +12,7 @@ pyNeuroML
 [![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
 [![Gitter](https://badges.gitter.im/NeuroML/community.svg)](https://gitter.im/NeuroML/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-12-orange.svg?style=flat-square)](#contributors)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
@@ -42,6 +42,30 @@ pyNeuroML can be installed with pip (preferably in a [virtual environment](https
 
     pip install pyneuroml
 
+
+A number of extra packages are also provided for convenience. You can install these to pull in other dependencies if required:
+
+
+    pip install pyneuroml[neuron]       # for NEURON simulation backend
+    pip install pyneuroml[brian]        # for Brian2 simulation backend
+    pip install pyneuroml[netpyne]      # for NetPyNE simulation backend
+    pip install pyneuroml[povray]       # for povray functions
+    pip install pyneuroml[hdf5]         # for HDF5 support
+    pip install pyneuroml[analysis]     # for analysis functions
+    pip install pyneuroml[tune]         # for tuning/fitting functions
+    pip install pyneuroml[vispy]        # for 3D interactive morphology plotting using vispy
+    pip install pyneuroml[plotly]       # for interactive plotting with plotly
+    pip install pyneuroml[nsg]          # pulls in pynsgr to use NSG
+    pip install pyneuroml[combine]      # includes libsbml, libsedml
+    pip install pyneuroml[tellurium]    # for Tellurium simulation backend
+    pip install pyneuroml[all]          # installs all of the above
+    pip install pyneuroml[dev]          # installs all of the above and other test related packages
+    pip install pyneuroml[doc]          # for building documentation
+
+
+Please see the `setup.cfg` file for more details.
+
+
 ### Fedora
 
 The [NeuroFedora](https://neuro.fedoraproject.org) community initiative provides pyNeuroML for use on the [Fedora Linux Distribution](https://getfedora.org).
@@ -53,7 +77,7 @@ Fedora users can install pyNeuroML using the following commands:
 This will also pull in all the necessary dependencies (Java, lxml, graphviz).
 Please see the [project documentation](https://docs.fedoraproject.org/en-US/neurofedora/copr/) for more information.
 
-### Installation from source
+### Installation from the source
 
 Clone the repository:
 
@@ -167,6 +191,7 @@ More closely tied to PyNN?
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/jrieke"><img src="https://avatars.githubusercontent.com/u/5103165?v=4?s=100" width="100px;" alt="Johannes Rieke"/><br /><sub><b>Johannes Rieke</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Ajrieke" title="Bug reports">🐛</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=jrieke" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/andrisecker"><img src="https://avatars.githubusercontent.com/u/13274870?v=4?s=100" width="100px;" alt="András Ecker"/><br /><sub><b>András Ecker</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3Aandrisecker" title="Bug reports">🐛</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=andrisecker" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/RokasSt"><img src="https://avatars.githubusercontent.com/u/12904422?v=4?s=100" width="100px;" alt="Rokas Stanislovas"/><br /><sub><b>Rokas Stanislovas</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3ARokasSt" title="Bug reports">🐛</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=RokasSt" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/robertvi"><img src="https://avatars.githubusercontent.com/u/456100?v=4?s=100" width="100px;" alt="Robert Vickerstaff"/><br /><sub><b>Robert Vickerstaff</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=robertvi" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=robertvi" title="Tests">⚠️</a></td>
     </tr>
   </tbody>
   <tfoot>
@@ -184,4 +209,3 @@ More closely tied to PyNN?
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
-

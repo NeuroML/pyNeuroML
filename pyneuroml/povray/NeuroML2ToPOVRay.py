@@ -8,13 +8,12 @@ This file has been developed as part of the neuroConstruct project
 This work has been funded by the Medical Research Council and Wellcome Trust
 """
 
-
-import typing
-import random
 import argparse
 import logging
+import random
 
 import neuroml
+
 from pyneuroml import pynml
 
 logger = logging.getLogger(__name__)
@@ -478,9 +477,9 @@ background {rgbt %s}
             else:
                 parent = int(segment.parent.segments)
                 proximalpoint = distpoints[parent]
-                cell_id_vs_seg_id_vs_proximal[cell.id][
-                    id
-                ] = cell_id_vs_seg_id_vs_distal[cell.id][parent]
+                cell_id_vs_seg_id_vs_proximal[cell.id][id] = (
+                    cell_id_vs_seg_id_vs_distal[cell.id][parent]
+                )
 
             proxpoints[id] = proximalpoint
 
