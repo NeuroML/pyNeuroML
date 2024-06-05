@@ -157,7 +157,46 @@ def generate_plot(
         plotting, this is always done if using animation
     :type close_plot: bool
     :returns: matplotlib.axes.Axes object if plot is not closed, else None
+    :raises ValueError: if the dimensions of xvalues/yvalues and option
+        arguments colors/labels/linestyles/linewidths/markers/markersizes do
+        not match
     """
+
+    # Some basic checks to ensure the right values are being passed
+    if len(xvalues) != len(yvalues):
+        raise ValueError(
+            f"xvalues ({len(xvalues)}) and yvalues ({len(yvalues)}) must have the same length"
+        )
+
+    if labels and len(labels) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and labels ({len(labels)}) must have the same length"
+        )
+
+    if colors and len(colors) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and colors ({len(colors)}) must have the same length"
+        )
+
+    if linestyles and len(linestyles) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and linestyles ({len(linestyles)}) must have the same length"
+        )
+
+    if linewidths and len(linewidths) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and linewidths ({len(linewidths)}) must have the same length"
+        )
+
+    if markers and len(markers) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and markers ({len(markers)}) must have the same length"
+        )
+
+    if markersizes and len(markersizes) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and markersizes ({len(markersizes)}) must have the same length"
+        )
 
     logger.info("Generating plot: %s" % (title))
 
@@ -170,7 +209,12 @@ def generate_plot(
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    plt.get_current_fig_manager().set_window_title(title)
+    fig_manager = plt.get_current_fig_manager()
+    if fig_manager:
+        fig_manager.set_window_title(title)
+    else:
+        logger.warning("Unable to get current figure manager to set plot title")
+
     if title_above_plot:
         plt.title(title)
 

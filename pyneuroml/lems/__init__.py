@@ -7,6 +7,7 @@ import typing
 
 import neuroml
 from lxml import etree
+
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
@@ -93,8 +94,8 @@ def generate_lems_file_for_neuroml(
         files for, if list is empty, all populations are considered
     :type gen_saves_for_only_populations: list of populations to save data
     :param gen_saves_for_quantities: dict of quantities to save data files for
-        the key is the "display" and the value will be the list of quantitiy
-        paths
+        the key is the filename and the value will be the list of quantitiy
+        paths to save to it
     :type gen_saves_for_quantities: dict
     :param gen_spike_saves_for_all_somas: toggle if spikes should be saved for
         all somas
@@ -587,11 +588,16 @@ def load_sim_data_from_lems_file(
                     elif format == "ID_TIME":
                         id = int(values[0])
                         t = float(values[1])
-                    logger.debug(
-                        "Found a event in cell %s (%s) at t = %s"
-                        % (id, selections[id], t)
-                    )
-                    events[selections[id]].append(t)
+                    if id in selections:
+                        logger.debug(
+                            "Found a event in cell %s (%s) at t = %s"
+                            % (id, selections[id], t)
+                        )
+                        events[selections[id]].append(t)
+
+                    else:
+                        logger.warning("ID %s not found in selections dictionary" % id)
+                        continue  # skip this event
 
     if get_traces:
         output_files = sim.findall(ns_prefix + "OutputFile")
@@ -631,17 +637,13 @@ def load_sim_data_from_lems_file(
                     for vi in range(len(values)):
                         traces[cols[vi]].append(float(values[vi]))
 
-    if get_traces and get_events:
-        if len(traces) == 0:
-            raise ValueError("No traces found")
-        if len(events) == 0:
-            raise ValueError("No events found")
-        return traces, events
-    elif get_events:
+    if get_events:
         if len(events) == 0:
             raise ValueError("No events found")
         return events
-    else:
+    elif get_traces:
         if len(traces) == 0:
             raise ValueError("No traces found")
         return traces
+    elif get_events and get_traces:
+        raise ValueError("Set get_traces to False if you are not reading any traces")
