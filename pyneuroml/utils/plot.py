@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
-from neuroml import Cell, NeuroMLDocument
+from neuroml import Cell, NeuroMLDocument, Segment
 from neuroml.loaders import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
@@ -317,9 +317,9 @@ def get_cell_bound_box(cell: Cell):
     :returns: tuple (min view, max view)
 
     """
-    seg0 = cell.morphology.segments[0]  # type: Segment
+    seg0: Segment = cell.morphology.segments[0]
     ex1 = numpy.array([seg0.distal.x, seg0.distal.y, seg0.distal.z])
-    seg1 = cell.morphology.segments[-1]  # type: Segment
+    seg1: Segment = cell.morphology.segments[-1]
     ex2 = numpy.array([seg1.distal.x, seg1.distal.y, seg1.distal.z])
     center = (ex1 + ex2) / 2
     diff = numpy.linalg.norm(ex2 - ex1)

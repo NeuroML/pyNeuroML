@@ -4,3 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff.lint]
 ignore = ["F403", "F405"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=pyneuroml"
+markers = [
+    "localonly", # test to not be run on GH actions: they segfault.
+]
