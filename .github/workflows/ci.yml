@@ -53,7 +53,9 @@ jobs:
 
     - name: Code Coverage Summary
       uses: irongut/CodeCoverageSummary@v1.3.0
+      if: ${{ matrix.python-version == '3.12' }}
       with:
+        output: both
         filename: coverage.xml
         badge: true
         format: markdown
@@ -62,7 +64,7 @@ jobs:
 
     - name: Add Coverage PR Comment
       uses: marocchino/sticky-pull-request-comment@v2
-      if: github.event_name == 'pull_request'
+      if: ${{ github.event_name == 'pull_request' && matrix.python-version == '3.12' }}
       with:
         recreate: true
         path: code-coverage-results.md
