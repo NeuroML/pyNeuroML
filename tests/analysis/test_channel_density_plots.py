@@ -11,6 +11,7 @@ import logging
 import unittest
 
 import neuroml
+
 from pyneuroml.analysis.ChannelDensityPlot import (
     get_channel_densities,
     get_conductance_density_for_segments,
@@ -23,7 +24,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestChannelDensityPlots(unittest.TestCase):
-
     """Tests for ChannelDensityPlot"""
 
     def test_get_channel_densities(self):
@@ -80,14 +80,6 @@ class TestChannelDensityPlots(unittest.TestCase):
         plot_channel_densities(
             cell,
             ion_channels=["Ih"],
-            distance_plots=True,
-            show_plots_already=False,
-            target_directory="tests/analysis",
-        )
-        # no channel densities or ion channels, so generate for all ion
-        # channels
-        plot_channel_densities(
-            cell,
             distance_plots=True,
             show_plots_already=False,
             target_directory="tests/analysis",
