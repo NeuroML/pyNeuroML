@@ -222,7 +222,7 @@ def substitute_functions(expr, functions):
     for func_name, func_def in functions.items():
         # logger.debug('  - Function %s, replacing %s in <%s>'%(func_name, func_def,expr))
         # Find all occurrences of the function in the expression
-        pattern = f"{func_name}\(([^)]+)\)"
+        pattern = rf"{func_name}\(([^)]+)\)"
         matches = re.findall(pattern, expr)
 
         for match in matches:

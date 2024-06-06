@@ -61,6 +61,8 @@ jobs:
         format: markdown
         indicators: true
         fail_below_min: false
+        hide_complexity: true
+        hide_branch_rate: true
 
     - name: Add Coverage PR Comment
       uses: marocchino/sticky-pull-request-comment@v2
