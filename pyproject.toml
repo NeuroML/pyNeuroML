@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 ignore = ["F403", "F405"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=pyneuroml"
+addopts = "--cov=pyneuroml --cov-report term --cov-report xml:coverage.xml"
 markers = [
     "localonly", # test to not be run on GH actions: they segfault.
 ]
