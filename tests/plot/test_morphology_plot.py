@@ -88,7 +88,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_files = ["tests/plot/Cell_497232312.cell.nml"]
         for nml_file in nml_files:
             nml_doc = read_neuroml2_file(nml_file)
-            cell = nml_doc.cells[0]  # type: neuroml.Cell
+            cell: neuroml.Cell = nml_doc.cells[0]
             ofile = pl.Path(nml_file).name
             plane = "xy"
             filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_with_data.png"
@@ -235,7 +235,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_3D_schematic plotter function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         plot_3D_schematic(
             cell,
             segment_groups=None,
@@ -282,7 +282,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         plot_3D_cell_morphology(
             cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
         )
@@ -290,7 +290,7 @@ class TestMorphologyPlot(BaseTestCase):
         # test a circular soma
         nml_file = "tests/plot/test-spherical-soma.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         plot_3D_cell_morphology(
             cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
         )
@@ -320,11 +320,11 @@ class TestMorphologyPlot(BaseTestCase):
         olm_file = "tests/plot/test.cell.nml"
 
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         ofile = pl.Path(nml_file).name
 
         olm_doc = read_neuroml2_file(olm_file)
-        olm_cell = olm_doc.cells[0]  # type: neuroml.Cell
+        olm_cell: neuroml.Cell = olm_doc.cells[0]
         olm_ofile = pl.Path(olm_file).name
 
         for plane in ["xy", "yz", "xz"]:
@@ -368,7 +368,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/Cell_497232312.cell.nml"
 
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         ofile = pl.Path(nml_file).name
 
         # more complex cell
@@ -398,7 +398,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/Cell_497232312.cell.nml"
 
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         ofile = pl.Path(nml_file).name
 
         # more complex cell

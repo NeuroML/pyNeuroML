@@ -215,7 +215,7 @@ class TestPlotSpikes(BaseTestCase):
     @unittest.skip("Skipping until write_spike_data_to_hdf5 is implemented")
     def test_plot_spikes_from_sonata_file(self):
         """Test the plot_spikes function with a SONATA-format HDF5 file."""
-        spike_data = [
+        spike_data = [  # noqa
             {
                 "name": "Population1",
                 "times": np.array([1.0, 2.0, 3.0]),

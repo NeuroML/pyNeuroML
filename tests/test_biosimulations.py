@@ -14,7 +14,6 @@ import pathlib
 from pyneuroml.biosimulations import (
     get_simulator_versions,
     submit_simulation,
-    submit_simulation_archive,
 )
 
 from . import BaseTestCase
@@ -46,8 +45,8 @@ class TestBiosimulations(BaseTestCase):
             versions = simulators[s]
             self.assertGreater(len(versions), 0)
 
-    def test_submit_simulation_archive(self):
-        """Test submit_simulation_archive"""
+    def test_submit_simulation(self):
+        """Test submit_simulation"""
         # TODO: we don't want to use the prod instance for testing, so currently
         # disabled. We'll point it at a dev instance for testingo
         # Manually set to False to test.

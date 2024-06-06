@@ -7,7 +7,6 @@ File: tests/test_annotations.py
 Copyright 2024 NeuroML contributors
 """
 
-import copy
 import logging
 import os
 

@@ -40,7 +40,7 @@ class TestChannelDensityPlots(unittest.TestCase):
     def test_get_conductance_density_for_segments(self):
         """Test get_conductance_density_for_segments."""
         cell_file = "tests/plot/L23-example/HL23PYR.cell.nml"
-        cell = read_neuroml2_file(cell_file).cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = read_neuroml2_file(cell_file).cells[0]
         print(cell.id)
         channel_densities = get_channel_densities(cell)
 
@@ -67,7 +67,7 @@ class TestChannelDensityPlots(unittest.TestCase):
     def test_plot_channel_densities(self):
         """Test the plot_channel_densities function."""
         cell_file = "tests/plot/L23-example/HL23PYR.cell.nml"
-        cell = read_neuroml2_file(cell_file).cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = read_neuroml2_file(cell_file).cells[0]
 
         # check with channel densities
         plot_channel_densities(
