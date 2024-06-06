@@ -50,8 +50,3 @@ jobs:
         pynml -h
 
         ./test-ghactions.sh -neuron
-
-    - name: Lint with ruff
-      run: |
-        pip install ruff
-        ruff . --exit-zero --show-source
