@@ -60,7 +60,7 @@ jobs:
         indicators: true
         fail_below_min: false
 
-   - name: Add Coverage PR Comment
+    - name: Add Coverage PR Comment
       uses: marocchino/sticky-pull-request-comment@v2
       if: github.event_name == 'pull_request'
       with:
