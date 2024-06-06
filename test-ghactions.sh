@@ -46,7 +46,7 @@ fi
 
 ### Test script for pyNeuroML
 
-cd examples
+pushd examples
 
 
 echo
@@ -211,6 +211,8 @@ if [ "$run_neuron_examples" == true ]; then
         popd
 
 fi
+
+popd
 
 echo
 echo "################################################"
