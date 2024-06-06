@@ -750,17 +750,17 @@ def export_mod_to_neuroml2(mod_file: str):
     lines = [(str(ll.strip())).replace("\t", " ") for ll in open(mod_file)]
     line_num = 0
     while line_num < len(lines):
-        l = lines[line_num]
-        if len(l) > 0:
-            logger.info(">>> %i > %s" % (line_num, l))
+        aline = lines[line_num]
+        if len(aline) > 0:
+            logger.info(">>> %i > %s" % (line_num, aline))
             # @type l str
-            if l.startswith("TITLE"):
-                blocks["TITLE"] = l[6:].strip()
-            if "{" in l:
-                block_name = l[: l.index("{")].strip()
+            if aline.startswith("TITLE"):
+                blocks["TITLE"] = aline[6:].strip()
+            if "{" in aline:
+                block_name = aline[: aline.index("{")].strip()
                 blocks[block_name] = []
 
-                li = l[l.index("{") + 1 :]
+                li = aline[aline.index("{") + 1 :]
                 bracket_depth = __check_brackets(li, 1)
                 while bracket_depth > 0:
                     if len(li) > 0:

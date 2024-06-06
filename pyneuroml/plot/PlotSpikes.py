@@ -349,8 +349,8 @@ def plot_spikes(
                 tt, bins=bins, weights=[bins * max(tt) / (float(ids_here))] * len(tt)
             )
 
-            width = bin_edges[1] - bin_edges[0]
-            mids = [i + width / 2 for i in bin_edges[:-1]]
+            # width = bin_edges[1] - bin_edges[0]
+            # mids = [i + width / 2 for i in bin_edges[:-1]]
 
             boxes = [int(rate_window)]
             for b in boxes:

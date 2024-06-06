@@ -7,6 +7,8 @@ import os
 import typing
 from pprint import pprint
 
+from pyneuroml.utils.cli import build_namespace
+
 XPP_TIME = "xpp_time"
 LEMS_TIME = "t"
 
@@ -606,8 +608,6 @@ file_of1.close()"""
 
     ls.save_to_file()"""
 
-
-from pyneuroml.utils.cli import build_namespace
 
 DEFAULTS = {
     "lems": False,

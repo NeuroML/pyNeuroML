@@ -424,8 +424,6 @@ background {rgbt %s}
         cells_file.write("#declare %s = \n" % declaredcell)
         cells_file.write("union {\n")
 
-        prefix = ""
-
         segments = cell.morphology.segments
 
         distpoints = {}

@@ -286,7 +286,7 @@ def plot_2D(
     if verbose:
         print("Plotting %s" % nml_file)
 
-    if type(nml_file) is str:
+    if isinstance(nml_file, str):
         # load without optimization for older HDF5 API
         # TODO: check if this is required: must for MultiscaleISN
         if nml_file.endswith(".h5"):
@@ -686,15 +686,21 @@ def plot_2D_cell_morphology(
 
         if overlay_data and acolormap and norm:
             try:
-                seg_color = acolormap(norm(overlay_data[seg.id]))
+                seg_color: typing.Union[
+                    str, typing.Tuple[float, float, float, float]
+                ] = acolormap(norm(overlay_data[seg.id]))
             except KeyError:
                 seg_color = "black"
         else:
-            seg_color = "b"
             if seg.id in soma_segs:
                 seg_color = "g"
             elif seg.id in axon_segs:
                 seg_color = "r"
+            elif seg.id in dend_segs:
+                seg_color = "b"
+            # default is also blue
+            else:
+                seg_color = "b"
 
         if segment_spec["marker_color"] is not None:
             seg_color = segment_spec["marker_color"]
@@ -1333,7 +1339,7 @@ def plot_segment_groups_curtain_plots(
             )
 
         for seg_num in range(0, len(segs)):
-            seg = segs[seg_num]
+            # seg = segs[seg_num]
             cumulative_len = cumulative_lengths_sg[seg_num]
 
             if overlay_data and acolormap and norm:
