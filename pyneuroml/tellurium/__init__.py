@@ -2,10 +2,10 @@
 run a model using the tellurium engine
 """
 
-import os
 import logging
-from pyneuroml.sedml import validate_sedml_files
+import os
 
+from pyneuroml.sedml import validate_sedml_files
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -51,7 +51,7 @@ def run_from_sedml_file(input_files, args):
     if "-outputdir" in args:
         try:
             outputdir = args[args.index("-outputdir") + 1]
-        except:
+        except Exception:
             raise ValueError("Incorrectly specified outputdir")
 
         if outputdir == "none":

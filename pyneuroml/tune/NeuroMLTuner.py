@@ -646,7 +646,7 @@ def _run_optimisation(a: argparse.Namespace) -> typing.Optional[dict]:
         added = []
         # print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
 
-        fig = plt.figure()
+        plt.figure()
         plt.get_current_fig_manager().set_window_title(
             "Simulation of fittest individual from run: %s" % ref
         )

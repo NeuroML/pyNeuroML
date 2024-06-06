@@ -4,7 +4,6 @@
 import argparse
 import logging
 import os
-import sys
 import typing
 from pprint import pprint
 

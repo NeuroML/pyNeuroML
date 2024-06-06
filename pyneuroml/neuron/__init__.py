@@ -18,11 +18,6 @@ import warnings
 import airspeed
 import yaml
 
-try:
-    from yaml import CDumper as Dumper
-except ImportError:
-    from yaml import Dumper
-
 from pyneuroml.pynml import validate_neuroml1, validate_neuroml2
 
 pp = pprint.PrettyPrinter(depth=4)
