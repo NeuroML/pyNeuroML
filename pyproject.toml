@@ -16,3 +16,8 @@ addopts = "--cov=pyneuroml --cov-report term --cov-report xml:coverage.xml"
 markers = [
     "localonly", # test to not be run on GH actions: they segfault.
 ]
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+]
