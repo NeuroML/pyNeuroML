@@ -10,11 +10,11 @@
 #
 
 
-import sys
-import os
-import os.path
 import argparse
 import logging
+import os
+import os.path
+import sys
 
 from pyneuroml import pynml
 
@@ -276,8 +276,8 @@ def main(argv):
                 if line.strip().startswith("//"):
                     ref = line.strip()[2:]
                     ref = ref.replace(dummy_ref, args.singlecell)
-                    if ref in volts.keys():
-                        vs = volts[ref]
+                    if ref in volt_colors.keys():
+                        vs = volt_colors[ref]
                         out_file.write(
                             "         "
                             + vs[index]

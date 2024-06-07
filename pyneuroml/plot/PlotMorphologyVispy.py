@@ -368,7 +368,7 @@ def plot_interactive_3D(
     if verbose:
         logger.info(f"Visualising {nml_file}")
 
-    if type(nml_file) is str:
+    if isinstance(nml_file, str):
         # load without optimization for older HDF5 API
         # TODO: check if this is required: must for MultiscaleISN
         if nml_file.endswith(".h5"):
@@ -824,7 +824,7 @@ def plot_3D_cell_morphology(
         logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
 
         if segment_spec["marker_size"] is not None:
-            if type(segment_spec["marker_size"]) is not list:
+            if not isinstance(segment_spec["marker_size"], list):
                 raise RuntimeError("The marker size must be a list")
             r1 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
             r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)

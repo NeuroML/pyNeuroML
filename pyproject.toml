@@ -2,11 +2,22 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff]
+
+exclude = [
+    "examples",
+    ]
+
 [tool.ruff.lint]
 ignore = ["F403", "F405"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=pyneuroml"
+addopts = "--cov=pyneuroml --cov-report term --cov-report xml:coverage.xml -n auto"
 markers = [
     "localonly", # test to not be run on GH actions: they segfault.
+]
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
 ]
