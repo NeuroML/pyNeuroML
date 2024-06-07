@@ -149,7 +149,7 @@ def create_new_vispy_canvas(
     # https://vispy.org/gallery/scene/flipped_axis.html
     cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
 
-    cam2 = scene.cameras.TurntableCamera(parent=view.scene, azimuth=0.0, elevation=0.0, name="Turntable")
+    cam2 = scene.cameras.TurntableCamera(parent=view.scene, azimuth=0.0, elevation=90.0, name="Turntable")
 
     cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
 
