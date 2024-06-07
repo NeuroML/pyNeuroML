@@ -9,10 +9,12 @@ File: pyneuroml/plot/PlotMorphologyPlotly.py
 Copyright 2023 NeuroML contributors
 """
 
+import logging
 import os
 import typing
-import logging
+
 from neuroml import Cell, NeuroMLDocument
+
 from pyneuroml.pynml import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
@@ -67,7 +69,7 @@ def plot_3D_cell_morphology_plotly(
             "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
 
-    if type(nml_file) == str:
+    if isinstance(nml_file, str):
         nml_model = read_neuroml2_file(
             nml_file,
             include_includes=True,

@@ -2,7 +2,7 @@ set -e
 
 # CI already installs package and all optional dependencies, so this is redundant.
 # But we keep it to allow easy local testing.
-pip install .
+pip install .[dev]
 
 echo
 echo "################################################"
@@ -27,7 +27,8 @@ echo "##   Running unit tests"
 
 
 # skip a few tests that segfault etc. on GH
-pytest --cov=pyneuroml -m "not localonly" .
+# see configuration in pyproject.toml
+pytest -m "not localonly"
 
 
 run_neuron_examples=false
@@ -46,7 +47,7 @@ fi
 
 ### Test script for pyNeuroML
 
-cd examples
+pushd examples
 
 
 echo
@@ -211,6 +212,8 @@ if [ "$run_neuron_examples" == true ]; then
         popd
 
 fi
+
+popd
 
 echo
 echo "################################################"

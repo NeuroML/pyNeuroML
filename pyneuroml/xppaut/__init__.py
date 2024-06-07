@@ -7,6 +7,8 @@ import os
 import typing
 from pprint import pprint
 
+from pyneuroml.utils.cli import build_namespace
+
 XPP_TIME = "xpp_time"
 LEMS_TIME = "t"
 
@@ -222,7 +224,7 @@ def substitute_functions(expr, functions):
     for func_name, func_def in functions.items():
         # logger.debug('  - Function %s, replacing %s in <%s>'%(func_name, func_def,expr))
         # Find all occurrences of the function in the expression
-        pattern = f"{func_name}\(([^)]+)\)"
+        pattern = rf"{func_name}\(([^)]+)\)"
         matches = re.findall(pattern, expr)
 
         for match in matches:
@@ -606,8 +608,6 @@ file_of1.close()"""
 
     ls.save_to_file()"""
 
-
-from pyneuroml.utils.cli import build_namespace
 
 DEFAULTS = {
     "lems": False,
