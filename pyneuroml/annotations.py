@@ -93,7 +93,7 @@ class Annotation(object):
             "description": DC.description,
             "keywords": PRISM.keyword,
             "thumbnails": COLLEX.thumbnail,
-            "is_": BQBIOL.Is,
+            "is_": getattr(BQBIOL, "is"),
             "organisms": BQBIOL.hasTaxon,
             "encodes_other_biology": BQBIOL.encodes,
             "has_version": BQBIOL.hasVersion,
