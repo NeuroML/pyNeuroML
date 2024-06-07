@@ -93,6 +93,7 @@ class Annotation(object):
             "description": DC.description,
             "keywords": PRISM.keyword,
             "thumbnails": COLLEX.thumbnail,
+            "is_": BQBIOL.Is,
             "organisms": BQBIOL.hasTaxon,
             "encodes_other_biology": BQBIOL.encodes,
             "has_version": BQBIOL.hasVersion,
@@ -129,6 +130,7 @@ class Annotation(object):
         xml_header: bool = True,
         indent: int = 12,
         description: typing.Optional[str] = None,
+        is_: typing.Optional[typing.List[str]] = None,
         keywords: typing.Optional[typing.List[str]] = None,
         thumbnails: typing.Optional[typing.List[str]] = None,
         organisms: typing.Optional[typing.Dict[str, str]] = None,
@@ -219,6 +221,8 @@ class Annotation(object):
         :type indent: int
         :param description: a longer description
         :type description: str
+        :param is_: biological entity represented by the model
+        :type is_: dict(str, str)
         :param keywords: keywords
         :type keywords: list(str)
         :param thumbnails: thumbnails
@@ -819,12 +823,136 @@ def _URIRef_or_Literal(astr: str) -> typing.Union[URIRef, Literal]:
 def create_annotation(*args, **kwargs):
     """Wrapper around the Annotations.create_annotation method.
 
-    Please see :py:func:`pyneuroml.annotations.Annotation.create_annotation` for detailed
-    documentation.
-
     .. versionadded:: 1.2.13
 
-    :returns: annotation string
+    Please see :py:func:`pyneuroml.annotations.Annotation.create_annotation` for detailed
+    documentation. The doc string is pasted below for convenience:
+
+    This can be used to create an RDF annotation for a subject---a model or a
+    file like an OMEX archive file. It supports most qualifiers and will be
+    continuously updated to support more as they are added.
+
+    It merely uses rdflib to make life easier for users to create annotations
+    by coding in the various predicates for each subject.
+
+    For information on the specifications, see:
+
+    - COMBINE specifications: https://github.com/combine-org/combine-specifications/blob/main/specifications/qualifiers-1.1.md
+    - Biosimulations guidelines: https://docs.biosimulations.org/concepts/conventions/simulation-project-metadata/
+    - MIRIAM guidelines: https://drive.google.com/file/d/1JqjcH0T0UTWMuBj-scIMwsyt2z38A0vp/view
+
+
+    Note that:
+
+    - not all qualifiers have been included yet
+    - the qualifiers and their representations may change in the future
+
+    For any arguments here that take a dictionary of strings, the key is the
+    resource reference URI, and the value is the string label. For example:
+
+    .. code-block:: python
+
+        encodes_other_biology={
+            "http://identifiers.org/GO:0009653": "anatomical structure morphogenesis",
+            "http://identifiers.org/kegg:ko04111": "Cell cycle - yeast",
+        }
+
+    :param subject: subject/target of the annotation
+        could be a file, a mode component
+    :type subject: str
+    :param title: title of annotation
+        This is required for publishing models on biosimulations.org
+    :type title: str
+    :param abstract: an abstract
+    :type abstract: str
+    :param annotation_style: type of annotation: either "miriam" or
+        "biosimulations" (default).
+
+        There's a difference in the annotation "style" suggested by MIRIAM and
+        Biosimulations. MIRIAM suggests the use of RDF containers (bags)
+        wherewas Biosimulations does not. This argument allows the user to
+        select what style they want to use for the annotation.
+    :type annotation_style: str
+    :param serialization_format: format to serialize in using `rdflib.serialize`
+
+        See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
+
+    :type serialization_format: str
+    :param xml_header: toggle inclusion of xml header if serializing in xml format
+    :type xml_header: bool
+    :param indent: number of spaces to use to indent the annotation block
+    :type indent: int
+    :param description: a longer description
+    :type description: str
+    :param is_: biological entity represented by the model
+    :type is_: dict(str, str)
+    :param keywords: keywords
+    :type keywords: list(str)
+    :param thumbnails: thumbnails
+    :type thumbnails: list(str)
+    :param organisms: of organisms
+    :type organisms: dict(str, str)
+    :param encodes_other_biology:  other biological entities
+    :type encodes_other_biology: dict(str, str)
+    :param has_version: other versions
+    :type has_version: dict(str, str)
+    :param is_version_of: is a version of
+    :type is_version_of: dict(str, str)
+    :param has_part: includes another as a part
+    :type has_part: dict(str, str)
+    :param is_part_of: is a part of another entity
+    :type is_part_of: dict(str, str)
+    :param has_property: has a property
+    :type has_property: dict(str, str)
+    :param is_property_of: is a property of another entity
+    :type is_property_of: dict(str, str)
+    :param sources: links to sources (on GitHub and so on)
+    :type sources: dict(str, str)
+    :param is_instance_of: is an instance of
+    :type is_instance_of: dict(str, str)
+    :param has_instance: has instance of another entity
+    :type has_instance: dict(str, str)
+    :param predecessors: predecessors of this entity
+    :type predecessors: dict(str, str)
+    :param successors: successors of this entity
+    :type successors: dict(str, str)
+    :param see_also: more information
+    :type see_also: dict(str, str)
+    :param references: references
+    :type references: dict(str, str)
+    :param other_ids: other IDs
+    :type other_ids: dict(str, str)
+    :param citations: related citations
+    :type citations: dict(str, str)
+    :param authors: authors
+
+        This can either be:
+
+        - a set: :code:`{"Author A", "Author B"}`
+        - a dictionary where the keys are author names and values are
+          dictionaries of more metadata:
+
+          :code:`{"Author A": {"https://../": "accountname", "..": ".."}}`
+
+        The inner dictionary should have the reference or literal as key, and
+        can take a "label", which can be any of the FOAF attributes:
+
+        http://xmlns.com/foaf/spec/#sec-glance
+
+    :type authors: dict(str, dict(str, str) or set
+    :param contributors: other contributors, follows the same format as authors
+    :type contributors: dict(str, dict(str, str) or set
+    :param license: license
+    :type license: dict(str, str)
+    :param funders: funders
+    :type funders: dict(str, str)
+    :param creation_date: date in YYYY-MM-DD format when this was created (eg: 2024-04-19)
+    :type creation_date: str
+    :param modified_dates: dates in YYYY-MM-DD format when modifications were made
+    :type modified_dates: list(str)
+    :param write_to_file: path to file to write to
+    :type write_to_file: str
+    :returns: the annotation string in the requested format.
 
     """
     new_annotation = Annotation()
