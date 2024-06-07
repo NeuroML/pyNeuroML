@@ -32,6 +32,7 @@ class TestAnnotations(BaseTestCase):
         "organisms": {
             "http://identifiers.org/taxonomy/4896": "Schizosaccharomyces pombe"
         },
+        "is_": {"http://uri.neuinfo.org/nif/nifstd/nifext_2511": "An ion channel"},
         "encodes_other_biology": {
             "http://identifiers.org/GO:0009653": "anatomical structure morphogenesis",
             "http://identifiers.org/kegg:ko04111": "Cell cycle - yeast",
