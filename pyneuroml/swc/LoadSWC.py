@@ -2,6 +2,26 @@ import re
 
 
 class SWCNode:
+    """
+    Represents a single node in an SWC (Standardized Morphology Data Format) file.
+
+    The SWC format is a widely used standard for representing neuronal morphology data.
+    It consists of a series of lines, each representing a single node or sample point
+    along the neuronal structure. For more information on the SWC format, see:
+    https://swc-specification.readthedocs.io/en/latest/swc.html
+
+    Attributes:
+        UNDEFINED (int): ID representing an undefined node type.
+        SOMA (int): ID representing a soma node.
+        AXON (int): ID representing an axon node.
+        BASAL_DENDRITE (int): ID representing a basal dendrite node.
+        APICAL_DENDRITE (int): ID representing an apical dendrite node.
+        CUSTOM (int): ID representing a custom node type.
+        UNSPECIFIED_NEURITE (int): ID representing an unspecified neurite node.
+        GLIA_PROCESSES (int): ID representing a glia process node.
+        TYPE_NAMES (dict): A mapping of node type IDs to their string representations.
+    """
+
     UNDEFINED = 0
     SOMA = 1
     AXON = 2
