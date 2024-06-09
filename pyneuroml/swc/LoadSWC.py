@@ -251,3 +251,11 @@ class SWCGraph:
         Check if the graph contains at least one soma node (type 1).
         """
         return any(node.type == SWCNode.SOMA for node in self.nodes.values())
+
+
+def parse_header(line):
+    for field in SWCGraph.HEADER_FIELDS:
+        match = re.match(rf"{field}\s+(.+)", line, re.IGNORECASE)
+        if match:
+            return field, match.group(1).strip()
+    return None, None
