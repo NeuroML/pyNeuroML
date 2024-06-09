@@ -245,3 +245,9 @@ class SWCGraph:
         for type_id in types:
             nodes.extend(self.get_nodes_with_multiple_children(type_id))
         return nodes
+
+    def has_soma_node(self):
+        """
+        Check if the graph contains at least one soma node (type 1).
+        """
+        return any(node.type == SWCNode.SOMA for node in self.nodes.values())
