@@ -259,3 +259,35 @@ def parse_header(line):
         if match:
             return field, match.group(1).strip()
     return None, None
+
+
+def load_swc(filename):
+    tree = SWCGraph()
+    try:
+        with open(filename, "r") as file:
+            for line in file:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith("#"):
+                    key, value = parse_header(line[1:].strip())
+                    if key:
+                        tree.add_metadata(key, value)
+                    continue
+
+                parts = line.split()
+                if len(parts) != 7:
+                    print(f"Warning: Skipping invalid line: {line}")
+                    continue
+
+                node_id, type_id, x, y, z, radius, parent_id = parts
+                try:
+                    node = SWCNode(node_id, type_id, x, y, z, radius, parent_id)
+                    tree.add_node(node)
+                except ValueError as e:
+                    print(f"Warning: {e} in line: {line}")
+
+    except (FileNotFoundError, IOError) as e:
+        print(f"Error reading file {filename}: {e}")
+
+    return tree
