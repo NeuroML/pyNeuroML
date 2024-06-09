@@ -1,5 +1,7 @@
 import re
 
+import networkx as nx
+
 
 class SWCNode:
     """
@@ -52,6 +54,7 @@ class SWCNode:
             self.radius = float(radius)
             self.parent_id = int(parent_id)
             self.children = []
+            self.fraction_along = 0.0
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid data types in SWC line: {e}")
 
@@ -60,7 +63,7 @@ class SWCNode:
         return f"SWCNode(id={self.id}, type={type_name}, x={self.x:.2f}, y={self.y:.2f}, z={self.z:.2f}, radius={self.radius:.2f}, parent_id={self.parent_id})"
 
 
-class SWCTree:
+class SWCGraph:
     HEADER_FIELDS = [
         "ORIGINAL_SOURCE",
         "CREATURE",
@@ -80,10 +83,19 @@ class SWCTree:
 
     def __init__(self):
         self.nodes = {}
-        self.root = None
+        self.root = None  # New attribute to store the root node
         self.metadata = {}
 
     def add_node(self, node):
+        """
+        Add a node to the SWC graph.
+
+        Args:
+            node (SWCNode): The node to be added.
+
+        Raises:
+            ValueError: If a node with the same ID already exists in the graph.
+        """
         if node.id in self.nodes:
             raise ValueError(f"Duplicate node ID: {node.id}")
         self.nodes[node.id] = node
@@ -98,8 +110,99 @@ class SWCTree:
             print(f"Warning: Parent {node.parent_id} not found for node {node.id}")
 
     def add_metadata(self, key, value):
+        """
+        Add metadata to the SWC graph.
+
+        Args:
+            key (str): The key for the metadata.
+            value (str): The value for the metadata.
+
+        Note:
+            Only valid header fields (as defined in HEADER_FIELDS) are added as metadata.
+        """
         if key in self.HEADER_FIELDS:
             self.metadata[key] = value
+
+    def get_segment_adjacency_list(self):
+        """
+        Get the adjacency list of all segments (nodes) in the SWC graph.
+
+        Returns a dict where each key is a parent node, and the value is the
+        list of its child nodes.
+
+        Nodes without children (leaf nodes) are not included as parents in the
+        adjacency list.
+
+        This method also stores the computed adjacency list in
+        `self.adjacency_list` for future use by other methods.
+
+        `self.adjacency_list` is populated each time this method is run, to
+        ensure that users can regenerate it after making modifications to the
+        SWC graph. If the graph has not changed, one only needs to
+        populate it once and then re-use it as required.
+
+        Returns:
+            dict: A dictionary containing the adjacency list representation of the SWC graph.
+                  Keys are parent node objects, and values are lists of child node objects.
+        """
+        child_lists = {}
+        for node in self.nodes.values():
+            if node.parent_id != -1:
+                if node.parent_id not in child_lists:
+                    child_lists[node.parent_id] = []
+                child_lists[node.parent_id].append(node)
+
+        self.adjacency_list = child_lists
+        return child_lists
+
+    def get_graph(self):
+        """
+        Get a networkx DiGraph representation of the SWC graph.
+
+        The graph represents the neuronal morphology, where nodes correspond to
+        points in the SWC data, and edges represent connections between parent
+        and child nodes. The weight of each edge is the distance from the
+        proximal point of the parent segment to the point where the child segment
+        connects.
+
+        This method uses the adjacency list computed by `get_segment_adjacency_list`
+        to construct the graph.
+
+        This method also stores the computed graph in the `self.graph` attribute
+        for future use.
+
+        For more information on networkx routines and operations on graphs, see:
+        https://networkx.org/documentation/stable/reference/
+
+        Returns:
+            networkx.DiGraph: A directed graph representing the SWC data.
+        """
+        graph = nx.DiGraph()
+
+        # Populate the graph with nodes
+        for node in self.nodes.values():
+            graph.add_node(
+                node.id,
+                type=node.type,
+                x=node.x,
+                y=node.y,
+                z=node.z,
+                radius=node.radius,
+            )
+
+        # Populate the graph with edges using the adjacency list
+        adjacency_list = self.get_segment_adjacency_list()
+        for parent_id, children in adjacency_list.items():
+            parent_node = self.nodes[parent_id]
+            parent_length = self.get_segment_length(parent_id)
+
+            for child in children:
+                fraction_along = child.fraction_along
+                distance_to_proximal = parent_length * fraction_along
+                graph.add_edge(parent_id, child.id, weight=distance_to_proximal)
+
+        self.graph = graph
+        return graph
 
     def get_parent(self, node_id):
         """Get the parent of a given node."""
@@ -142,43 +245,3 @@ class SWCTree:
         for type_id in types:
             nodes.extend(self.get_nodes_with_multiple_children(type_id))
         return nodes
-
-
-def parse_header(line):
-    for field in SWCTree.HEADER_FIELDS:
-        match = re.match(rf"{field}\s+(.+)", line, re.IGNORECASE)
-        if match:
-            return field, match.group(1).strip()
-    return None, None
-
-
-def load_swc(filename):
-    tree = SWCTree()
-    try:
-        with open(filename, "r") as file:
-            for line in file:
-                line = line.strip()
-                if not line:
-                    continue
-                if line.startswith("#"):
-                    key, value = parse_header(line[1:].strip())
-                    if key:
-                        tree.add_metadata(key, value)
-                    continue
-
-                parts = line.split()
-                if len(parts) != 7:
-                    print(f"Warning: Skipping invalid line: {line}")
-                    continue
-
-                node_id, type_id, x, y, z, radius, parent_id = parts
-                try:
-                    node = SWCNode(node_id, type_id, x, y, z, radius, parent_id)
-                    tree.add_node(node)
-                except ValueError as e:
-                    print(f"Warning: {e} in line: {line}")
-
-    except (FileNotFoundError, IOError) as e:
-        print(f"Error reading file {filename}: {e}")
-
-    return tree
