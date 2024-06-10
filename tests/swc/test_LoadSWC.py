@@ -59,3 +59,10 @@ class TestSWCGraph(unittest.TestCase):
         self.assertEqual(graph.nodes[self.node3.id]["radius"], self.node3.radius)
         self.assertEqual(graph.edges[(self.node1.id, self.node2.id)]["weight"], 0.0)
         self.assertEqual(graph.edges[(self.node2.id, self.node3.id)]["weight"], 0.5)
+
+    def test_get_parent(self):
+        self.assertIsNone(self.tree.get_parent(self.node1.id))
+        self.assertEqual(self.tree.get_parent(self.node2.id), self.node1)
+        self.assertEqual(self.tree.get_parent(self.node3.id), self.node2)
+        with self.assertRaises(ValueError):
+            self.tree.get_parent(4)
