@@ -7,7 +7,7 @@ on:
       - development
       - experimental
       - 'test*'
-  pull_request:
+  pull_request_target:
     branches:
       - master
       - development
@@ -18,6 +18,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -67,7 +69,7 @@ jobs:
 
     - name: Add Coverage PR Comment
       uses: marocchino/sticky-pull-request-comment@v2
-      if: ${{ github.event_name == 'pull_request' && matrix.python-version == '3.12' }}
+      if: ${{ github.event_name == 'pull_request_target' && matrix.python-version == '3.12' }}
       with:
         recreate: true
         path: code-coverage-results.md
