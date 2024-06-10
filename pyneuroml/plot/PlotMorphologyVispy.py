@@ -711,7 +711,7 @@ def PCA_transformation(
     #Get the first principal component axis
     first_pca = principal_axes[0]
     #y angle needed to eliminate z component
-    y_angle = math.atan(-first_pca[2]/first_pca[0])
+    y_angle = math.atan(first_pca[2]/first_pca[0])
     rotation_y = numpy.array(
             [
                 [math.cos(y_angle), 0, math.sin(y_angle)],
@@ -737,7 +737,7 @@ def PCA_transformation(
         rotated_pca2[2] = -rotated_pca2[2]
 
     cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0,0,0])
-    cell = rotate_cell(cell, z_angle, y_angle, 0, 'yxz', relative_to_soma=False, inplace=inplace)
+    cell = rotate_cell(cell, 0, y_angle, z_angle, 'yzx', relative_to_soma=False, inplace=inplace)
     return cell
         
 
