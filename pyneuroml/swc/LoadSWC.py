@@ -193,7 +193,6 @@ class SWCGraph:
         # Populate the graph with edges using the adjacency list
         adjacency_list = self.get_segment_adjacency_list()
         for parent_id, children in adjacency_list.items():
-            parent_node = self.nodes[parent_id]
             parent_length = self.get_segment_length(parent_id)
 
             for child in children:
