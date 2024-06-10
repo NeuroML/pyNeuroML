@@ -202,19 +202,32 @@ def create_new_vispy_canvas(
 
     if axes_pos is not None:
         # can't get XYZAxis to work, so create manually
-        points = [
-            axes_pos,  # origin
-            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
-            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
-            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
-        ]
-        scene.Line(
-            points,
-            connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
-            parent=view.scene,
-            color=VISPY_THEME[theme]["fg"],
-            width=axes_width,
-        )
+        # points = [
+        #     axes_pos,  # origin
+        #     [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
+        #     [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
+        #     [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
+        # ]
+        # scene.Line(
+        #     points,
+        #     connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
+        #     parent=view.scene,
+        #     color=VISPY_THEME[theme]["fg"],
+        #     width=axes_width,
+        # )
+        pos = numpy.array([[0, 0, 0],
+                        [axes_length, 0, 0],
+                        [0, 0, 0],
+                        [0, axes_length, 0],
+                        [0, 0, 0],
+                        [0, 0, axes_length]])
+        color = numpy.array([[1, 0, 0, 1],
+                          [1, 0, 0, 1],
+                          [0, 1, 0, 1],
+                          [0, 1, 0, 1],
+                          [0, 0, 1, 1],
+                          [0, 0, 1, 1]])
+        axis = scene.visuals.XYZAxis(parent=view.scene, pos=pos)
 
     def vispy_rotate(self):
         view.camera.orbit(azim=1, elev=0)
@@ -697,8 +710,8 @@ def PCA_transformation(
     principal_axes = pca.components_
     #Get the first principal component axis
     first_pca = principal_axes[0]
-    #y angle needed to eliminate x component
-    y_angle = math.atan(-first_pca[0]/first_pca[2])
+    #y angle needed to eliminate z component
+    y_angle = math.atan(-first_pca[2]/first_pca[0])
     rotation_y = numpy.array(
             [
                 [math.cos(y_angle), 0, math.sin(y_angle)],
@@ -708,23 +721,23 @@ def PCA_transformation(
         )
     rotated_pca = numpy.dot(rotation_y,first_pca)
 
-    #x angle needed to eliminate y component
-    x_angle = math.atan(rotated_pca[1]/rotated_pca[2])
+    #z angle needed to eliminate x component
+    z_angle = math.atan(rotated_pca[0]/rotated_pca[1])
 
-    rotation_x = numpy.array(
-        [
-            [1, 0, 0],
-            [0, math.cos(x_angle), -math.sin(x_angle)],
-            [0, math.sin(x_angle), math.cos(x_angle)],
-        ]
-    )
-    rotated_pca2 = numpy.dot(rotation_x, rotated_pca)
+    rotation_z = numpy.array(
+            [
+                [math.cos(z_angle), -math.sin(z_angle), 0],
+                [math.sin(z_angle), math.cos(z_angle), 0],
+                [0, 0, 1],
+            ]
+        )
+    rotated_pca2 = numpy.dot(rotation_z, rotated_pca)
     if rotated_pca2[2] < 0:
-        x_angle += numpy.pi
+        z_angle += numpy.pi
         rotated_pca2[2] = -rotated_pca2[2]
 
     cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0,0,0])
-    cell = rotate_cell(cell, x_angle, y_angle, 0, 'yxz', relative_to_soma=False, inplace=inplace)
+    cell = rotate_cell(cell, z_angle, y_angle, 0, 'yxz', relative_to_soma=False, inplace=inplace)
     return cell
         
 
