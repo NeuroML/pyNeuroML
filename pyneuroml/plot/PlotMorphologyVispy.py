@@ -147,13 +147,13 @@ def create_new_vispy_canvas(
 
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
-    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
+    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom", up='y')
 
-    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
+    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable", up='y')
 
-    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
+    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball", up='y')
 
-    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
+    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly", up='y')
     # do not keep z up
     cam4.autoroll = False
 
@@ -162,9 +162,6 @@ def create_new_vispy_canvas(
     # Turntable is default
     cam_index = 1
     view.camera = cams[cam_index]
-
-    for acam in cams:
-        acam.up = 'y'
 
     if view_min is not None and view_max is not None:
         for acam in cams:
@@ -205,32 +202,31 @@ def create_new_vispy_canvas(
 
     if axes_pos is not None:
         # can't get XYZAxis to work, so create manually
-        # points = [
-        #     axes_pos,  # origin
-        #     [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
-        #     [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
-        #     [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
-        # ]
-        # scene.Line(
-        #     points,
-        #     connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
-        #     parent=view.scene,
-        #     color=VISPY_THEME[theme]["fg"],
-        #     width=axes_width,
-        # )
-        pos = numpy.array([[0, 0, 0],
-                        [axes_length, 0, 0],
-                        [0, 0, 0],
-                        [0, axes_length, 0],
-                        [0, 0, 0],
-                        [0, 0, axes_length]])
-        color = numpy.array([[1, 0, 0, 1],
-                          [1, 0, 0, 1],
-                          [0, 1, 0, 1],
-                          [0, 1, 0, 1],
-                          [0, 0, 1, 1],
-                          [0, 0, 1, 1]])
-        scene.visuals.XYZAxis(parent=view.scene, pos=pos)
+        points = [
+            axes_pos,  # origin
+            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
+            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
+            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
+        ]
+        scene.Line(
+            [points[0], points[1]],
+            parent=view.scene,
+            color='red',
+            width=axes_width,
+        )
+        scene.Line(
+            [points[0], points[2]],
+            parent=view.scene,
+            color='green',
+            width=axes_width,
+        )
+        scene.Line(
+        [points[0], points[3]],
+        parent=view.scene,
+        color='blue',
+        width=axes_width,
+        )   
+      
 
     def vispy_rotate(self):
         view.camera.orbit(azim=1, elev=0)
