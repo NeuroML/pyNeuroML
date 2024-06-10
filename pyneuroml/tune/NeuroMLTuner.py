@@ -15,21 +15,21 @@ This module also provides the `pynml-tune` command line utility.
 Please see the output of `pynml-tune -h` for more information on `pynml-tune`.
 """
 
-from __future__ import unicode_literals
-from __future__ import annotations
-import os
-import os.path
-import time
-import re
-from collections import OrderedDict
+from __future__ import annotations, unicode_literals
+
 import argparse
 import logging
+import os
+import os.path
 import pprint
+import time
 import typing
+from collections import OrderedDict
 
 from matplotlib import pyplot as plt
-from pyneuroml.utils.cli import build_namespace
+
 from pyneuroml import print_v
+from pyneuroml.utils.cli import build_namespace
 
 pp = pprint.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -37,9 +37,8 @@ logger.setLevel(logging.INFO)
 
 
 try:
-    from neurotune import optimizers
-    from neurotune import evaluators
-    from neurotune import utils
+    from neurotune import evaluators, optimizers, utils
+
     from pyneuroml.tune.NeuroMLController import NeuroMLController
 except ImportError:
     logger.warning("Please install optional dependencies to use neurotune features:")
@@ -647,7 +646,7 @@ def _run_optimisation(a: argparse.Namespace) -> typing.Optional[dict]:
         added = []
         # print("Plotting saved data from %s which are relevant for targets: %s"%(best_candidate_v.keys(), a.target_data.keys()))
 
-        fig = plt.figure()
+        plt.figure()
         plt.get_current_fig_manager().set_window_title(
             "Simulation of fittest individual from run: %s" % ref
         )

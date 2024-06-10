@@ -52,6 +52,7 @@ def generate_plot(
     title_above_plot: bool = False,
     verbose: bool = False,
     close_plot: bool = False,
+    interactive_legend: bool = True,
 ) -> typing.Optional[matplotlib.axes.Axes]:
     """Utility function to generate plots using the Matplotlib library.
 
@@ -71,6 +72,11 @@ def generate_plot(
     styles and colours:
     - https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html
     - https://matplotlib.org/stable/gallery/index.html
+
+    .. versionadded:: 1.2.15
+
+        - animate
+        - interactive_legend
 
     :param xvalues: X values
     :type xvalues: list of lists
@@ -156,6 +162,9 @@ def generate_plot(
     :param close_plot: call :code:`pyplot.close()` to close plot after
         plotting, this is always done if using animation
     :type close_plot: bool
+    :param interactive_legend: enable clicking on legend to toggle plot lines
+        when using the matplotlib UI
+    :type interactive_legend: bool
     :returns: matplotlib.axes.Axes object if plot is not closed, else None
     :raises ValueError: if the dimensions of xvalues/yvalues and option
         arguments colors/labels/linestyles/linewidths/markers/markersizes do
@@ -242,6 +251,7 @@ def generate_plot(
     if not show_yticklabels:
         ax.set_yticklabels([])
 
+    legend_box = None
     artists = []
 
     for i in range(len(xvalues)):
@@ -275,14 +285,17 @@ def generate_plot(
         artists.append(artist)
 
     if labels:
+        legend_position = (
+            rcParams["legend.loc"] if not legend_position else legend_position
+        )
         if legend_position == "outer right":
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            ax.set_position((box.x0, box.y0, box.width * 0.8, box.height))
             # Put a legend to the right of the current axis
-            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+            legend_box = ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
         elif legend_position == "bottom center":
-            plt.legend(
+            legend_box = plt.legend(
                 loc="upper center",
                 # to ensure it does not cover the lower axis label
                 bbox_to_anchor=(0.5, -0.05),
@@ -291,7 +304,7 @@ def generate_plot(
                 ncol=cols_in_legend_box,
             )
         else:
-            plt.legend(
+            legend_box = plt.legend(
                 loc=legend_position,
                 fancybox=True,
                 shadow=True,
@@ -378,6 +391,27 @@ def generate_plot(
             logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
+        if interactive_legend is True and legend_box is not None:
+            map_legend_to_ax = {}
+            pickradius = 5
+            for legend_line, ax_line in zip(legend_box.get_lines(), artists):
+                legend_line.set_picker(pickradius)
+                map_legend_to_ax[legend_line] = ax_line
+
+            def on_pick(event):
+                legend_line = event.artist
+
+                if legend_line not in map_legend_to_ax:
+                    return
+
+                ax_line = map_legend_to_ax[legend_line]
+                visible = not ax_line.get_visible()
+                ax_line.set_visible(visible)
+                legend_line.set_alpha(1.0 if visible else 0.2)
+                fig.canvas.draw()
+
+            fig.canvas.mpl_connect("pick_event", on_pick)
+
         plt.show()
 
     if close_plot or animate:

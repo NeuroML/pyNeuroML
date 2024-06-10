@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from pyneuroml import sbml
 import os
 import stat
+
+from pyneuroml import sbml
 
 
 def test_sbml_validate_a_valid_file():
@@ -15,7 +16,7 @@ def test_sbml_validate_a_valid_file():
 
 def test_sbml_validate_missing_inputfile():
     try:
-        result = sbml.validate_sbml_files(["tests/sbml/test_data/nonexistent_file"])
+        sbml.validate_sbml_files(["tests/sbml/test_data/nonexistent_file"])
     except FileNotFoundError:
         return
     except Exception:
@@ -30,7 +31,7 @@ def test_sbml_validate_no_read_access():
     # Remove read permission
     os.chmod(fname, 0)
     try:
-        result = sbml.validate_sbml_files([fname])
+        sbml.validate_sbml_files([fname])
     except IOError:
         os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
         return
@@ -47,7 +48,7 @@ def test_sbml_validate_valueerror_on_no_inputfiles():
     "ensure it raises a ValueError exception for failing to provide any files"
 
     try:
-        result = sbml.validate_sbml_files([])
+        sbml.validate_sbml_files([])
     except ValueError:
         return
     except Exception:
@@ -102,7 +103,6 @@ def test_sbml_validate_flag_all_invalid_files():
 
 
 if __name__ == "__main__":
-    test_sbml_validate_validate_a_valid_file()
     test_sbml_validate_valueerror_on_no_inputfiles()
     test_sbml_validate_missing_inputfile()
     test_sbml_validate_flag_all_invalid_files()

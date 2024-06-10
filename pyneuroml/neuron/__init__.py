@@ -6,24 +6,19 @@ Will use some some utilities from https://github.com/OpenSourceBrain/NEURONShowc
 
 """
 
-import os
-import logging
-import warnings
-import typing
-import pathlib
 import json
+import logging
 import math
+import os
+import pathlib
 import pprint
+import typing
+import warnings
+
 import airspeed
 import yaml
 
-try:
-    from yaml import CDumper as Dumper
-except ImportError:
-    from yaml import Dumper
-
-from pyneuroml.pynml import validate_neuroml1
-from pyneuroml.pynml import validate_neuroml2
+from pyneuroml.pynml import validate_neuroml1, validate_neuroml2
 
 pp = pprint.PrettyPrinter(depth=4)
 logger = logging.getLogger(__name__)
@@ -31,6 +26,7 @@ logger.setLevel(logging.INFO)
 
 try:
     from neuron import h
+
     from pyneuroml.neuron.nrn_export_utils import set_erev_for_mechanism
 except ImportError:
     logger.warning("Please install optional dependencies to use NEURON features:")
@@ -468,8 +464,8 @@ def getinfo(seclist: list, doprint: str = "", listall: bool = False):
                         ms.name(pname, j)
                         totParamVal[j] += ms.get(pname)
                         if (
-                            not replace_brackets(str(sec))
-                            in paramsectiondict[rm_NML_str(pname[0])].keys()
+                            replace_brackets(str(sec))
+                            not in paramsectiondict[rm_NML_str(pname[0])].keys()
                         ):
                             paramsectiondict[rm_NML_str(pname[0])][
                                 replace_brackets(str(sec))
@@ -754,17 +750,17 @@ def export_mod_to_neuroml2(mod_file: str):
     lines = [(str(ll.strip())).replace("\t", " ") for ll in open(mod_file)]
     line_num = 0
     while line_num < len(lines):
-        l = lines[line_num]
-        if len(l) > 0:
-            logger.info(">>> %i > %s" % (line_num, l))
+        aline = lines[line_num]
+        if len(aline) > 0:
+            logger.info(">>> %i > %s" % (line_num, aline))
             # @type l str
-            if l.startswith("TITLE"):
-                blocks["TITLE"] = l[6:].strip()
-            if "{" in l:
-                block_name = l[: l.index("{")].strip()
+            if aline.startswith("TITLE"):
+                blocks["TITLE"] = aline[6:].strip()
+            if "{" in aline:
+                block_name = aline[: aline.index("{")].strip()
                 blocks[block_name] = []
 
-                li = l[l.index("{") + 1 :]
+                li = aline[aline.index("{") + 1 :]
                 bracket_depth = __check_brackets(li, 1)
                 while bracket_depth > 0:
                     if len(li) > 0:
