@@ -96,6 +96,22 @@ def add_text_to_vispy_3D_plot(
         parent=current_canvas,
     )
 
+def orbit(camera, azim, elev, roll):
+        """Orbits the camera around the center position.
+
+        Parameters
+        ----------
+        azim : float
+            Angle in degrees to rotate horizontally around the center point.
+        elev : float
+            Angle in degrees to rotate vertically around the center point.
+        roll : float
+            Angle in degrees to rotate around the y axis of the center point.
+        """
+        camera.azimuth += azim
+        camera.elevation = numpy.clip(camera.elevation + elev, -90, 90)
+        camera.roll += roll
+        camera.view_changed()
 
 def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
@@ -231,7 +247,7 @@ def create_new_vispy_canvas(
         axis = scene.visuals.XYZAxis(parent=view.scene, pos=pos)
 
     def vispy_rotate(self):
-        view.camera.orbit(azim=1, elev=0)
+        orbit(view.camera, azim=0, elev=0, roll=1)
 
     rotation_timer = app.Timer(connect=vispy_rotate)
 
