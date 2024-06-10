@@ -1,10 +1,6 @@
 import unittest
-from io import StringIO
-from unittest.mock import patch
 
-import networkx as nx
-
-from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode
+from pyneuroml.swc.LoadSWC import SWCNode
 
 
 class TestSWCNode(unittest.TestCase):
