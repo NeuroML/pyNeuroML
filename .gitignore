@@ -177,3 +177,7 @@ arm64
 /examples/test_data/xppaut/wc_2.ode
 
 coverage.xml
+/examples/LEMS_NML2_Ex5_DetCell.sedml.omex
+/examples/hhcell.swc
+/examples/metadata.rdf
+/tests/utils/test_translation.net.nml
