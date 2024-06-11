@@ -28,6 +28,7 @@ from pyneuroml.plot.PlotMorphologyVispy import (
     plot_3D_cell_morphology,
     plot_3D_schematic,
     plot_interactive_3D,
+    PCA_transformation
 )
 from pyneuroml.pynml import read_neuroml2_file
 
@@ -440,3 +441,72 @@ class TestMorphologyPlot(BaseTestCase):
         mesh2 = create_cylindrical_mesh(5, 10, 1.0, 1, closed=True)
 
         self.assertEqual(mesh.n_vertices + 2, mesh2.n_vertices)
+
+    def test_PCA_transformation(self):
+        """Test principle component axis rotation after PCA cell transformation"""
+    
+        acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
+        acell.set_spike_thresh("10mV")
+        soma = acell.add_segment(
+            prox=[0, 0, 0, 15],
+            dist=[10, 0, 0, 15],
+            seg_id=0,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+        )
+
+        acell.add_segment(
+            prox=[10, 0, 0, 12],
+            dist=[110, 0, 0, 12],
+            seg_id=1,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        acell.add_segment(
+            prox=[110, 0, 0, 7],
+            dist=[250, 0, 0, 7],
+            seg_id=2,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        acell.add_segment(
+            prox=[250, 0, 0, 4],
+            dist=[320, 0, 0, 4],
+            seg_id=3,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        print(f"cell before: {acell}")
+
+        transformed_cell = PCA_transformation(acell)
+        transformed_cell.id = "test_transformed_cell"
+        print(f"cell after transformation: {transformed_cell}")
+
+         #Get all segments' distal points
+        segment_points = []
+        segments_all = transformed_cell.morphology.segments
+        for segment in segments_all:
+            segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
+        
+        coords = numpy.array(segment_points)
+        from sklearn.decomposition import PCA
+
+        #Get the PCA components
+        pca = PCA()
+        pca.fit(coords)
+        # Get the principal component axes
+        first_pca = pca.components_
+        pca_goal = numpy.array([0,first_pca[0][1],0])
+        #Test if PCA of transformed cell is on y axis
+        print(f'type first pca {first_pca} and type pca_goal {pca_goal}')
+        numpy.testing.assert_almost_equal(pca_goal, first_pca[0], 3)
