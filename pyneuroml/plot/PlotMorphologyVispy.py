@@ -115,11 +115,11 @@ def create_new_vispy_canvas(
     :type view_min: [float, float, float]
     :param view_max: max view co-ordinates
     :type view_max: [float, float, float]
-    :param view_center: center view co-ordinates
+    :param view_center: center view co-ordinates, calculated from view max/min if omitted
     :type view_center: [float, float, float]
     :param title: title of plot
     :type title: str
-    :param axes_pos: position to draw axes at
+    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely 
     :type axes_pos: [float, float, float]
     :param axes_length: length of axes
     :type axes_length: float
@@ -277,7 +277,7 @@ def plot_interactive_3D(
     ] = None,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
-    isPCA: bool=False,
+    upright: bool=False,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -374,8 +374,11 @@ def plot_interactive_3D(
         If you have a good GPU, you can increase both these values to get more
         detailed visualizations
     :type precision: (int, int)
-    :param isPCA: bool that if True, transforms single Cell according to its PCA to make it look 'upwards'
-    :type isPCA: bool
+    :param upright: bool only applicable for single cells: Makes cells "upright" 
+    (along Y axis) by calculating it PCA and transforming cell co-ordinates to 
+    align along the first principal component. Note that the original cell object
+    is unchanged, this is for visualization purposes only
+    :type upright: bool
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
@@ -505,7 +508,7 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_max = list(numpy.array(pos))
 
-    if singleCell and isPCA:
+    if singleCell and upright:
         view_center=[0,0,0]
     else:
         view_center=None
@@ -616,7 +619,7 @@ def plot_interactive_3D(
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
-                        isPCA=isPCA
+                        upright=upright
                     )
                 elif (
                     plot_type == "detailed"
@@ -644,7 +647,7 @@ def plot_interactive_3D(
                         meshdata=meshdata,
                         mesh_precision=precision[0],
                         highlight_spec=cell_highlight_spec,
-                        isPCA = isPCA
+                        upright = upright
                     )
 
             # if too many meshes, reduce precision and retry, recursively
@@ -665,7 +668,7 @@ def plot_interactive_3D(
                     plot_spec=plot_spec,
                     precision=precision,
                     highlight_spec=highlight_spec,
-                    isPCA=isPCA
+                    upright=upright
                 )
                 # break the recursion, don't plot in the calling method
                 return
@@ -762,7 +765,7 @@ def plot_3D_cell_morphology(
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
-    isPCA: bool=False
+    upright: bool=False
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -845,8 +848,11 @@ def plot_3D_cell_morphology(
           is used)
 
     :type highlight_spec: dict
-    :param isPCA: bool that if True, transforms single Cell according to its PCA to make it look 'upwards'
-    :type isPCA: bool
+    :param upright: bool only applicable for single cells: Makes cells "upright" 
+    (along Y axis) by calculating it PCA and transforming cell co-ordinates to 
+    align along the first principal component. Note that the original cell object
+    is unchanged, this is for visualization purposes only
+    :type upright: bool
     :raises: ValueError if `cell` is None
 
     """
@@ -872,7 +878,7 @@ def plot_3D_cell_morphology(
     except Exception:
         axon_segs = []
     
-    if isPCA:
+    if upright:
         cell = PCA_transformation(cell)
     current_canvas = current_view = None
 
@@ -1121,7 +1127,7 @@ def plot_3D_schematic(
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
-    isPCA: bool = False
+    upright: bool = False
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -1176,13 +1182,16 @@ def plot_3D_schematic(
           dendrites, and soma segments
 
     :type color: str
-    :param isPCA: bool that if True, transforms single Cell according to its PCA to make it look 'upwards'
-    :type isPCA: bool
+    :param upright: bool only applicable for single cells: Makes cells "upright" 
+    (along Y axis) by calculating it PCA and transforming cell co-ordinates to 
+    align along the first principal component. Note that the original cell object
+    is unchanged, this is for visualization purposes only
+    :type upright: bool
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
 
-    if isPCA:
+    if upright:
         cell = PCA_transformation(cell)
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
