@@ -66,3 +66,34 @@ class TestSWCGraph(unittest.TestCase):
         self.assertEqual(self.tree.get_parent(self.node3.id), self.node2)
         with self.assertRaises(ValueError):
             self.tree.get_parent(4)
+
+    def test_get_descendants(self):
+        self.assertEqual(
+            self.tree.get_descendants(self.node1.id), [self.node2, self.node3]
+        )
+        self.assertEqual(self.tree.get_descendants(self.node2.id), [self.node3])
+        self.assertEqual(self.tree.get_descendants(self.node3.id), [])
+        with self.assertRaises(ValueError):
+            self.tree.get_descendants(4)
+
+    def test_get_nodes_with_multiple_children(self):
+        self.assertEqual(self.tree.get_nodes_with_multiple_children(), [])
+        self.assertEqual(self.tree.get_nodes_with_multiple_children(SWCNode.SOMA), [])
+        self.assertEqual(
+            self.tree.get_nodes_with_multiple_children(SWCNode.BASAL_DENDRITE), []
+        )
+
+    def test_get_nodes_by_type(self):
+        self.assertEqual(len(self.tree.get_nodes_by_type(SWCNode.SOMA)), 1)
+        self.assertEqual(len(self.tree.get_nodes_by_type(SWCNode.BASAL_DENDRITE)), 2)
+        self.assertEqual(len(self.tree.get_nodes_by_type(SWCNode.AXON)), 0)
+
+    def test_get_branch_points(self):
+        self.assertEqual(self.tree.get_branch_points(SWCNode.SOMA), [])
+        self.assertEqual(self.tree.get_branch_points(SWCNode.BASAL_DENDRITE), [])
+        self.assertEqual(
+            self.tree.get_branch_points(SWCNode.SOMA, SWCNode.BASAL_DENDRITE), []
+        )
+
+    def test_has_soma_node(self):
+        self.assertTrue(self.tree.has_soma_node())
