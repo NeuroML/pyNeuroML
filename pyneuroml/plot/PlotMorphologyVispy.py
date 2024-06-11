@@ -733,17 +733,8 @@ def make_cell_upright(
     # z angle needed to eliminate x component
     z_angle = -math.atan(rotated_pca[0] / rotated_pca[1])
 
-    rotation_z = numpy.array(
-        [
-            [math.cos(z_angle), -math.sin(z_angle), 0],
-            [math.sin(z_angle), math.cos(z_angle), 0],
-            [0, 0, 1],
-        ]
-    )
-    rotated_pca2 = numpy.dot(rotation_z, rotated_pca)
-    if rotated_pca2[2] < 0:
+    if z_angle < 0:
         z_angle += numpy.pi
-        rotated_pca2[2] = -rotated_pca2[2]
 
     cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0, 0, 0])
     cell = rotate_cell(
