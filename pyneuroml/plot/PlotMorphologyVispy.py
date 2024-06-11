@@ -727,7 +727,7 @@ def PCA_transformation(
     rotated_pca = numpy.dot(rotation_y,first_pca)
 
     #z angle needed to eliminate x component
-    z_angle = math.atan(rotated_pca[0]/rotated_pca[1])
+    z_angle = -math.atan(rotated_pca[0]/rotated_pca[1])
 
     rotation_z = numpy.array(
             [
