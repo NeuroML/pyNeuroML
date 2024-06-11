@@ -25,10 +25,10 @@ from pyneuroml.plot.PlotMorphologyPlotly import (
 )
 from pyneuroml.plot.PlotMorphologyVispy import (
     create_cylindrical_mesh,
+    make_cell_upright,
     plot_3D_cell_morphology,
     plot_3D_schematic,
     plot_interactive_3D,
-    PCA_transformation
 )
 from pyneuroml.pynml import read_neuroml2_file
 
@@ -444,7 +444,7 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_PCA_transformation(self):
         """Test principle component axis rotation after PCA cell transformation"""
-    
+
         acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
         acell.set_spike_thresh("10mV")
         soma = acell.add_segment(
@@ -488,25 +488,27 @@ class TestMorphologyPlot(BaseTestCase):
 
         print(f"cell before: {acell}")
 
-        transformed_cell = PCA_transformation(acell)
+        transformed_cell = make_cell_upright(acell)
         transformed_cell.id = "test_transformed_cell"
         print(f"cell after transformation: {transformed_cell}")
 
-         #Get all segments' distal points
+        # Get all segments' distal points
         segment_points = []
         segments_all = transformed_cell.morphology.segments
         for segment in segments_all:
-            segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
-        
+            segment_points.append(
+                [segment.distal.x, segment.distal.y, segment.distal.z]
+            )
+
         coords = numpy.array(segment_points)
         from sklearn.decomposition import PCA
 
-        #Get the PCA components
+        # Get the PCA components
         pca = PCA()
         pca.fit(coords)
         # Get the principal component axes
         first_pca = pca.components_
-        pca_goal = numpy.array([0,first_pca[0][1],0])
-        #Test if PCA of transformed cell is on y axis
-        print(f'type first pca {first_pca} and type pca_goal {pca_goal}')
+        pca_goal = numpy.array([0, first_pca[0][1], 0])
+        # Test if PCA of transformed cell is on y axis
+        print(f"type first pca {first_pca} and type pca_goal {pca_goal}")
         numpy.testing.assert_almost_equal(pca_goal, first_pca[0], 3)
