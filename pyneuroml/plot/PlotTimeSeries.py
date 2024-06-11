@@ -13,10 +13,11 @@ import math
 import typing
 
 import numpy
-import pyneuroml.lems as pynmll
-import pyneuroml.plot.Plot as pynmlplt
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
+
+import pyneuroml.lems as pynmll
+import pyneuroml.plot.Plot as pynmlplt
 from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ def plot_time_series(
     :raises ValueError: if a 't' (time) key is not found in the traces data
 
     """
-    if type(trace_data) is dict:
+    if isinstance(trace_data, dict):
         trace_data = [trace_data]
 
     num_traces = 0
@@ -217,7 +218,7 @@ def plot_time_series_from_data_files(
 
     """
     all_traces = []
-    if type(data_file_names) is str:
+    if isinstance(data_file_names, str):
         data_file_names = [data_file_names]
 
     for f in data_file_names:

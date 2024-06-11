@@ -3,26 +3,25 @@
 Helper class for generating LEMS xml files for simulations
 """
 
-import os.path
 import logging
-import typing
-import random
 import os
+import os.path
+import random
+import typing
+from typing import Optional
 
 import airspeed
-from pyneuroml import __version__ as pynml_ver
 from neuroml import __version__ as libnml_ver
-from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.pynml import read_lems_file
+
+from pyneuroml import __version__ as pynml_ver
+from pyneuroml.pynml import read_lems_file, read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
 from pyneuroml.utils.units import convert_to_units
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
 class LEMSSimulation:
-
     """
     Helper class for creating LEMS Simulations for running NeuroML2 models.
     """
@@ -88,7 +87,7 @@ class LEMSSimulation:
         :type meta: dict
         """
 
-        if type(duration) is str:
+        if isinstance(duration, str):
             # is this just the magnitude in the string?
             try:
                 duration_mag_ms = float(duration)
@@ -97,7 +96,7 @@ class LEMSSimulation:
         else:
             duration_mag_ms = float(duration)
 
-        if type(dt) is str:
+        if isinstance(dt, str):
             # is this just the magnitude in the string?
             try:
                 dt_mag_ms = float(dt)
