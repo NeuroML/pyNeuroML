@@ -685,7 +685,7 @@ def plot_interactive_3D(
         app.run()
 
 
-def PCA_transformation(
+def make_cell_upright(
     cell: Cell = None,
     inplace: bool = False,
 ) -> Cell:
@@ -882,7 +882,7 @@ def plot_3D_cell_morphology(
         axon_segs = []
     view_center = None
     if upright:
-        cell = PCA_transformation(cell)
+        cell = make_cell_upright(cell)
         current_canvas = current_view = None
         view_center = [0, 0, 0]
 
@@ -1196,7 +1196,7 @@ def plot_3D_schematic(
         title = f"3D schematic of segment groups from {cell.id}"
 
     if upright:
-        cell = PCA_transformation(cell)
+        cell = make_cell_upright(cell)
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -1223,7 +1223,7 @@ def plot_3D_schematic(
 
     view_center = None
     if upright:
-        cell = PCA_transformation(cell)
+        cell = make_cell_upright(cell)
         current_canvas = current_view = None
         view_center = [0, 0, 0]
 
