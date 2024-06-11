@@ -277,6 +277,7 @@ def plot_interactive_3D(
     ] = None,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
+    isPCA: bool=False,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -373,6 +374,8 @@ def plot_interactive_3D(
         If you have a good GPU, you can increase both these values to get more
         detailed visualizations
     :type precision: (int, int)
+    :param isPCA: bool that if True, transforms single Cell according to its PCA to make it look 'upwards'
+    :type isPCA: bool
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
@@ -502,7 +505,7 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_max = list(numpy.array(pos))
 
-    if singleCell:
+    if singleCell and isPCA:
         view_center=[0,0,0]
     else:
         view_center=None
@@ -613,6 +616,7 @@ def plot_interactive_3D(
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
+                        isPCA=isPCA
                     )
                 elif (
                     plot_type == "detailed"
@@ -640,6 +644,7 @@ def plot_interactive_3D(
                         meshdata=meshdata,
                         mesh_precision=precision[0],
                         highlight_spec=cell_highlight_spec,
+                        isPCA = isPCA
                     )
 
             # if too many meshes, reduce precision and retry, recursively
@@ -660,6 +665,7 @@ def plot_interactive_3D(
                     plot_spec=plot_spec,
                     precision=precision,
                     highlight_spec=highlight_spec,
+                    isPCA=isPCA
                 )
                 # break the recursion, don't plot in the calling method
                 return
@@ -756,8 +762,7 @@ def plot_3D_cell_morphology(
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
-    x_angle: float = None,
-    y_angle: float = None
+    isPCA: bool=False
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -840,6 +845,8 @@ def plot_3D_cell_morphology(
           is used)
 
     :type highlight_spec: dict
+    :param isPCA: bool that if True, transforms single Cell according to its PCA to make it look 'upwards'
+    :type isPCA: bool
     :raises: ValueError if `cell` is None
 
     """
@@ -864,9 +871,9 @@ def plot_3D_cell_morphology(
         axon_segs = cell.get_all_segments_in_group("axon_group")
     except Exception:
         axon_segs = []
-
-    #Placeholder for pca_
-    cell = PCA_transformation(cell)
+    
+    if isPCA:
+        cell = PCA_transformation(cell)
     current_canvas = current_view = None
 
     if current_canvas is None or current_view is None:
@@ -1114,6 +1121,7 @@ def plot_3D_schematic(
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
+    isPCA: bool = False
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -1168,10 +1176,14 @@ def plot_3D_schematic(
           dendrites, and soma segments
 
     :type color: str
+    :param isPCA: bool that if True, transforms single Cell according to its PCA to make it look 'upwards'
+    :type isPCA: bool
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
 
+    if isPCA:
+        cell = PCA_transformation(cell)
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
