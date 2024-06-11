@@ -374,9 +374,12 @@ def plot_interactive_3D(
         detailed visualizations
     :type precision: (int, int)
     :param upright: bool only applicable for single cells: Makes cells "upright"
-    (along Y axis) by calculating it PCA and transforming cell co-ordinates to
-    align along the first principal component. Note that the original cell object
-    is unchanged, this is for visualization purposes only
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
     :type upright: bool
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
@@ -843,9 +846,12 @@ def plot_3D_cell_morphology(
 
     :type highlight_spec: dict
     :param upright: bool only applicable for single cells: Makes cells "upright"
-    (along Y axis) by calculating it PCA and transforming cell co-ordinates to
-    align along the first principal component. Note that the original cell object
-    is unchanged, this is for visualization purposes only
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
     :type upright: bool
     :raises: ValueError if `cell` is None
 
@@ -1178,9 +1184,12 @@ def plot_3D_schematic(
 
     :type color: str
     :param upright: bool only applicable for single cells: Makes cells "upright"
-    (along Y axis) by calculating it PCA and transforming cell co-ordinates to
-    align along the first principal component. Note that the original cell object
-    is unchanged, this is for visualization purposes only
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
     :type upright: bool
     """
     if title == "":
