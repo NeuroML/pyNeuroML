@@ -268,6 +268,7 @@ def plot_interactive_3D(
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
+    axes_pos: typing.Optional[typing.List] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
@@ -314,6 +315,8 @@ def plot_interactive_3D(
         morphology)
 
     :type plot_type: str
+    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
+    :type axes_pos: [float, float, float]
     :param title: title of plot
     :type title: str
     :param theme: theme to use (light/dark)
@@ -465,8 +468,6 @@ def plot_interactive_3D(
     # not used later, clear up
     del cell_id_vs_cell
 
-    singleCell = False
-
     if len(positions) > 1:
         only_pos = []
         for posdict in positions.values():
@@ -498,7 +499,6 @@ def plot_interactive_3D(
         logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
 
     else:
-        singleCell = True
         cell = list(pop_id_vs_cell.values())[0]
 
         if cell is not None:
@@ -509,15 +509,16 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_max = list(numpy.array(pos))
 
-    if singleCell and upright:
+    if upright:
         view_center = [0, 0, 0]
     else:
         view_center = None
+
     current_canvas, current_view = create_new_vispy_canvas(
         view_min,
         view_max,
         title,
-        axes_pos=[0, 0, 0],
+        axes_pos=axes_pos,
         theme=theme,
         view_center=view_center,
     )
@@ -622,6 +623,7 @@ def plot_interactive_3D(
                         verbose=verbose,
                         current_canvas=current_canvas,
                         current_view=current_view,
+                        axes_pos=axes_pos,
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
@@ -648,6 +650,7 @@ def plot_interactive_3D(
                         verbose=verbose,
                         current_canvas=current_canvas,
                         current_view=current_view,
+                        axes_pos=axes_pos,
                         min_width=min_width,
                         nogui=True,
                         meshdata=meshdata,
@@ -668,6 +671,7 @@ def plot_interactive_3D(
                     min_width=min_width,
                     verbose=verbose,
                     plot_type=plot_type,
+                    axes_pos=axes_pos,
                     title=title,
                     theme=theme,
                     nogui=nogui,
@@ -756,6 +760,7 @@ def plot_3D_cell_morphology(
     current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    axes_pos: typing.Optional[typing.List] = None,
     nogui: bool = True,
     plot_type: str = "constant",
     theme: str = "light",
@@ -802,6 +807,8 @@ def plot_3D_cell_morphology(
     :type min_width: float
     :param axis_min_max: min, max value of axes
     :type axis_min_max: [float, float]
+    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
+    :type axes_pos: [float, float, float]
     :param title: title of plot
     :type title: str
     :param verbose: show extra information (default: False)
@@ -886,7 +893,12 @@ def plot_3D_cell_morphology(
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
         current_canvas, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme, view_center=view_center
+            view_min,
+            view_max,
+            title,
+            theme=theme,
+            axes_pos=axes_pos,
+            view_center=view_center,
         )
 
     if color == "Groups":
@@ -1124,6 +1136,7 @@ def plot_3D_schematic(
     title: str = "",
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
+    axes_pos: typing.Optional[typing.List] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
@@ -1173,6 +1186,8 @@ def plot_3D_schematic(
     :type current_canvas: scene.SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
+    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
+    :type axes_pos: [float, float, float]
     :param theme: theme to use (light/dark)
     :type theme: str
     :param color: color to use for segment groups with some special values:
@@ -1230,7 +1245,12 @@ def plot_3D_schematic(
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
         current_canvas, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme, view_center=view_center
+            view_min,
+            view_max,
+            title,
+            theme=theme,
+            axes_pos=axes_pos,
+            view_center=view_center,
         )
 
     # colors for cell
