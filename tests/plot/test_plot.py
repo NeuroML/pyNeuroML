@@ -14,6 +14,7 @@ import logging
 import pathlib as pl
 
 from pyneuroml.plot import generate_plot, generate_interactive_plot
+from pyneuroml.plot.Connectivity import plot_chord_diagram
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -207,6 +208,17 @@ class TestPlot(BaseTestCase):
         )
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
+
+    def test_chord_diagram(self):
+        """Test the chord diagram plotter"""
+        filename = "tests/plot/test_chord_diagram.png"
+
+        # remove the file first
+        try:
+            pl.Path(filename).unlink()
+        except FileNotFoundError:
+            pass
+        plot_chord_diagram("./Izh2007Cells.net.nml")
 
 
 if __name__ == "__main__":
