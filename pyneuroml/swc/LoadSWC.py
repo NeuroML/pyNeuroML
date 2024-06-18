@@ -1,7 +1,4 @@
 import re
-from math import sqrt
-
-import networkx as nx
 
 
 class SWCNode:
@@ -117,7 +114,19 @@ class SWCGraph:
             self.metadata[key] = value
 
     def get_parent(self, node_id):
-        """Get the parent of a given node."""
+        """
+        Get the parent node of a given node in the SWC tree.
+
+        Args:
+        node_id (int): The ID of the node for which to retrieve the parent.
+
+        Returns:
+        Node or None: The parent Node object if the node has a parent, otherwise None.
+
+        Raises:
+        ValueError: If the specified node_id is not found in the SWC tree.
+
+        """
         node = next((n for n in self.nodes if n.id == node_id), None)
         if node is None:
             raise ValueError(f"Node {node_id} not found")
@@ -147,7 +156,18 @@ class SWCGraph:
         return children
 
     def get_descendants(self, node_id):
-        """Get all descendants of a given node."""
+        """
+        Get all descendant nodes of a given node in the SWC tree.
+
+        Args:
+        node_id (int): The ID of the node for which to retrieve descendants.
+
+        Returns:
+        list: A list of Node objects representing the descendants of the given node.
+
+        Raises:
+        ValueError: If the specified node_id is not found in the SWC tree.
+        """
 
         node = next((n for n in self.nodes if n.id == node_id), None)
         print(f"node_id: {node_id}, node: {node}")
