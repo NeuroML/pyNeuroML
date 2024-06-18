@@ -91,7 +91,7 @@ def summary(
 
     if nml2_doc is None:
         nml2_file_name = sys.argv[1]
-        nml2_doc = read_neuroml2_file(nml2_file_name, include_includes=verbose)
+        nml2_doc = read_neuroml2_file(nml2_file_name, include_includes=verbose, fix_external_morphs_biophys=True)
 
     info = nml2_doc.summary(show_includes=False)
 

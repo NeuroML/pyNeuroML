@@ -75,6 +75,8 @@ class TestUtils(BaseTestCase):
         acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
 
         acell.set_spike_thresh("10mV")
+        acell.set_init_memb_potential("-70mV")
+        acell.set_specific_capacitance("1 uF_per_cm2")
 
         soma = acell.add_segment(
             prox=[0, 0, 0, 15],
@@ -159,6 +161,8 @@ class TestUtils(BaseTestCase):
         """Test translate_cell_to_coords"""
         acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
         acell.set_spike_thresh("10mV")
+        acell.set_init_memb_potential("-70mV")
+        acell.set_specific_capacitance("1 uF_per_cm2")
         soma = acell.add_segment(
             prox=[10, 10, 10, 15],
             dist=[10, 10, 10, 15],

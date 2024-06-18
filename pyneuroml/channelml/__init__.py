@@ -13,17 +13,15 @@ File: pyneuroml/channelml/__init__.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import argparse
 import logging
-import typing
 import pathlib
-from lxml.etree import parse, XSLT, tostring
-
-
-from pyneuroml.utils.cli import build_namespace
+import typing
 from typing import Optional
 
+from lxml.etree import XSLT, parse, tostring
+
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -53,7 +51,7 @@ def channelml2nml(
     """
     try:
         dom = parse(channelmlfile)
-    except:
+    except Exception:
         logger.error(f"Cannot parse channelml file: {channelmlfile}")
         return None
     if not xsltfile:
@@ -62,7 +60,7 @@ def channelml2nml(
 
     try:
         xslt = parse(xsltfile)
-    except:
+    except Exception:
         logger.error(f"Cannot parse XSL: {xsltfile}")
         return None
 

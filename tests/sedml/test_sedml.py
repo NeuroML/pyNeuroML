@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from pyneuroml import sedml
 import os
 import stat
+
+from pyneuroml import sedml
 
 
 def test_sedml_validate_a_valid_file():
@@ -28,7 +29,7 @@ def test_sedml_validate_missing_sourcefile():
 
 def test_sedml_validate_missing_inputfile():
     try:
-        result = sedml.validate_sedml_files(["tests/sedml/test_data/nonexistent_file"])
+        sedml.validate_sedml_files(["tests/sedml/test_data/nonexistent_file"])
     except FileNotFoundError:
         return
     except Exception:
@@ -43,7 +44,7 @@ def test_sedml_validate_no_read_access():
     # Remove read permission
     os.chmod(fname, 0)
     try:
-        result = sedml.validate_sedml_files([fname])
+        sedml.validate_sedml_files([fname])
     except IOError:
         os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
         return
@@ -60,7 +61,7 @@ def test_sedml_validate_valueerror_on_no_inputfiles():
     "ensure it raises a ValueError exception for failing to provide any files"
 
     try:
-        result = sedml.validate_sedml_files([])
+        sedml.validate_sedml_files([])
     except ValueError:
         return
     except Exception:

@@ -34,6 +34,7 @@ def read_neuroml2_file(
     already_included: Optional[list] = None,
     optimized: bool = False,
     check_validity_pre_include: bool = False,
+    fix_external_morphs_biophys: bool = False,
 ) -> NeuroMLDocument:
     """Read a NeuroML2 file into a `nml.NeuroMLDocument`
 
@@ -49,6 +50,8 @@ def read_neuroml2_file(
     :type optimized: bool
     :param check_validity_pre_include: check each file for validity before including
     :type check_validity_pre_include: bool
+    :param fix_external_morphs_biophys: if a cell element has a morphology (or biophysicalProperties) attribute, as opposed to a subelement morphology/biophysicalProperties, substitute the external element into the cell element for ease of access
+    :type fix_external_morphs_biophys: bool
     :returns: nml.NeuroMLDocument object containing the read NeuroML file(s)
     """
     if already_included is None:
@@ -125,7 +128,12 @@ def read_neuroml2_file(
         for include in incl_to_remove:
             nml2_doc.includes.remove(include)
 
+        if fix_external_morphs_biophys:
+            from neuroml.utils import fix_external_morphs_biophys_in_cell
+            fix_external_morphs_biophys_in_cell(nml2_doc)
+
     return nml2_doc
+
 
 
 def write_neuroml2_file(
