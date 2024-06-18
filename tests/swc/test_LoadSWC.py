@@ -1,10 +1,7 @@
 import unittest
-from io import StringIO
 from unittest.mock import patch
 
-import networkx as nx
-
-from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode, load_swc
+from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode
 
 
 class TestSWCNode(unittest.TestCase):
@@ -59,3 +56,20 @@ class TestSWCGraph(unittest.TestCase):
         self.assertEqual(self.tree.get_children(self.node2.id), [self.node3])
         with self.assertRaises(ValueError):
             self.tree.get_parent(4)
+
+    def test_get_descendants(self):
+        self.assertEqual(
+            self.tree.get_descendants(self.node1.id),
+            [self.node2, self.node3, self.node4],
+        )
+        self.assertEqual(
+            self.tree.get_descendants(self.node2.id), [self.node3, self.node4]
+        )
+        self.assertEqual(self.tree.get_descendants(self.node3.id), [self.node4])
+        self.assertEqual(self.tree.get_descendants(self.node4.id), [])
+        with self.assertRaises(ValueError):
+            self.tree.get_descendants(5)
+
+
+if __name__ == "__main__":
+    unittest.main()
