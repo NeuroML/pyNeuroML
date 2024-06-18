@@ -1,4 +1,5 @@
 import re
+from math import sqrt
 
 import networkx as nx
 
@@ -82,7 +83,7 @@ class SWCGraph:
     ]
 
     def __init__(self):
-        self.nodes = {}
+        self.nodes = []
         self.root = None  # New attribute to store the root node
         self.metadata = {}
 
@@ -96,18 +97,10 @@ class SWCGraph:
         Raises:
             ValueError: If a node with the same ID already exists in the graph.
         """
-        if node.id in self.nodes:
+        if any(existing_node.id == node.id for existing_node in self.nodes):
             raise ValueError(f"Duplicate node ID: {node.id}")
-        self.nodes[node.id] = node
-        if node.parent_id == -1:
-            if self.root is not None:
-                raise ValueError("Multiple root nodes found")
-            self.root = node
-        elif node.parent_id in self.nodes:
-            parent = self.nodes[node.parent_id]
-            parent.children.append(node.id)
-        else:
-            print(f"Warning: Parent {node.parent_id} not found for node {node.id}")
+
+        self.nodes.append(node)
 
     def add_metadata(self, key, value):
         """
@@ -123,96 +116,41 @@ class SWCGraph:
         if key in self.HEADER_FIELDS:
             self.metadata[key] = value
 
-    def get_segment_adjacency_list(self):
-        """
-        Get the adjacency list of all segments (nodes) in the SWC graph.
-
-        Returns a dict where each key is a parent node, and the value is the
-        list of its child nodes.
-
-        Nodes without children (leaf nodes) are not included as parents in the
-        adjacency list.
-
-        This method also stores the computed adjacency list in
-        `self.adjacency_list` for future use by other methods.
-
-        `self.adjacency_list` is populated each time this method is run, to
-        ensure that users can regenerate it after making modifications to the
-        SWC graph. If the graph has not changed, one only needs to
-        populate it once and then re-use it as required.
-
-        Returns:
-            dict: A dictionary containing the adjacency list representation of the SWC graph.
-                  Keys are parent node objects, and values are lists of child node objects.
-        """
-        child_lists = {}
-        for node in self.nodes.values():
-            if node.parent_id != -1:
-                if node.parent_id not in child_lists:
-                    child_lists[node.parent_id] = []
-                child_lists[node.parent_id].append(node)
-
-        self.adjacency_list = child_lists
-        return child_lists
-
-    def get_graph(self):
-        """
-        Get a networkx DiGraph representation of the SWC graph.
-
-        The graph represents the neuronal morphology, where nodes correspond to
-        points in the SWC data, and edges represent connections between parent
-        and child nodes. The weight of each edge is the distance from the
-        proximal point of the parent segment to the point where the child segment
-        connects.
-
-        This method uses the adjacency list computed by `get_segment_adjacency_list`
-        to construct the graph.
-
-        This method also stores the computed graph in the `self.graph` attribute
-        for future use.
-
-        For more information on networkx routines and operations on graphs, see:
-        https://networkx.org/documentation/stable/reference/
-
-        Returns:
-            networkx.DiGraph: A directed graph representing the SWC data.
-        """
-        graph = nx.DiGraph()
-
-        # Populate the graph with nodes
-        for node in self.nodes.values():
-            graph.add_node(
-                node.id,
-                type=node.type,
-                x=node.x,
-                y=node.y,
-                z=node.z,
-                radius=node.radius,
-            )
-
-        # Populate the graph with edges using the adjacency list
-        adjacency_list = self.get_segment_adjacency_list()
-        for parent_id, children in adjacency_list.items():
-            parent_length = self.get_segment_length(parent_id)
-
-            for child in children:
-                fraction_along = child.fraction_along
-                distance_to_proximal = parent_length * fraction_along
-                graph.add_edge(parent_id, child.id, weight=distance_to_proximal)
-
-        self.graph = graph
-        return graph
-
     def get_parent(self, node_id):
         """Get the parent of a given node."""
-        node = self.nodes.get(node_id)
+        node = next((n for n in self.nodes if n.id == node_id), None)
         if node is None:
             raise ValueError(f"Node {node_id} not found")
-        return self.nodes.get(node.parent_id) if node.parent_id != -1 else None
+        parent_id = node.parent_id
+        if parent_id == -1:
+            return None
+        else:
+            parent_node = next((n for n in self.nodes if n.id == parent_id), None)
+            return parent_node
+
+    def get_children(self, node_id):
+        """
+        Get a list of child nodes for a given node.
+
+        Args:
+            node_id (int): The ID of the node for which to get the children.
+
+        Returns:
+            list: A list of SWCNode objects representing the children of the given node.
+
+        Raises:
+            ValueError: If the provided node_id is not found in the graph.
+        """
+        children = [node for node in self.nodes if node.parent_id == node_id]
+        if not children:
+            raise ValueError(f"Node {node_id} not found or has no children")
+        return children
 
     def get_descendants(self, node_id):
         """Get all descendants of a given node."""
-        node = self.nodes.get(node_id)
+
+        node = next((n for n in self.nodes if n.id == node_id), None)
+        print(f"node_id: {node_id}, node: {node}")
         if node is None:
             raise ValueError(f"Node {node_id} not found")
 
@@ -220,7 +158,9 @@ class SWCGraph:
         queue = node.children.copy()
         while queue:
             child_id = queue.pop(0)
-            child = self.nodes[child_id]
+            child = next((n for n in self.nodes if n.id == child_id), None)
+            if child is None:
+                continue
             descendants.append(child)
             queue.extend(child.children)
         return descendants
@@ -236,7 +176,7 @@ class SWCGraph:
 
     def get_nodes_by_type(self, type_id):
         """Get all nodes of a specific type."""
-        return [node for node in self.nodes.values() if node.type == type_id]
+        return [node for node in self.nodes if node.type == type_id]
 
     def get_branch_points(self, *types):
         """Get all branch points (nodes with multiple children) of the given types."""
