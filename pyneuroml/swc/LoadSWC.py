@@ -155,36 +155,6 @@ class SWCGraph:
             raise ValueError(f"Node {node_id} not found or has no children")
         return children
 
-    def get_descendants(self, node_id):
-        """
-        Get all descendant nodes of a given node in the SWC tree.
-
-        Args:
-        node_id (int): The ID of the node for which to retrieve descendants.
-
-        Returns:
-        list: A list of Node objects representing the descendants of the given node.
-
-        Raises:
-        ValueError: If the specified node_id is not found in the SWC tree.
-        """
-
-        node = next((n for n in self.nodes if n.id == node_id), None)
-        print(f"node_id: {node_id}, node: {node}")
-        if node is None:
-            raise ValueError(f"Node {node_id} not found")
-
-        descendants = []
-        queue = node.children.copy()
-        while queue:
-            child_id = queue.pop(0)
-            child = next((n for n in self.nodes if n.id == child_id), None)
-            if child is None:
-                continue
-            descendants.append(child)
-            queue.extend(child.children)
-        return descendants
-
     def get_nodes_with_multiple_children(self, type_id=None):
         """Get all nodes that have more than one child, optionally filtering by type."""
         nodes = []
