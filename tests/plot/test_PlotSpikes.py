@@ -49,7 +49,7 @@ class TestPlotSpikes(BaseTestCase):
             pyplts.plot_spikes(
                 title=f"spikes from data - {data['name']}",
                 spike_data=[data],
-                show_plots_already=True,
+                show_plots_already=False,
                 save_spike_plot_to=f"spike-plot-test-{data['name']}.png",
             )
             self.assertIsFile(f"spike-plot-test-{data['name']}.png")
@@ -62,7 +62,7 @@ class TestPlotSpikes(BaseTestCase):
         pyplts.plot_spikes(
             title="spikes from data",
             spike_data=self.spike_data,
-            show_plots_already=True,
+            show_plots_already=False,
             save_spike_plot_to="spike-plot-test-multi.png",
         )
         self.assertIsFile("spike-plot-test-multi.png")
@@ -93,7 +93,7 @@ class TestPlotSpikes(BaseTestCase):
             filelist,
             format_="id_t",
             title="spikes from data files",
-            show_plots_already=True,
+            show_plots_already=False,
             save_spike_plot_to="spike-plot-from-file-test.png",
         )
 
@@ -199,7 +199,7 @@ class TestPlotSpikes(BaseTestCase):
         pyplts.plot_spikes_from_lems_file(
             lems_file_name=lems_file.name,
             base_dir=".",
-            show_plots_already=True,
+            show_plots_already=False,
             save_spike_plot_to="spikes-test-from-lems-file.png",
             rates=False,
             # rate_window=50,
@@ -215,7 +215,7 @@ class TestPlotSpikes(BaseTestCase):
     @unittest.skip("Skipping until write_spike_data_to_hdf5 is implemented")
     def test_plot_spikes_from_sonata_file(self):
         """Test the plot_spikes function with a SONATA-format HDF5 file."""
-        spike_data = [
+        spike_data = [  # noqa
             {
                 "name": "Population1",
                 "times": np.array([1.0, 2.0, 3.0]),
