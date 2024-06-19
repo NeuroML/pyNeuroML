@@ -150,36 +150,74 @@ class SWCGraph:
         Raises:
             ValueError: If the provided node_id is not found in the graph.
         """
-        children = [node for node in self.nodes if node.parent_id == node_id]
-        if not children:
+        parent_node = next((node for node in self.nodes if node.id == node_id), None)
+        if parent_node is None:
             raise ValueError(f"Node {node_id} not found or has no children")
+
+        children = [node for node in self.nodes if node.parent_id == node_id]
+        parent_node.children = children
         return children
 
     def get_nodes_with_multiple_children(self, type_id=None):
-        """Get all nodes that have more than one child, optionally filtering by type."""
+        """
+        Get a list of child nodes for a given node.
+
+        Args:
+        node_id (int): The ID of the node for which to get the children.
+
+        Returns:
+        list: A list of SWCNode objects representing the children of the given node.
+
+        Raises:
+        ValueError: If the provided node_id is not found in the graph.
+        """
         nodes = []
-        for node in self.nodes.values():
-            if len(node.children) > 1:
-                if type_id is None or node.type == type_id:
-                    nodes.append(node)
+        if type_id is None:
+            # If type_id is None, return all nodes with multiple children
+            nodes = [node for node in self.nodes if len(node.children) > 1]
+        else:
+            # If type_id is provided, filter nodes by type and multiple children
+            nodes = [
+                node
+                for node in self.nodes
+                if len(node.children) > 1 and node.type == type_id
+            ]
+            print(f"Found {len(nodes)} nodes of type {type_id} with multiple children.")
         return nodes
 
     def get_nodes_by_type(self, type_id):
-        """Get all nodes of a specific type."""
+        """
+        Get a list of nodes of a specific type.
+
+        Args:
+            type_id (int): The type ID of the nodes to retrieve.
+
+        Returns:
+            list: A list of SWCNode objects that have the specified type ID.
+        """
         return [node for node in self.nodes if node.type == type_id]
 
     def get_branch_points(self, *types):
-        """Get all branch points (nodes with multiple children) of the given types."""
-        nodes = []
-        for type_id in types:
-            nodes.extend(self.get_nodes_with_multiple_children(type_id))
-        return nodes
+        """
+        Get all branch points (nodes with multiple children) of the given types.
 
-    def has_soma_node(self):
+        Args:
+           *types (int): One or more node type IDs to filter the branch points by.
+              If no types are provided, all branch points in the graph will be returned.
+
+        Returns:
+            list: A list of SWCNode objects that represent branch points (nodes with
+                  multiple children) of the specified types. If no types are provided,
+                  all branch points in the graph are returned.
         """
-        Check if the graph contains at least one soma node (type 1).
-        """
-        return any(node.type == SWCNode.SOMA for node in self.nodes.values())
+        nodes = []
+        if not types:
+            nodes = self.get_nodes_with_multiple_children()
+        else:
+            for type_id in types:
+                nodes.extend(self.get_nodes_with_multiple_children(type_id))
+
+        return nodes
 
 
 def parse_header(line):
