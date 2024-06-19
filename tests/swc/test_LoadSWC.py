@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 
 from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode
 
