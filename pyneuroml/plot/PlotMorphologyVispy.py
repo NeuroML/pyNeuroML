@@ -469,7 +469,7 @@ def plot_interactive_3D(
     del cell_id_vs_cell
 
     if len(positions) > 1:
-        if upright == True:
+        if upright:
             raise AttributeError("Argument upright can be True only for single cells")
         only_pos = []
         for posdict in positions.values():
