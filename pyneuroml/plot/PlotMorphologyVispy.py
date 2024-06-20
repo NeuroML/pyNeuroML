@@ -469,6 +469,8 @@ def plot_interactive_3D(
     del cell_id_vs_cell
 
     if len(positions) > 1:
+        if upright == True:
+            raise AttributeError("Argument upright can be True only for single cells")
         only_pos = []
         for posdict in positions.values():
             for poss in posdict.values():
@@ -872,6 +874,11 @@ def plot_3D_cell_morphology(
         highlight_spec = {}
     logging.debug("highlight_spec is " + str(highlight_spec))
 
+    view_center = None
+    if upright:
+        cell = make_cell_upright(cell)
+        current_canvas = current_view = None
+        view_center = [0, 0, 0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -884,11 +891,6 @@ def plot_3D_cell_morphology(
         axon_segs = cell.get_all_segments_in_group("axon_group")
     except Exception:
         axon_segs = []
-    view_center = None
-    if upright:
-        cell = make_cell_upright(cell)
-        current_canvas = current_view = None
-        view_center = [0, 0, 0]
 
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
@@ -1210,8 +1212,11 @@ def plot_3D_schematic(
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
 
+    view_center = None
     if upright:
         cell = make_cell_upright(cell)
+        current_canvas = current_view = None
+        view_center = [0, 0, 0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -1235,12 +1240,6 @@ def plot_3D_schematic(
     ord_segs = cell.get_ordered_segments_in_groups(
         segment_groups, check_parentage=False
     )
-
-    view_center = None
-    if upright:
-        cell = make_cell_upright(cell)
-        current_canvas = current_view = None
-        view_center = [0, 0, 0]
 
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
