@@ -1,4 +1,5 @@
 import re
+import sys
 
 
 class SWCNode:
@@ -56,6 +57,13 @@ class SWCNode:
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid data types in SWC line: {e}")
 
+    def to_string(self):
+        """
+        Returns a human-readable string representation of the node.
+        """
+        type_name = self.TYPE_NAMES.get(self.type, f"Custom_{self.type}")
+        return f"Node ID: {self.id}, Type: {type_name}, Coordinates: ({self.x:.2f}, {self.y:.2f}, {self.z:.2f}), Radius: {self.radius:.2f}, Parent ID: {self.parent_id}"
+
     def __repr__(self):
         type_name = self.TYPE_NAMES.get(self.type, f"Custom_{self.type}")
         return f"SWCNode(id={self.id}, type={type_name}, x={self.x:.2f}, y={self.y:.2f}, z={self.z:.2f}, radius={self.radius:.2f}, parent_id={self.parent_id})"
@@ -98,6 +106,13 @@ class SWCGraph:
             raise ValueError(f"Duplicate node ID: {node.id}")
 
         self.nodes.append(node)
+
+        if node.parent_id != -1:
+            parent = next((n for n in self.nodes if n.id == node.parent_id), None)
+            if parent:
+                parent.children.append(node)
+        else:
+            self.root = node
 
     def add_metadata(self, key, value):
         """
@@ -172,17 +187,14 @@ class SWCGraph:
         ValueError: If the provided node_id is not found in the graph.
         """
         nodes = []
-        if type_id is None:
-            # If type_id is None, return all nodes with multiple children
-            nodes = [node for node in self.nodes if len(node.children) > 1]
-        else:
-            # If type_id is provided, filter nodes by type and multiple children
-            nodes = [
-                node
-                for node in self.nodes
-                if len(node.children) > 1 and node.type == type_id
-            ]
+        for node in self.nodes:
+            children = self.get_children(node.id)
+            if len(children) > 1 and (type_id is None or node.type == type_id):
+                nodes.append(node)
+
+        if type_id is not None:
             print(f"Found {len(nodes)} nodes of type {type_id} with multiple children.")
+
         return nodes
 
     def get_nodes_by_type(self, type_id):
