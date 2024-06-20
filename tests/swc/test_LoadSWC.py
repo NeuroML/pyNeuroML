@@ -24,9 +24,7 @@ class TestSWCGraph(unittest.TestCase):
         self.tree = SWCGraph()
         self.node1 = SWCNode(1, 1, 0.0, 0.0, 0.0, 1.0, -1)
         self.node2 = SWCNode(2, 3, 1.0, 0.0, 0.0, 0.5, 1)
-        self.node2.fraction_along = 1.0
         self.node3 = SWCNode(3, 3, 2.0, 0.0, 0.0, 0.5, 2)
-        self.node3.fraction_along = 0.5
         self.tree.add_node(self.node1)
         self.tree.add_node(self.node2)
         self.tree.add_node(self.node3)
@@ -55,6 +53,11 @@ class TestSWCGraph(unittest.TestCase):
         self.assertEqual(self.tree.get_children(self.node2.id), [self.node3])
         with self.assertRaises(ValueError):
             self.tree.get_parent(4)
+
+    def test_get_nodes_with_multiple_children(self):
+        node4 = SWCNode(4, 3, 3.0, 0.0, 0.0, 0.5, 2)
+        self.tree.add_node(node4)
+        self.assertEqual(self.tree.get_nodes_with_multiple_children(), [self.node2])
 
 
 if __name__ == "__main__":
