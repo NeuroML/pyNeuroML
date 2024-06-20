@@ -59,6 +59,10 @@ class TestSWCGraph(unittest.TestCase):
         self.tree.add_node(node4)
         self.assertEqual(self.tree.get_nodes_with_multiple_children(), [self.node2])
 
+    def test_get_nodes_by_type(self):
+        self.assertEqual(self.tree.get_nodes_by_type(1), [self.node1])
+        self.assertEqual(self.tree.get_nodes_by_type(3), [self.node2, self.node3])
+
 
 if __name__ == "__main__":
     unittest.main()
