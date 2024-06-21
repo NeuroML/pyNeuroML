@@ -84,7 +84,7 @@ class SWCGraph:
     def __init__(self):
         self.nodes = []
         self.root = None  # New attribute to store the root node
-        self.metadata = {}
+        self.metadata = []
 
     def add_node(self, node):
         """
