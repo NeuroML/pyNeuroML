@@ -52,7 +52,6 @@ class SWCNode:
             self.radius = float(radius)
             self.parent_id = int(parent_id)
             self.children = []
-            self.fraction_along = 0.0
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid data types in SWC line: {e}")
 
@@ -62,10 +61,6 @@ class SWCNode:
         """
         type_name = self.TYPE_NAMES.get(self.type, f"Custom_{self.type}")
         return f"Node ID: {self.id}, Type: {type_name}, Coordinates: ({self.x:.2f}, {self.y:.2f}, {self.z:.2f}), Radius: {self.radius:.2f}, Parent ID: {self.parent_id}"
-
-    def __repr__(self):
-        type_name = self.TYPE_NAMES.get(self.type, f"Custom_{self.type}")
-        return f"SWCNode(id={self.id}, type={type_name}, x={self.x:.2f}, y={self.y:.2f}, z={self.z:.2f}, radius={self.radius:.2f}, parent_id={self.parent_id})"
 
 
 class SWCGraph:
