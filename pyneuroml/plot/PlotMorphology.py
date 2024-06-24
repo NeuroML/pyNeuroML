@@ -91,7 +91,7 @@ def process_args():
     parser.add_argument(
         "-showAxes",
         type=str,
-        metavar="<axes placement: origin, bottom left, bottom right>",
+        metavar="<axes placement: origin, bottom left>",
         default=DEFAULTS["showAxes"],
         help="Whether to show reference X, Y, Z axes",
     )
