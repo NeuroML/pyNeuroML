@@ -36,6 +36,7 @@ DEFAULTS = {
     "plotType": "detailed",
     "theme": "light",
     "pointFraction": 0,
+    "upright": False,
 }  # type: dict[str, typing.Any]
 
 

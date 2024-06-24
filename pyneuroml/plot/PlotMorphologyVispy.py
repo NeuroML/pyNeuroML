@@ -17,7 +17,7 @@ from typing import Optional
 
 import numpy
 import progressbar
-from neuroml import Cell, NeuroMLDocument, SegmentGroup
+from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
 
@@ -384,6 +384,11 @@ def plot_interactive_3D(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+
+    :throws ValueError: if `plot_type` is not one of "detailed", "constant",
+        "schematic", or "point"
+    :throws TypeError: if model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument
+    :throws AttributeError: if `upright=True` for non single-cell models
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
@@ -512,7 +517,7 @@ def plot_interactive_3D(
             view_max = list(numpy.array(pos))
 
     if upright:
-        view_center = [0, 0, 0]
+        view_center = [0.0, 0.0, 0.0]
     else:
         view_center = None
 
@@ -745,6 +750,7 @@ def make_cell_upright(
     if z_angle < 0:
         z_angle += numpy.pi
 
+    logger.info("Making cell upright for visualization")
     cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0, 0, 0])
     cell = rotate_cell(
         cell, 0, y_angle, z_angle, "yzx", relative_to_soma=False, inplace=inplace
@@ -878,7 +884,7 @@ def plot_3D_cell_morphology(
     if upright:
         cell = make_cell_upright(cell)
         current_canvas = current_view = None
-        view_center = [0, 0, 0]
+        view_center = [0.0, 0.0, 0.0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -1216,7 +1222,7 @@ def plot_3D_schematic(
     if upright:
         cell = make_cell_upright(cell)
         current_canvas = current_view = None
-        view_center = [0, 0, 0]
+        view_center = [0.0, 0.0, 0.0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
