@@ -101,7 +101,9 @@ def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
     view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
-    axes_pos: typing.Optional[typing.List] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     axes_length: float = 100,
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
@@ -119,8 +121,17 @@ def create_new_vispy_canvas(
     :type view_center: [float, float, float]
     :param title: title of plot
     :type title: str
-    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
-    :type axes_pos: [float, float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+            - "bottom right": automatically added at bottom right
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param axes_length: length of axes
     :type axes_length: float
     :param axes_width: width of axes lines
@@ -163,51 +174,78 @@ def create_new_vispy_canvas(
     cam_index = 1
     view.camera = cams[cam_index]
 
+    calc_axes_pos = None  # type: typing.Optional[typing.Union[typing.List[float], typing.List[int]]]
     if view_min is not None and view_max is not None:
+        x_width = abs(view_min[0] - view_max[0])
+        y_width = abs(view_min[1] - view_max[1])
+        z_width = abs(view_min[2] - view_max[2])
+
+        xrange = (
+            (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
+            if x_width > 0
+            else (-100, 100)
+        )
+        yrange = (
+            (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
+            if y_width > 0
+            else (-100, 100)
+        )
+        zrange = (
+            (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
+            if z_width > 0
+            else (-100, 100)
+        )
+        logger.debug(f"Ranges: {xrange}, {yrange}, {zrange}")
+        logger.debug(f"Widths: {x_width}, {y_width}, {z_width}")
+
         for acam in cams:
-            x_width = abs(view_min[0] - view_max[0])
-            y_width = abs(view_min[1] - view_max[1])
-            z_width = abs(view_min[2] - view_max[2])
-
-            xrange = (
-                (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
-                if x_width > 0
-                else (-100, 100)
-            )
-            yrange = (
-                (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
-                if y_width > 0
-                else (-100, 100)
-            )
-            zrange = (
-                (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
-                if z_width > 0
-                else (-100, 100)
-            )
-            logger.debug(f"{xrange}, {yrange}, {zrange}")
-
             acam.set_range(x=xrange, y=yrange, z=zrange)
 
         # Calculate view center if it is None
         if view_center is None:
             view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
         logger.debug(f"Center is {view_center}")
+
         cam1.center = [view_center[0], view_center[1]]
         cam2.center = view_center
         cam3.center = view_center
         cam4.center = view_center
 
+        # calculate origin of the axes
+        if axes_pos is not None and isinstance(axes_pos, str):
+            if axes_pos == "bottom left":
+                calc_axes_pos = [
+                    view_min[0] - pow(10, int(math.log(x_width, 10) - 1)),
+                    view_min[1] - pow(10, int(math.log(y_width, 10) - 1)),
+                    view_min[2] - pow(10, int(math.log(z_width, 10) - 1)),
+                ]
+            if axes_pos == "bottom right":
+                calc_axes_pos = (
+                    [
+                        view_min[0] + pow(10, int(math.log(x_width, 10) - 1)),
+                        view_min[1] + pow(10, int(math.log(y_width, 10) - 1)),
+                        view_min[2] + pow(10, int(math.log(z_width, 10) - 1)),
+                    ],
+                )
+            if axes_pos == "origin":
+                calc_axes_pos = [0.0, 0.0, 0.0]
+        # if it's either None, or a point
+        else:
+            calc_axes_pos = axes_pos
+
+    logger.debug(f"Axes origin is {calc_axes_pos}")
+
     for acam in cams:
         acam.set_default_state()
 
-    if axes_pos is not None:
-        # can't get XYZAxis to work, so create manually
+    if calc_axes_pos is not None:
         points = [
-            axes_pos,  # origin
-            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
-            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
-            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
+            calc_axes_pos,  # origin
+            [calc_axes_pos[0] + axes_length, calc_axes_pos[1], calc_axes_pos[2]],
+            [calc_axes_pos[0], calc_axes_pos[1] + axes_length, calc_axes_pos[2]],
+            [calc_axes_pos[0], calc_axes_pos[1], calc_axes_pos[2] + axes_length],
         ]
+
         scene.Line(
             [points[0], points[1]],
             parent=view.scene,
@@ -268,7 +306,9 @@ def plot_interactive_3D(
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
-    axes_pos: typing.Optional[typing.List] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = "bottom left",
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
@@ -315,8 +355,17 @@ def plot_interactive_3D(
         morphology)
 
     :type plot_type: str
-    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
-    :type axes_pos: [float, float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+            - "bottom right": automatically added at bottom right
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
     :type title: str
     :param theme: theme to use (light/dark)
@@ -503,8 +552,6 @@ def plot_interactive_3D(
 
         view_min = center - numpy.array([x_len, y_len, z_len])
         view_max = center + numpy.array([x_len, y_len, z_len])
-        logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
-
     else:
         cell = list(pop_id_vs_cell.values())[0]
 
@@ -521,6 +568,10 @@ def plot_interactive_3D(
     else:
         view_center = None
 
+    logger.debug(
+        f"Before canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
+    )
+
     current_canvas, current_view = create_new_vispy_canvas(
         view_min,
         view_max,
@@ -530,7 +581,9 @@ def plot_interactive_3D(
         view_center=view_center,
     )
 
-    logger.debug(f"figure extents are: {view_min}, {view_max}")
+    logger.debug(
+        f"After canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
+    )
 
     # process plot_spec
     point_cells = []
@@ -768,7 +821,9 @@ def plot_3D_cell_morphology(
     current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
-    axes_pos: typing.Optional[typing.List] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     nogui: bool = True,
     plot_type: str = "constant",
     theme: str = "light",
@@ -815,8 +870,17 @@ def plot_3D_cell_morphology(
     :type min_width: float
     :param axis_min_max: min, max value of axes
     :type axis_min_max: [float, float]
-    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
-    :type axes_pos: [float, float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+            - "bottom right": automatically added at bottom right
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
     :type title: str
     :param verbose: show extra information (default: False)
@@ -1144,7 +1208,9 @@ def plot_3D_schematic(
     title: str = "",
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
-    axes_pos: typing.Optional[typing.List] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
@@ -1194,8 +1260,17 @@ def plot_3D_schematic(
     :type current_canvas: scene.SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
-    :param axes_pos: None by default: axes omitted, otherwise axes centered at given position with colours red, green, blue for x,y,z axis respecitvely
-    :type axes_pos: [float, float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+            - "bottom right": automatically added at bottom right
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param theme: theme to use (light/dark)
     :type theme: str
     :param color: color to use for segment groups with some special values:
