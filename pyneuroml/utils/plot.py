@@ -37,6 +37,7 @@ DEFAULTS = {
     "theme": "light",
     "pointFraction": 0,
     "upright": False,
+    "showAxes": None,
 }  # type: dict[str, typing.Any]
 
 

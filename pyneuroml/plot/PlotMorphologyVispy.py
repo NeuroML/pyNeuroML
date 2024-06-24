@@ -129,7 +129,6 @@ def create_new_vispy_canvas(
             - None: disable axes (default)
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
-            - "bottom right": automatically added at bottom right
 
     :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param axes_length: length of axes
@@ -137,6 +136,7 @@ def create_new_vispy_canvas(
     :param axes_width: width of axes lines
     :type axes_width: float
     :returns: scene, view
+    :raises ValueError: if incompatible value of `axes_pos` is passed
     """
     # vispy: full gl+ context is required for instanced rendering
     use(gl="gl+")
@@ -216,19 +216,13 @@ def create_new_vispy_canvas(
             if axes_pos == "bottom left":
                 calc_axes_pos = [
                     view_min[0] - pow(10, int(math.log(x_width, 10) - 1)),
-                    view_min[1] - pow(10, int(math.log(y_width, 10) - 1)),
+                    view_min[1],
                     view_min[2] - pow(10, int(math.log(z_width, 10) - 1)),
                 ]
-            if axes_pos == "bottom right":
-                calc_axes_pos = (
-                    [
-                        view_min[0] + pow(10, int(math.log(x_width, 10) - 1)),
-                        view_min[1] + pow(10, int(math.log(y_width, 10) - 1)),
-                        view_min[2] + pow(10, int(math.log(z_width, 10) - 1)),
-                    ],
-                )
-            if axes_pos == "origin":
+            elif axes_pos == "origin":
                 calc_axes_pos = [0.0, 0.0, 0.0]
+            else:
+                raise ValueError(f"Invalid value for axes_pos: {axes_pos}")
         # if it's either None, or a point
         else:
             calc_axes_pos = axes_pos
@@ -308,7 +302,7 @@ def plot_interactive_3D(
     plot_type: str = "constant",
     axes_pos: typing.Optional[
         typing.Union[typing.List[float], typing.List[int], str]
-    ] = "bottom left",
+    ] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
@@ -363,7 +357,6 @@ def plot_interactive_3D(
             - None: disable axes (default)
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
-            - "bottom right": automatically added at bottom right
 
     :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
@@ -878,7 +871,6 @@ def plot_3D_cell_morphology(
             - None: disable axes (default)
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
-            - "bottom right": automatically added at bottom right
 
     :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
@@ -1268,7 +1260,6 @@ def plot_3D_schematic(
             - None: disable axes (default)
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
-            - "bottom right": automatically added at bottom right
 
     :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param theme: theme to use (light/dark)

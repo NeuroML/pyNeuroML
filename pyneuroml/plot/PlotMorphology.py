@@ -89,6 +89,13 @@ def process_args():
         help="Level of detail to plot in",
     )
     parser.add_argument(
+        "-showAxes",
+        type=str,
+        metavar="<axes placement: origin, bottom left, bottom right>",
+        default=DEFAULTS["showAxes"],
+        help="Whether to show reference X, Y, Z axes",
+    )
+    parser.add_argument(
         "-theme",
         type=str,
         metavar="<theme: light, dark>",
@@ -161,6 +168,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             theme=a.theme,
             plot_spec={"point_fraction": a.point_fraction},
             upright=a.upright,
+            axes_pos=a.show_axes,
         )
     else:
         plot_2D(
