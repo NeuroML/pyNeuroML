@@ -20,6 +20,7 @@ from matplotlib.patches import Rectangle
 from matplotlib_scalebar.scalebar import ScaleBar
 from neuroml import Cell, NeuroMLDocument, Segment
 from neuroml.loaders import read_neuroml2_file
+from vispy.io.mesh import write_mesh
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -389,3 +390,184 @@ def load_minimal_morphplottable__model(
                 for acell in inc.cells:
                     acell.biophysical_properties = None
                     nml_model.add(acell)
+
+
+def extract_coordinates_and_diameter(point_with_diam):
+    """
+    Extracts coordinates and diameter from a Point3DWithDiam object.
+
+    Parameters:
+        point_with_diam (neuroml.nml.nml.Point3DWithDiam): Object representing a point with diameter.
+
+    Returns:
+        tuple: Tuple containing coordinates and diameter.
+    """
+    coords = (point_with_diam.x, point_with_diam.y, point_with_diam.z)
+    diam = point_with_diam.diameter
+    return coords, diam
+
+
+def save_meshdata_to_file(meshdata, filename, format="obj", overwrite=True):
+    """Save the generated meshdata to a file.
+
+    Parameters
+    ----------
+    meshdata : dict
+        Dictionary containing meshdata.
+    filename : str
+        Filename to save the meshdata.
+    format : str
+        File format for the saved file. Supported formats are ".obj" and ".gz"
+    overwrite : bool
+        Boolean value specifying if file already exists and needs to be overwritten
+    """
+    if not meshdata:
+        logger.warning("No meshdata to save.")
+        return
+
+    logger.info(f"Saving meshdata to file: {filename}")
+
+    # Create directories if they don't exist
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    vertices = []
+    faces = []
+    normals = []
+    texcoords = []
+
+    for key, segments in meshdata.items():
+        for segment in segments:
+            # Extract proximal and distal points with diameter
+            proximal_point_with_diam, distal_point_with_diam, color, _ = segment
+
+            # Extract coordinates and diameter for proximal and distal points
+            proximal_coords, proximal_diam = extract_coordinates_and_diameter(
+                proximal_point_with_diam
+            )
+            distal_coords, distal_diam = extract_coordinates_and_diameter(
+                distal_point_with_diam
+            )
+
+            # Add proximal and distal points to vertices
+            vertices.append(proximal_coords)
+            vertices.append(distal_coords)
+
+            # Calculate segment direction
+            direction = numpy.array(distal_coords) - numpy.array(proximal_coords)
+
+            # Calculate segment normal (assuming cylindrical segments)
+            segment_normal = numpy.cross(
+                direction, [0, 0, 1]
+            )  # Cross product with [0, 0, 1] for simplicity
+            segment_normal /= numpy.linalg.norm(segment_normal)  # Normalize
+
+            # Add segment normal for both proximal and distal points
+            normals.append(segment_normal)
+            normals.append(segment_normal)
+
+            # Add texcoords (assuming no texture coordinates)
+            texcoords.append([0, 0])
+            texcoords.append([0, 0])
+
+            # Add faces
+            num_vertices = len(vertices)
+            faces.append(
+                [num_vertices - 2, num_vertices - 1]
+            )  # Face indices for proximal and distal vertices
+
+    # Convert lists to numpy arrays
+    vertices = numpy.array(vertices)
+    faces = numpy.array(faces)
+    normals = numpy.array(normals)
+    texcoords = numpy.array(texcoords)
+
+    # Write meshdata to file
+    _write_mesh(
+        filename,
+        vertices,
+        faces,
+        normals=None,
+        texcoords=None,
+        format=format,
+        overwrite=overwrite,
+    )
+
+    logger.info("Meshdata saved successfully.")
+
+
+def _write_mesh(fname, vertices, faces, normals, texcoords, format, overwrite):
+    """Write mesh data to file using Vispy I/O functions.
+
+    Parameters
+    ----------
+    fname : str
+        Filename to write.
+    vertices : array
+        Vertices.
+    faces : array
+        Triangle face definitions.
+    normals : array | None
+        Normals for the mesh.
+    texcoords : array | None
+        Texture coordinates.
+    format : str
+        File format for the saved file. Supported formats are ".obj" and ".gz"
+    overwrite : bool
+        Boolean value specifying if file already exists and needs to be overwritten
+    """
+    # Check file extension
+    _, ext = os.path.splitext(fname)
+
+    # Check if the file format is supported by Vispy
+    if ext.lower() not in [".obj", ".stl", ".gz"]:
+        raise ValueError(f"Unsupported file format: {ext}")
+
+    # Write mesh data using Vispy I/O functions
+    write_mesh_vispy(fname, vertices, faces, normals, texcoords, format, overwrite)
+
+
+def write_mesh_vispy(fname, vertices, faces, normals, texcoords, format, overwrite):
+    """Write mesh data to file using Vispy's WavefrontWriter.
+
+    Parameters
+    ----------
+    fname : str
+        Filename to write.
+    vertices : array
+        Vertices.
+    faces : array
+        Triangle face definitions.
+    normals : array | None
+        Normals for the mesh.
+    texcoords : array | None
+        Texture coordinates.
+    format : str
+        File format for the saved file. Supported formats are ".obj" and ".gz"
+    overwrite : bool
+        Boolean value specifying if file already exists and needs to be overwritten
+    """
+    # Use Vispy's WavefrontWriter to write mesh data
+    try:
+        Nfaces = faces.size // 3
+        faces = faces.reshape((Nfaces, 3))
+        write_mesh(
+            fname,
+            vertices,
+            faces,
+            normals,
+            texcoords,
+            format=format,
+            overwrite=overwrite,
+            reshape_faces=True,
+        )
+    except:
+        write_mesh(
+            fname,
+            vertices,
+            faces,
+            normals,
+            texcoords,
+            format=format,
+            overwrite=overwrite,
+            reshape_faces=False,
+        )

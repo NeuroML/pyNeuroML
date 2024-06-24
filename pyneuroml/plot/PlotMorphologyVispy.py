@@ -15,6 +15,7 @@ import random
 import typing
 from typing import Optional
 
+import os
 import numpy
 import progressbar
 from neuroml import Cell, NeuroMLDocument, SegmentGroup
@@ -28,6 +29,7 @@ from pyneuroml.utils.plot import (
     get_cell_bound_box,
     get_next_hex_color,
     load_minimal_morphplottable__model,
+    save_meshdata_to_file,
 )
 
 logger = logging.getLogger(__name__)
@@ -255,6 +257,7 @@ def plot_interactive_3D(
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
+    save_to_file: typing.Optional[str] = None,
     plot_spec: typing.Optional[
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
@@ -303,6 +306,8 @@ def plot_interactive_3D(
     :type theme: str
     :param nogui: toggle showing gui (for testing only)
     :type nogui: bool
+    :param save_to_file: optional filename to save generated morphology to
+    :type save_to_file: str
     :param plot_spec: dictionary that allows passing some specifications that
         control how a plot is generated. This is mostly useful for large
         network plots where one may want to have a mix of full morphology and
@@ -639,6 +644,11 @@ def plot_interactive_3D(
                 return
 
             pbar_ctr += 1
+
+    if save_to_file:
+        abs_file = os.path.abspath(save_to_file)
+        save_meshdata_to_file(meshdata, abs_file)
+        print(f"Saved obj to {abs_file} of plot: {title}")
 
     if not nogui:
         pbar.finish()
