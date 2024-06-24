@@ -318,14 +318,16 @@ def get_cell_bound_box(cell: Cell):
     :returns: tuple (min view, max view)
 
     """
+    # first segment
     seg0: Segment = cell.morphology.segments[0]
     ex1 = numpy.array([seg0.distal.x, seg0.distal.y, seg0.distal.z])
+    # last segment
     seg1: Segment = cell.morphology.segments[-1]
     ex2 = numpy.array([seg1.distal.x, seg1.distal.y, seg1.distal.z])
     center = (ex1 + ex2) / 2
-    diff = numpy.linalg.norm(ex2 - ex1)
-    view_min = center - diff
-    view_max = center + diff
+    diff = abs(ex2 - ex1)
+    view_min = center - diff / 2
+    view_max = center + diff / 2
 
     return view_min, view_max
 
