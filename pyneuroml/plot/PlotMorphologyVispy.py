@@ -543,8 +543,8 @@ def plot_interactive_3D(
         z_max = numpy.max(pos_array[:, 2])
         z_len = abs(z_max - z_min)
 
-        view_min = center - numpy.array([x_len, y_len, z_len])
-        view_max = center + numpy.array([x_len, y_len, z_len])
+        view_min = center - numpy.array([x_len, y_len, z_len]) / 2
+        view_max = center + numpy.array([x_len, y_len, z_len]) / 2
     else:
         cell = list(pop_id_vs_cell.values())[0]
 
