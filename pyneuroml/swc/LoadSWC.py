@@ -1,6 +1,5 @@
 import logging
 import re
-import sys
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -15,16 +14,24 @@ class SWCNode:
     along the neuronal structure. For more information on the SWC format, see:
     https://swc-specification.readthedocs.io/en/latest/swc.html
 
-    Attributes:
-        UNDEFINED (int): ID representing an undefined node type.
-        SOMA (int): ID representing a soma node.
-        AXON (int): ID representing an axon node.
-        BASAL_DENDRITE (int): ID representing a basal dendrite node.
-        APICAL_DENDRITE (int): ID representing an apical dendrite node.
-        CUSTOM (int): ID representing a custom node type.
-        UNSPECIFIED_NEURITE (int): ID representing an unspecified neurite node.
-        GLIA_PROCESSES (int): ID representing a glia process node.
-        TYPE_NAMES (dict): A mapping of node type IDs to their string representations.
+    :param UNDEFINED: ID representing an undefined node type
+    :type UNDEFINED: int
+    :param SOMA: ID representing a soma node
+    :type SOMA: int
+    :param AXON: ID representing an axon node
+    :type AXON: int
+    :param BASAL_DENDRITE: ID representing a basal dendrite node
+    :type BASAL_DENDRITE: int
+    :param APICAL_DENDRITE: ID representing an apical dendrite node
+    :type APICAL_DENDRITE: int
+    :param CUSTOM: ID representing a custom node type
+    :type CUSTOM: int
+    :param UNSPECIFIED_NEURITE: ID representing an unspecified neurite node
+    :type UNSPECIFIED_NEURITE: int
+    :param GLIA_PROCESSES: ID representing a glia process node
+    :type GLIA_PROCESSES: int
+    :param TYPE_NAMES: A mapping of node type IDs to their string representations
+    :type TYPE_NAMES: dict
     """
 
     UNDEFINED = 0
