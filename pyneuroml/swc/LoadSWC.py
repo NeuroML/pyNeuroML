@@ -90,6 +90,7 @@ class SWCGraph:
         self.nodes = []
         self.root = None
         self.metadata = {}
+        self.logger = logging.getLogger(__name__)
 
     def add_node(self, node):
         """
@@ -100,18 +101,32 @@ class SWCGraph:
 
         Raises:
             ValueError: If a node with the same ID already exists in the graph.
+            ValueError: If multiple root nodes are detected.
         """
         if any(existing_node.id == node.id for existing_node in self.nodes):
+            self.logger.error(f"Duplicate node ID: {node.id}")
             raise ValueError(f"Duplicate node ID: {node.id}")
 
-        self.nodes.append(node)
-
-        if node.parent_id != -1:
+        if node.parent_id == -1:
+            if self.root is not None:
+                self.logger.error("Attempted to add multiple root nodes")
+                raise ValueError(
+                    "Multiple root nodes detected. Only one root node is allowed."
+                )
+            self.root = node
+            self.logger.debug(f"Root node set: {node}")
+        else:
             parent = next((n for n in self.nodes if n.id == node.parent_id), None)
             if parent:
                 parent.children.append(node)
-        else:
-            self.root = node
+                self.logger.debug(f"Node {node.id} added as child to node {parent.id}")
+            else:
+                self.logger.warning(
+                    f"Parent node {node.parent_id} not found for node {node.id}"
+                )
+
+        self.nodes.append(node)
+        self.logger.debug(f"New node added: {node}")
 
     def get_node(self, node_id):
         """
@@ -141,9 +156,13 @@ class SWCGraph:
 
         Note:
             Only valid header fields (as defined in HEADER_FIELDS) are added as metadata.
+            A warning is logged for unrecognized header fields.
         """
         if key in self.HEADER_FIELDS:
             self.metadata[key] = value
+            self.logger.debug(f"Added metadata: {key}: {value}")
+        else:
+            self.logger.warning(f"Ignoring unrecognized header field: {key}: {value}")
 
     def get_parent(self, node_id):
         """
@@ -184,16 +203,16 @@ class SWCGraph:
 
     def get_nodes_with_multiple_children(self, type_id=None):
         """
-        Get a list of child nodes for a given node.
+        Get nodes with multiple children, optionally filtered by type.
 
         Args:
-        node_id (int): The ID of the node for which to get the children.
+            type_id (int, optional): The type ID to filter nodes by. If None, all types are considered.
 
         Returns:
-        list: A list of SWCNode objects representing the children of the given node.
+            list: A list of SWCNode objects that have multiple children and match the specified type (if provided).
 
-        Raises:
-        ValueError: If the provided node_id is not found in the graph.
+        Note:
+            Prints the number of nodes found if a specific type_id is provided.
         """
         nodes = []
         for node in self.nodes:
@@ -244,6 +263,21 @@ class SWCGraph:
 
 
 def parse_header(line):
+    """
+    Parse a header line from an SWC file.
+
+    This function attempts to match the given line against known header fields
+    defined in SWCGraph.HEADER_FIELDS. It performs a case-insensitive match.
+
+    Args:
+        line (str): A single line from the SWC file header.
+
+    Returns:
+        Tuple[Optional[str], Optional[str]]: A tuple containing two elements:
+            - The matched header field name (or None if no match)
+            - The corresponding value (or None if no match)
+    """
+
     for field in SWCGraph.HEADER_FIELDS:
         match = re.match(rf"{field}\s+(.+)", line, re.IGNORECASE)
         if match:
