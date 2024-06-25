@@ -1,4 +1,9 @@
+import logging
 import re
+import sys
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class SWCNode:
@@ -108,6 +113,24 @@ class SWCGraph:
         else:
             self.root = node
 
+    def get_node(self, node_id):
+        """
+        Get a node from the graph by its ID.
+
+        Args:
+            node_id (int): The ID of the node to retrieve.
+
+        Returns:
+              SWCNode: The node with the specified ID.
+
+        Raises:
+              ValueError: If the specified node_id is not found in the SWC tree.
+        """
+        node = next((n for n in self.nodes if n.id == node_id), None)
+        if node is None:
+            raise ValueError(f"Node {node_id} not found in the SWC tree")
+        return node
+
     def add_metadata(self, key, value):
         """
         Add metadata to the SWC graph.
@@ -136,15 +159,10 @@ class SWCGraph:
         ValueError: If the specified node_id is not found in the SWC tree.
 
         """
-        node = next((n for n in self.nodes if n.id == node_id), None)
-        if node is None:
-            raise ValueError(f"Node {node_id} not found")
-        parent_id = node.parent_id
-        if parent_id == -1:
+        node = self.get_node(node_id)
+        if node.parent_id == -1:
             return None
-        else:
-            parent_node = next((n for n in self.nodes if n.id == parent_id), None)
-            return parent_node
+        return self.get_node(node.parent_id)
 
     def get_children(self, node_id):
         """
@@ -159,10 +177,7 @@ class SWCGraph:
         Raises:
             ValueError: If the provided node_id is not found in the graph.
         """
-        parent_node = next((node for node in self.nodes if node.id == node_id), None)
-        if parent_node is None:
-            raise ValueError(f"Node {node_id} not found or has no children")
-
+        parent_node = self.get_node(node_id)
         children = [node for node in self.nodes if node.parent_id == node_id]
         parent_node.children = children
         return children
@@ -216,14 +231,16 @@ class SWCGraph:
                   multiple children) of the specified types. If no types are provided,
                   all branch points in the graph are returned.
         """
-        nodes = []
+        branch_points = {}
+
         if not types:
-            nodes = self.get_nodes_with_multiple_children()
+            # If no types are specified, return all branch points under a None key
+            branch_points[None] = self.get_nodes_with_multiple_children()
         else:
             for type_id in types:
-                nodes.extend(self.get_nodes_with_multiple_children(type_id))
+                branch_points[type_id] = self.get_nodes_with_multiple_children(type_id)
 
-        return nodes
+        return branch_points
 
 
 def parse_header(line):
@@ -235,10 +252,23 @@ def parse_header(line):
 
 
 def load_swc(filename):
+    """
+    Load an SWC file and create an SWCGraph object.
+
+    Args:
+        filename (str): The path to the SWC file to be loaded.
+
+    Returns:
+        SWCGraph: An SWCGraph object representing the loaded SWC file.
+
+    Raises:
+        FileNotFoundError: If the specified file does not exist.
+        IOError: If there's an error reading the file.
+    """
     tree = SWCGraph()
     try:
         with open(filename, "r") as file:
-            for line in file:
+            for line_number, line in enumerate(file, 1):
                 line = line.strip()
                 if not line:
                     continue
@@ -250,17 +280,98 @@ def load_swc(filename):
 
                 parts = line.split()
                 if len(parts) != 7:
-                    print(f"Warning: Skipping invalid line: {line}")
+                    logger.warning(
+                        f"Line {line_number}: Invalid number of fields. Expected 7, got {len(parts)}. Skipping line: {line}"
+                    )
                     continue
 
-                node_id, type_id, x, y, z, radius, parent_id = parts
                 try:
+                    node_id, type_id, x, y, z, radius, parent_id = parts
                     node = SWCNode(node_id, type_id, x, y, z, radius, parent_id)
                     tree.add_node(node)
                 except ValueError as e:
-                    print(f"Warning: {e} in line: {line}")
+                    logger.warning(
+                        f"Line {line_number}: {str(e)}. Skipping line: {line}"
+                    )
 
-    except (FileNotFoundError, IOError) as e:
-        print(f"Error reading file {filename}: {e}")
+    except FileNotFoundError:
+        logger.error(f"File not found: {filename}")
+        raise
+    except IOError as e:
+        logger.error(f"Error reading file {filename}: {str(e)}")
+        raise
 
     return tree
+
+
+output_file = open("output.txt", "w")
+sys.stdout = output_file
+
+swc_graph = load_swc("H16-06-013-05-01-01_576675715_m_dendriteaxon.CNG.swc")
+
+# Access the metadata
+print("Metadata:")
+for key, value in swc_graph.metadata.items():
+    print(f"{key}: {value}")
+
+# Get all branch points
+all_branch_points = swc_graph.get_branch_points()
+print("\nAll branch points:")
+for node in all_branch_points[None]:  # None key for all branch points
+    print(node.to_string())
+
+# Get the parent of a node with ID 10
+parent_node = swc_graph.get_parent(10)
+if parent_node:
+    print(f"\nParent of node 10: {parent_node.to_string()}")
+else:
+    print("\nNode 10 has no parent")
+
+# Get the children of a node with ID 5
+children = swc_graph.get_children(5)
+if children:
+    print("\nChildren of node 5:")
+    for child in children:
+        print(child.to_string())
+else:
+    print("\nNode 5 has no children")
+
+parent_node = swc_graph.get_parent(6)
+if parent_node:
+    print(f"\nParent of node 6: {parent_node.to_string()}")
+else:
+    print("\nNode 6 has no parent")
+
+# Get branch points for specific types
+type_specific_branch_points = swc_graph.get_branch_points(
+    SWCNode.AXON, SWCNode.GLIA_PROCESSES
+)
+
+print("\nAxon branch points:")
+for node in type_specific_branch_points.get(SWCNode.AXON, []):
+    print(node.to_string())
+
+print("\nGlia process branch points:")
+for node in type_specific_branch_points.get(SWCNode.GLIA_PROCESSES, []):
+    print(node.to_string())
+
+print("\nAll nodes with multiple children:")
+all_multi_children = swc_graph.get_nodes_with_multiple_children()
+for node in all_multi_children:
+    children = swc_graph.get_children(node.id)
+    print(f"Node: {node.to_string()}")
+    print(f"  Number of children: {len(children)}")
+    print(f"  Children IDs: {[child.id for child in children]}")
+    print()
+
+print("\nSoma nodes with multiple children:")
+soma_multi_children = swc_graph.get_nodes_with_multiple_children(SWCNode.SOMA)
+for node in soma_multi_children:
+    children = swc_graph.get_children(node.id)
+    print(f"Node: {node.to_string()}")
+    print(f"  Number of children: {len(children)}")
+    print(f"  Children IDs: {[child.id for child in children]}")
+    print()
+
+output_file.close()
+sys.stdout = sys.__stdout__
