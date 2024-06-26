@@ -70,6 +70,9 @@ class SWCNode:
     def to_string(self):
         """
         Returns a human-readable string representation of the node.
+
+        :return: A string representation of the node
+        :rtype: str
         """
         type_name = self.TYPE_NAMES.get(self.type, f"Custom_{self.type}")
         return f"Node ID: {self.id}, Type: {type_name}, Coordinates: ({self.x:.2f}, {self.y:.2f}, {self.z:.2f}), Radius: {self.radius:.2f}, Parent ID: {self.parent_id}"
@@ -103,12 +106,9 @@ class SWCGraph:
         """
         Add a node to the SWC graph.
 
-        Args:
-            node (SWCNode): The node to be added.
-
-        Raises:
-            ValueError: If a node with the same ID already exists in the graph.
-            ValueError: If multiple root nodes are detected.
+        :param node: The node to be added
+        :type node: SWCNode
+        :raises ValueError: If a node with the same ID already exists in the graph or if multiple root nodes are detected
         """
         if any(existing_node.id == node.id for existing_node in self.nodes):
             self.logger.error(f"Duplicate node ID: {node.id}")
@@ -139,14 +139,11 @@ class SWCGraph:
         """
         Get a node from the graph by its ID.
 
-        Args:
-            node_id (int): The ID of the node to retrieve.
-
-        Returns:
-              SWCNode: The node with the specified ID.
-
-        Raises:
-              ValueError: If the specified node_id is not found in the SWC tree.
+        :param node_id: The ID of the node to retrieve
+        :type node_id: int
+        :return: The node with the specified ID
+        :rtype: SWCNode
+        :raises ValueError: If the specified node_id is not found in the SWC tree
         """
         node = next((n for n in self.nodes if n.id == node_id), None)
         if node is None:
@@ -157,14 +154,12 @@ class SWCGraph:
         """
         Add metadata to the SWC graph.
 
-        Args:
-            key (str): The key for the metadata.
-            value (str): The value for the metadata.
-
-        Note:
-            Only valid header fields (as defined in HEADER_FIELDS) are added as metadata.
-            A warning is logged for unrecognized header fields.
+        :param key: The key for the metadata
+        :type key: str
+        :param value: The value for the metadata
+        :type value: str
         """
+
         if key in self.HEADER_FIELDS:
             self.metadata[key] = value
             self.logger.debug(f"Added metadata: {key}: {value}")
@@ -175,16 +170,14 @@ class SWCGraph:
         """
         Get the parent node of a given node in the SWC tree.
 
-        Args:
-        node_id (int): The ID of the node for which to retrieve the parent.
-
-        Returns:
-        Node or None: The parent Node object if the node has a parent, otherwise None.
-
-        Raises:
-        ValueError: If the specified node_id is not found in the SWC tree.
+        :param node_id: The ID of the node for which to retrieve the parent
+        :type node_id: int
+        :return: The parent Node object if the node has a parent, otherwise None
+        :rtype: SWCNode or None
+        :raises ValueError: If the specified node_id is not found in the SWC tree
 
         """
+
         node = self.get_node(node_id)
         if node.parent_id == -1:
             return None
@@ -194,15 +187,14 @@ class SWCGraph:
         """
         Get a list of child nodes for a given node.
 
-        Args:
-            node_id (int): The ID of the node for which to get the children.
+        :param node_id: The ID of the node for which to get the children
+        :type node_id: int
+        :return: A list of SWCNode objects representing the children of the given node
+        :rtype: list
+        :raises ValueError: If the provided node_id is not found in the graph
 
-        Returns:
-            list: A list of SWCNode objects representing the children of the given node.
-
-        Raises:
-            ValueError: If the provided node_id is not found in the graph.
         """
+
         parent_node = self.get_node(node_id)
         children = [node for node in self.nodes if node.parent_id == node_id]
         parent_node.children = children
@@ -212,14 +204,10 @@ class SWCGraph:
         """
         Get nodes with multiple children, optionally filtered by type.
 
-        Args:
-            type_id (int, optional): The type ID to filter nodes by. If None, all types are considered.
-
-        Returns:
-            list: A list of SWCNode objects that have multiple children and match the specified type (if provided).
-
-        Note:
-            Prints the number of nodes found if a specific type_id is provided.
+        :param type_id: The type ID to filter nodes by (optional)
+        :type type_id: int or None
+        :return: A list of SWCNode objects that have multiple children and match the specified type (if provided)
+        :rtype: list
         """
         nodes = []
         for node in self.nodes:
@@ -236,11 +224,10 @@ class SWCGraph:
         """
         Get a list of nodes of a specific type.
 
-        Args:
-            type_id (int): The type ID of the nodes to retrieve.
-
-        Returns:
-            list: A list of SWCNode objects that have the specified type ID.
+        :param type_id: The type ID of the nodes to retrieve
+        :type type_id: int
+        :return: A list of SWCNode objects that have the specified type ID
+        :rtype: list
         """
         return [node for node in self.nodes if node.type == type_id]
 
@@ -248,14 +235,10 @@ class SWCGraph:
         """
         Get all branch points (nodes with multiple children) of the given types.
 
-        Args:
-           *types (int): One or more node type IDs to filter the branch points by.
-              If no types are provided, all branch points in the graph will be returned.
-
-        Returns:
-            list: A list of SWCNode objects that represent branch points (nodes with
-                  multiple children) of the specified types. If no types are provided,
-                  all branch points in the graph are returned.
+        :param types: One or more node type IDs to filter the branch points by
+        :type types: int
+        :return: A dictionary of lists of SWCNode objects that represent branch points of the specified types
+        :rtype: dict
         """
         branch_points = {}
 
@@ -273,16 +256,11 @@ def parse_header(line):
     """
     Parse a header line from an SWC file.
 
-    This function attempts to match the given line against known header fields
-    defined in SWCGraph.HEADER_FIELDS. It performs a case-insensitive match.
+    :param line: A single line from the SWC file header
+    :type line: str
+    :return: A tuple containing the matched header field name and corresponding value (or None if no match)
+    :rtype: tuple
 
-    Args:
-        line (str): A single line from the SWC file header.
-
-    Returns:
-        Tuple[Optional[str], Optional[str]]: A tuple containing two elements:
-            - The matched header field name (or None if no match)
-            - The corresponding value (or None if no match)
     """
 
     for field in SWCGraph.HEADER_FIELDS:
@@ -296,16 +274,14 @@ def load_swc(filename):
     """
     Load an SWC file and create an SWCGraph object.
 
-    Args:
-        filename (str): The path to the SWC file to be loaded.
-
-    Returns:
-        SWCGraph: An SWCGraph object representing the loaded SWC file.
-
-    Raises:
-        FileNotFoundError: If the specified file does not exist.
-        IOError: If there's an error reading the file.
+    :param filename: The path to the SWC file to be loaded
+    :type filename: str
+    :return: An SWCGraph object representing the loaded SWC file
+    :rtype: SWCGraph
+    :raises FileNotFoundError: If the specified file does not exist
+    :raises IOError: If there's an error reading the file
     """
+
     tree = SWCGraph()
     try:
         with open(filename, "r") as file:
