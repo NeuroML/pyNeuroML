@@ -17,12 +17,12 @@ from typing import Optional
 
 import numpy
 import progressbar
-from neuroml import Cell, NeuroMLDocument, SegmentGroup
+from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
 
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, rotate_cell, translate_cell_to_coords
 from pyneuroml.utils.plot import (
     DEFAULTS,
     get_cell_bound_box,
@@ -101,10 +101,13 @@ def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
     view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
-    axes_pos: typing.Optional[typing.List] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     axes_length: float = 100,
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
+    view_center: typing.Optional[typing.List[float]] = None,
 ):
     """Create a new vispy scene canvas with a view and optional axes lines
 
@@ -114,15 +117,26 @@ def create_new_vispy_canvas(
     :type view_min: [float, float, float]
     :param view_max: max view co-ordinates
     :type view_max: [float, float, float]
+    :param view_center: center view co-ordinates, calculated from view max/min if omitted
+    :type view_center: [float, float, float]
     :param title: title of plot
     :type title: str
-    :param axes_pos: position to draw axes at
-    :type axes_pos: [float, float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param axes_length: length of axes
     :type axes_length: float
     :param axes_width: width of axes lines
     :type axes_width: float
     :returns: scene, view
+    :raises ValueError: if incompatible value of `axes_pos` is passed
     """
     # vispy: full gl+ context is required for instanced rendering
     use(gl="gl+")
@@ -144,13 +158,13 @@ def create_new_vispy_canvas(
 
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
-    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
+    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom", up="y")
 
-    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
+    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable", up="y")
 
-    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
+    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball", up="y")
 
-    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
+    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly", up="y")
     # do not keep z up
     cam4.autoroll = False
 
@@ -160,54 +174,88 @@ def create_new_vispy_canvas(
     cam_index = 1
     view.camera = cams[cam_index]
 
+    calc_axes_pos = None  # type: typing.Optional[typing.Union[typing.List[float], typing.List[int]]]
     if view_min is not None and view_max is not None:
-        view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
+        x_width = abs(view_min[0] - view_max[0])
+        y_width = abs(view_min[1] - view_max[1])
+        z_width = abs(view_min[2] - view_max[2])
+
+        xrange = (
+            (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
+            if x_width > 0
+            else (-100, 100)
+        )
+        yrange = (
+            (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
+            if y_width > 0
+            else (-100, 100)
+        )
+        zrange = (
+            (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
+            if z_width > 0
+            else (-100, 100)
+        )
+        logger.debug(f"Ranges: {xrange}, {yrange}, {zrange}")
+        logger.debug(f"Widths: {x_width}, {y_width}, {z_width}")
+
+        for acam in cams:
+            acam.set_range(x=xrange, y=yrange, z=zrange)
+
+        # Calculate view center if it is None
+        if view_center is None:
+            view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
         logger.debug(f"Center is {view_center}")
+
         cam1.center = [view_center[0], view_center[1]]
         cam2.center = view_center
         cam3.center = view_center
         cam4.center = view_center
 
-        for acam in cams:
-            x_width = abs(view_min[0] - view_max[0])
-            y_width = abs(view_min[1] - view_max[1])
-            z_width = abs(view_min[2] - view_max[2])
+        # calculate origin of the axes
+        if axes_pos is not None and isinstance(axes_pos, str):
+            if axes_pos == "bottom left":
+                calc_axes_pos = [
+                    view_min[0] - pow(10, int(math.log(x_width, 10) - 1)),
+                    view_min[1],
+                    view_min[2] - pow(10, int(math.log(z_width, 10) - 1)),
+                ]
+            elif axes_pos == "origin":
+                calc_axes_pos = [0.0, 0.0, 0.0]
+            else:
+                raise ValueError(f"Invalid value for axes_pos: {axes_pos}")
+        # if it's either None, or a point
+        else:
+            calc_axes_pos = axes_pos
 
-            xrange = (
-                (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
-                if x_width > 0
-                else (-100, 100)
-            )
-            yrange = (
-                (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
-                if y_width > 0
-                else (-100, 100)
-            )
-            zrange = (
-                (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
-                if z_width > 0
-                else (-100, 100)
-            )
-            logger.debug(f"{xrange}, {yrange}, {zrange}")
-
-            acam.set_range(x=xrange, y=yrange, z=zrange)
+    logger.debug(f"Axes origin is {calc_axes_pos}")
 
     for acam in cams:
         acam.set_default_state()
 
-    if axes_pos is not None:
-        # can't get XYZAxis to work, so create manually
+    if calc_axes_pos is not None:
         points = [
-            axes_pos,  # origin
-            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
-            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
-            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
+            calc_axes_pos,  # origin
+            [calc_axes_pos[0] + axes_length, calc_axes_pos[1], calc_axes_pos[2]],
+            [calc_axes_pos[0], calc_axes_pos[1] + axes_length, calc_axes_pos[2]],
+            [calc_axes_pos[0], calc_axes_pos[1], calc_axes_pos[2] + axes_length],
         ]
+
         scene.Line(
-            points,
-            connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
+            [points[0], points[1]],
             parent=view.scene,
-            color=VISPY_THEME[theme]["fg"],
+            color="red",
+            width=axes_width,
+        )
+        scene.Line(
+            [points[0], points[2]],
+            parent=view.scene,
+            color="green",
+            width=axes_width,
+        )
+        scene.Line(
+            [points[0], points[3]],
+            parent=view.scene,
+            color="blue",
             width=axes_width,
         )
 
@@ -252,6 +300,9 @@ def plot_interactive_3D(
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
@@ -260,6 +311,7 @@ def plot_interactive_3D(
     ] = None,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
+    upright: bool = False,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -297,6 +349,16 @@ def plot_interactive_3D(
         morphology)
 
     :type plot_type: str
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
     :type title: str
     :param theme: theme to use (light/dark)
@@ -356,6 +418,19 @@ def plot_interactive_3D(
         If you have a good GPU, you can increase both these values to get more
         detailed visualizations
     :type precision: (int, int)
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
+
+    :throws ValueError: if `plot_type` is not one of "detailed", "constant",
+        "schematic", or "point"
+    :throws TypeError: if model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument
+    :throws AttributeError: if `upright=True` for non single-cell models
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
@@ -441,6 +516,8 @@ def plot_interactive_3D(
     del cell_id_vs_cell
 
     if len(positions) > 1:
+        if upright:
+            raise AttributeError("Argument upright can be True only for single cells")
         only_pos = []
         for posdict in positions.values():
             for poss in posdict.values():
@@ -466,12 +543,11 @@ def plot_interactive_3D(
         z_max = numpy.max(pos_array[:, 2])
         z_len = abs(z_max - z_min)
 
-        view_min = center - numpy.array([x_len, y_len, z_len])
-        view_max = center + numpy.array([x_len, y_len, z_len])
-        logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
-
+        view_min = center - numpy.array([x_len, y_len, z_len]) / 2
+        view_max = center + numpy.array([x_len, y_len, z_len]) / 2
     else:
         cell = list(pop_id_vs_cell.values())[0]
+
         if cell is not None:
             view_min, view_max = get_cell_bound_box(cell)
         else:
@@ -480,11 +556,27 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_max = list(numpy.array(pos))
 
-    current_canvas, current_view = create_new_vispy_canvas(
-        view_min, view_max, title, theme=theme
+    if upright:
+        view_center = [0.0, 0.0, 0.0]
+    else:
+        view_center = None
+
+    logger.debug(
+        f"Before canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
     )
 
-    logger.debug(f"figure extents are: {view_min}, {view_max}")
+    current_canvas, current_view = create_new_vispy_canvas(
+        view_min,
+        view_max,
+        title,
+        axes_pos=axes_pos,
+        theme=theme,
+        view_center=view_center,
+    )
+
+    logger.debug(
+        f"After canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
+    )
 
     # process plot_spec
     point_cells = []
@@ -584,9 +676,11 @@ def plot_interactive_3D(
                         verbose=verbose,
                         current_canvas=current_canvas,
                         current_view=current_view,
+                        axes_pos=axes_pos,
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
+                        upright=upright,
                     )
                 elif (
                     plot_type == "detailed"
@@ -609,11 +703,13 @@ def plot_interactive_3D(
                         verbose=verbose,
                         current_canvas=current_canvas,
                         current_view=current_view,
+                        axes_pos=axes_pos,
                         min_width=min_width,
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
                         highlight_spec=cell_highlight_spec,
+                        upright=upright,
                     )
 
             # if too many meshes, reduce precision and retry, recursively
@@ -628,12 +724,14 @@ def plot_interactive_3D(
                     min_width=min_width,
                     verbose=verbose,
                     plot_type=plot_type,
+                    axes_pos=axes_pos,
                     title=title,
                     theme=theme,
                     nogui=nogui,
                     plot_spec=plot_spec,
                     precision=precision,
                     highlight_spec=highlight_spec,
+                    upright=upright,
                 )
                 # break the recursion, don't plot in the calling method
                 return
@@ -647,6 +745,65 @@ def plot_interactive_3D(
         app.run()
 
 
+def make_cell_upright(
+    cell: Cell = None,
+    inplace: bool = False,
+) -> Cell:
+    """Use cell's PCA to make it upright
+
+    .. versionadded:: 1.2.13
+
+    :param cell: cell object to translate
+    :type cell: neuroml.Cell
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+    :type inplace: bool
+    :returns: new neuroml.Cell object
+    :rtype: neuroml.Cell
+    """
+
+    # Get all segments' distal points
+    segment_points = []
+    segments_all = cell.morphology.segments
+    for segment in segments_all:
+        segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
+
+    coords = numpy.array(segment_points)
+    from sklearn.decomposition import PCA
+
+    # Get the PCA components
+    pca = PCA()
+    pca.fit(coords)
+
+    # Get the principal component axes
+    principal_axes = pca.components_
+    # Get the first principal component axis
+    first_pca = principal_axes[0]
+    # y angle needed to eliminate z component
+    y_angle = math.atan(first_pca[2] / first_pca[0])
+    rotation_y = numpy.array(
+        [
+            [math.cos(y_angle), 0, math.sin(y_angle)],
+            [0, 1, 0],
+            [-math.sin(y_angle), 0, math.cos(y_angle)],
+        ]
+    )
+    rotated_pca = numpy.dot(rotation_y, first_pca)
+
+    # z angle needed to eliminate x component
+    z_angle = -math.atan(rotated_pca[0] / rotated_pca[1])
+
+    if z_angle < 0:
+        z_angle += numpy.pi
+
+    logger.info("Making cell upright for visualization")
+    cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0, 0, 0])
+    cell = rotate_cell(
+        cell, 0, y_angle, z_angle, "yzx", relative_to_soma=False, inplace=inplace
+    )
+    return cell
+
+
 def plot_3D_cell_morphology(
     offset: typing.List[float] = [0, 0, 0],
     cell: Optional[Cell] = None,
@@ -657,12 +814,16 @@ def plot_3D_cell_morphology(
     current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     nogui: bool = True,
     plot_type: str = "constant",
     theme: str = "light",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    upright: bool = False,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -702,6 +863,16 @@ def plot_3D_cell_morphology(
     :type min_width: float
     :param axis_min_max: min, max value of axes
     :type axis_min_max: [float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
     :type title: str
     :param verbose: show extra information (default: False)
@@ -745,6 +916,14 @@ def plot_3D_cell_morphology(
           is used)
 
     :type highlight_spec: dict
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
     :raises: ValueError if `cell` is None
 
     """
@@ -757,6 +936,11 @@ def plot_3D_cell_morphology(
         highlight_spec = {}
     logging.debug("highlight_spec is " + str(highlight_spec))
 
+    view_center = None
+    if upright:
+        cell = make_cell_upright(cell)
+        current_canvas = current_view = None
+        view_center = [0.0, 0.0, 0.0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -773,7 +957,12 @@ def plot_3D_cell_morphology(
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
         current_canvas, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme
+            view_min,
+            view_max,
+            title,
+            theme=theme,
+            axes_pos=axes_pos,
+            view_center=view_center,
         )
 
     if color == "Groups":
@@ -1011,10 +1200,14 @@ def plot_3D_schematic(
     title: str = "",
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
+    upright: bool = False,
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -1059,6 +1252,16 @@ def plot_3D_schematic(
     :type current_canvas: scene.SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param theme: theme to use (light/dark)
     :type theme: str
     :param color: color to use for segment groups with some special values:
@@ -1069,10 +1272,23 @@ def plot_3D_schematic(
           dendrites, and soma segments
 
     :type color: str
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
 
+    view_center = None
+    if upright:
+        cell = make_cell_upright(cell)
+        current_canvas = current_view = None
+        view_center = [0.0, 0.0, 0.0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -1097,11 +1313,15 @@ def plot_3D_schematic(
         segment_groups, check_parentage=False
     )
 
-    # if no canvas is defined, define a new one
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
         current_canvas, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme
+            view_min,
+            view_max,
+            title,
+            theme=theme,
+            axes_pos=axes_pos,
+            view_center=view_center,
         )
 
     # colors for cell
