@@ -67,7 +67,7 @@ class SWCNode:
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid data types in SWC line: {e}")
 
-    def to_string(self):
+    def __str__(self) -> str:
         """
         Returns a human-readable string representation of the node.
 
