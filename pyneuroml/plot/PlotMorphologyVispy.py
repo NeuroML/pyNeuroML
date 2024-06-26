@@ -17,7 +17,7 @@ from typing import Optional
 
 import numpy
 import progressbar
-from neuroml import Cell, NeuroMLDocument, Segment, SegmentGroup
+from neuroml import Cell, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
 
