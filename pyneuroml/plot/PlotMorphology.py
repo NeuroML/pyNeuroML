@@ -18,7 +18,7 @@ from typing import Optional
 import matplotlib
 import numpy
 from matplotlib import pyplot as plt
-from neuroml import Cell, NeuroMLDocument, SegmentGroup
+from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 from pyneuroml.pynml import read_neuroml2_file
@@ -301,6 +301,7 @@ def plot_2D(
     if verbose:
         print("Plotting %s" % nml_file)
 
+    # if it's a file, load it first
     if isinstance(nml_file, str):
         # load without optimization for older HDF5 API
         # TODO: check if this is required: must for MultiscaleISN
@@ -315,30 +316,35 @@ def plot_2D(
                 optimized=True,
             )
             load_minimal_morphplottable__model(nml_model, nml_file)
-
-        if title is None:
-            try:
-                title = f"{nml_model.networks[0].id} from {nml_file}"
-            except IndexError:
-                title = f"{nml_model.cells[0].id} from {nml_file}"
-
-    elif isinstance(nml_file, Cell):
-        nml_model = NeuroMLDocument(id="newdoc")
-        nml_model.add(nml_file)
-        if title is None:
-            title = f"{nml_model.cells[0].id}"
-
-    elif isinstance(nml_file, NeuroMLDocument):
-        nml_model = nml_file
-        if title is None:
-            try:
-                title = f"{nml_model.networks[0].id} from {nml_file.id}"
-            except IndexError:
-                title = f"{nml_model.cells[0].id} from {nml_file.id}"
+            # note that from this point, the model object is not necessarily valid,
+            # because we've removed lots of bits.
     else:
-        raise TypeError(
-            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        nml_model = nml_file
+
+    # if it isn't a NeuroMLDocument, create one
+    if isinstance(nml_model, Cell):
+        logger.info("Got a cell")
+        plottable_nml_model = NeuroMLDocument(id="newdoc")
+        plottable_nml_model.add(nml_model)
+        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        if title is None:
+            title = f"{plottable_nml_model.cells[0].id}"
+
+    # if it's only a cell, add it to an empty cell in a document
+    elif isinstance(nml_model, Morphology):
+        logger.info("Received morph, adding to a dummy cell")
+        plottable_nml_model = NeuroMLDocument(id="newdoc")
+        nml_cell = plottable_nml_model.add(
+            Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
+        plottable_nml_model.add(nml_cell)
+        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        if title is None:
+            title = f"{plottable_nml_model.cells[0].id}"
+    elif isinstance(nml_model, NeuroMLDocument):
+        plottable_nml_model = nml_model
+        if title is None:
+            title = f"{plottable_nml_model.id}"
 
     (
         cell_id_vs_cell,
@@ -346,7 +352,7 @@ def plot_2D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(nml_model, verbose)
+    ) = extract_position_info(plottable_nml_model, verbose)
 
     if verbose:
         logger.debug(f"positions: {positions}")
