@@ -198,9 +198,7 @@ class SWCGraph:
 
         """
 
-        parent_node = self.get_node(node_id)
         children = [node for node in self.nodes if node.parent_id == node_id]
-        parent_node.children = children
         return children
 
     def get_nodes_with_multiple_children(self, type_id=None):
