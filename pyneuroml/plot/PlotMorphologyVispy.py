@@ -318,6 +318,7 @@ def plot_interactive_3D(
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
     upright: bool = False,
+    jupyter: bool = False,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -434,6 +435,8 @@ def plot_interactive_3D(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :param jupyter: Set to True to run visualizations in jupyter notebooks. Default is False
+    :type jupyter: bool
 
     :throws ValueError: if `plot_type` is not one of "detailed", "constant",
         "schematic", or "point"
@@ -450,6 +453,14 @@ def plot_interactive_3D(
 
     if verbose:
         logger.info(f"Visualising {nml_file}")
+
+    if not jupyter:
+        from IPython import get_ipython
+
+        ipython = get_ipython()
+        # Check if the IPython instance is using the kernel environment
+        if ipython and "IPKernelApp" in ipython.config:
+            logging.warning("Kernel detected. Try setting jupyter=True")
 
     # if it's a file, load it first
     if isinstance(nml_file, str):
@@ -695,6 +706,7 @@ def plot_interactive_3D(
                         meshdata=meshdata,
                         mesh_precision=precision[0],
                         upright=upright,
+                        jupyter=jupyter,
                     )
                 elif (
                     plot_type == "detailed"
@@ -724,6 +736,7 @@ def plot_interactive_3D(
                         mesh_precision=precision[0],
                         highlight_spec=cell_highlight_spec,
                         upright=upright,
+                        jupyter=jupyter,
                     )
 
             # if too many meshes, reduce precision and retry, recursively
@@ -746,18 +759,23 @@ def plot_interactive_3D(
                     precision=precision,
                     highlight_spec=highlight_spec,
                     upright=upright,
+                    jupyter=jupyter,
                 )
                 # break the recursion, don't plot in the calling method
-                return canvas
+                return
 
             pbar_ctr += 1
 
     if not nogui:
         pbar.finish()
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        current_canvas.show()
-        app.run()
-        return current_canvas
+        if jupyter:
+            from IPython.display import display
+
+            display(current_canvas)
+        else:
+            current_canvas.show()
+            app.run()
 
 
 def make_cell_upright(
@@ -839,6 +857,7 @@ def plot_3D_cell_morphology(
     mesh_precision: int = 2,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     upright: bool = False,
+    jupyter: bool = False,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -939,6 +958,8 @@ def plot_3D_cell_morphology(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :param jupyter: Set to True to run visualizations in jupyter notebooks. Default is False
+    :type jupyter: bool
     :raises: ValueError if `cell` is None
 
     """
@@ -950,6 +971,14 @@ def plot_3D_cell_morphology(
     if highlight_spec is None:
         highlight_spec = {}
     logging.debug("highlight_spec is " + str(highlight_spec))
+
+    if not jupyter:
+        from IPython import get_ipython
+
+        ipython = get_ipython()
+        # Check if the IPython instance is using the kernel environment
+        if ipython and "IPKernelApp" in ipython.config:
+            logging.warning("Kernel detected. Try setting jupyter=True")
 
     view_center = None
     if upright:
@@ -1074,9 +1103,13 @@ def plot_3D_cell_morphology(
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        current_canvas.show()
-        app.run()
-        return current_canvas
+        if jupyter:
+            from IPython.display import display
+
+            display(current_canvas)
+        else:
+            current_canvas.show()
+            app.run()
     return meshdata
 
 
@@ -1224,6 +1257,7 @@ def plot_3D_schematic(
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
     upright: bool = False,
+    jupyter: bool = False,
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -1296,9 +1330,19 @@ def plot_3D_schematic(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :param jupyter: Set to True to run visualizations in jupyter notebooks. Default is False
+    :type jupyter: bool
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
+
+    if not jupyter:
+        from IPython import get_ipython
+
+        ipython = get_ipython()
+        # Check if the IPython instance is using the kernel environment
+        if ipython and "IPKernelApp" in ipython.config:
+            logging.warning("Kernel detected. Try setting jupyter=True")
 
     view_center = None
     if upright:
@@ -1396,8 +1440,12 @@ def plot_3D_schematic(
 
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
-        app.run()
-        return current_canvas
+        if jupyter:
+            from IPython.display import display
+
+            display(current_canvas)
+        else:
+            app.run()
 
 
 def create_cylindrical_mesh(
