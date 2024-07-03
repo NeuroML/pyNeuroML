@@ -1,13 +1,14 @@
 """
-    A script to export SWC files from NeuroML <cell>s
+A script to export SWC files from NeuroML <cell>s
 
 """
 
+import logging
 import os
 import sys
-import logging
-from pyneuroml import pynml
+
 from pyneuroml import __version__ as pynmlv
+from pyneuroml.io import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ def convert_to_swc(nml_file_name, add_comments=False, target_dir=None):
     if target_dir is None:
         base_dir = os.path.dirname(os.path.realpath(nml_file_name))
         target_dir = base_dir
-    nml_doc = pynml.read_neuroml2_file(
+    nml_doc = read_neuroml2_file(
         nml_file_name, include_includes=True, verbose=False, optimized=True
     )
 
