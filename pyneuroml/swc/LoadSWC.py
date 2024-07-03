@@ -217,7 +217,11 @@ class SWCGraph:
                 nodes.append(node)
 
         if type_id is not None:
-            print(f"Found {len(nodes)} nodes of type {type_id} with multiple children.")
+            logger.debug(
+                f"Found {len(nodes)} nodes of type {type_id} with multiple children."
+            )
+        else:
+            logger.debug(f"Found {len(nodes)} nodes with multiple children.")
 
         return nodes
 
