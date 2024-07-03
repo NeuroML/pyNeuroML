@@ -746,7 +746,7 @@ def plot_interactive_3D(
                 logger.info(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
-                canvas = plot_interactive_3D(
+                plot_interactive_3D(
                     nml_file=plottable_nml_model,
                     min_width=min_width,
                     verbose=verbose,
