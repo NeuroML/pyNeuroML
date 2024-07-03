@@ -182,6 +182,7 @@ class SWCGraph:
 
         node = self.get_node(node_id)
         if node.parent_id == -1:
+            logger.info("Root node given, does not have a parent. Returning None")
             return None
         return self.get_node(node.parent_id)
 
