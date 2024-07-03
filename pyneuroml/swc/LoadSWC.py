@@ -3,6 +3,7 @@ import re
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class SWCNode:
