@@ -80,6 +80,8 @@ class SWCNode:
 
 
 class SWCGraph:
+    """Graph data structure holding SWCNode objects"""
+
     HEADER_FIELDS = [
         "ORIGINAL_SOURCE",
         "CREATURE",
