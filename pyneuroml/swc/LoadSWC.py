@@ -1,3 +1,10 @@
+"""
+Module for loading SWC files
+
+.. versionadded:: 1.3.4
+
+"""
+
 import logging
 import re
 import typing
