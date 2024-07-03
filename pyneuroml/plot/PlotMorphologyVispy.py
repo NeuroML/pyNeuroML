@@ -17,7 +17,7 @@ from typing import Optional
 
 import numpy
 import progressbar
-from neuroml import Cell, NeuroMLDocument, SegmentGroup
+from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
 
@@ -214,11 +214,17 @@ def create_new_vispy_canvas(
         # calculate origin of the axes
         if axes_pos is not None and isinstance(axes_pos, str):
             if axes_pos == "bottom left":
-                calc_axes_pos = [
-                    view_min[0] - pow(10, int(math.log(x_width, 10) - 1)),
-                    view_min[1],
-                    view_min[2] - pow(10, int(math.log(z_width, 10) - 1)),
-                ]
+                try:
+                    x_bit = view_min[0] - pow(10, int(math.log(x_width, 10) - 1))
+                except ValueError:
+                    x_bit = view_min[0]
+
+                try:
+                    z_bit = view_min[0] - pow(10, int(math.log(z_width, 10) - 1))
+                except ValueError:
+                    z_bit = view_min[0]
+
+                calc_axes_pos = [x_bit, view_min[1], z_bit]
             elif axes_pos == "origin":
                 calc_axes_pos = [0.0, 0.0, 0.0]
             else:
@@ -296,7 +302,7 @@ def create_new_vispy_canvas(
 
 
 def plot_interactive_3D(
-    nml_file: typing.Union[str, Cell, NeuroMLDocument],
+    nml_file: typing.Union[str, Cell, Morphology, NeuroMLDocument],
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
@@ -329,8 +335,10 @@ def plot_interactive_3D(
 
 
     :param nml_file: path to NeuroML cell file or
-        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
-    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell
+        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell`
+        or :py:class:`neuroml.Morphology` object
+    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell or
+        neuroml.Morphology
     :param min_width: minimum width for segments (useful for visualising very
         thin segments): default 0.8um
     :type min_width: float
@@ -443,6 +451,7 @@ def plot_interactive_3D(
     if verbose:
         logger.info(f"Visualising {nml_file}")
 
+    # if it's a file, load it first
     if isinstance(nml_file, str):
         # load without optimization for older HDF5 API
         # TODO: check if this is required: must for MultiscaleISN
@@ -457,30 +466,35 @@ def plot_interactive_3D(
                 optimized=True,
             )
             load_minimal_morphplottable__model(nml_model, nml_file)
-
-        if title is None:
-            try:
-                title = f"{nml_model.networks[0].id} from {nml_file}"
-            except IndexError:
-                title = f"{nml_model.cells[0].id} from {nml_file}"
-
-    elif isinstance(nml_file, Cell):
-        nml_model = NeuroMLDocument(id="newdoc")
-        nml_model.add(nml_file)
-        if title is None:
-            title = f"{nml_model.cells[0].id}"
-
-    elif isinstance(nml_file, NeuroMLDocument):
-        nml_model = nml_file
-        if title is None:
-            try:
-                title = f"{nml_model.networks[0].id} from {nml_file.id}"
-            except IndexError:
-                title = f"{nml_model.cells[0].id} from {nml_file.id}"
+            # note that from this point, the model object is not necessarily valid,
+            # because we've removed lots of bits.
     else:
-        raise TypeError(
-            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        nml_model = nml_file
+
+    # if it isn't a NeuroMLDocument, create one
+    if isinstance(nml_model, Cell):
+        logger.info("Got a cell")
+        plottable_nml_model = NeuroMLDocument(id="newdoc")
+        plottable_nml_model.add(nml_model)
+        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        if title is None:
+            title = f"{plottable_nml_model.cells[0].id}"
+
+    # if it's only a cell, add it to an empty cell in a document
+    elif isinstance(nml_model, Morphology):
+        logger.info("Received morph, adding to a dummy cell")
+        plottable_nml_model = NeuroMLDocument(id="newdoc")
+        nml_cell = plottable_nml_model.add(
+            Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
+        plottable_nml_model.add(nml_cell)
+        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        if title is None:
+            title = f"{plottable_nml_model.cells[0].id}"
+    elif isinstance(nml_model, NeuroMLDocument):
+        plottable_nml_model = nml_model
+        if title is None:
+            title = f"{plottable_nml_model.id}"
 
     (
         cell_id_vs_cell,
@@ -488,7 +502,7 @@ def plot_interactive_3D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(nml_model, verbose)
+    ) = extract_position_info(plottable_nml_model, verbose)
 
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
@@ -720,7 +734,7 @@ def plot_interactive_3D(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
                 plot_interactive_3D(
-                    nml_file=nml_model,
+                    nml_file=plottable_nml_model,
                     min_width=min_width,
                     verbose=verbose,
                     plot_type=plot_type,

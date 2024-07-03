@@ -279,6 +279,12 @@ class TestMorphologyPlot(BaseTestCase):
         )
 
     @pytest.mark.localonly
+    def test_3d_plotter_vispy_morph_only(self):
+        """Test plot_interactive_3D function with morphology only NeuroML document."""
+        nml_file = "tests/plot/L23-example/HL23VIP.morph.cell.nml"
+        plot_interactive_3D(nml_file)
+
+    @pytest.mark.localonly
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"

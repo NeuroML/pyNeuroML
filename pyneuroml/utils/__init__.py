@@ -25,12 +25,12 @@ from pathlib import Path
 
 import neuroml
 import numpy
-import pyneuroml.utils.misc
 from lems.model.model import Model
 from neuroml.loaders import read_neuroml2_file
+
+import pyneuroml.utils.misc
 from pyneuroml.errors import UNKNOWN_ERR
 from pyneuroml.utils.plot import get_next_hex_color
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -86,11 +86,19 @@ def extract_position_info(
     pop_id_vs_color = {}
     pop_id_vs_radii = {}
 
+    morph_elements = []
     cell_elements = []
     popElements = []
 
     cell_elements.extend(nml_model.cells)
     cell_elements.extend(nml_model.cell2_ca_poolses)
+
+    # handle morphology elements by adding them into dummy cells
+    ctr = 1
+    morph_elements.extend(nml_model.morphology)
+    for m in morph_elements:
+        cell_elements.append(neuroml.Cell(id=f"Dummy cell {ctr}", morphology=m))
+        ctr += 1
 
     # if the model does not include a network, plot all the cells in the
     # model in new dummy populations
