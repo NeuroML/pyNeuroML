@@ -733,7 +733,7 @@ def plot_interactive_3D(
                 logger.info(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
-                plot_interactive_3D(
+                canvas = plot_interactive_3D(
                     nml_file=plottable_nml_model,
                     min_width=min_width,
                     verbose=verbose,
@@ -748,7 +748,7 @@ def plot_interactive_3D(
                     upright=upright,
                 )
                 # break the recursion, don't plot in the calling method
-                return
+                return canvas
 
             pbar_ctr += 1
 
@@ -757,6 +757,7 @@ def plot_interactive_3D(
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
         current_canvas.show()
         app.run()
+        return current_canvas
 
 
 def make_cell_upright(
@@ -1075,6 +1076,7 @@ def plot_3D_cell_morphology(
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
         current_canvas.show()
         app.run()
+        return current_canvas
     return meshdata
 
 
@@ -1395,6 +1397,7 @@ def plot_3D_schematic(
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
         app.run()
+        return current_canvas
 
 
 def create_cylindrical_mesh(
