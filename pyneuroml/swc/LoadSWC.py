@@ -119,9 +119,8 @@ class SWCGraph:
 
         if node.parent_id == -1:
             if self.root is not None:
-                self.logger.error("Attempted to add multiple root nodes")
                 raise ValueError(
-                    "Multiple root nodes detected. Only one root node is allowed."
+                    "Attempted to add multiple root nodes. Only one root node is allowed."
                 )
             self.root = node
             self.logger.debug(f"Root node set: {node}")
@@ -131,7 +130,7 @@ class SWCGraph:
                 parent.children.append(node)
                 self.logger.debug(f"Node {node.id} added as child to node {parent.id}")
             else:
-                self.logger.warning(
+                raise ValueError(
                     f"Parent node {node.parent_id} not found for node {node.id}"
                 )
 
