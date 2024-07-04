@@ -244,7 +244,6 @@ def submit_simulation_archive(
                 )
                 print(f"View: {biosimulations_api_url}/runs/{serv_response['id']}")
                 download_url = f'{biosimulations_api_url}/results/{serv_response["id"]}/download'
-
                 print(
                     f"Downloads: {download_url}"
                 )
