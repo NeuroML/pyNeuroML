@@ -168,7 +168,7 @@ def submit_simulation_archive(
     archive_file: str,
     sim_dict: typing.Dict[str, typing.Union[int, str, typing.List[str]]] = {},
     dry_run: bool = False,
-) -> object:
+) -> typing.Dict[str, typing.Union[str, object]]:
     """Submit an OMEX archive to biosimulations using the provided simulation run dictionary
 
     .. versionadded:: 1.2.10
@@ -203,7 +203,12 @@ def submit_simulation_archive(
         https://api.biosimulations.org/#/Simulations/SimulationRunController_createRun
 
     :type sim_dict: dict
-    :returns: the requests.post response object, or True if dry_run
+    :returns: dictionary with keys "response", "download", "logs", "view" that
+        contain the response object and download, logs, and view URLs
+
+        If a dry run, response is True and the URLs are all None
+
+    :rtype: dict
 
     """
     api_url = f"{biosimulations_api_url}/runs"
@@ -230,6 +235,8 @@ def submit_simulation_archive(
         logger.info(f"multipart encoded data is {m}")
         logger.info(f"with content type: {m.content_type}")
 
+        resdict = {}
+
         if dry_run is False:
             logger.info("Submitting archive to biosimulations")
             response = requests.post(
@@ -242,17 +249,29 @@ def submit_simulation_archive(
                 print(
                     f"Submitted {archive_file} successfully with id: {serv_response['id']}"
                 )
-                print(f"View: {biosimulations_api_url}/runs/{serv_response['id']}")
-                download_url = f'{biosimulations_api_url}/results/{serv_response["id"]}/download'
-                print(
-                    f"Downloads: {download_url}"
+
+                log_url = f"{biosimulations_api_url}/logs/{serv_response['id']}?includeOutput=true"
+                view_url = f"{biosimulations_api_url}/runs/{serv_response['id']}"
+                download_url = (
+                    f'{biosimulations_api_url}/results/{serv_response["id"]}/download'
                 )
-                print(
-                    f"Logs: {biosimulations_api_url}/logs/{serv_response['id']}?includeOutput=true"
-                )
+
+                print(f"View: {view_url}")
+                print(f"Downloads: {download_url}")
+                print(f"Logs: {log_url}")
+
+            resdict["response"] = response
+            resdict["view"] = view_url
+            resdict["download"] = download_url
+            resdict["logs"] = log_url
         else:
             response = True
             print("Dry run, not submitting")
             print(f"Simulation dictionary: {sim_dict}")
 
-    return download_url, response
+            resdict["response"] = response
+            resdict["view"] = None
+            resdict["download"] = None
+            resdict["logs"] = None
+
+    return resdict
