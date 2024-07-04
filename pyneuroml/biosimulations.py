@@ -243,7 +243,8 @@ def submit_simulation_archive(
                     f"Submitted {archive_file} successfully with id: {serv_response['id']}"
                 )
                 print(f"View: {biosimulations_api_url}/runs/{serv_response['id']}")
-                download_url = f{biosimulations_api_url}/results/{serv_response['id']}/download
+                download_url = f'{biosimulations_api_url}/results/{serv_response["id"]}/download'
+
                 print(
                     f"Downloads: {download_url}"
                 )
