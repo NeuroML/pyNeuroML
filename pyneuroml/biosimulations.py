@@ -243,8 +243,9 @@ def submit_simulation_archive(
                     f"Submitted {archive_file} successfully with id: {serv_response['id']}"
                 )
                 print(f"View: {biosimulations_api_url}/runs/{serv_response['id']}")
+                download_url = f{biosimulations_api_url}/results/{serv_response['id']}/download
                 print(
-                    f"Downloads: {biosimulations_api_url}/results/{serv_response['id']}/download"
+                    f"Downloads: {download_url}"
                 )
                 print(
                     f"Logs: {biosimulations_api_url}/logs/{serv_response['id']}?includeOutput=true"
@@ -254,4 +255,4 @@ def submit_simulation_archive(
             print("Dry run, not submitting")
             print(f"Simulation dictionary: {sim_dict}")
 
-    return response
+    return download_url, response
