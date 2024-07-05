@@ -62,9 +62,10 @@ class TestBiosimulations(BaseTestCase):
             "maxTime": "20",
         }
 
-        response = submit_simulation(
+        resdict = submit_simulation(
             "LEMS_NML2_Ex5_DetCell.xml", sim_dict=sim_dict, dry_run=dry_run
         )
+        response = resdict["response"]
         os.chdir(cwd)
 
         if dry_run:
