@@ -334,3 +334,34 @@ def load_swc(filename: str) -> SWCGraph:
             tree.add_node(node)
 
     return tree
+
+
+def export_swc(graph: SWCGraph, filename: str) -> None:
+    """
+    Export the SWCGraph to a new SWC file.
+
+    :param filename: The path to the output SWC file
+    :type filename: str
+    """
+    with open(filename, "w") as file:
+        # Write metadata
+        for key, value in graph.metadata.items():
+            file.write(f"# {key} {value}\n")
+
+        # Write node data
+        for node in sorted(graph.nodes, key=lambda n: n.id):
+            file.write(
+                f"{node.id} {node.type} {node.x:.4f} {node.y:.4f} {node.z:.4f} {node.radius:.4f} {node.parent_id}\n"
+            )
+
+
+input_file = "Case1_new.swc"
+
+# First, load the SWC file into an SWCGraph object
+swc_graph = load_swc(input_file)
+
+# Now, let's export this graph to a new file
+output_file = "output.swc"
+export_swc(swc_graph, output_file)
+
+print(f"SWC graph exported to {output_file}")
