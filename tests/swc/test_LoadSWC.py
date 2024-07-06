@@ -1,6 +1,8 @@
+import filecmp
+import os
 import unittest
 
-from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode
+from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode, export_swc, load_swc
 
 
 class TestSWCNode(unittest.TestCase):
@@ -62,6 +64,49 @@ class TestSWCGraph(unittest.TestCase):
     def test_get_nodes_by_type(self):
         self.assertEqual(self.tree.get_nodes_by_type(1), [self.node1])
         self.assertEqual(self.tree.get_nodes_by_type(3), [self.node2, self.node3])
+
+
+class TestSWCExport(unittest.TestCase):
+    def setUp(self):
+        self.input_file = "Case1_new.swc"
+        self.output_file = "Case1_exported.swc"
+
+    def test_load_export_compare(self):
+        # Load the original file
+        original_tree = load_swc(self.input_file)
+
+        # Export the loaded tree
+        export_swc(original_tree, self.output_file)
+
+        # Check if the exported file was created
+        self.assertTrue(os.path.exists(self.output_file))
+
+        # Load the exported file
+        exported_tree = load_swc(self.output_file)
+
+        # Compare the original and exported trees
+        self.assertEqual(len(original_tree.nodes), len(exported_tree.nodes))
+
+        # Compare a few key properties of the first and last nodes
+        self.compare_nodes(original_tree.nodes[0], exported_tree.nodes[0])
+        self.compare_nodes(original_tree.nodes[-1], exported_tree.nodes[-1])
+
+        # Compare metadata
+        self.assertEqual(original_tree.metadata, exported_tree.metadata)
+
+    def compare_nodes(self, node1, node2):
+        self.assertEqual(node1.id, node2.id)
+        self.assertEqual(node1.type, node2.type)
+        self.assertEqual(node1.parent_id, node2.parent_id)
+        self.assertAlmostEqual(node1.x, node2.x, places=4)
+        self.assertAlmostEqual(node1.y, node2.y, places=4)
+        self.assertAlmostEqual(node1.z, node2.z, places=4)
+        self.assertAlmostEqual(node1.radius, node2.radius, places=4)
+
+    def tearDown(self):
+        # Clean up
+        if os.path.exists(self.output_file):
+            os.remove(self.output_file)
 
 
 if __name__ == "__main__":
