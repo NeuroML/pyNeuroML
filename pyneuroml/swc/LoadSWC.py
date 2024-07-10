@@ -353,15 +353,3 @@ def export_swc(graph: SWCGraph, filename: str) -> None:
             file.write(
                 f"{node.id} {node.type} {node.x:.4f} {node.y:.4f} {node.z:.4f} {node.radius:.4f} {node.parent_id}\n"
             )
-
-
-input_file = "Case1_new.swc"
-
-# First, load the SWC file into an SWCGraph object
-swc_graph = load_swc(input_file)
-
-# Now, let's export this graph to a new file
-output_file = "output.swc"
-export_swc(swc_graph, output_file)
-
-print(f"SWC graph exported to {output_file}")
