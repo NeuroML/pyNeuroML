@@ -477,22 +477,22 @@ def plot_interactive_3D(
 
     # if it isn't a NeuroMLDocument, create one
     if isinstance(nml_model, Cell):
-        logger.info("Got a cell")
+        logger.debug("Got a cell")
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         plottable_nml_model.add(nml_model)
-        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
 
     # if it's only a cell, add it to an empty cell in a document
     elif isinstance(nml_model, Morphology):
-        logger.info("Received morph, adding to a dummy cell")
+        logger.debug("Received morph, adding to a dummy cell")
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         nml_cell = plottable_nml_model.add(
             Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
         plottable_nml_model.add(nml_cell)
-        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
     elif isinstance(nml_model, NeuroMLDocument):
@@ -524,10 +524,10 @@ def plot_interactive_3D(
         except AttributeError:
             total_segments += len(positions[pop_id])
 
-    logger.info(
+    logger.debug(
         f"Visualising {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
     )
-    logger.info(
+    logger.debug(
         f"Grouping into mesh instances by diameters at {precision[0]} decimal places"
     )
     # not used later, clear up
@@ -620,7 +620,7 @@ def plot_interactive_3D(
             pass
 
     meshdata = {}  # type: typing.Dict[typing.Any, typing.Any]
-    logger.info("Processing cells")
+    logger.debug("Processing cells")
     pbar = progressbar.ProgressBar(
         max_value=total_cells,
         widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
@@ -734,7 +734,7 @@ def plot_interactive_3D(
             if (len(meshdata.keys()) > precision[1]) and (precision[0] > 0):
                 precision = (precision[0] - 1, precision[1])
                 pbar.finish(dirty=True)
-                logger.info(
+                logger.debug(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
                 plot_interactive_3D(
@@ -819,7 +819,7 @@ def make_cell_upright(
     if z_angle < 0:
         z_angle += numpy.pi
 
-    logger.info("Making cell upright for visualization")
+    logger.debug("Making cell upright for visualization")
     cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0, 0, 0])
     cell = rotate_cell(
         cell, 0, y_angle, z_angle, "yzx", relative_to_soma=False, inplace=inplace
@@ -1117,7 +1117,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
     total_mesh_instances = 0
     for d, i in meshdata.items():
         total_mesh_instances += len(i)
-    logger.info(
+    logger.debug(
         f"Visualising {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
     )
 
@@ -1164,8 +1164,9 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         instance_positions = []
         instance_transforms = []
         instance_colors = []
-        for im in i:
-            pbar.update(progress_ctr)
+        for num, im in enumerate(i):
+            if num % 2000 == 0:
+                pbar.update(progress_ctr)
             progress_ctr += 1
             prox = im[0]
             dist = im[1]
