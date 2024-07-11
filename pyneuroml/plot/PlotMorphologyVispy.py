@@ -39,6 +39,12 @@ try:
     from vispy.geometry.meshdata import MeshData
     from vispy.scene.visuals import InstancedMesh
     from vispy.util.transforms import rotate
+
+    pynml_in_jupyter = False
+    if app.Application.is_interactive(app):
+        pynml_in_jupyter = True
+        from IPython.display import display
+
 except ImportError:
     logger.warning("Please install optional dependencies to use vispy features:")
     logger.warning("pip install pyneuroml[vispy]")
@@ -451,10 +457,6 @@ def plot_interactive_3D(
     if verbose:
         logger.info(f"Visualising {nml_file}")
 
-    jupyter = False
-    if app.Application.is_interactive(app):
-        jupyter = True
-
     # if it's a file, load it first
     if isinstance(nml_file, str):
         # load without optimization for older HDF5 API
@@ -620,15 +622,26 @@ def plot_interactive_3D(
             pass
 
     meshdata = {}  # type: typing.Dict[typing.Any, typing.Any]
-    logger.debug("Processing cells")
-    pbar = progressbar.ProgressBar(
-        max_value=total_cells,
-        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
-        redirect_stdout=True,
-    )
+    logger.info("Processing %s cells" % total_cells)
+
+    # do not show this pbar in jupyter notebooks
+    if not pynml_in_jupyter:
+        pbar = progressbar.ProgressBar(
+            max_value=total_cells,
+            widgets=[
+                progressbar.SimpleProgress(),
+                progressbar.Bar(),
+                progressbar.Timer(),
+            ],
+            redirect_stdout=True,
+        )
+    else:
+        pbar = None
+
     pbar_ctr = 0
     while pop_id_vs_cell:
-        pbar.update(pbar_ctr)
+        if pbar is not None:
+            pbar.update(pbar_ctr)
         pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]
 
@@ -733,8 +746,10 @@ def plot_interactive_3D(
             # if too many meshes, reduce precision and retry, recursively
             if (len(meshdata.keys()) > precision[1]) and (precision[0] > 0):
                 precision = (precision[0] - 1, precision[1])
-                pbar.finish(dirty=True)
-                logger.debug(
+                if pbar is not None:
+                    pbar.finish(dirty=True)
+
+                logger.info(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
                 plot_interactive_3D(
@@ -757,11 +772,10 @@ def plot_interactive_3D(
             pbar_ctr += 1
 
     if not nogui:
-        pbar.finish()
+        if pbar is not None:
+            pbar.finish()
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        if jupyter:
-            from IPython.display import display
-
+        if pynml_in_jupyter:
             display(current_canvas)
         else:
             current_canvas.show()
@@ -959,10 +973,6 @@ def plot_3D_cell_morphology(
         highlight_spec = {}
     logging.debug("highlight_spec is " + str(highlight_spec))
 
-    jupyter = False
-    if app.Application.is_interactive(app):
-        jupyter = True
-
     view_center = None
     if upright:
         cell = make_cell_upright(cell)
@@ -1086,9 +1096,7 @@ def plot_3D_cell_morphology(
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        if jupyter:
-            from IPython.display import display
-
+        if pynml_in_jupyter:
             display(current_canvas)
         else:
             current_canvas.show()
@@ -1164,9 +1172,17 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         instance_positions = []
         instance_transforms = []
         instance_colors = []
+
+        # if in a notebook, only update once per mesh, but not per mesh
+        # instance
+        if pynml_in_jupyter:
+            pbar.update(progress_ctr)
+
         for num, im in enumerate(i):
-            if num % 2000 == 0:
+            # if not in a notebook, update for each mesh instance
+            if not pynml_in_jupyter:
                 pbar.update(progress_ctr)
+
             progress_ctr += 1
             prox = im[0]
             dist = im[1]
@@ -1317,10 +1333,6 @@ def plot_3D_schematic(
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
 
-    jupyter = False
-    if app.Application.is_interactive(app):
-        jupyter = True
-
     view_center = None
     if upright:
         cell = make_cell_upright(cell)
@@ -1417,9 +1429,7 @@ def plot_3D_schematic(
 
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
-        if jupyter:
-            from IPython.display import display
-
+        if pynml_in_jupyter:
             display(current_canvas)
         else:
             app.run()
