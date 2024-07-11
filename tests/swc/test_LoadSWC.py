@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode, export_swc, load_swc
+from pyneuroml.swc.LoadSWC import SWCGraph, SWCNode, load_swc
 
 
 class TestSWCNode(unittest.TestCase):
@@ -75,7 +75,7 @@ class TestSWCExport(unittest.TestCase):
         original_tree = load_swc(self.input_file)
 
         # Export the loaded tree
-        export_swc(original_tree, self.output_file)
+        original_tree.export_to_swc_file(self.output_file)
 
         # Check if the exported file was created
         self.assertTrue(os.path.exists(self.output_file))
