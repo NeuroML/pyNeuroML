@@ -84,8 +84,9 @@ class TestSWCExport(unittest.TestCase):
 
     def setUp(self):
         """Set up file paths for testing."""
-        self.input_file = "Case1_new.swc"
-        self.output_file = "Case1_exported.swc"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.input_file = os.path.join(current_dir, "Case1_new.swc")
+        self.output_file = os.path.join(current_dir, "Case1_exported.swc")
 
     def test_load_export_compare(self):
         """Test loading an SWC file, exporting it, and comparing the results."""
