@@ -276,6 +276,24 @@ class SWCGraph:
                 branch_points[type_id] = self.get_nodes_with_multiple_children(type_id)
             return branch_points
 
+    def export_to_swc_file(self, filename: str) -> None:
+        """
+        Export the SWCGraph to a new SWC file.
+
+        :param filename: The path to the output SWC file
+        :type filename: str
+        """
+        with open(filename, "w") as file:
+            # Write metadata
+            for key, value in self.metadata.items():
+                file.write(f"# {key} {value}\n")
+
+            # Write node data
+            for node in sorted(self.nodes, key=lambda n: n.id):
+                file.write(
+                    f"{node.id} {node.type} {node.x:.4f} {node.y:.4f} {node.z:.4f} {node.radius:.4f} {node.parent_id}\n"
+                )
+
 
 def parse_header(line: str) -> typing.Optional[typing.Tuple[str, str]]:
     """
