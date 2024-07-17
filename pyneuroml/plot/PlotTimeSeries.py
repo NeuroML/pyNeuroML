@@ -38,7 +38,7 @@ def plot_time_series(
     scalebar_location: typing.Optional[str] = None,
     scalebar_length: typing.Optional[float] = None,
     labels: bool = False,
-    **kwargs: typing.Any,
+    **kwargs_generate_plot: typing.Any,
 ) -> None:
     """Plot time series data from a dictionary of data
 
@@ -72,7 +72,7 @@ def plot_time_series(
     :param labels: toggle using labels for legends
         If labels is None, no legend is shown
     :type labels: bool
-    :param kwargs: other key word arguments that are passed to the
+    :param kwargs_generate_plot: other key word arguments that are passed to the
         `pyneuroml.plot.Plot.generate_plot` function
     :returns: None
     :raises ValueError: if a 't' (time) key is not found in the traces data
@@ -138,18 +138,20 @@ def plot_time_series(
                     labelvals.append(key)
                 ctr += 1
 
+    if offset is True:
+        show_yticklabels = False
+    else:
+        show_yticklabels = True
+
     ax = pynmlplt.generate_plot(
         xvalues=xs,
         yvalues=ys,
         title=title,
         labels=labelvals,
+        show_yticklabels=show_yticklabels,
         show_plot_already=False,
-        **kwargs,
+        **kwargs_generate_plot,
     )
-
-    # clear ytics
-    if offset is True:
-        ax.set_yticks([])
 
     if scalebar_location is not None:
         if scalebar_length is None:
@@ -199,7 +201,7 @@ def plot_time_series_from_lems_file(
         lems_file_name, get_events=False, get_traces=True
     )
 
-    plot_time_series(traces, **kwargs)
+    plot_time_series(traces, xaxis="Time (s)", **kwargs)
 
 
 def plot_time_series_from_data_files(
