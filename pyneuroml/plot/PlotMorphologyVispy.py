@@ -20,7 +20,7 @@ import progressbar
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
-from vispy.visuals.filters import InstancedShadingFilter
+from vispy.visuals.filters import ShadingFilter
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info, rotate_cell, translate_cell_to_coords
@@ -1235,7 +1235,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             parent=current_view.scene,
         )
         # TODO: add a shading filter for light?
-        shading_filter = InstancedShadingFilter(
+        shading_filter = ShadingFilter(
             "smooth", shininess=1, ambient_light=(1, 1, 1, 0.6)
         )
         mesh.attach(shading_filter)
