@@ -22,7 +22,7 @@ from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
 
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info, rotate_cell, translate_cell_to_coords
+from pyneuroml.utils import extract_position_info, make_cell_upright
 from pyneuroml.utils.plot import (
     DEFAULTS,
     get_cell_bound_box,
@@ -780,65 +780,6 @@ def plot_interactive_3D(
         else:
             current_canvas.show()
             app.run()
-
-
-def make_cell_upright(
-    cell: Cell = None,
-    inplace: bool = False,
-) -> Cell:
-    """Use cell's PCA to make it upright
-
-    .. versionadded:: 1.2.13
-
-    :param cell: cell object to translate
-    :type cell: neuroml.Cell
-    :param inplace: toggle whether the cell object should be modified inplace
-        or a copy created (creates and returns a copy by default)
-    :type inplace: bool
-    :returns: new neuroml.Cell object
-    :rtype: neuroml.Cell
-    """
-
-    # Get all segments' distal points
-    segment_points = []
-    segments_all = cell.morphology.segments
-    for segment in segments_all:
-        segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
-
-    coords = numpy.array(segment_points)
-    from sklearn.decomposition import PCA
-
-    # Get the PCA components
-    pca = PCA()
-    pca.fit(coords)
-
-    # Get the principal component axes
-    principal_axes = pca.components_
-    # Get the first principal component axis
-    first_pca = principal_axes[0]
-    # y angle needed to eliminate z component
-    y_angle = math.atan(first_pca[2] / first_pca[0])
-    rotation_y = numpy.array(
-        [
-            [math.cos(y_angle), 0, math.sin(y_angle)],
-            [0, 1, 0],
-            [-math.sin(y_angle), 0, math.cos(y_angle)],
-        ]
-    )
-    rotated_pca = numpy.dot(rotation_y, first_pca)
-
-    # z angle needed to eliminate x component
-    z_angle = -math.atan(rotated_pca[0] / rotated_pca[1])
-
-    if z_angle < 0:
-        z_angle += numpy.pi
-
-    logger.debug("Making cell upright for visualization")
-    cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0, 0, 0])
-    cell = rotate_cell(
-        cell, 0, y_angle, z_angle, "yzx", relative_to_soma=False, inplace=inplace
-    )
-    return cell
 
 
 def plot_3D_cell_morphology(
