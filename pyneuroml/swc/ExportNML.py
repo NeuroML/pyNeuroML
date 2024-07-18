@@ -128,7 +128,6 @@ class NeuroMLConverter:
                 f"\n-- Handling point: {this_point}, NewCable: {new_cable}\n-- With parent point: {parent_point}"
             )
 
-        this_type = max(this_point.type, 0)
         cable_id = -1
 
         if new_cable:
@@ -203,7 +202,6 @@ class NeuroMLConverter:
         parent_node: SWCNode,
         is_soma: bool,
         version: NeuroMLVersion,
-        fract_along_parent: float = 1.0,
     ) -> Segment:
         """
         Create a new segment for the NeuroML document.
@@ -243,7 +241,6 @@ class NeuroMLConverter:
         self,
         point: SWCNode,
         cable_id: int,
-        fract_along_parent: float,
         version: NeuroMLVersion,
     ) -> None:
         """
