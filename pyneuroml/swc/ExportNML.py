@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from LoadSWC import SWCGraph, SWCNode, load_swc
 from neuroml import (
@@ -14,7 +14,6 @@ from neuroml import (
     SegmentGroup,
     SegmentParent,
 )
-from neuroml.utils import validate_neuroml2
 from neuroml.writers import NeuroMLWriter
 
 
@@ -36,6 +35,12 @@ class NeuroMLVersion(Enum):
 
 class NeuroMLConverter:
     def __init__(self, swc_graph: SWCGraph, cell_name: str):
+        """
+        Initialize the NeuroMLConverter.
+
+        :param swc_graph: SWCGraph object representing the neuron structure
+        :param cell_name: str, name of the cell
+        """
         self.swc_graph = swc_graph
         self.cell_name = cell_name
         self.segment_id = 0
@@ -54,6 +59,13 @@ class NeuroMLConverter:
     def swc_to_neuroml(
         self, version: NeuroMLVersion, morphology_only: bool = False
     ) -> NeuroMLDocument:
+        """
+        Convert SWC graph to NeuroML document.
+
+        :param version: NeuroMLVersion enum, specifying the NeuroML version to use
+        :param morphology_only: bool, if True, only export morphology (default: False)
+        :return: NeuroMLDocument object
+        """
         doc = NeuroMLDocument(id=self.cell_name)
 
         if version.is_version_1():
@@ -98,6 +110,15 @@ class NeuroMLConverter:
         new_cell: bool,
         version: NeuroMLVersion,
     ) -> None:
+        """
+        Recursively create segments and groups for the NeuroML document.
+
+        :param this_point: SWCNode, current node being processed
+        :param parent_point: SWCNode, parent node of the current node
+        :param new_cable: bool, whether to start a new cable
+        :param new_cell: bool, whether this is the start of a new cell
+        :param version: NeuroMLVersion enum, specifying the NeuroML version to use
+        """
         if this_point is None:
             print("Warning: Encountered None point in create_segments_and_groups")
             return
@@ -127,7 +148,7 @@ class NeuroMLConverter:
             and parent_point
             and parent_point.type == 1
         ):
-            pass  # First point is of a multi point soma => not spherical!
+            pass
         elif this_point.type != 1 and parent_point and parent_point.type == 1:
             if parent_point.id == 0 and parent_point.id not in self.point_to_segment:
                 fract_along_parent_cable = 0
@@ -184,6 +205,16 @@ class NeuroMLConverter:
         version: NeuroMLVersion,
         fract_along_parent: float = 1.0,
     ) -> Segment:
+        """
+        Create a new segment for the NeuroML document.
+
+        :param node: SWCNode, current node to create a segment for
+        :param parent_node: SWCNode, parent node of the current node
+        :param is_soma: bool, whether this segment is part of the soma
+        :param version: NeuroMLVersion enum, specifying the NeuroML version to use
+        :param fract_along_parent: float, fraction along the parent segment (default: 1.0)
+        :return: Segment object
+        """
         segment = Segment(id=self.segment_id, name=f"Seg_{self.segment_id}")
 
         if parent_node:
@@ -194,21 +225,7 @@ class NeuroMLConverter:
                     segment.parent = str(parent_segment_id)
                 else:
                     segment.parent = SegmentParent(segments=str(parent_segment_id))
-            elif is_soma and parent_node.type == 1:
-                proximal = Point3DWithDiam(
-                    x=parent_node.x,
-                    y=parent_node.y,
-                    z=parent_node.z,
-                    diameter=parent_node.radius * 2,
-                )
-                segment.proximal = proximal
-            else:
-                if version.is_version_1():
-                    segment.parent = parent_id
-                else:
-                    segment.parent = SegmentParent(segments=parent_id)
-
-            if not is_soma or (is_soma and parent_node.type != 1):
+            elif is_soma and parent_node.type != 1:
                 proximal = Point3DWithDiam(
                     x=parent_node.x,
                     y=parent_node.y,
@@ -228,7 +245,15 @@ class NeuroMLConverter:
         cable_id: int,
         fract_along_parent: float,
         version: NeuroMLVersion,
-    ):
+    ) -> None:
+        """
+        Handle the creation of a new cable in the NeuroML document.
+
+        :param point: SWCNode, current node
+        :param cable_id: int, ID of the new cable
+        :param fract_along_parent: float, fraction along the parent segment
+        :param version: NeuroMLVersion enum, specifying the NeuroML version to use
+        """
         cable_name = f"{self.CABLE_PREFIX}{cable_id}"
         if version.is_version_2():
             for group in self.get_groups_for_type(point):
@@ -237,6 +262,12 @@ class NeuroMLConverter:
                 self.segment_groups[group].append(cable_name)
 
     def get_groups_for_type(self, point: SWCNode) -> List[str]:
+        """
+        Get the group names for a given SWC node type.
+
+        :param point: SWCNode, the node to get groups for
+        :return: List[str], list of group names
+        """
         groups = ["all"]
         type_code = point.type
 
@@ -264,6 +295,12 @@ class NeuroMLConverter:
     def create_segment_groups(
         self, morphology: Morphology, version: NeuroMLVersion
     ) -> None:
+        """
+        Create segment groups in the NeuroML document.
+
+        :param morphology: Morphology object to add segment groups to
+        :param version: NeuroMLVersion enum, specifying the NeuroML version to use
+        """
         for cable_name, segment_ids in self.cable_groups.items():
             seg_group = SegmentGroup(id=cable_name)
             for segment_id in segment_ids:
@@ -280,6 +317,11 @@ class NeuroMLConverter:
             morphology.segment_groups.append(seg_group)
 
     def find_start_point(self) -> SWCNode:
+        """
+        Find the starting point in the SWC graph.
+
+        :return: SWCNode, the starting point of the neuron
+        """
         for node in self.swc_graph.nodes:
             if node.type == 1 and node.parent_id == -1:
                 return node
@@ -293,6 +335,15 @@ def export_neuroml(
     version: NeuroMLVersion,
     morphology_only: bool = False,
 ) -> None:
+    """
+    Export SWC graph to NeuroML file.
+
+    :param swc_graph: SWCGraph object representing the neuron structure
+    :param filename: str, name of the output NeuroML file
+    :param cell_name: str, name of the cell
+    :param version: NeuroMLVersion enum, specifying the NeuroML version to use
+    :param morphology_only: bool, if True, only export morphology (default: False)
+    """
     converter = NeuroMLConverter(swc_graph, cell_name)
     doc = converter.swc_to_neuroml(version, morphology_only)
 
@@ -316,38 +367,3 @@ def export_neuroml(
 
     NeuroMLWriter.write(doc, filename)
     print(f"NeuroML file has been generated: {filename}")
-
-
-if __name__ == "__main__":
-    swc_file = "Case3_new.swc"
-
-    try:
-        swc_graph = load_swc(swc_file)
-        if not swc_graph or not swc_graph.nodes:
-            raise ValueError("SWC graph is empty or invalid.")
-
-        cell_name = os.path.splitext(os.path.basename(swc_file))[0]
-
-        print("SWC Graph structure:")
-        for node in swc_graph.nodes:
-            print(
-                f"Node {node.id}: type={node.type}, parent={node.parent_id}, x={node.x}, y={node.y}, z={node.z}, radius={node.radius}"
-            )
-
-        print("\nAttempting to export to NeuroML...")
-        export_neuroml(
-            swc_graph,
-            f"{cell_name}.nml",
-            cell_name,
-            NeuroMLVersion.NEUROML_VERSION_2_3_1,
-        )
-        print("Export completed successfully.")
-    except FileNotFoundError:
-        print(f"Error: The file '{swc_file}' was not found.")
-    except ValueError as ve:
-        print(f"Error: {str(ve)}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
