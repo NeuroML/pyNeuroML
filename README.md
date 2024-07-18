@@ -12,7 +12,7 @@ pyNeuroML
 [![Twitter Follow](https://img.shields.io/twitter/follow/NeuroML?style=social)](https://twitter.com/NeuroML)
 [![Gitter](https://badges.gitter.im/NeuroML/community.svg)](https://gitter.im/NeuroML/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-17-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
@@ -198,6 +198,7 @@ More closely tied to PyNN?
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/AdityaBITMESRA"><img src="https://avatars.githubusercontent.com/u/147182147?v=4?s=100" width="100px;" alt="AdityaBITMESRA"/><br /><sub><b>AdityaBITMESRA</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3AAdityaBITMESRA" title="Bug reports">🐛</a> <a href="#ideas-AdityaBITMESRA" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=AdityaBITMESRA" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/pulls?q=is%3Apr+reviewed-by%3AAdityaBITMESRA" title="Reviewed Pull Requests">👀</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/YBCS"><img src="https://avatars.githubusercontent.com/u/29734619?v=4?s=100" width="100px;" alt="Y. Budhachandra"/><br /><sub><b>Y. Budhachandra</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Tests">⚠️</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/stellaprins"><img src="https://avatars.githubusercontent.com/u/30465823?v=4?s=100" width="100px;" alt="Stella"/><br /><sub><b>Stella</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=stellaprins" title="Code">💻</a> <a href="#ideas-stellaprins" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
   <tfoot>
