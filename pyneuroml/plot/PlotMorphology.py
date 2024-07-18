@@ -22,7 +22,7 @@ from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, make_cell_upright
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils.plot import (
     DEFAULTS,
@@ -532,6 +532,7 @@ def plot_2D_cell_morphology(
     datamax: typing.Optional[float] = None,
     colormap_name: str = "viridis",
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    upright: bool = False,
 ):
     """Plot the detailed 2D morphology of a cell in provided plane.
 
@@ -609,6 +610,14 @@ def plot_2D_cell_morphology(
         - marker_size: width of the marker
 
     :type highlight_spec: dict
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
 
     :raises: ValueError if `cell` is None
 
@@ -617,6 +626,9 @@ def plot_2D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if upright:
+        cell = make_cell_upright(cell)
 
     if highlight_spec is None:
         highlight_spec = {}
