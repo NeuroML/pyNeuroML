@@ -33,6 +33,8 @@ from pyneuroml.utils.plot import (
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+pynml_in_jupyter = False
+
 try:
     from vispy import app, scene, use
     from vispy.geometry.generation import create_sphere
@@ -40,7 +42,6 @@ try:
     from vispy.scene.visuals import InstancedMesh
     from vispy.util.transforms import rotate
 
-    pynml_in_jupyter = False
     if app.Application.is_interactive(app):
         pynml_in_jupyter = True
         from IPython.display import display
