@@ -7,12 +7,12 @@ File: tests/utils/test_utils.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import logging
 import math
 import pathlib as pl
 
 import neuroml
+
 from pyneuroml.pynml import read_neuroml2_file, write_neuroml2_file
 from pyneuroml.utils import (
     extract_position_info,
@@ -27,7 +27,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestUtils(BaseTestCase):
-
     """Test utils module"""
 
     def test_extract_position_info(self):
@@ -73,9 +72,11 @@ class TestUtils(BaseTestCase):
 
     def test_rotate_cell(self):
         """Test rotate_cell"""
-        acell = neuroml.utils.component_factory(
-            "Cell", id="test_cell", validate=False
-        )  # type: neuroml.Cell
+        acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
+
+        acell.set_spike_thresh("10mV")
+        acell.set_init_memb_potential("-70mV")
+        acell.set_specific_capacitance("1 uF_per_cm2")
 
         soma = acell.add_segment(
             prox=[0, 0, 0, 15],
@@ -122,9 +123,7 @@ class TestUtils(BaseTestCase):
         rotated_cell.id = "test_rotated_cell"
         print(rotated_cell)
 
-        newdoc = neuroml.utils.component_factory(
-            "NeuroMLDocument", id="test_doc"
-        )  # type: neuroml.NeuroMLDocument
+        newdoc = neuroml.utils.component_factory("NeuroMLDocument", id="test_doc")  # type: neuroml.NeuroMLDocument
         newdoc.add(acell)
         newdoc.add(rotated_cell)
 
