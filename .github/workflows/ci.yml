@@ -54,4 +54,4 @@ jobs:
     - name: Lint with ruff
       run: |
         pip install ruff
-        ruff check . --exit-zero --show-source
+        ruff check . --exit-zero
