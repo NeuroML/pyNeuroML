@@ -1195,7 +1195,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
                 shading_filter.light_dir = transform.map(initial_light_dir)[:3]
                 # print(shading_filter.light_dir)
 
-    attach_headlight(current_view)
+        attach_headlight(current_view)
     pbar.finish()
 
 
