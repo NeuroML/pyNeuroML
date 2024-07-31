@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Set
 
-from LoadSWC import SWCGraph, SWCNode
+from .LoadSWC import SWCGraph, SWCNode
 
 
 class NeuroMLWriter:
@@ -433,9 +433,17 @@ class NeuroMLWriter:
                 "color_magenta",
             ],
         }
-        groups.extend(
-            type_groups.get(p.type, [f"SWC_group_{p.type}", "dendrite_group"])
-        )
+
+        if p.type in type_groups:
+            groups.extend(type_groups[p.type])
+        elif p.type == 0:  # undefined
+            groups.append("undefined_group")
+        else:
+            print(
+                f"Warning: Unexpected SWC node type {p.type} encountered. Treating as undefined."
+            )
+            groups.append("undefined_group")
+
         print(f"Groups for point type {p.type}: {groups}")
         return groups
 
@@ -495,7 +503,7 @@ class NeuroMLWriter:
                         nml_content.append(f'        <member segment="{segment}"/>')
                 nml_content.append("      </segmentGroup>")
 
-        nml_content.extend(["   </morphology>", " </cell>", "</neuroml>"])
+        nml_content.extend(["    </morphology>", "  </cell>", "</neuroml>"])
 
         print("NeuroML content generation completed")
         return nml_content
