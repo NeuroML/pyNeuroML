@@ -20,23 +20,23 @@ import sys
 import typing
 import warnings
 
-import neuroml
-
 import lems
 import lems.model.model as lems_model
+import neuroml
+
 from pyneuroml import DEFAULTS, JNEUROML_VERSION, __version__
 from pyneuroml.errors import ARGUMENT_ERR, UNKNOWN_ERR
+from pyneuroml.io import *
+from pyneuroml.modelgraphs import *
+from pyneuroml.runners import *
 from pyneuroml.swc.ExportSWC import convert_to_swc
 from pyneuroml.utils import extract_lems_definition_files
+from pyneuroml.utils.info import *
+from pyneuroml.utils.misc import *
 
 # these imports are included for backwards compatibility
 from pyneuroml.utils.units import *
-from pyneuroml.modelgraphs import *
-from pyneuroml.runners import *
 from pyneuroml.validators import *
-from pyneuroml.io import *
-from pyneuroml.utils.info import *
-from pyneuroml.utils.misc import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -942,7 +942,7 @@ def evaluate_component(comp_type, req_variables={}, parameter_values={}):
                     cond = (
                         case.condition.replace(".neq.", "!=")
                         .replace(".eq.", "==")
-                        .replace(".gt.", "<")
+                        .replace(".gt.", ">")
                         .replace(".lt.", "<")
                     )
                     exec_str += "if ( %s ): %s = %s \n" % (cond, cdv.name, case.value)
