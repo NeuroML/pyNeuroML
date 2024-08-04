@@ -36,7 +36,7 @@ logger.setLevel(logging.INFO)
 
 try:
     from vispy import app, scene, use
-    from vispy.geometry.generation import create_cylinder, create_sphere
+    from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
     from vispy.scene.visuals import InstancedMesh
     from vispy.util.transforms import rotate
@@ -1165,11 +1165,8 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
-            seg_mesh = create_cylinder(
-                rows=rows,
-                cols=9,
-                radius=[r1, r2],
-                length=length,
+            seg_mesh = create_cylindrical_mesh(
+                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
             )
             logger.debug(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
