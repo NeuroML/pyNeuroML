@@ -20,7 +20,7 @@ import progressbar
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
-from vispy.visuals.filters import InstancedShadingFilter, ShadingFilter
+from vispy.visuals.filters import ShadingFilter
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info, rotate_cell, translate_cell_to_coords
