@@ -20,9 +20,10 @@ import progressbar
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
+from vispy.visuals.filters import InstancedShadingFilter, ShadingFilter
 
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info, make_cell_upright
+from pyneuroml.utils import extract_position_info, rotate_cell, translate_cell_to_coords
 from pyneuroml.utils.plot import (
     DEFAULTS,
     get_cell_bound_box,
@@ -33,15 +34,14 @@ from pyneuroml.utils.plot import (
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-pynml_in_jupyter = False
-
 try:
     from vispy import app, scene, use
-    from vispy.geometry.generation import create_sphere
+    from vispy.geometry.generation import create_cylinder, create_sphere
     from vispy.geometry.meshdata import MeshData
     from vispy.scene.visuals import InstancedMesh
     from vispy.util.transforms import rotate
 
+    pynml_in_jupyter = False
     if app.Application.is_interactive(app):
         pynml_in_jupyter = True
         from IPython.display import display
@@ -783,6 +783,65 @@ def plot_interactive_3D(
             app.run()
 
 
+def make_cell_upright(
+    cell: Cell = None,
+    inplace: bool = False,
+) -> Cell:
+    """Use cell's PCA to make it upright
+
+    .. versionadded:: 1.2.13
+
+    :param cell: cell object to translate
+    :type cell: neuroml.Cell
+    :param inplace: toggle whether the cell object should be modified inplace
+        or a copy created (creates and returns a copy by default)
+    :type inplace: bool
+    :returns: new neuroml.Cell object
+    :rtype: neuroml.Cell
+    """
+
+    # Get all segments' distal points
+    segment_points = []
+    segments_all = cell.morphology.segments
+    for segment in segments_all:
+        segment_points.append([segment.distal.x, segment.distal.y, segment.distal.z])
+
+    coords = numpy.array(segment_points)
+    from sklearn.decomposition import PCA
+
+    # Get the PCA components
+    pca = PCA()
+    pca.fit(coords)
+
+    # Get the principal component axes
+    principal_axes = pca.components_
+    # Get the first principal component axis
+    first_pca = principal_axes[0]
+    # y angle needed to eliminate z component
+    y_angle = math.atan(first_pca[2] / first_pca[0])
+    rotation_y = numpy.array(
+        [
+            [math.cos(y_angle), 0, math.sin(y_angle)],
+            [0, 1, 0],
+            [-math.sin(y_angle), 0, math.cos(y_angle)],
+        ]
+    )
+    rotated_pca = numpy.dot(rotation_y, first_pca)
+
+    # z angle needed to eliminate x component
+    z_angle = -math.atan(rotated_pca[0] / rotated_pca[1])
+
+    if z_angle < 0:
+        z_angle += numpy.pi
+
+    logger.debug("Making cell upright for visualization")
+    cell = translate_cell_to_coords(cell, inplace=inplace, dest=[0, 0, 0])
+    cell = rotate_cell(
+        cell, 0, y_angle, z_angle, "yzx", relative_to_soma=False, inplace=inplace
+    )
+    return cell
+
+
 def plot_3D_cell_morphology(
     offset: typing.List[float] = [0, 0, 0],
     cell: Optional[Cell] = None,
@@ -1077,6 +1136,8 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         redirect_stdout=True,
     )
     progress_ctr = 0
+    shaders = []
+    counter = 0
     for d, i in meshdata.items():
         r1 = float(d[0])
         r2 = float(d[1])
@@ -1104,8 +1165,11 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
-            seg_mesh = create_cylindrical_mesh(
-                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
+            seg_mesh = create_cylinder(
+                rows=rows,
+                cols=9,
+                radius=[r1, r2],
+                length=length,
             )
             logger.debug(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
@@ -1176,7 +1240,27 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             parent=current_view.scene,
         )
         # TODO: add a shading filter for light?
+        shaders.append(
+            ShadingFilter("smooth", shininess=1, ambient_light=(0.8, 0.8, 0.8, 0.6))
+        )
+        mesh.attach(shaders[counter])
         assert mesh is not None
+
+        def attach_headlight(current_view):
+            light_dir = (0, -1, 0, 0)
+            for shader in shaders:
+                shader.light_dir = light_dir[:3]
+            initial_light_dir = current_view.camera.transform.imap(light_dir)
+
+            @current_view.scene.transform.changed.connect
+            def on_transform_change(event):
+                transform = current_view.camera.transform
+
+                for shader in shaders:
+                    shader.light_dir = transform.map(initial_light_dir)[:3]
+
+        counter += 1
+        attach_headlight(current_view)
     pbar.finish()
 
 
