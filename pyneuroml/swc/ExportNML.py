@@ -1,33 +1,56 @@
 import logging
-from typing import Dict, List, Optional, Set
+import os
+import tempfile
+from typing import Dict, List, Optional, Set, Union
 
-from .LoadSWC import SWCGraph, SWCNode
+import neuroml.writers as writers
 
-# Set up logging
+# Import the load_swc function from the LoadSWC module
+from LoadSWC import SWCNode, load_swc
+from neuroml import (
+    Cell,
+    Include,
+    Member,
+    Morphology,
+    NeuroMLDocument,
+    Property,
+    Segment,
+    SegmentGroup,
+)
+from neuroml.nml.nml import Point3DWithDiam, SegmentParent
+
+# Set up logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class NeuroMLWriter:
-    def __init__(self, swc_graph: "SWCGraph"):
+    def __init__(self, swc_graph):
         """
         Initialize the NeuroMLWriter.
 
-        :param swc_graph: The SWC graph containing the neuronal morphology.
+        :param swc_graph: The graph representation of the SWC file.
+        :type swc_graph: Any  # Replace with the actual type of swc_graph if known
         """
         logger.info("Initializing NeuroMLWriter")
-        self.swc_graph: "SWCGraph" = swc_graph
+        self.swc_graph = swc_graph
         self.points: List[SWCNode] = swc_graph.nodes
-        self.section_types: List[str] = SWCNode.TYPE_NAMES
+        self.section_types: List[str] = [
+            "undefined",
+            "soma",
+            "axon",
+            "basal dendrite",
+            "apical dendrite",
+        ]
         self.morphology_origin: str = swc_graph.metadata.get(
             "ORIGINAL_SOURCE", "Unknown"
         )
+        self.cell: Optional[Cell] = None
+        self.nml_doc: Optional[NeuroMLDocument] = None
         self.seg_per_typ: List[int] = [0] * len(self.points)
-        self.segment_content: List[str] = []
-        self.group_content: List[str] = []
-        self.cable_ids_vs_indices: Dict[int, int] = {}
+        self.segment_groups: Dict[str, SegmentGroup] = {}
+        self.cable_ids_vs_indices: Dict[int, List[int]] = {}
         self.point_indices_vs_seg_ids: Dict[int, int] = {}
-        self.segment_groups: Dict[str, List[str]] = {}
         self.next_segment_id: int = 0
         self.next_cable_id: int = 0
         self.cable_prefix_v2: str = "Cable_"
@@ -35,40 +58,31 @@ class NeuroMLWriter:
         self.processed_nodes: Set[int] = set()
         logger.debug(f"NeuroMLWriter initialized with {len(self.points)} points")
 
-    def nml_string(self, version: str) -> str:
+    def create_cell(self) -> Cell:
         """
-        Generate the NeuroML string representation.
+        Create a Cell object.
 
-        :param version: The NeuroML version to use.
-        :return: The NeuroML string representation.
+        :return: The created Cell object.
+        :rtype: Cell
         """
-        logger.info("Starting NeuroML generation")
-        if (
-            len(self.points) < 2
-            or len(self.section_types) < 2
-            or self.section_types[1].lower() != "soma"
-        ):
-            logger.error("Null data or section types in nmlWrite")
-            return ""
-
+        logger.info("Creating Cell object")
         cell_name = self.get_cell_name()
-        start_point = self.find_start_point()
 
-        logger.debug(f"Cell name: {cell_name}")
-        logger.debug(f"Start point: {start_point}")
+        self.cell = Cell(id=cell_name)
+        self.cell.notes = f"Neuronal morphology exported from Python Based Converter. Original file: {self.morphology_origin}"
 
-        self.parse_tree(start_point, start_point, True, True, version)
+        morphology = Morphology(id=f"morphology_{cell_name}")
+        self.cell.morphology = morphology
 
-        nml_content = self.generate_nml_content(cell_name, version)
-
-        logger.info("NeuroML generation completed")
-        return "\n".join(nml_content)
+        logger.debug(f"Created Cell object with name: {cell_name}")
+        return self.cell
 
     def get_cell_name(self) -> str:
         """
         Generate a cell name based on the morphology origin.
 
         :return: The generated cell name.
+        :rtype: str
         """
         logger.debug("Generating cell name")
         cell_name = "cell1"
@@ -86,11 +100,54 @@ class NeuroMLWriter:
         logger.debug(f"Generated cell name: {cell_name}")
         return cell_name
 
+    def nml_string(self, version: str) -> str:
+        """
+        Generate NeuroML string representation.
+
+        :param version: NeuroML version.
+        :type version: str
+        :return: NeuroML string representation.
+        :rtype: str
+        """
+        logger.info("Starting NeuroML generation")
+        if (
+            len(self.points) < 2
+            or len(self.section_types) < 2
+            or self.section_types[1].lower() != "soma"
+        ):
+            logger.error("Null data or section types in nmlWrite")
+            return ""
+
+        self.create_cell()
+        start_point = self.find_start_point()
+
+        logger.debug(f"Cell name: {self.cell.id}")
+        logger.debug(f"Start point: {start_point}")
+
+        self.parse_tree(start_point, start_point, True, True, version)
+        self.create_segment_groups()
+
+        self.nml_doc = NeuroMLDocument(id=self.cell.id)
+        self.nml_doc.cells.append(self.cell)
+
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
+            writers.NeuroMLWriter.write(self.nml_doc, temp_file)
+            temp_file_path = temp_file.name
+
+        with open(temp_file_path, "r") as temp_file:
+            nml_content = temp_file.read()
+
+        os.unlink(temp_file_path)
+
+        logger.info("NeuroML generation completed")
+        return nml_content
+
     def find_start_point(self) -> SWCNode:
         """
-        Find the starting point (soma) of the neuron.
+        Find the starting point (soma) in the SWC graph.
 
-        :return: The starting SWCNode (soma).
+        :return: The starting point (soma) node.
+        :rtype: SWCNode
         """
         logger.debug("Finding start point (soma)")
         for point in self.points:
@@ -107,15 +164,20 @@ class NeuroMLWriter:
         new_cable: bool,
         new_cell: bool,
         version: str,
-    ):
+    ) -> None:
         """
-        Parse the neural tree structure recursively.
+        Parse the SWC tree and create NeuroML segments.
 
-        :param parent_point: The parent SWCNode.
-        :param this_point: The current SWCNode being processed.
-        :param new_cable: Whether this point starts a new cable.
-        :param new_cell: Whether this is the start of a new cell.
-        :param version: The NeuroML version being used.
+        :param parent_point: The parent point in the SWC tree.
+        :type parent_point: SWCNode
+        :param this_point: The current point being processed.
+        :type this_point: SWCNode
+        :param new_cable: Whether to start a new cable.
+        :type new_cable: bool
+        :param new_cell: Whether this is a new cell.
+        :type new_cell: bool
+        :param version: NeuroML version.
+        :type version: str
         """
         logger.debug(
             f"Parsing tree: Point {this_point.id}, Type {this_point.type}, NewCable: {new_cable}, NewCell: {new_cell}"
@@ -127,36 +189,19 @@ class NeuroMLWriter:
         if new_cable:
             cable_id = self.next_cable_id
             self.next_cable_id += 1
-            self.cable_ids_vs_indices[this_point.id] = cable_id
+            self.cable_ids_vs_indices[cable_id] = []
             logger.debug(f"New cable created: Cable ID {cable_id}")
         else:
-            cable_id = self.cable_ids_vs_indices[parent_point.id]
-            self.cable_ids_vs_indices[this_point.id] = cable_id
+            cable_id = max(self.cable_ids_vs_indices.keys())
             logger.debug(f"Using existing cable: Cable ID {cable_id}")
-
-        fract_along_parent_cable = 1
 
         if this_point.type == SWCNode.SOMA:
             self.handle_soma(this_point, parent_point, cable_id, version, new_cell)
         elif this_point.type != SWCNode.SOMA and parent_point.type == SWCNode.SOMA:
             logger.debug("Parent point is on soma! Not creating 'real' segment")
-            self.segment_content.append(
-                "      <!-- Parent point is on soma! Not creating 'real' segment -->"
-            )
-            if (
-                parent_point.id == 0
-                and parent_point.id not in self.point_indices_vs_seg_ids
-            ):
-                fract_along_parent_cable = 0
         else:
             logger.debug(f"Creating segment for point {this_point.id}")
             self.create_segment(this_point, parent_point, cable_id, version, new_cable)
-
-        if new_cable:
-            logger.debug(f"Handling new cable for point {this_point.id}")
-            self.handle_new_cable(
-                this_point, cable_id, this_type, fract_along_parent_cable, version
-            )
 
         self.processed_nodes.add(this_point.id)
 
@@ -187,68 +232,151 @@ class NeuroMLWriter:
         cable_id: int,
         version: str,
         new_cell: bool,
-    ):
+    ) -> None:
         """
-        Handle the soma point in the neural structure.
+         Handle the creation of soma segments based on different soma representation cases.
 
-        :param this_point: The current soma SWCNode.
-        :param parent_point: The parent SWCNode.
+         This method implements the soma representation guidelines as described in
+        "Soma format representation in NeuroMorpho.Org as of version 5.3".
+         For full details, see: https://github.com/NeuroML/Cvapp-NeuroMorpho.org/blob/master/caseExamples/SomaFormat-NMOv5.3.pdf
+
+         The method handles the following cases:
+
+         1. Single contour (most common, ~80% of cases):
+          Converted to a three-point soma cylinder.
+
+         2. Soma absent (~8% of cases):
+          Not handled in this method (no changes made).
+
+         3. Multiple contours (~5% of cases):
+          Converted to a three-point soma cylinder, averaging all contour points.
+
+         4. Multiple cylinders (~4% of cases):
+          Kept as is, no conversion needed.
+
+         5. Single point (~3% of cases):
+          Converted to a three-point soma cylinder.
+
+         The three-point soma representation consists of:
+         - First point: Center of the soma
+         - Second point: Shifted -r_s in y-direction
+         - Third point: Shifted +r_s in y-direction
+         Where r_s is the equivalent radius computed from the soma surface area.
+
+         This method specifically handles cases 1, 3, and 5. Case 2 is not applicable,
+         and case 4 is handled implicitly by not modifying the existing representation.
+
+
+        :param this_point: The current soma point being processed.
+        :type this_point: SWCNode
+        :param parent_point: The parent point of the current soma point.
+        :type parent_point: SWCNode
         :param cable_id: The ID of the current cable.
-        :param version: The NeuroML version being used.
-        :param new_cell: Whether this is the start of a new cell.
+        :type cable_id: int
+        :param version: NeuroML version.
+        :type version: str
+        :param new_cell: Whether this is a new cell.
+        :type new_cell: bool
         """
         logger.debug(f"Handling soma point: {this_point.id}")
         soma_points = [p for p in self.points if p.type == SWCNode.SOMA]
 
         if len(soma_points) == 3:
-            if this_point.id == soma_points[1].id:  # Middle point
-                logger.debug("Processing middle point of 3-point soma")
-                self.segment_content.append(
-                    "      <!-- First point is of a multi point soma => not spherical! -->"
+            if this_point.id == soma_points[0].id:
+                logger.debug("Processing first point of 3-point soma")
+                middle_point = soma_points[1]
+                end_point = soma_points[2]
+
+                segment = Segment(
+                    id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
                 )
-                self.segment_content.append("      <!-- Cylindrical soma... -->")
-
-                # Create first segment (from second point to first point)
-                seg_id = self.next_segment_id
+                segment.proximal = Point3DWithDiam(
+                    x=middle_point.x,
+                    y=middle_point.y,
+                    z=middle_point.z,
+                    diameter=2 * middle_point.radius,
+                )
+                segment.distal = Point3DWithDiam(
+                    x=this_point.x,
+                    y=this_point.y,
+                    z=this_point.z,
+                    diameter=2 * this_point.radius,
+                )
+                segment.type = SWCNode.SOMA
+                self.cell.morphology.segments.append(segment)
+                self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
+                self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
                 self.next_segment_id += 1
-                self.point_indices_vs_seg_ids[this_point.id] = seg_id
 
-                segment = [f'      <segment id="{seg_id}" name="Seg_{seg_id}"']
-                if version.startswith("1"):
-                    segment.append(f' cable="{cable_id}">')
-                else:
-                    segment.append(f'> <!-- "Cable" is {cable_id}-->')
-
-                self.point_append(soma_points[1], 0.0, "proximal", segment)
-                self.point_append(soma_points[0], 0.0, "distal", segment)
-                segment.append("      </segment>")
-                self.segment_content.extend(segment)
-
-                # Create second segment (from second point to third point)
-                seg_id = self.next_segment_id
+                segment = Segment(
+                    id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
+                )
+                segment.parent = SegmentParent(segments=self.next_segment_id - 1)
+                segment.distal = Point3DWithDiam(
+                    x=end_point.x,
+                    y=end_point.y,
+                    z=end_point.z,
+                    diameter=2 * end_point.radius,
+                )
+                segment.type = SWCNode.SOMA
+                self.cell.morphology.segments.append(segment)
+                self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
+                self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
                 self.next_segment_id += 1
-                self.point_indices_vs_seg_ids[soma_points[2].id] = seg_id
 
-                segment = [f'      <segment id="{seg_id}" name="Seg_{seg_id}"']
-                if version.startswith("1"):
-                    segment.append(f' cable="{cable_id}">')
-                else:
-                    segment.append(f'> <!-- "Cable" is {cable_id}-->')
-
-                segment.append(f'        <parent segment="{seg_id-1}"/>')
-                self.point_append(soma_points[2], 0.0, "distal", segment)
-                segment.append("      </segment>")
-                self.segment_content.extend(segment)
             elif (
-                this_point.id == soma_points[0].id or this_point.id == soma_points[2].id
+                this_point.id == soma_points[1].id or this_point.id == soma_points[2].id
             ):
-                # Do nothing for first and third points as they're handled with the middle point
-                pass
-        elif new_cell and parent_point.type == SWCNode.SOMA:
-            logger.debug("First point of multi-point soma")
-            self.segment_content.append(
-                "      <!-- First point is of a multi point soma => not spherical! -->"
-            )
+                pass  # These points are already handled
+        elif len(soma_points) > 3:
+            if this_point.id == soma_points[0].id:
+                logger.debug("Processing first point of multi-point soma")
+
+                # First segment
+                segment = Segment(
+                    id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
+                )
+                segment.proximal = Point3DWithDiam(
+                    x=this_point.x,
+                    y=this_point.y,
+                    z=this_point.z,
+                    diameter=2 * this_point.radius,
+                )
+                next_point = soma_points[1]
+                segment.distal = Point3DWithDiam(
+                    x=next_point.x,
+                    y=next_point.y,
+                    z=next_point.z,
+                    diameter=2 * next_point.radius,
+                )
+                segment.type = SWCNode.SOMA
+                self.cell.morphology.segments.append(segment)
+                self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
+                self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
+                self.next_segment_id += 1
+
+            elif this_point.id != soma_points[-1].id:
+                # Middle segments
+                parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
+                segment = Segment(
+                    id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
+                )
+                segment.parent = SegmentParent(segments=parent_seg_id)
+                next_point = soma_points[soma_points.index(this_point) + 1]
+                segment.distal = Point3DWithDiam(
+                    x=next_point.x,
+                    y=next_point.y,
+                    z=next_point.z,
+                    diameter=2 * next_point.radius,
+                )
+                segment.type = SWCNode.SOMA
+                self.cell.morphology.segments.append(segment)
+                self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
+                self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
+                self.next_segment_id += 1
+
+            # We don't need to do anything for the last point, as it's already represented by the distal of the previous segment
+
         else:
             logger.debug(f"Creating regular segment for soma point {this_point.id}")
             self.create_segment(this_point, parent_point, cable_id, version, True)
@@ -260,266 +388,163 @@ class NeuroMLWriter:
         cable_id: int,
         version: str,
         new_cable: bool,
-    ):
+    ) -> None:
         """
-        Create a segment in the NeuroML structure.
+        Create a NeuroML segment.
 
-        :param this_point: The current SWCNode.
-        :param parent_point: The parent SWCNode.
+        :param this_point: The current point being processed.
+        :type this_point: SWCNode
+        :param parent_point: The parent point of the current point.
+        :type parent_point: SWCNode
         :param cable_id: The ID of the current cable.
-        :param version: The NeuroML version being used.
-        :param new_cable: Whether this point starts a new cable.
+        :type cable_id: int
+        :param version: NeuroML version.
+        :type version: str
+        :param new_cable: Whether this is a new cable.
+        :type new_cable: bool
         """
         logger.debug(
-            f"Creating segment: Point {this_point.id}, Parent {parent_point.id}, Cable {cable_id}"
+            f"Creating segment: Point {this_point.id}, Type {this_point.type}, Parent {parent_point.id}, Cable {cable_id}"
         )
         seg_id = self.next_segment_id
         self.next_segment_id += 1
+
+        segment = Segment(id=seg_id, name=f"Seg_{seg_id}")
+        segment.type = this_point.type
+
+        if parent_point.id in self.point_indices_vs_seg_ids:
+            parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
+            segment.parent = SegmentParent(segments=parent_seg_id)
+        else:
+            segment.proximal = Point3DWithDiam(
+                x=parent_point.x,
+                y=parent_point.y,
+                z=parent_point.z,
+                diameter=2 * parent_point.radius,
+            )
+
+        segment.distal = Point3DWithDiam(
+            x=this_point.x,
+            y=this_point.y,
+            z=this_point.z,
+            diameter=2 * this_point.radius,
+        )
+
+        self.cell.morphology.segments.append(segment)
         self.point_indices_vs_seg_ids[this_point.id] = seg_id
+        self.cable_ids_vs_indices[cable_id].append(seg_id)
 
-        segment = [f'      <segment id="{seg_id}" name="Seg_{seg_id}"']
-
-        parent_element = self.get_parent_element(seg_id, parent_point, version)
-
-        if version.startswith("1"):
-            segment.append(f' cable="{cable_id}">')
-        else:
-            segment.append(f'> <!-- "Cable" is {cable_id}-->')
-
-        if parent_element:
-            segment.append(f"        {parent_element}")
-
-        append_disjointed_proximal = (
-            parent_element and "UNKNOWN_PARENT" in parent_element
-        )
-        if append_disjointed_proximal or new_cable:
-            logger.debug(f"Appending proximal point for segment {seg_id}")
-            self.point_append(parent_point, 0.0, "proximal", segment)
-
-        logger.debug(f"Appending distal point for segment {seg_id}")
-        self.point_append(this_point, 0.0, "distal", segment)
-
-        segment.append("      </segment>")
-        self.segment_content.extend(segment)
-
-        if version.startswith("2"):
-            cable_name = f"{self.cable_prefix_v2}{cable_id}"
-            if cable_name not in self.segment_groups:
-                self.segment_groups[cable_name] = []
-            self.segment_groups[cable_name].append(str(seg_id))
-            logger.debug(f"Added segment {seg_id} to cable group {cable_name}")
-
-    def get_parent_element(
-        self, seg_id: int, parent_point: SWCNode, version: str
-    ) -> Optional[str]:
+    def create_segment_groups(self) -> None:
         """
-        Get the parent element for a segment.
-
-        :param seg_id: The ID of the current segment.
-        :param parent_point: The parent SWCNode.
-        :param version: The NeuroML version being used.
-        :return: The parent element string or None.
+        Create segment groups based on the cell morphology.
         """
-        logger.debug(
-            f"Getting parent element for segment {seg_id}, parent point {parent_point.id}"
-        )
-        if seg_id > 0 and parent_point.id >= 0:
-            if parent_point.id not in self.point_indices_vs_seg_ids:
-                if (
-                    parent_point.children
-                    and parent_point.children[0].type == SWCNode.SOMA
-                    and parent_point.children[0].id in self.point_indices_vs_seg_ids
-                ):
-                    par_seg_id = self.point_indices_vs_seg_ids[
-                        parent_point.children[0].id
-                    ]
-                    logger.debug(f"Using soma child as parent: {par_seg_id}")
-                elif (
-                    parent_point.children
-                    and parent_point.children[0].type == SWCNode.SOMA
-                    and parent_point.children[0].id == 0
-                ):
-                    par_seg_id = 0
-                    logger.debug("Using soma root as parent")
-                else:
-                    logger.warning(
-                        f"Unknown parent for segment {seg_id}: {parent_point.id}"
-                    )
-                    return (
-                        f'<parent segment="UNKNOWN_PARENT_{parent_point.id}"/>'
-                        if version.startswith("2")
-                        else f' parent="UNKNOWN_PARENT_{parent_point.id}"'
-                    )
+        logger.info("Creating segment groups")
 
-                return (
-                    f'<parent segment="{par_seg_id}"/>'
-                    if version.startswith("2")
-                    else f' parent="{par_seg_id}"'
-                )
-            else:
-                par_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
-                logger.debug(f"Parent segment found: {par_seg_id}")
-                return (
-                    f'<parent segment="{par_seg_id}"/>'
-                    if version.startswith("2")
-                    else f' parent="{par_seg_id}"'
-                )
-        return ""
+        def get_groups_for_type(segment_type: int) -> List[str]:
+            """
+            Get the list of groups a segment belongs to based on its type.
 
-    def handle_new_cable(
-        self,
-        this_point: SWCNode,
-        cable_id: int,
-        this_type: int,
-        fract_along_parent_cable: float,
-        version: str,
-    ):
-        """
-        Handle the creation of a new cable in the NeuroML structure.
+            :param segment_type: The type of the segment.
+            :type segment_type: int
+            :return: List of group names the segment belongs to.
+            :rtype: List[str]
+            """
+            groups = ["all"]
+            if segment_type == SWCNode.SOMA:
+                groups.extend(["soma_group", "color_white"])
+            elif segment_type == SWCNode.AXON:
+                groups.extend(["axon_group", "color_grey"])
+            elif segment_type == SWCNode.BASAL_DENDRITE:
+                groups.extend(["basal_dendrite", "dendrite_group", "color_green"])
+            elif segment_type == SWCNode.APICAL_DENDRITE:
+                groups.extend(["apical_dendrite", "dendrite_group", "color_magenta"])
+            elif segment_type >= 5:
+                groups.extend([f"SWC_group_{segment_type}", "dendrite_group"])
+            elif segment_type == 0:
+                groups.extend(["SWC_group_0_assuming_soma", "soma_group"])
+            elif segment_type == -1:
+                groups.extend(["SWC_group_-1_assuming_soma", "soma_group"])
+            return groups
 
-        :param this_point: The current SWCNode.
-        :param cable_id: The ID of the current cable.
-        :param this_type: The type of the current point.
-        :param fract_along_parent_cable: The fractional position along the parent cable.
-        :param version: The NeuroML version being used.
-        """
-        logger.debug(
-            f"Handling new cable: Point {this_point.id}, Cable {cable_id}, Type {this_type}"
-        )
-        cable_name = f"{self.cable_prefix_v2}{cable_id}"
-
-        if version.startswith("1"):
-            fract_info = (
-                f' fract_along_parent="{fract_along_parent_cable}"'
-                if fract_along_parent_cable != 1
-                else ""
-            )
-            self.group_content.append(
-                f'      <cable id="{cable_id}" name="{self.segment_name(this_type)}_{self.seg_per_typ[this_type]}"{fract_info}>'
-            )
-            for group in self.get_groups_for_type(this_point):
-                self.group_content.append(f"        <meta:group>{group}</meta:group>")
-            self.group_content.append("      </cable>")
-        else:
-            # Create a segment group for this cable
-            if cable_name not in self.segment_groups:
-                self.segment_groups[cable_name] = []
-
-            # Add this cable to all relevant groups
-            for group in self.get_groups_for_type(this_point):
-                if group not in self.segment_groups:
-                    self.segment_groups[group] = []
-                self.segment_groups[group].append(cable_name)
-                logger.debug(f"Added cable {cable_id} to group {group}")
-
-        self.seg_per_typ[this_type] += 1
-
-    def point_append(self, p: SWCNode, dz: float, loc: str, segment: List[str]):
-        """
-        Append a point to the segment content.
-
-        :param p: The SWCNode to append.
-        :param dz: The z-offset to apply.
-        :param loc: The location identifier ('proximal' or 'distal').
-        :param segment: The list of segment content strings.
-        """
-        logger.debug(
-            f"Appending {loc} point: x={p.x:.6f}, y={p.y:.6f}, z={p.z + dz:.6f}, diameter={2 * p.radius:.6f}"
-        )
-        segment.append(
-            f'        <{loc} x="{p.x:.6f}" y="{p.y:.6f}" z="{p.z + dz:.6f}" diameter="{2 * p.radius:.6f}"/>'
-        )
-
-    def get_groups_for_type(self, p: SWCNode) -> List[str]:
-        """
-        Get the groups associated with a given point type.
-
-        :param p: The SWCNode to get groups for.
-        :return: A list of group names.
-        """
-        logger.debug(f"Getting groups for point type {p.type}")
-        groups = ["all"]
-        type_groups = {
-            SWCNode.SOMA: ["soma_group", "color_white"],
-            SWCNode.AXON: ["axon_group", "color_grey"],
-            SWCNode.BASAL_DENDRITE: ["basal_dendrite", "dendrite_group", "color_green"],
-            SWCNode.APICAL_DENDRITE: [
-                "apical_dendrite",
+        # Initialize all groups
+        all_groups = set(
+            [
+                "all",
+                "soma_group",
+                "axon_group",
                 "dendrite_group",
-                "color_magenta",
-            ],
-        }
+                "basal_dendrite",
+                "apical_dendrite",
+            ]
+        )
+        all_groups.update([f"SWC_group_{i}" for i in range(-1, 10)])
+        all_groups.update(["color_white", "color_grey", "color_green", "color_magenta"])
 
-        if p.type in type_groups:
-            groups.extend(type_groups[p.type])
-        elif p.type == 0:  # undefined
-            groups.append("undefined_group")
-        else:
-            logger.warning(
-                f"Unexpected SWC node type {p.type} encountered. Treating as undefined."
-            )
-            groups.append("undefined_group")
+        group_members: Dict[str, Set[int]] = {group: set() for group in all_groups}
 
-        logger.debug(f"Groups for point type {p.type}: {groups}")
-        return groups
+        # Assign segments to groups
+        for segment in self.cell.morphology.segments:
+            segment_type = segment.type
+            groups = get_groups_for_type(segment_type)
 
-    def segment_name(self, ityp: int) -> str:
+            for group in groups:
+                group_members[group].add(segment.id)
+
+        # Create SegmentGroup objects
+        for group_name, members in group_members.items():
+            if members:
+                group = SegmentGroup(id=group_name)
+                for member_id in sorted(members):  # Sort to ensure consistent order
+                    group.members.append(Member(segments=member_id))
+                self.cell.morphology.segment_groups.append(group)
+
+        # Add cable groups (assuming we're using NeuroML v2)
+        for cable_id, segments in self.cable_ids_vs_indices.items():
+            cable_group = SegmentGroup(id=f"{self.cable_prefix_v2}{cable_id}")
+            for seg_id in sorted(set(segments)):  # Remove duplicates and sort
+                cable_group.members.append(Member(segments=seg_id))
+            self.cell.morphology.segment_groups.append(cable_group)
+
+        # Add the cell_type property
+        self.cell.properties.append(
+            Property(tag="cell_type", value="converted_from_swc")
+        )
+
+        logger.info("Segment groups created successfully")
+
+    def print_soma_segments(self) -> None:
         """
-        Get the segment name for a given type.
-
-        :param ityp: The integer type of the segment.
-        :return: The string name of the segment type.
+        Print information about soma segments.
         """
-        logger.debug(f"Getting segment name for type {ityp}")
-        if ityp >= 5:
-            return f"user{ityp}"
-        elif ityp < 0:
-            logger.warning("Negative segment type converted to 'unknown'")
-            return "unknown"
-        else:
-            return self.section_types[ityp]
+        logger.info("Printing soma segments:")
+        for segment in self.cell.morphology.segments:
+            if any(
+                sg.id == "soma_group"
+                for sg in self.cell.morphology.segment_groups
+                if segment.id in [m.segments for m in sg.members]
+            ):
+                print(f"Soma Segment ID: {segment.id}")
+                print(f"  Name: {segment.name}")
+                if segment.proximal:
+                    print(
+                        f"  Proximal: x={segment.proximal.x}, y={segment.proximal.y}, z={segment.proximal.z}, diameter={segment.proximal.diameter}"
+                    )
+                print(
+                    f"  Distal: x={segment.distal.x}, y={segment.distal.y}, z={segment.distal.z}, diameter={segment.distal.diameter}"
+                )
+                if segment.parent:
+                    print(f"  Parent Segment ID: {segment.parent.segments}")
+                print()
 
-    def generate_nml_content(self, cell_name: str, version: str) -> List[str]:
+    def export_to_nml_file(self, filename: str) -> None:
         """
-        Generate the full NeuroML content.
+        Export the NeuroML document to a file.
 
-        :param cell_name: The name of the cell.
-        :param version: The NeuroML version being used.
-        :return: A list of strings representing the NeuroML content.
+        :param filename: The name of the file to export to.
+        :type filename: str
         """
-        logger.debug("Generating full NeuroML content")
-        nml_content = [
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            f'<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"',
-            f'    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
-            f'    xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v{version}.xsd"',
-            f'    id="{cell_name}">',
-            f'  <cell id="{cell_name}">',
-            f"    <notes>",
-            f"      Neuronal morphology exported in NeuroML v{version} from Python Based Converter )",
-            f"      Original file: {self.morphology_origin}",
-            f"    </notes>",
-            f'    <morphology id="morphology_{cell_name}">',
-        ]
+        if self.nml_doc is None:
+            self.nml_string("2.0")  # This creates self.nml_doc if it doesn't exist
 
-        nml_content.extend(self.segment_content)
-
-        if version.startswith("1"):
-            nml_content.extend(self.group_content)
-        else:
-            for group_name, members in self.segment_groups.items():
-                logger.debug(f"Adding segment group: {group_name}")
-                nml_content.append(f'      <segmentGroup id="{group_name}">')
-                for member in members:
-                    if member.startswith(self.cable_prefix_v2):
-                        nml_content.append(
-                            f'        <include segmentGroup="{member}"/>'
-                        )
-                    else:
-                        nml_content.append(f'        <member segment="{member}"/>')
-                nml_content.append("      </segmentGroup>")
-
-        nml_content.extend(["    </morphology>", "  </cell>", "</neuroml>"])
-
-        logger.debug("NeuroML content generation completed")
-        return nml_content
+        writers.NeuroMLWriter.write(self.nml_doc, filename)
+        logger.info(f"NeuroML file exported to: {filename}")
