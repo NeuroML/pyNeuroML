@@ -1238,26 +1238,39 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         )
         # TODO: add a shading filter for light?
         shaders.append(
-            ShadingFilter("smooth", shininess=1, ambient_light=(0.8, 0.8, 0.8, 0.6))
+            ShadingFilter(
+                "smooth",
+                shininess=25,
+                ambient_light=(0.8, 0.8, 0.8, 0.0),
+                diffuse_light=(1, 1, 1, 1),
+            )
         )
         mesh.attach(shaders[counter])
         assert mesh is not None
-
-        def attach_headlight(current_view):
-            light_dir = (0, -1, 0, 0)
-            for shader in shaders:
-                shader.light_dir = light_dir[:3]
-            initial_light_dir = current_view.camera.transform.imap(light_dir)
-
-            @current_view.scene.transform.changed.connect
-            def on_transform_change(event):
-                transform = current_view.camera.transform
-
-                for shader in shaders:
-                    shader.light_dir = transform.map(initial_light_dir)[:3]
-
         counter += 1
-        attach_headlight(current_view)
+
+    def attach_headlight(current_view):
+        logger.info(f"Camera center is: {current_view.camera.center}")
+        light_dir = (*current_view.camera.center, 0)
+        for shader in shaders:
+            shader.light_dir = light_dir[:3]
+
+        initial_light_dir = current_view.camera.transform.imap(light_dir)
+        logger.info(f"Transform is: {current_view.camera.transform}")
+        logger.info(f"Initial light dir is: {initial_light_dir}")
+
+        @current_view.scene.transform.changed.connect
+        def on_transform_change(event):
+            transform = current_view.camera.transform
+            new_light_dir = transform.map(initial_light_dir)[:3]
+
+            logger.info(f"New matrix is: {transform}")
+            logger.info(f"New light dir is: {new_light_dir}")
+
+            for shader in shaders:
+                shader.light_dir = new_light_dir
+
+    attach_headlight(current_view)
     pbar.finish()
 
 
