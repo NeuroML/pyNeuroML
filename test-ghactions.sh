@@ -1,8 +1,25 @@
+# note that set -e is flimsy
+# http://mywiki.wooledge.org/BashFAQ/105
 set -e
 
 # CI already installs package and all optional dependencies, so this is redundant.
 # But we keep it to allow easy local testing.
 pip install .[dev]
+
+# required to test commands that should fail
+# need this because other constructs don't work:
+# - command ||  or && does not check that command has failed
+# - ! command does not make script error even with set -e because this is considered to be handled
+check_should_fail() {
+    if [ $? -ne 0 ]; then
+        echo "TEST PASSED: Command failed as expected."
+        return 0
+    else
+        echo "TEST ERROR: Command should have failed!"
+        exit 1
+    fi
+}
+
 
 echo
 echo "################################################"
@@ -100,6 +117,28 @@ pynml LEMS_NML2_Ex9_FN.xml -nineml
 pynml LEMS_NML2_Ex9_FN.xml -spineml
 pynml LEMS_NML2_Ex9_FN.xml -sbml
 
+
+echo
+echo "################################################"
+echo "##   Test wrong file types"
+
+set +e
+
+# these should fail, but we need to check them explicity because constructs
+# like `! command` are not recognised by `set -e`
+pynml NML2_SingleCompHHCell.nml ; check_should_fail
+pynml NML2_SingleCompHHCell.nml -dlems ; check_should_fail
+pynml NML2_SingleCompHHCell.nml -brian ; check_should_fail
+pynml NML2_SingleCompHHCell.nml -cvode ; check_should_fail
+pynml NML2_SingleCompHHCell.nml -sbml ; check_should_fail
+pynml NML2_SingleCompHHCell.nml -matlab ; check_should_fail
+pynml -validate LEMS_NML2_Ex9_FN.xml ; check_should_fail
+pynml LEMS_NML2_Ex9_FN.xml -swc ; check_should_fail
+pynml LEMS_NML2_Ex9_FN.xml -png ; check_should_fail
+pynml -validate test_data/valid_doc.sbml ; check_should_fail
+pynml LEMS_NML2_Ex9_FN.xml -validate-sbml ; check_should_fail
+
+set -e
 
 echo
 echo "################################################"
