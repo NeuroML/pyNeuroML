@@ -561,9 +561,13 @@ def _evaluate_arguments(args):
     pre_args = ""
     post_args = ""
     exit_on_fail = True
+    # type of files being passed to the command
+    # by default, lems
+    file_types = ["xml"]
 
     # Deal with the SBML validation option which doesn't call run_jneuroml
     if args.validate_sbml or args.validate_sbml_units:
+        file_types = ["sbml"]
         try:
             from pyneuroml.sbml import validate_sbml_files
         except Exception:
@@ -597,6 +601,7 @@ def _evaluate_arguments(args):
 
     # Deal with the SEDML validation option which doesn't call run_jneuroml
     if args.validate_sedml:
+        file_types = ["sedml"]
         try:
             from pyneuroml.sedml import validate_sedml_files
         except Exception:
@@ -623,6 +628,7 @@ def _evaluate_arguments(args):
 
     # Deal with the -run-tellurium option which doesn't call run_jneuroml
     if args.run_tellurium is not None:
+        file_types = ["sedml"]
         try:
             from pyneuroml.tellurium import run_from_sedml_file
         except Exception:
@@ -654,16 +660,21 @@ def _evaluate_arguments(args):
     # TODO: handle these better
     if args.sbml_import or args.sbml_import_units or args.vhdl:
         if args.sbml_import:
+            file_types = ["sbml"]
             pre_args = "-sbml-import"
             f = args.sbml_import[0]
             post_args = " ".join(args.sbml_import[1:])
+            confirm_file_type(f, file_types, sys_error=True)
         elif args.sbml_import_units:
+            file_types = ["sbml"]
             pre_args = "-smbl-import-units"
             f = args.sbml_import_units[0]
             post_args = " ".join(args.sbml_import_units[1:])
+            confirm_file_type(f, file_types, sys_error=True)
         elif args.vhdl:
+            file_types = ["xml"]
             f = args.vhdl[1]
-            confirm_lems_file(f)
+            confirm_lems_file(f, True)
             post_args = "-vhdl %s" % args.vhdl[0]
 
         run_jneuroml(
@@ -678,21 +689,25 @@ def _evaluate_arguments(args):
 
     # Process bits that process the file list provided as the shared option
     if len(args.input_files) == 0:
-        logger.critical("Please specify NeuroML/LEMS files to process")
+        logger.error(
+            "Please specify files and options to process. Run `pynml -h` to see usage help text."
+        )
         return
 
+    # some commands can be run on lists of files
     run_multi = False
 
+    # for commands to be run on each file individually
     for f in args.input_files:
         if args.nogui:
             post_args = "-nogui"
 
         if args.sedml:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-sedml"
         elif args.neuron is not None:
             # Note: either a lems file or nml2 file is allowed here...
-            confirm_file_exists(f)
+            file_types = ["xml", "nml"]
 
             num_neuron_args = len(args.neuron)
             if num_neuron_args < 0 or num_neuron_args > 4:
@@ -707,7 +722,7 @@ def _evaluate_arguments(args):
 
         elif args.netpyne is not None:
             # Note: either a lems file or nml2 file is allowed here...
-            confirm_file_exists(f)
+            file_types = ["xml", "nml"]
 
             num_netpyne_args = len(args.netpyne)
 
@@ -722,7 +737,7 @@ def _evaluate_arguments(args):
             post_args = "-netpyne %s" % " ".join(other_args)
 
         elif args.eden is not None:
-            confirm_lems_file(f)
+            file_types = ["xml"]
 
             num_eden_args = len(args.eden)
 
@@ -736,53 +751,60 @@ def _evaluate_arguments(args):
             other_args = [(a if a != "-eden" else "") for a in args.eden]
             post_args = "-eden %s" % " ".join(other_args)
 
-        elif args.svg:
-            confirm_neuroml_file(f)
-            post_args = "-svg"
-        elif args.png:
-            confirm_neuroml_file(f)
-            post_args = "-png"
         elif args.dlems:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-dlems"
         elif args.vertex:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-vertex"
         elif args.xpp:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-xpp"
         elif args.dnsim:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-dnsim"
         elif args.brian:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-brian"
         elif args.brian2:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-brian2"
         elif args.moose:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-moose"
         elif args.sbml:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-sbml"
         elif args.sbml_sedml:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-sbml-sedml"
         elif args.matlab:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-matlab"
         elif args.cvode:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-cvode"
         elif args.nineml:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-nineml"
         elif args.spineml:
-            confirm_lems_file(f)
+            file_types = ["xml"]
             post_args = "-spineml"
+        elif args.lems_graph:
+            file_types = ["xml"]
+            pre_args = ""
+            post_args = "-lems-graph"
+            exit_on_fail = True
+        elif args.svg:
+            file_types = ["nml"]
+            post_args = "-svg"
+        elif args.png:
+            file_types = ["nml"]
+            post_args = "-png"
         elif args.graph:
-            confirm_neuroml_file(f)
+            # not using jneuroml
+            file_types = ["nml"]
+            confirm_neuroml_file(f, True)
             from neuromllite.GraphVizHandler import engines
 
             engine = "dot"
@@ -818,13 +840,8 @@ def _evaluate_arguments(args):
 
             generate_nmlgraph(f, level, engine)
             sys.exit(0)
-        elif args.lems_graph:
-            confirm_lems_file(f)
-            pre_args = ""
-            post_args = "-lems-graph"
-            exit_on_fail = True
         elif args.matrix:
-            confirm_neuroml_file(f)
+            confirm_neuroml_file(f, True)
             from neuromllite.MatrixHandler import MatrixHandler
 
             level = int(args.matrix[0])
@@ -845,27 +862,36 @@ def _evaluate_arguments(args):
 
             exit(0)
         elif args.validate:
-            confirm_neuroml_file(f)
+            file_types = ["nml"]
             pre_args = "-validate"
             exit_on_fail = True
             run_multi = True
 
         elif args.validatev1:
-            confirm_neuroml_file(f)
+            file_types = ["nml"]
             pre_args = "-validatev1"
             exit_on_fail = True
             run_multi = True
 
         elif args.swc:
             convert_count = 0
+            file_types = ["nml"]
             for f in args.input_files:
-                confirm_neuroml_file(f)
+                confirm_neuroml_file(f, True)
                 logger.info(f"Trying to convert {f} to swc format...")
                 convert_count += 1 if convert_to_swc(f) else 0
             logger.info(f"Converted {convert_count} file(s) to swc format")
             sys.exit(0)
 
         if run_multi is False:
+            # check that the right file type has been passed to jNeuroML
+            if file_types == ["xml"]:
+                confirm_lems_file(f, True)
+            elif file_types == ["nml"]:
+                confirm_neuroml_file(f, True)
+            else:
+                confirm_file_type(f, file_types, sys_error=True)
+
             run_jneuroml(
                 pre_args,
                 f,
@@ -873,7 +899,17 @@ def _evaluate_arguments(args):
                 max_memory=args.java_max_memory,
                 exit_on_fail=exit_on_fail,
             )
+
     if run_multi:
+        for f in args.input_files:
+            # check that the right file type has been passed to jNeuroML
+            if file_types == ["xml"]:
+                confirm_lems_file(f, True)
+            elif file_types == ["nml"]:
+                confirm_neuroml_file(f, True)
+            else:
+                confirm_file_type(f, file_types, sys_error=True)
+
         run_jneuroml(
             pre_args,
             " ".join(args.input_files),
