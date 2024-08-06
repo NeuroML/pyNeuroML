@@ -27,6 +27,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+# extension: standard
+pynml_file_type_dict = {
+    "xml": "LEMS",
+    "nml": "NeuroML",
+    "sedml": "SED-ML",
+    "sbml": "SBML",
+}
+
+
 def read_neuroml2_file(
     nml2_file_name: str,
     include_includes: bool = False,
@@ -296,9 +305,10 @@ def confirm_file_type(
     """
     confirm_file_exists(filename)
     filename_ext = filename.split(".")[-1]
+    file_types = [f"{x} ({pynml_file_type_dict[x]})" for x in file_exts]
     if filename_ext not in file_exts:
         error_string = (
-            f"Expected filetypes: {', '.join(file_exts)} (got {filename_ext})"
+            f"Expected file extension(s): {', '.join(file_types)}; got {filename_ext}"
         )
         if error_str is not None:
             error_string += "\n" + error_str
