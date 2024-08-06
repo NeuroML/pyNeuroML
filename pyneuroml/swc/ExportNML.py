@@ -4,6 +4,7 @@ import tempfile
 from typing import Dict, List, Optional, Set
 
 import neuroml.writers as writers
+from LoadSWC import SWCGraph, SWCNode, load_swc
 from neuroml import (
     Cell,
     Include,
@@ -16,21 +17,18 @@ from neuroml import (
 )
 from neuroml.nml.nml import Point3DWithDiam, SegmentParent
 
-# Import the load_swc function from the LoadSWC module
-from .LoadSWC import SWCNode
-
 # Set up logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class NeuroMLWriter:
-    def __init__(self, swc_graph):
+    def __init__(self, swc_graph: SWCGraph):
         """
         Initialize the NeuroMLWriter.
 
         :param swc_graph: The graph representation of the SWC file.
-        :type swc_graph: Any  # Replace with the actual type of swc_graph if known
+        :type swc_graph: SWCGraph
         """
         logger.info("Initializing NeuroMLWriter")
         self.swc_graph = swc_graph
@@ -56,6 +54,7 @@ class NeuroMLWriter:
         self.cable_prefix_v2: str = "Cable_"
         self.verbose: bool = True
         self.processed_nodes: Set[int] = set()
+        self.segment_types: Dict[int, int] = {}
         logger.debug(f"NeuroMLWriter initialized with {len(self.points)} points")
 
     def create_cell(self) -> Cell:
@@ -235,37 +234,28 @@ class NeuroMLWriter:
     ) -> None:
         """
          Handle the creation of soma segments based on different soma representation cases.
-
          This method implements the soma representation guidelines as described in
         "Soma format representation in NeuroMorpho.Org as of version 5.3".
          For full details, see: https://github.com/NeuroML/Cvapp-NeuroMorpho.org/blob/master/caseExamples/SomaFormat-NMOv5.3.pdf
 
-         The method handles the following cases:
-
+          The method handles the following cases:
          1. Single contour (most common, ~80% of cases):
           Converted to a three-point soma cylinder.
-
          2. Soma absent (~8% of cases):
           Not handled in this method (no changes made).
-
          3. Multiple contours (~5% of cases):
           Converted to a three-point soma cylinder, averaging all contour points.
-
          4. Multiple cylinders (~4% of cases):
           Kept as is, no conversion needed.
-
          5. Single point (~3% of cases):
           Converted to a three-point soma cylinder.
-
          The three-point soma representation consists of:
          - First point: Center of the soma
          - Second point: Shifted -r_s in y-direction
          - Third point: Shifted +r_s in y-direction
          Where r_s is the equivalent radius computed from the soma surface area.
-
          This method specifically handles cases 1, 3, and 5. Case 2 is not applicable,
          and case 4 is handled implicitly by not modifying the existing representation.
-
 
         :param this_point: The current soma point being processed.
         :type this_point: SWCNode
@@ -302,10 +292,10 @@ class NeuroMLWriter:
                     z=this_point.z,
                     diameter=2 * this_point.radius,
                 )
-                segment.type = SWCNode.SOMA
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
+                self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.next_segment_id += 1
 
                 segment = Segment(
@@ -318,10 +308,10 @@ class NeuroMLWriter:
                     z=end_point.z,
                     diameter=2 * end_point.radius,
                 )
-                segment.type = SWCNode.SOMA
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
                 self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
+                self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.next_segment_id += 1
 
             elif (
@@ -349,10 +339,10 @@ class NeuroMLWriter:
                     z=next_point.z,
                     diameter=2 * next_point.radius,
                 )
-                segment.type = SWCNode.SOMA
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
+                self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.next_segment_id += 1
 
             elif this_point.id != soma_points[-1].id:
@@ -369,10 +359,10 @@ class NeuroMLWriter:
                     z=next_point.z,
                     diameter=2 * next_point.radius,
                 )
-                segment.type = SWCNode.SOMA
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.cable_ids_vs_indices[cable_id].append(self.next_segment_id)
+                self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.next_segment_id += 1
 
             # We don't need to do anything for the last point, as it's already represented by the distal of the previous segment
@@ -410,7 +400,6 @@ class NeuroMLWriter:
         self.next_segment_id += 1
 
         segment = Segment(id=seg_id, name=f"Seg_{seg_id}")
-        segment.type = this_point.type
 
         if parent_point.id in self.point_indices_vs_seg_ids:
             parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
@@ -433,6 +422,7 @@ class NeuroMLWriter:
         self.cell.morphology.segments.append(segment)
         self.point_indices_vs_seg_ids[this_point.id] = seg_id
         self.cable_ids_vs_indices[cable_id].append(seg_id)
+        self.segment_types[seg_id] = this_point.type
 
     def create_segment_groups(self) -> None:
         """
@@ -484,7 +474,7 @@ class NeuroMLWriter:
 
         # Assign segments to groups
         for segment in self.cell.morphology.segments:
-            segment_type = segment.type
+            segment_type = self.segment_types[segment.id]
             groups = get_groups_for_type(segment_type)
 
             for group in groups:
@@ -518,11 +508,7 @@ class NeuroMLWriter:
         """
         logger.info("Printing soma segments:")
         for segment in self.cell.morphology.segments:
-            if any(
-                sg.id == "soma_group"
-                for sg in self.cell.morphology.segment_groups
-                if segment.id in [m.segments for m in sg.members]
-            ):
+            if self.segment_types.get(segment.id) == SWCNode.SOMA:
                 print(f"Soma Segment ID: {segment.id}")
                 print(f"  Name: {segment.name}")
                 if segment.proximal:
