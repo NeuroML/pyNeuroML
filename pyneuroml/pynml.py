@@ -578,6 +578,10 @@ def _evaluate_arguments(args):
             logger.critical("No input files specified")
             sys.exit(ARGUMENT_ERR)
 
+        # check for correct file types
+        for f in args.input_files:
+            confirm_file_type(f, file_types, sys_error=True)
+
         if args.validate_sbml_units:
             # A failed unit consistency check generates an error
             strict_units = True
@@ -612,6 +616,10 @@ def _evaluate_arguments(args):
             logger.critical("No input files specified")
             sys.exit(ARGUMENT_ERR)
 
+        # check for correct file types
+        for f in args.input_files:
+            confirm_file_type(f, file_types, sys_error=True)
+
         try:
             result = validate_sedml_files(args.input_files)
         except Exception as e:
@@ -638,6 +646,10 @@ def _evaluate_arguments(args):
         if len(args.run_tellurium) < 1 and len(args.input_files) < 1:
             logger.critical("No input files specified")
             sys.exit(ARGUMENT_ERR)
+
+        # check for correct file types
+        for f in args.input_files:
+            confirm_file_type(f, file_types, sys_error=True)
 
         try:
             if len(args.input_files) == 1:
