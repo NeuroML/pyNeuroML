@@ -20,7 +20,7 @@ import neuroml.loaders as loaders
 import neuroml.writers as writers
 from neuroml import NeuroMLDocument
 
-from pyneuroml.errors import FILE_NOT_FOUND_ERR, NMLFileTypeError
+from pyneuroml.errors import ARGUMENT_ERR, FILE_NOT_FOUND_ERR, NMLFileTypeError
 from pyneuroml.validators import validate_neuroml2
 
 logger = logging.getLogger(__name__)
@@ -237,12 +237,14 @@ def confirm_file_exists(filename: str) -> None:
         sys.exit(FILE_NOT_FOUND_ERR)
 
 
-def confirm_neuroml_file(filename: str) -> None:
+def confirm_neuroml_file(filename: str, sys_error: bool = False) -> None:
     """Confirm that file exists and is a NeuroML file before proceeding with
     processing.
 
     :param filename: Names of files to check
     :type filename: str
+    :param sys_error: toggle whether function should exit or raise exception
+    :type sys_error: bool
     """
     error_string = textwrap.dedent(
         """
@@ -258,15 +260,21 @@ def confirm_neuroml_file(filename: str) -> None:
     except NMLFileTypeError as e:
         if filename.startswith("LEMS_"):
             logger.warning(error_string)
-        raise e
+        if sys_error is True:
+            logger.error(e)
+            sys.exit(ARGUMENT_ERR)
+        else:
+            raise e
 
 
-def confirm_lems_file(filename: str) -> None:
+def confirm_lems_file(filename: str, sys_error: bool = False) -> None:
     """Confirm that file exists and is a LEMS file before proceeding with
     processing.
 
     :param filename: Names of files to check
     :type filename: list of strings
+    :param sys_error: toggle whether function should exit or raise exception
+    :type sys_error: bool
     """
     # print('Checking file: %s'%filename)
     # Some conditions to check if a LEMS file was entered
@@ -284,11 +292,18 @@ def confirm_lems_file(filename: str) -> None:
     except NMLFileTypeError as e:
         if filename.endswith("nml"):
             logger.warning(error_string)
-        raise e
+        if sys_error is True:
+            logger.error(e)
+            sys.exit(ARGUMENT_ERR)
+        else:
+            raise e
 
 
 def confirm_file_type(
-    filename: str, file_exts: typing.List[str], error_str: typing.Optional[str] = None
+    filename: str,
+    file_exts: typing.List[str],
+    error_str: typing.Optional[str] = None,
+    sys_error: bool = False,
 ) -> None:
     """Confirm that a file exists and has the necessary extension
 
@@ -312,4 +327,8 @@ def confirm_file_type(
         )
         if error_str is not None:
             error_string += "\n" + error_str
-        raise NMLFileTypeError(error_string)
+        if sys_error is True:
+            logger.error(error_string)
+            sys.exit(ARGUMENT_ERR)
+        else:
+            raise NMLFileTypeError(error_string)
