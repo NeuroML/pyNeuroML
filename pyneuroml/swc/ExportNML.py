@@ -206,11 +206,20 @@ class NeuroMLWriter:
             cable_id = max(self.cable_ids_vs_indices.keys())
             logger.debug(f"Using existing cable: Cable ID {cable_id}")
 
+        # Handle different cases for soma and dendrite connections
         if this_point.type == SWCNode.SOMA:
+            # Case 1: Current point is part of the soma
+            # Handle soma point (may involve special soma representation)
             self.handle_soma(this_point, parent_point, cable_id, new_cell)
         elif this_point.type != SWCNode.SOMA and parent_point.type == SWCNode.SOMA:
-            logger.debug("Parent point is on soma! Creating 'real' segment")
+            # Case 2: Current point is the first point of a dendrite or axon, connected to the soma
+            # We don't create a 'real' segment here because:
+            # a) The soma representation might be simplified (e.g., sphere or cylinder)
+            # b) The connection to the soma will be handled differently (e.g., attached to soma surface)
+            logger.debug("Parent point is on soma! Not creating 'real' segment")
         else:
+            # Case 3: Regular dendritic or axonal segment
+            # Create a normal segment
             logger.debug(f"Creating segment for point {this_point.id}")
             self.create_segment(this_point, parent_point, cable_id, new_cable)
 
