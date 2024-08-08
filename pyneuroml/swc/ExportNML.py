@@ -83,9 +83,7 @@ class NeuroMLWriter:
 
         notes: str = f"Neuronal morphology exported from Python Based Converter. Original file: {self.morphology_origin}"
 
-        self.cell = component_factory(
-            "Cell", id=cell_name, notes=notes, validate=validate
-        )
+        self.cell = Cell(id=cell_name, notes=notes)
 
         # Create an empty Morphology object
         self.cell.morphology = Morphology(id=f"morphology_{cell_name}")
