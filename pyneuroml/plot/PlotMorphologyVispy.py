@@ -33,8 +33,6 @@ from pyneuroml.utils.plot import (
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-pynml_in_jupyter = False
-
 try:
     from vispy import app, scene, use
     from vispy.geometry.generation import create_sphere
@@ -42,10 +40,8 @@ try:
     from vispy.scene.visuals import InstancedMesh
     from vispy.util.transforms import rotate
 
-    if app.Application.is_interactive(app):
-        pynml_in_jupyter = True
-        from IPython.display import display
-
+    # vispy: full gl+ context is required for instanced rendering
+    use(gl="gl+")
 except ImportError:
     logger.warning("Please install optional dependencies to use vispy features:")
     logger.warning("pip install pyneuroml[vispy]")
@@ -145,17 +141,21 @@ def create_new_vispy_canvas(
     :returns: scene, view
     :raises ValueError: if incompatible value of `axes_pos` is passed
     """
-    # vispy: full gl+ context is required for instanced rendering
-    use(gl="gl+")
+    # new app
+    pynmlapp = app.application.Application()
 
-    canvas = scene.SceneCanvas(
+    # if it's a notebook, use the flag
+    if pynmlapp.is_notebook():
+        from IPython.display import display
+
+    pynmlcanvas = scene.SceneCanvas(
         keys="interactive",
         show=False,
         bgcolor=VISPY_THEME[theme]["bg"],
         size=(800, 600),
         title="NeuroML viewer (VisPy)",
     )
-    grid = canvas.central_widget.add_grid(margin=10)
+    grid = pynmlcanvas.central_widget.add_grid(margin=10)
     grid.spacing = 0
 
     title_widget = scene.Label(title, color=VISPY_THEME[theme]["fg"])
@@ -277,7 +277,7 @@ def create_new_vispy_canvas(
 
     rotation_timer = app.Timer(connect=vispy_rotate)
 
-    @canvas.events.key_press.connect
+    @pynmlcanvas.events.key_press.connect
     def vispy_on_key_press(event):
         nonlocal cam_index
 
@@ -303,9 +303,9 @@ def create_new_vispy_canvas(
             view.camera.reset()
         # quit
         elif event.text == "9":
-            canvas.app.quit()
+            pynmlapp.quit()
 
-    return canvas, view
+    return pynmlcanvas, view
 
 
 def plot_interactive_3D(
@@ -595,6 +595,8 @@ def plot_interactive_3D(
         view_center=view_center,
     )
 
+    print(f"Vispy app is: {current_canvas.app}")
+
     logger.debug(
         f"After canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
     )
@@ -626,7 +628,7 @@ def plot_interactive_3D(
     logger.info("Processing %s cells" % total_cells)
 
     # do not show this pbar in jupyter notebooks
-    if not pynml_in_jupyter:
+    if not current_canvas.app.is_notebook():
         pbar = progressbar.ProgressBar(
             max_value=total_cells,
             widgets=[
@@ -776,11 +778,11 @@ def plot_interactive_3D(
         if pbar is not None:
             pbar.finish()
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        if pynml_in_jupyter:
-            display(current_canvas)
+        if current_canvas.app.is_notebook():
+            current_canvas
         else:
             current_canvas.show()
-            app.run()
+            current_canvas.app.run()
 
 
 def plot_3D_cell_morphology(
@@ -1038,11 +1040,11 @@ def plot_3D_cell_morphology(
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        if pynml_in_jupyter:
+        if current_canvas.app.is_notebook():
             display(current_canvas)
         else:
             current_canvas.show()
-            app.run()
+            current_canvas.app.run()
     return meshdata
 
 
@@ -1117,12 +1119,12 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
 
         # if in a notebook, only update once per mesh, but not per mesh
         # instance
-        if pynml_in_jupyter:
+        if current_view.scene.canvas.app.is_notebook():
             pbar.update(progress_ctr)
 
         for num, im in enumerate(i):
             # if not in a notebook, update for each mesh instance
-            if not pynml_in_jupyter:
+            if not current_view.scene.canvas.app.is_notebook():
                 pbar.update(progress_ctr)
 
             progress_ctr += 1
@@ -1371,10 +1373,10 @@ def plot_3D_schematic(
 
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
-        if pynml_in_jupyter:
+        if current_canvas.app.is_notebook():
             display(current_canvas)
         else:
-            app.run()
+            current_canvas.app.run()
 
 
 def create_cylindrical_mesh(
