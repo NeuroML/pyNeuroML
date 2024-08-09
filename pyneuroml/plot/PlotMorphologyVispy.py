@@ -9,6 +9,7 @@ File: pyneuroml/plot/PlotMorphologyVispy.py
 Copyright 2023 NeuroML contributors
 """
 
+import copy
 import logging
 import math
 import random
@@ -19,6 +20,7 @@ import numpy
 import progressbar
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+from neuroml.utils import fix_external_morphs_biophys_in_cell
 from scipy.spatial.transform import Rotation
 
 from pyneuroml.pynml import read_neuroml2_file
@@ -471,6 +473,7 @@ def plot_interactive_3D(
                 check_validity_pre_include=False,
                 verbose=False,
                 optimized=True,
+                fix_external_morphs_biophys=True,
             )
             load_minimal_morphplottable__model(nml_model, nml_file)
             # note that from this point, the model object is not necessarily valid,
@@ -481,6 +484,18 @@ def plot_interactive_3D(
     # if it isn't a NeuroMLDocument, create one
     if isinstance(nml_model, Cell):
         logger.debug("Got a cell")
+        if nml_model.morphology is None:
+            if nml_model.morphology_attr is None:
+                logger.error(
+                    "Neither morphology nor a reference to an external morphology are included in the Cell. Cannot plot."
+                )
+                return
+            else:
+                logger.error(
+                    "An external morphology is has been reference in the cell but I do not have the whole document to load it. Please pass the complete file to the function instead."
+                )
+                return
+
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         plottable_nml_model.add(nml_model)
         logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
@@ -499,7 +514,10 @@ def plot_interactive_3D(
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
     elif isinstance(nml_model, NeuroMLDocument):
-        plottable_nml_model = nml_model
+        plottable_nml_model = fix_external_morphs_biophys_in_cell(
+            nml_model, overwrite=False
+        )
+
         if title is None:
             title = f"{plottable_nml_model.id}"
 
@@ -511,11 +529,11 @@ def plot_interactive_3D(
         pop_id_vs_radii,
     ) = extract_position_info(plottable_nml_model, verbose)
 
-    logger.debug(f"positions: {positions}")
-    logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
-    logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
-    logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
-    logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
+    logger.info(f"positions: {positions}")
+    logger.info(f"pop_id_vs_cell: {pop_id_vs_cell}")
+    logger.info(f"cell_id_vs_cell: {cell_id_vs_cell}")
+    logger.info(f"pop_id_vs_color: {pop_id_vs_color}")
+    logger.info(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
     # calculate total cells and segments to be plotted
     total_cells = 0
@@ -911,6 +929,13 @@ def plot_3D_cell_morphology(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
 
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_interactive_3D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
+
     if highlight_spec is None:
         highlight_spec = {}
     logging.debug("highlight_spec is " + str(highlight_spec))
@@ -1274,6 +1299,13 @@ def plot_3D_schematic(
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_interactive_3D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
 
     view_center = None
     if upright:
