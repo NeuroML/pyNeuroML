@@ -141,12 +141,11 @@ def create_new_vispy_canvas(
     :returns: scene, view
     :raises ValueError: if incompatible value of `axes_pos` is passed
     """
-    # new app
-    pynmlapp = app.application.Application()
+    pynmlapp = None
+    pynmlcanvas = None
 
-    # if it's a notebook, use the flag
-    if pynmlapp.is_notebook():
-        from IPython.display import display
+    # new app
+    pynmlapp = app.use_app()
 
     pynmlcanvas = scene.SceneCanvas(
         keys="interactive",
@@ -1041,7 +1040,7 @@ def plot_3D_cell_morphology(
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
         if current_canvas.app.is_notebook():
-            display(current_canvas)
+            current_canvas
         else:
             current_canvas.show()
             current_canvas.app.run()
@@ -1374,7 +1373,7 @@ def plot_3D_schematic(
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
         if current_canvas.app.is_notebook():
-            display(current_canvas)
+            current_canvas
         else:
             current_canvas.app.run()
 
