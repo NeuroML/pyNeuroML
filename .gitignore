@@ -181,3 +181,5 @@ coverage.xml
 /examples/hhcell.swc
 /examples/metadata.rdf
 /tests/utils/test_translation.net.nml
+
+scratch/
