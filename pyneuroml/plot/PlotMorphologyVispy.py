@@ -518,8 +518,8 @@ def plot_interactive_3D(
             nml_model, overwrite=False
         )
 
-        if title is None:
-            title = f"{plottable_nml_model.id}"
+    if title is None:
+        title = f"{plottable_nml_model.id}"
 
     (
         cell_id_vs_cell,
