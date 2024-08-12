@@ -403,8 +403,8 @@ def plot_interactive_3D(
         used.)
 
         Each key in the dictionary will be of the cell id and the values will
-        be more dictionaries, with the segment id as key and the following keys
-        in it:
+        be a "cell_color" or more dictionaries, with the segment id as key and
+        the following keys in it:
 
         - marker_color: color of the marker
         - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
@@ -416,12 +416,21 @@ def plot_interactive_3D(
 
             {
                 "cell id1": {
+                "cell_color": "red",
                     "seg id1": {
                         "marker_color": "blue",
                         "marker_size": [0.1, 0.1]
                     }
                 }
             }
+
+
+        The `cell_color` can be one of:
+
+        - valid color options of :py:func:`plot_3D_cell_morphology` for a "detailed" plot_type
+        - valid color options of :py:func:`plot_3D_schematic` for a "schematic" plot_type
+
+        Please see the function docstrings for more information.
 
     :type highlight_spec: dict
     :param precision: tuple containing two values: (number of decimal places,
@@ -698,6 +707,11 @@ def plot_interactive_3D(
                 if pop_id in pop_id_vs_color
                 else get_next_hex_color()
             )
+            # if hightlight spec has a color for the cell, use that
+            try:
+                color = highlight_spec[cell.id]["cell_color"]
+            except KeyError:
+                pass
 
             try:
                 logging.debug(f"Plotting {cell.id}")
@@ -1045,7 +1059,7 @@ def plot_3D_cell_morphology(
         seg_color = "white"
         if color is None:
             seg_color = get_next_hex_color()
-        elif color == "Groups":
+        elif color.lower() == "Groups".lower():
             try:
                 seg_color = color_dict[seg.id]
             except KeyError:
@@ -1056,7 +1070,7 @@ def plot_3D_cell_morphology(
                     seg_color = "red"
                 elif seg.id in dend_segs:
                     seg_color = "blue"
-        elif color == "Default Groups":
+        elif color.lower() == "Default Groups".lower():
             if seg.id in soma_segs:
                 seg_color = "green"
             elif seg.id in axon_segs:
@@ -1297,7 +1311,7 @@ def plot_3D_schematic(
     :param color: color to use for segment groups with some special values:
 
         - if None, each unbranched segment group is given a unique color,
-        - if "Cell", each cell is given a unique color
+        - if "Cell", the whole cell is given one color
         - if "Default Groups", each cell is given unique colors for all axons,
           dendrites, and soma segments
 
