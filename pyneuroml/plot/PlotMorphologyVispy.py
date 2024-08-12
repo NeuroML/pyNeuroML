@@ -339,7 +339,7 @@ def plot_interactive_3D(
         QT_QPA_PLATFORM=wayland-egl
 
     .. versionadded:: 1.1.12
-        The hightlight_spec parameter
+        The highlight_spec parameter
 
 
     :param nml_file: path to NeuroML cell file or
@@ -828,7 +828,7 @@ def plot_3D_cell_morphology(
     .. versionadded:: 1.0.0
 
     .. versionadded:: 1.1.12
-        The hightlight_spec parameter
+        The highlight_spec parameter
 
     .. seealso::
 
