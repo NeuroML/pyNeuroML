@@ -430,7 +430,8 @@ def plot_interactive_3D(
         grouped into meshes---this may increase detail, but will reduce
         performance. The second argument is used to limit the total number of
         meshes. The function will keep reducing precision until the number of
-        meshes is fewer than the value provided here.
+        meshes is fewer than the value provided here. The precision is passed
+        to :py:func:`round` and so may be negative.
 
         If you have a good GPU, you can increase both these values to get more
         detailed visualizations
@@ -492,7 +493,7 @@ def plot_interactive_3D(
                 return
             else:
                 logger.error(
-                    "An external morphology is has been reference in the cell but I do not have the whole document to load it. Please pass the complete file to the function instead."
+                    "An external morphology is has been reference in the cell but I do not have the whole document to load it. Please pass the NeuroMLDocument or filename to the function instead."
                 )
                 return
 
@@ -900,7 +901,7 @@ def plot_3D_cell_morphology(
     :type meshdata: dict
     :param mesh_precision: what decimal places to use to group meshes into
         instances: more precision means more detail (meshes), means less
-        performance
+        performance (passed to :py:func:`round` and so may be negative)
     :type mesh_precision: int
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements. Mostly
@@ -1023,9 +1024,9 @@ def plot_3D_cell_morphology(
             r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)
 
         key = (
-            f"{r1:.{mesh_precision}f}",
-            f"{r2:.{mesh_precision}f}",
-            f"{round(length, mesh_precision):.{mesh_precision}f}",
+            f"{r1:.{abs(mesh_precision)}f}",
+            f"{r2:.{abs(mesh_precision)}f}",
+            f"{round(length, mesh_precision):.{abs(mesh_precision)}f}",
         )
 
         seg_color = "white"
@@ -1288,6 +1289,13 @@ def plot_3D_schematic(
           dendrites, and soma segments
 
     :type color: str
+    :param meshdata: dictionary used to store mesh related data for vispy
+        visualisation
+    :type meshdata: dict
+    :param mesh_precision: what decimal places to use to group meshes into
+        instances: more precision means more detail (meshes), means less
+        performance (passed to :py:func:`round` and so may be negative)
+    :type mesh_precision: int
     :param upright: bool only applicable for single cells: Makes cells "upright"
         (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
         and transforming cell co-ordinates to align along the rotated first principal
