@@ -9,7 +9,6 @@ File: pyneuroml/plot/PlotMorphologyVispy.py
 Copyright 2023 NeuroML contributors
 """
 
-import copy
 import logging
 import math
 import random
