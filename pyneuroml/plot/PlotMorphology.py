@@ -20,6 +20,7 @@ import numpy
 from matplotlib import pyplot as plt
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+from neuroml.utils import fix_external_morphs_biophys_in_cell
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
@@ -314,6 +315,7 @@ def plot_2D(
                 check_validity_pre_include=False,
                 verbose=False,
                 optimized=True,
+                fix_external_morphs_biophys=True,
             )
             load_minimal_morphplottable__model(nml_model, nml_file)
             # note that from this point, the model object is not necessarily valid,
@@ -323,26 +325,41 @@ def plot_2D(
 
     # if it isn't a NeuroMLDocument, create one
     if isinstance(nml_model, Cell):
-        logger.info("Got a cell")
+        logger.debug("Got a cell")
+        if nml_model.morphology is None:
+            if nml_model.morphology_attr is None:
+                logger.error(
+                    "Neither morphology nor a reference to an external morphology are included in the Cell. Cannot plot."
+                )
+                return
+            else:
+                logger.error(
+                    "An external morphology is has been reference in the cell but I do not have the whole document to load it. Please pass the NeuroMLDocument or filename to the function instead."
+                )
+                return
+
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         plottable_nml_model.add(nml_model)
-        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
 
     # if it's only a cell, add it to an empty cell in a document
     elif isinstance(nml_model, Morphology):
-        logger.info("Received morph, adding to a dummy cell")
+        logger.debug("Received morph, adding to a dummy cell")
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         nml_cell = plottable_nml_model.add(
             Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
         plottable_nml_model.add(nml_cell)
-        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
     elif isinstance(nml_model, NeuroMLDocument):
-        plottable_nml_model = nml_model
+        plottable_nml_model = fix_external_morphs_biophys_in_cell(
+            nml_model, overwrite=False
+        )
+
         if title is None:
             title = f"{plottable_nml_model.id}"
 
@@ -617,6 +634,13 @@ def plot_2D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_2D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
 
     if highlight_spec is None:
         highlight_spec = {}
@@ -1036,6 +1060,18 @@ def plot_2D_schematic(
     :type close_plot: bool
 
     """
+    if cell is None:
+        raise ValueError(
+            "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
+        )
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_2D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
+
     if title == "":
         title = f"2D schematic of segment groups from {cell.id}"
 
