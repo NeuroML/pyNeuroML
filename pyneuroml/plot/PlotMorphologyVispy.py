@@ -399,7 +399,8 @@ def plot_interactive_3D(
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements.  Only used
         when plotting multi-compartmental cells for marking segments on them
-        ("plot_type" is either "constant" or "detailed")
+        ("plot_type" is "detailed", since for "constant" `min_width` is always
+        used.)
 
         Each key in the dictionary will be of the cell id and the values will
         be more dictionaries, with the segment id as key and the following keys
@@ -456,6 +457,19 @@ def plot_interactive_3D(
 
     if highlight_spec is None:
         highlight_spec = {}
+
+    if plot_type != "detailed" and len(highlight_spec.items()) > 0:
+        if plot_type == "constant":
+            logger.warning(
+                "Plot type is 'constant', `marker_size` in `highlight_spec` will be ignored and provided `min_width` used"
+            )
+        elif plot_type == "schematic" or plot_type == "point":
+            logger.warning(
+                f"Plot type is '{plot_type}', `highlight_spec` will be ignored"
+            )
+        logger.warning(
+            "Please use `plot_type='detailed' if you also want to use `marker_size`"
+        )
 
     if verbose:
         logger.info(f"Visualising {nml_file}")
