@@ -530,11 +530,11 @@ def plot_interactive_3D(
         pop_id_vs_radii,
     ) = extract_position_info(plottable_nml_model, verbose)
 
-    logger.info(f"positions: {positions}")
-    logger.info(f"pop_id_vs_cell: {pop_id_vs_cell}")
-    logger.info(f"cell_id_vs_cell: {cell_id_vs_cell}")
-    logger.info(f"pop_id_vs_color: {pop_id_vs_color}")
-    logger.info(f"pop_id_vs_radii: {pop_id_vs_radii}")
+    logger.debug(f"positions: {positions}")
+    logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
+    logger.debug(f"cell_id_vs_cell: {cell_id_vs_cell}")
+    logger.debug(f"pop_id_vs_color: {pop_id_vs_color}")
+    logger.debug(f"pop_id_vs_radii: {pop_id_vs_radii}")
 
     # calculate total cells and segments to be plotted
     total_cells = 0
