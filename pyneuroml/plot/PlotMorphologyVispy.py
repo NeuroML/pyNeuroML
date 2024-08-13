@@ -409,6 +409,8 @@ def plot_interactive_3D(
         - marker_color: color of the marker
         - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
           is used)
+        - marker_type: "sphere" (otherwise the default shape of the segment is
+          used, which could either be a sphere or a cylinder)
 
         E.g.:
 
@@ -419,7 +421,8 @@ def plot_interactive_3D(
                 "cell_color": "red",
                     "seg id1": {
                         "marker_color": "blue",
-                        "marker_size": [0.1, 0.1]
+                        "marker_size": [0.1, 0.1],
+                        "marker_type": "sphere"
                     }
                 }
             }
@@ -939,6 +942,8 @@ def plot_3D_cell_morphology(
         - marker_color: color of the marker
         - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
           is used)
+        - marker_type: "sphere" (otherwise the default shape of the segment is
+          used, which could either be a sphere or a cylinder)
 
     :type highlight_spec: dict
     :param upright: bool only applicable for single cells: Makes cells "upright"
@@ -1029,6 +1034,7 @@ def plot_3D_cell_morphology(
         segment_spec = {
             "marker_size": None,
             "marker_color": None,
+            "marker_type": None,
         }
         try:
             segment_spec.update(highlight_spec[str(seg.id)])
@@ -1049,6 +1055,14 @@ def plot_3D_cell_morphology(
                 raise RuntimeError("The marker size must be a list")
             r1 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
             r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)
+
+        if (
+            segment_spec["marker_type"] is not None
+            and segment_spec["marker_type"].lower() == "sphere"
+        ):
+            logger.debug("Changing marker type to sphere")
+            r1 = r2 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
+            length = 0.0
 
         key = (
             f"{r1:.{abs(mesh_precision)}f}",
