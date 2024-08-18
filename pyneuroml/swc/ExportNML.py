@@ -1,9 +1,8 @@
 import logging
 import tempfile
-from typing import Dict, List, Optional, Set
+from typing import List
 
 import neuroml.writers as writers
-from LoadSWC import SWCGraph, SWCNode, load_swc
 from neuroml import (
     Cell,
     Member,
@@ -14,6 +13,8 @@ from neuroml import (
     SegmentGroup,
 )
 from neuroml.nml.nml import Point3DWithDiam, SegmentParent
+
+from .LoadSWC import SWCGraph, SWCNode
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -520,26 +521,6 @@ class NeuroMLWriter:
         )
 
         logger.info("Segment groups created successfully")
-
-    def print_soma_segments(self) -> None:
-        """
-        Print information about the soma segments for debugging purposes.
-        """
-        logger.info("Printing soma segments:")
-        for segment in self.cell.morphology.segments:
-            if self.segment_types.get(segment.id) == SWCNode.SOMA:
-                print(f"Soma Segment ID: {segment.id}")
-                print(f"  Name: {segment.name}")
-                if segment.proximal:
-                    print(
-                        f"  Proximal: x={segment.proximal.x}, y={segment.proximal.y}, z={segment.proximal.z}, diameter={segment.proximal.diameter}"
-                    )
-                print(
-                    f"  Distal: x={segment.distal.x}, y={segment.distal.y}, z={segment.distal.z}, diameter={segment.distal.diameter}"
-                )
-                if segment.parent:
-                    print(f"  Parent Segment ID: {segment.parent.segments}")
-                print()
 
     def export_to_nml_file(self, filename: str) -> None:
         """
