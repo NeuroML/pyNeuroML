@@ -1,8 +1,9 @@
 import logging
 import tempfile
-from typing import List
+from typing import Dict, List, Optional, Set
 
 import neuroml.writers as writers
+from LoadSWC import SWCGraph, SWCNode, load_swc
 from neuroml import (
     Cell,
     Member,
@@ -13,8 +14,6 @@ from neuroml import (
     SegmentGroup,
 )
 from neuroml.nml.nml import Point3DWithDiam, SegmentParent
-
-from .LoadSWC import SWCGraph, SWCNode
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -37,8 +36,8 @@ class NeuroMLWriter:
         """
         Initialize the NeuroMLWriter with an SWC graph.
 
-        Args:
-            swc_graph (SWCGraph): The SWC graph to be converted to NeuroML.
+        :param swc_graph: The SWC graph to be converted to NeuroML.
+        :type swc_graph: SWCGraph
         """
         logger.info("Initializing NeuroMLWriter")
         self.swc_graph = swc_graph
@@ -71,8 +70,8 @@ class NeuroMLWriter:
         """
         Create a Cell object for the NeuroML representation.
 
-        Returns:
-            Cell: The created Cell object.
+        :return: The created Cell object.
+        :rtype: Cell
         """
         logger.info("Creating Cell object")
         cell_name = self.get_cell_name()
@@ -86,8 +85,8 @@ class NeuroMLWriter:
         """
         Generate a cell name based on the morphology origin.
 
-        Returns:
-            str: The generated cell name.
+        :return: The generated cell name.
+        :rtype: str
         """
         logger.debug("Generating cell name")
         cell_name = "cell1"
@@ -109,8 +108,8 @@ class NeuroMLWriter:
         """
         Generate the NeuroML representation as a string.
 
-        Returns:
-            str: The NeuroML representation as a string.
+        :return: The NeuroML representation as a string.
+        :rtype: str
         """
         logger.info("Starting NeuroML generation")
         if (
@@ -147,8 +146,8 @@ class NeuroMLWriter:
         """
         Find the starting point (soma) in the SWC graph.
 
-        Returns:
-            SWCNode: The starting point (soma) of the neuron.
+        :return: The starting point (soma) of the neuron.
+        :rtype: SWCNode
         """
         logger.debug("Finding start point (soma)")
         for point in self.points:
@@ -166,9 +165,10 @@ class NeuroMLWriter:
         """
         Recursively parse the SWC tree to create NeuroML segments.
 
-        Args:
-            parent_point (SWCNode): The parent point of the current point.
-            this_point (SWCNode): The current point being processed.
+        :param parent_point: The parent point of the current point.
+        :type parent_point: SWCNode
+        :param this_point: The current point being processed.
+        :type this_point: SWCNode
         """
         if this_point.id in self.processed_nodes:
             logger.debug(f"Point {this_point.id} already processed, skipping")
@@ -204,32 +204,11 @@ class NeuroMLWriter:
     ) -> None:
         """
         Handle the creation of soma segments.
-         Handle the creation of soma segments based on different soma representation cases.
-         This method implements the soma representation guidelines as described in
-        "Soma format representation in NeuroMorpho.Org as of version 5.3".
-         For full details, see: https://github.com/NeuroML/Cvapp-NeuroMorpho.org/blob/master/caseExamples/SomaFormat-NMOv5.3.pdf
-          The method handles the following cases:
-         1. Single contour (most common, ~80% of cases):
-          Converted to a three-point soma cylinder.
-         2. Soma absent (~8% of cases):
-          Not handled in this method (no changes made).
-         3. Multiple contours (~5% of cases):
-          Converted to a three-point soma cylinder, averaging all contour points.
-         4. Multiple cylinders (~4% of cases):
-          Kept as is, no conversion needed.
-         5. Single point (~3% of cases):
-          Converted to a three-point soma cylinder.
-         The three-point soma representation consists of:
-         - First point: Center of the soma
-         - Second point: Shifted -r_s in y-direction
-         - Third point: Shifted +r_s in y-direction
-         Where r_s is the equivalent radius computed from the soma surface area.
-         This method specifically handles cases 1, 3, and 5. Case 2 is not applicable,
-         and case 4 is handled implicitly by not modifying the existing representation.
 
-        Args:
-            this_point (SWCNode): The current soma point being processed.
-            parent_point (SWCNode): The parent point of the current soma point.
+        :param this_point: The current soma point being processed.
+        :type this_point: SWCNode
+        :param parent_point: The parent point of the current soma point.
+        :type parent_point: SWCNode
         """
         logger.debug(f"Handling soma point: {this_point.id}")
 
@@ -374,10 +353,12 @@ class NeuroMLWriter:
         """
         Create a NeuroML segment from an SWC point.
 
-        Args:
-            this_point (SWCNode): The current point being processed.
-            parent_point (SWCNode): The parent point of the current point.
-            new_branch (bool): Whether this point starts a new branch.
+        :param this_point: The current point being processed.
+        :type this_point: SWCNode
+        :param parent_point: The parent point of the current point.
+        :type parent_point: SWCNode
+        :param new_branch: Whether this point starts a new branch.
+        :type new_branch: bool
         """
 
         logger.debug(
@@ -459,9 +440,10 @@ class NeuroMLWriter:
         """
         Add a segment to the appropriate segment groups.
 
-        Args:
-            seg_id (int): The ID of the segment to add.
-            segment_type (int): The type of the segment.
+        :param seg_id: The ID of the segment to add.
+        :type seg_id: int
+        :param segment_type: The type of the segment.
+        :type segment_type: int
         """
         groups = self.get_groups_for_type(segment_type)
         for group in groups:
@@ -471,11 +453,10 @@ class NeuroMLWriter:
         """
         Get the list of group names a segment should belong to based on its type.
 
-        Args:
-            segment_type (int): The type of the segment.
-
-        Returns:
-            List[str]: A list of group names the segment should belong to.
+        :param segment_type: The type of the segment.
+        :type segment_type: int
+        :return: A list of group names the segment should belong to.
+        :rtype: List[str]
         """
         groups = ["all"]
         if segment_type == SWCNode.SOMA:
@@ -526,8 +507,8 @@ class NeuroMLWriter:
         """
         Export the NeuroML representation to a file.
 
-        Args:
-            filename (str): The name of the file to export to.
+        :param filename: The name of the file to export to.
+        :type filename: str
         """
         if self.nml_doc is None:
             self.nml_string()
