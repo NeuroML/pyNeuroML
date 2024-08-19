@@ -1,9 +1,8 @@
 import logging
 import tempfile
-from typing import Dict, List, Optional, Set
+from typing import Dict, List
 
 import neuroml.writers as writers
-from LoadSWC import SWCGraph, SWCNode, load_swc
 from neuroml import (
     Cell,
     Member,
@@ -14,6 +13,8 @@ from neuroml import (
     SegmentGroup,
 )
 from neuroml.nml.nml import Point3DWithDiam, SegmentParent
+
+from .LoadSWC import SWCGraph, SWCNode
 
 logging.basicConfig(
     level=logging.DEBUG,
