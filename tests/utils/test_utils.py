@@ -12,6 +12,7 @@ import math
 import pathlib as pl
 
 import neuroml
+
 from pyneuroml.pynml import read_neuroml2_file, write_neuroml2_file
 from pyneuroml.utils import (
     extract_position_info,
