@@ -250,10 +250,13 @@ def substitute_functions(expr, functions):
 def to_xpp(data, new_xpp_filename):
     xpp_ode = ""
 
+    from pyneuroml import __version__
+    xpp_ode += "\n## XPP export from pyNeuroML v%s\n"%__version__
+    
     xpp_ode += "\n# Parameters\n"
     for k, v in data["parameters"].items():
         if k not in INBUILT.keys():
-            xpp_ode += f"par {k} = {v}\n"
+            xpp_ode += f"par {k}={v}\n"
 
     xpp_ode += "\n# Functions\n"
     for k, v in data["functions"].items():
