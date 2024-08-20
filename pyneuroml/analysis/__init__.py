@@ -8,12 +8,21 @@ from pyneuroml import pynml
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.lems import generate_lems_file_for_neuroml
 from pyneuroml.utils.plot import get_next_hex_color
+from pyneuroml.plot import generate_plot
 import neuroml as nml
-from pyelectro.analysis import max_min
-from pyelectro.analysis import mean_spike_frequency
+
+from typing import Optional
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    from pyelectro.analysis import max_min
+    from pyelectro.analysis import mean_spike_frequency
+except ImportError:
+    logger.warning("Please install optional dependencies to use analysis features:")
+    logger.warning("pip install pyneuroml[analysis]")
 
 
 def generate_current_vs_frequency_curve(
@@ -33,10 +42,10 @@ def generate_current_vs_frequency_curve(
     plot_voltage_traces: bool = False,
     plot_if: bool = True,
     plot_iv: bool = False,
-    xlim_if: typing.List[float] = None,
-    ylim_if: typing.List[float] = None,
-    xlim_iv: typing.List[float] = None,
-    ylim_iv: typing.List[float] = None,
+    xlim_if: Optional[typing.List[float]] = None,
+    ylim_if: Optional[typing.List[float]] = None,
+    xlim_iv: Optional[typing.List[float]] = None,
+    ylim_iv: Optional[typing.List[float]] = None,
     label_xaxis: bool = True,
     label_yaxis: bool = True,
     show_volts_label: bool = True,
@@ -46,11 +55,11 @@ def generate_current_vs_frequency_curve(
     linewidth: str = "1",
     bottom_left_spines_only: bool = False,
     show_plot_already: bool = True,
-    save_voltage_traces_to: str = None,
-    save_if_figure_to: str = None,
-    save_iv_figure_to: str = None,
-    save_if_data_to: str = None,
-    save_iv_data_to: str = None,
+    save_voltage_traces_to: Optional[str] = None,
+    save_if_figure_to: Optional[str] = None,
+    save_iv_figure_to: Optional[str] = None,
+    save_if_data_to: Optional[str] = None,
+    save_iv_data_to: Optional[str] = None,
     simulator: str = "jNeuroML",
     num_processors: int = 1,
     include_included: bool = True,
@@ -111,8 +120,8 @@ def generate_current_vs_frequency_curve(
     :type temperature: str
     :param spike_threshold_mV: spike threshold potential
     :type spike_threshold_mV: float
-    :param plot_voltage_traces:
-    :type plot_voltage_traces:
+    :param plot_voltage_traces: toggle plotting of voltage traces
+    :type plot_voltage_traces: bool
     :param plot_if: toggle whether to plot I-F graphs
     :type plot_if: bool
     :param plot_iv: toggle whether to plot I-V graphs
@@ -157,11 +166,13 @@ def generate_current_vs_frequency_curve(
     :param simulator: simulator to use
     :type simulator: str
     :param num_processors: number of processors to use for analysis
+        This option is only used with NetPyNE which can use MPI for
+        parallelising simulations. For other simulators, this is unused.
     :type num_processors: int
-    :param include_included:
-    :type include_included:
-    :param title_above_plot:
-    :type title_above_plot:
+    :param include_included: include included files
+    :type include_included: bool
+    :param title_above_plot: title to show above the plot
+    :type title_above_plot: str
     :param return_axes: toggle whether plotting axis should be returned.
         This is useful if one wants to overlay more graphs in the same plot.
     :type return_axes: bool
@@ -169,8 +180,8 @@ def generate_current_vs_frequency_curve(
     :type segment_id: str
     :param fraction_along: fraction along on segment to attach to
     :type fraction_along: float
-    :param verbose:
-    :type verbose:
+    :param verbose: toggle verbosity
+    :type verbose: bool
 
     """
 
@@ -198,9 +209,7 @@ def generate_current_vs_frequency_curve(
     stims = []
     if len(custom_amps_nA) > 0:
         stims = [float(a) for a in custom_amps_nA]
-        stim_info = [
-            "%snA" % float(a) for a in custom_amps_nA
-        ]  # type: typing.Union[str, typing.List[str]]
+        stim_info = ["%snA" % float(a) for a in custom_amps_nA]  # type: typing.Union[str, typing.List[str]]
     else:
         # else generate a list using the provided arguments
         amp = start_amp_nA
@@ -381,7 +390,7 @@ def generate_current_vs_frequency_curve(
                 iv_results[stims[i]] = v_end
 
     if plot_voltage_traces:
-        traces_ax = pynml.generate_plot(
+        traces_ax = generate_plot(
             times_results,
             volts_results,
             "Membrane potential traces for: %s" % nml2_file,
@@ -403,7 +412,7 @@ def generate_current_vs_frequency_curve(
         stims = sorted(if_results.keys())
         stims_pA = [ii * 1000 for ii in stims]
         freqs = [if_results[s] for s in stims]
-        if_ax = pynml.generate_plot(
+        if_ax = generate_plot(
             [stims_pA],
             [freqs],
             "Firing frequency versus injected current for: %s" % nml2_file,
@@ -455,7 +464,7 @@ def generate_current_vs_frequency_curve(
             xs[-1].append(stim * 1000)
             ys[-1].append(iv_results[stim])
 
-        iv_ax = pynml.generate_plot(
+        iv_ax = generate_plot(
             xs,
             ys,
             "V at %sms versus I below threshold for: %s" % (end_stim, nml2_file),
@@ -621,7 +630,7 @@ def analyse_spiketime_vs_dt(
         markers.append("")
         colors.append("k")
 
-    pynml.generate_plot(
+    generate_plot(
         spxs,
         spys,
         "Spike times vs dt",
@@ -635,7 +644,7 @@ def analyse_spiketime_vs_dt(
     )
 
     if verbose:
-        pynml.generate_plot(
+        generate_plot(
             xs,
             ys,
             "Membrane potentials in %s for %s" % (simulator, dts),

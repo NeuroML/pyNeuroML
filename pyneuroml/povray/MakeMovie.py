@@ -1,10 +1,8 @@
-import cv2
-import colorsys
 import argparse
-import sys
-import os.path
+import colorsys
 import logging
-
+import os.path
+import sys
 
 """
 
@@ -18,6 +16,15 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+try:
+    import cv2
+except ImportError:
+    logger.warning("Please install optional dependencies to use povray features:")
+    logger.warning("pip install pyneuroml[povray]")
+
+
 scale_font = 1
 
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL
@@ -134,7 +141,6 @@ def main(argv):
     pref = args.prefix
 
     if gen_images:
-
         for i in range(args.frames):
             index = str(i + 1)
             while len(index) < (len(str(args.frames))):
@@ -235,11 +241,11 @@ def main(argv):
             mov_file = args.name + ".avi"
             out = cv2.VideoWriter(mov_file, fourcc, fps, (width, height))
         if format == "divx":
-            fourcc = cv.CV_FOURCC("D", "I", "V", "X")
+            fourcc = cv2.CV_FOURCC("D", "I", "V", "X")
             mov_file = args.name + ".avi"
             out = cv2.VideoWriter(mov_file, -1, fps, (width, height))
         if format == "mpg":
-            fourcc = cv.CV_FOURCC("M", "J", "P", "G")
+            fourcc = cv2.CV_FOURCC("M", "J", "P", "G")
             mov_file = args.name + ".mpg"
             out = cv2.VideoWriter(mov_file, fourcc, fps, (width, height))
         if format == "mp4":

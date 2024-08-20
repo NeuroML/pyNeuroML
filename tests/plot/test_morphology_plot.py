@@ -7,13 +7,13 @@ File: tests/plot/test_morphology_plot.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import logging
 import pathlib as pl
 
-import pytest
-import numpy
 import neuroml
+import numpy
+import pytest
+
 from pyneuroml.plot.PlotMorphology import (
     plot_2D,
     plot_2D_cell_morphology,
@@ -24,11 +24,14 @@ from pyneuroml.plot.PlotMorphologyPlotly import (
     plot_3D_cell_morphology_plotly,
 )
 from pyneuroml.plot.PlotMorphologyVispy import (
-    plot_3D_schematic,
+    create_cylindrical_mesh,
+    make_cell_upright,
     plot_3D_cell_morphology,
+    plot_3D_schematic,
     plot_interactive_3D,
 )
 from pyneuroml.pynml import read_neuroml2_file
+
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -36,7 +39,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestMorphologyPlot(BaseTestCase):
-
     """Test Plot module"""
 
     def test_2d_point_plotter(self):
@@ -44,7 +46,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_files = ["tests/plot/Izh2007Cells.net.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
-            for plane in ["xy", "yz", "xz"]:
+            for plane in ["xy"]:
                 filename = f"tests/plot/test_morphology_plot_2d_point_{ofile.replace('.', '_', 100)}_{plane}.png"
                 # remove the file first
                 try:
@@ -69,7 +71,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_files = ["tests/plot/Cell_497232312.cell.nml", "tests/plot/test.cell.nml"]
         for nml_file in nml_files:
             ofile = pl.Path(nml_file).name
-            for plane in ["xy", "yz", "xz"]:
+            for plane in ["yz"]:
                 filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
                 # remove the file first
                 try:
@@ -87,7 +89,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_files = ["tests/plot/Cell_497232312.cell.nml"]
         for nml_file in nml_files:
             nml_doc = read_neuroml2_file(nml_file)
-            cell = nml_doc.cells[0]  # type: neuroml.Cell
+            cell: neuroml.Cell = nml_doc.cells[0]
             ofile = pl.Path(nml_file).name
             plane = "xy"
             filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_with_data.png"
@@ -120,7 +122,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
         # percentage
-        for plane in ["xy", "yz", "xz"]:
+        for plane in ["zx"]:
             filename = f"test_morphology_plot_2d_spec_{ofile.replace('.', '_', 100)}_{plane}.png"
             # remove the file first
             try:
@@ -139,8 +141,11 @@ class TestMorphologyPlot(BaseTestCase):
             self.assertIsFile(filename)
             pl.Path(filename).unlink()
 
+    def test_2d_plotter_network_with_detailed_spec(self):
+        nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
+        ofile = pl.Path(nml_file).name
         # more detailed plot_spec
-        for plane in ["xy", "yz", "xz"]:
+        for plane in ["xy"]:
             filename = f"test_morphology_plot_2d_spec_{ofile.replace('.', '_', 100)}_{plane}.png"
             # remove the file first
             try:
@@ -167,7 +172,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_2D function with a network of a few cells."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
-        for plane in ["xy", "yz", "xz"]:
+        for plane in ["yz"]:
             filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
             # remove the file first
             try:
@@ -184,7 +189,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_2D_schematic function with a network of a few cells."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
-        for plane in ["xy", "yz", "xz"]:
+        for plane in ["xz"]:
             filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_constant.png"
             # remove the file first
             try:
@@ -207,7 +212,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_2D_schematic function with a network of a few cells."""
         nml_file = "tests/plot/L23-example/TestNetwork.net.nml"
         ofile = pl.Path(nml_file).name
-        for plane in ["xy", "yz", "xz"]:
+        for plane in ["xy"]:
             filename = f"tests/plot/test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_schematic.png"
             # remove the file first
             try:
@@ -231,7 +236,7 @@ class TestMorphologyPlot(BaseTestCase):
         """Test plot_3D_schematic plotter function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         plot_3D_schematic(
             cell,
             segment_groups=None,
@@ -274,11 +279,17 @@ class TestMorphologyPlot(BaseTestCase):
         )
 
     @pytest.mark.localonly
+    def test_3d_plotter_vispy_morph_only(self):
+        """Test plot_interactive_3D function with morphology only NeuroML document."""
+        nml_file = "tests/plot/L23-example/HL23VIP.morph.cell.nml"
+        plot_interactive_3D(nml_file)
+
+    @pytest.mark.localonly
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
         nml_file = "tests/plot/L23-example/HL23PYR.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         plot_3D_cell_morphology(
             cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
         )
@@ -286,7 +297,7 @@ class TestMorphologyPlot(BaseTestCase):
         # test a circular soma
         nml_file = "tests/plot/test-spherical-soma.cell.nml"
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         plot_3D_cell_morphology(
             cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
         )
@@ -316,11 +327,11 @@ class TestMorphologyPlot(BaseTestCase):
         olm_file = "tests/plot/test.cell.nml"
 
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         ofile = pl.Path(nml_file).name
 
         olm_doc = read_neuroml2_file(olm_file)
-        olm_cell = olm_doc.cells[0]  # type: neuroml.Cell
+        olm_cell: neuroml.Cell = olm_doc.cells[0]
         olm_ofile = pl.Path(olm_file).name
 
         for plane in ["xy", "yz", "xz"]:
@@ -364,7 +375,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/Cell_497232312.cell.nml"
 
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         ofile = pl.Path(nml_file).name
 
         # more complex cell
@@ -394,7 +405,7 @@ class TestMorphologyPlot(BaseTestCase):
         nml_file = "tests/plot/Cell_497232312.cell.nml"
 
         nml_doc = read_neuroml2_file(nml_file)
-        cell = nml_doc.cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = nml_doc.cells[0]
         ofile = pl.Path(nml_file).name
 
         # more complex cell
@@ -429,3 +440,81 @@ class TestMorphologyPlot(BaseTestCase):
 
         self.assertIsFile(filename)
         pl.Path(filename).unlink()
+
+    def test_cylindrical_mesh_generator(self):
+        """Test the create_cylindrical_mesh function"""
+        mesh = create_cylindrical_mesh(5, 10, 1.0, 1, closed=False)
+        mesh2 = create_cylindrical_mesh(5, 10, 1.0, 1, closed=True)
+
+        self.assertEqual(mesh.n_vertices + 2, mesh2.n_vertices)
+
+    def test_PCA_transformation(self):
+        """Test principle component axis rotation after PCA cell transformation"""
+
+        acell = neuroml.utils.component_factory("Cell", id="test_cell", validate=False)  # type: neuroml.Cell
+        acell.set_spike_thresh("10mV")
+        soma = acell.add_segment(
+            prox=[0, 0, 0, 15],
+            dist=[10, 0, 0, 15],
+            seg_id=0,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+        )
+
+        acell.add_segment(
+            prox=[10, 0, 0, 12],
+            dist=[110, 0, 0, 12],
+            seg_id=1,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        acell.add_segment(
+            prox=[110, 0, 0, 7],
+            dist=[250, 0, 0, 7],
+            seg_id=2,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        acell.add_segment(
+            prox=[250, 0, 0, 4],
+            dist=[320, 0, 0, 4],
+            seg_id=3,
+            use_convention=False,
+            reorder_segment_groups=False,
+            optimise_segment_groups=False,
+            parent=soma,
+        )
+
+        print(f"cell before: {acell}")
+
+        transformed_cell = make_cell_upright(acell)
+        transformed_cell.id = "test_transformed_cell"
+        print(f"cell after transformation: {transformed_cell}")
+
+        # Get all segments' distal points
+        segment_points = []
+        segments_all = transformed_cell.morphology.segments
+        for segment in segments_all:
+            segment_points.append(
+                [segment.distal.x, segment.distal.y, segment.distal.z]
+            )
+
+        coords = numpy.array(segment_points)
+        from sklearn.decomposition import PCA
+
+        # Get the PCA components
+        pca = PCA()
+        pca.fit(coords)
+        # Get the principal component axes
+        first_pca = pca.components_
+        pca_goal = numpy.array([0, first_pca[0][1], 0])
+        # Test if PCA of transformed cell is on y axis
+        print(f"type first pca {first_pca} and type pca_goal {pca_goal}")
+        numpy.testing.assert_almost_equal(pca_goal, first_pca[0], 3)

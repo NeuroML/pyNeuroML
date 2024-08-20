@@ -14,6 +14,14 @@ pyneuroml.plot.Plot module
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.plot.PlotTimeSeries module
+--------------------------------------
+
+.. automodule:: pyneuroml.plot.PlotTimeSeries
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyneuroml.plot.PlotSpikes module
 --------------------------------
 

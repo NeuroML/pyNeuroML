@@ -9,33 +9,48 @@ File: pyneuroml/plot/PlotMorphologyVispy.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import logging
 import math
 import random
 import typing
+from typing import Optional
 
 import numpy
 import progressbar
-from neuroml import Cell, NeuroMLDocument, SegmentGroup, Segment
+from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+from scipy.spatial.transform import Rotation
+
 from pyneuroml.pynml import read_neuroml2_file
-from pyneuroml.utils import extract_position_info
+from pyneuroml.utils import extract_position_info, make_cell_upright
 from pyneuroml.utils.plot import (
     DEFAULTS,
     get_cell_bound_box,
     get_next_hex_color,
     load_minimal_morphplottable__model,
 )
-from scipy.spatial.transform import Rotation
-from vispy import app, scene, use
-from vispy.geometry.generation import create_cylinder, create_sphere
-from vispy.scene.visuals import InstancedMesh
-from vispy.util.transforms import rotate
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+pynml_in_jupyter = False
+
+try:
+    from vispy import app, scene, use
+    from vispy.geometry.generation import create_sphere
+    from vispy.geometry.meshdata import MeshData
+    from vispy.scene.visuals import InstancedMesh
+    from vispy.util.transforms import rotate
+
+    if app.Application.is_interactive(app):
+        pynml_in_jupyter = True
+        from IPython.display import display
+
+except ImportError:
+    logger.warning("Please install optional dependencies to use vispy features:")
+    logger.warning("pip install pyneuroml[vispy]")
+    logger.warning("or (for Qt5):")
+    logger.warning("pip install pyneuroml[vispy-qt5]")
 
 VISPY_THEME = {
     "light": {"bg": "white", "fg": "black"},
@@ -93,10 +108,13 @@ def create_new_vispy_canvas(
     view_min: typing.Optional[typing.List[float]] = None,
     view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
-    axes_pos: typing.Optional[typing.List] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     axes_length: float = 100,
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
+    view_center: typing.Optional[typing.List[float]] = None,
 ):
     """Create a new vispy scene canvas with a view and optional axes lines
 
@@ -106,15 +124,26 @@ def create_new_vispy_canvas(
     :type view_min: [float, float, float]
     :param view_max: max view co-ordinates
     :type view_max: [float, float, float]
+    :param view_center: center view co-ordinates, calculated from view max/min if omitted
+    :type view_center: [float, float, float]
     :param title: title of plot
     :type title: str
-    :param axes_pos: position to draw axes at
-    :type axes_pos: [float, float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param axes_length: length of axes
     :type axes_length: float
     :param axes_width: width of axes lines
     :type axes_width: float
     :returns: scene, view
+    :raises ValueError: if incompatible value of `axes_pos` is passed
     """
     # vispy: full gl+ context is required for instanced rendering
     use(gl="gl+")
@@ -136,13 +165,13 @@ def create_new_vispy_canvas(
 
     # create cameras
     # https://vispy.org/gallery/scene/flipped_axis.html
-    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom")
+    cam1 = scene.cameras.PanZoomCamera(parent=view.scene, name="PanZoom", up="y")
 
-    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable")
+    cam2 = scene.cameras.TurntableCamera(parent=view.scene, name="Turntable", up="y")
 
-    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball")
+    cam3 = scene.cameras.ArcballCamera(parent=view.scene, name="Arcball", up="y")
 
-    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly")
+    cam4 = scene.cameras.FlyCamera(parent=view.scene, name="Fly", up="y")
     # do not keep z up
     cam4.autoroll = False
 
@@ -152,54 +181,94 @@ def create_new_vispy_canvas(
     cam_index = 1
     view.camera = cams[cam_index]
 
+    calc_axes_pos = None  # type: typing.Optional[typing.Union[typing.List[float], typing.List[int]]]
     if view_min is not None and view_max is not None:
-        view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
+        x_width = abs(view_min[0] - view_max[0])
+        y_width = abs(view_min[1] - view_max[1])
+        z_width = abs(view_min[2] - view_max[2])
+
+        xrange = (
+            (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
+            if x_width > 0
+            else (-100, 100)
+        )
+        yrange = (
+            (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
+            if y_width > 0
+            else (-100, 100)
+        )
+        zrange = (
+            (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
+            if z_width > 0
+            else (-100, 100)
+        )
+        logger.debug(f"Ranges: {xrange}, {yrange}, {zrange}")
+        logger.debug(f"Widths: {x_width}, {y_width}, {z_width}")
+
+        for acam in cams:
+            acam.set_range(x=xrange, y=yrange, z=zrange)
+
+        # Calculate view center if it is None
+        if view_center is None:
+            view_center = (numpy.array(view_max) + numpy.array(view_min)) / 2
         logger.debug(f"Center is {view_center}")
+
         cam1.center = [view_center[0], view_center[1]]
         cam2.center = view_center
         cam3.center = view_center
         cam4.center = view_center
 
-        for acam in cams:
-            x_width = abs(view_min[0] - view_max[0])
-            y_width = abs(view_min[1] - view_max[1])
-            z_width = abs(view_min[2] - view_max[2])
+        # calculate origin of the axes
+        if axes_pos is not None and isinstance(axes_pos, str):
+            if axes_pos == "bottom left":
+                try:
+                    x_bit = view_min[0] - pow(10, int(math.log(x_width, 10) - 1))
+                except ValueError:
+                    x_bit = view_min[0]
 
-            xrange = (
-                (view_min[0] - x_width * 0.02, view_max[0] + x_width * 0.02)
-                if x_width > 0
-                else (-100, 100)
-            )
-            yrange = (
-                (view_min[1] - y_width * 0.02, view_max[1] + y_width * 0.02)
-                if y_width > 0
-                else (-100, 100)
-            )
-            zrange = (
-                (view_min[2] - z_width * 0.02, view_max[2] + z_width * 0.02)
-                if z_width > 0
-                else (-100, 100)
-            )
-            logger.debug(f"{xrange}, {yrange}, {zrange}")
+                try:
+                    z_bit = view_min[0] - pow(10, int(math.log(z_width, 10) - 1))
+                except ValueError:
+                    z_bit = view_min[0]
 
-            acam.set_range(x=xrange, y=yrange, z=zrange)
+                calc_axes_pos = [x_bit, view_min[1], z_bit]
+            elif axes_pos == "origin":
+                calc_axes_pos = [0.0, 0.0, 0.0]
+            else:
+                raise ValueError(f"Invalid value for axes_pos: {axes_pos}")
+        # if it's either None, or a point
+        else:
+            calc_axes_pos = axes_pos
+
+    logger.debug(f"Axes origin is {calc_axes_pos}")
 
     for acam in cams:
         acam.set_default_state()
 
-    if axes_pos is not None:
-        # can't get XYZAxis to work, so create manually
+    if calc_axes_pos is not None:
         points = [
-            axes_pos,  # origin
-            [axes_pos[0] + axes_length, axes_pos[1], axes_pos[2]],
-            [axes_pos[0], axes_pos[1] + axes_length, axes_pos[2]],
-            [axes_pos[0], axes_pos[1], axes_pos[2] + axes_length],
+            calc_axes_pos,  # origin
+            [calc_axes_pos[0] + axes_length, calc_axes_pos[1], calc_axes_pos[2]],
+            [calc_axes_pos[0], calc_axes_pos[1] + axes_length, calc_axes_pos[2]],
+            [calc_axes_pos[0], calc_axes_pos[1], calc_axes_pos[2] + axes_length],
         ]
+
         scene.Line(
-            points,
-            connect=numpy.array([[0, 1], [0, 2], [0, 3]]),
+            [points[0], points[1]],
             parent=view.scene,
-            color=VISPY_THEME[theme]["fg"],
+            color="red",
+            width=axes_width,
+        )
+        scene.Line(
+            [points[0], points[2]],
+            parent=view.scene,
+            color="green",
+            width=axes_width,
+        )
+        scene.Line(
+            [points[0], points[3]],
+            parent=view.scene,
+            color="blue",
             width=axes_width,
         )
 
@@ -240,25 +309,43 @@ def create_new_vispy_canvas(
 
 
 def plot_interactive_3D(
-    nml_file: typing.Union[str, Cell, NeuroMLDocument],
+    nml_file: typing.Union[str, Cell, Morphology, NeuroMLDocument],
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
     plot_spec: typing.Optional[
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     precision: typing.Tuple[int, int] = (4, 200),
+    upright: bool = False,
 ):
     """Plot interactive plots in 3D using Vispy
 
     https://vispy.org
 
+    Note that on Linux systems using Wayland, one may need to set the
+    environment variable for PyOpenGL to work correctly:
+
+    .. code-block:: bash
+
+        QT_QPA_PLATFORM=wayland-egl
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
+
+
     :param nml_file: path to NeuroML cell file or
-        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell` object
-    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell
+        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell`
+        or :py:class:`neuroml.Morphology` object
+    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell or
+        neuroml.Morphology
     :param min_width: minimum width for segments (useful for visualising very
         thin segments): default 0.8um
     :type min_width: float
@@ -277,6 +364,16 @@ def plot_interactive_3D(
         morphology)
 
     :type plot_type: str
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
     :type title: str
     :param theme: theme to use (light/dark)
@@ -297,6 +394,34 @@ def plot_interactive_3D(
         The last three lists override the point_fraction setting. If a cell id
         is not included in the spec here, it will follow the plot_type provided
         before.
+    :type plot_spec: dict
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements.  Only used
+        when plotting multi-compartmental cells for marking segments on them
+        ("plot_type" is either "constant" or "detailed")
+
+        Each key in the dictionary will be of the cell id and the values will
+        be more dictionaries, with the segment id as key and the following keys
+        in it:
+
+        - marker_color: color of the marker
+        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+          is used)
+
+        E.g.:
+
+        .. code-block:: python
+
+            {
+                "cell id1": {
+                    "seg id1": {
+                        "marker_color": "blue",
+                        "marker_size": [0.1, 0.1]
+                    }
+                }
+            }
+
+    :type highlight_spec: dict
     :param precision: tuple containing two values: (number of decimal places,
         maximum number of meshes). The first is used to group segments into
         meshes to create instances. More precision means fewer segments will be
@@ -308,16 +433,33 @@ def plot_interactive_3D(
         If you have a good GPU, you can increase both these values to get more
         detailed visualizations
     :type precision: (int, int)
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
+
+    :throws ValueError: if `plot_type` is not one of "detailed", "constant",
+        "schematic", or "point"
+    :throws TypeError: if model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument
+    :throws AttributeError: if `upright=True` for non single-cell models
     """
     if plot_type not in ["detailed", "constant", "schematic", "point"]:
         raise ValueError(
             "plot_type must be one of 'detailed', 'constant', 'schematic', 'point'"
         )
 
+    if highlight_spec is None:
+        highlight_spec = {}
+
     if verbose:
         logger.info(f"Visualising {nml_file}")
 
-    if type(nml_file) is str:
+    # if it's a file, load it first
+    if isinstance(nml_file, str):
         # load without optimization for older HDF5 API
         # TODO: check if this is required: must for MultiscaleISN
         if nml_file.endswith(".h5"):
@@ -331,30 +473,35 @@ def plot_interactive_3D(
                 optimized=True,
             )
             load_minimal_morphplottable__model(nml_model, nml_file)
-
-        if title is None:
-            try:
-                title = f"{nml_model.networks[0].id} from {nml_file}"
-            except IndexError:
-                title = f"{nml_model.cells[0].id} from {nml_file}"
-
-    elif isinstance(nml_file, Cell):
-        nml_model = NeuroMLDocument(id="newdoc")
-        nml_model.add(nml_file)
-        if title is None:
-            title = f"{nml_model.cells[0].id}"
-
-    elif isinstance(nml_file, NeuroMLDocument):
-        nml_model = nml_file
-        if title is None:
-            try:
-                title = f"{nml_model.networks[0].id} from {nml_file.id}"
-            except IndexError:
-                title = f"{nml_model.cells[0].id} from {nml_file.id}"
+            # note that from this point, the model object is not necessarily valid,
+            # because we've removed lots of bits.
     else:
-        raise TypeError(
-            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        nml_model = nml_file
+
+    # if it isn't a NeuroMLDocument, create one
+    if isinstance(nml_model, Cell):
+        logger.debug("Got a cell")
+        plottable_nml_model = NeuroMLDocument(id="newdoc")
+        plottable_nml_model.add(nml_model)
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        if title is None:
+            title = f"{plottable_nml_model.cells[0].id}"
+
+    # if it's only a cell, add it to an empty cell in a document
+    elif isinstance(nml_model, Morphology):
+        logger.debug("Received morph, adding to a dummy cell")
+        plottable_nml_model = NeuroMLDocument(id="newdoc")
+        nml_cell = plottable_nml_model.add(
+            Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
+        plottable_nml_model.add(nml_cell)
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        if title is None:
+            title = f"{plottable_nml_model.cells[0].id}"
+    elif isinstance(nml_model, NeuroMLDocument):
+        plottable_nml_model = nml_model
+        if title is None:
+            title = f"{plottable_nml_model.id}"
 
     (
         cell_id_vs_cell,
@@ -362,7 +509,7 @@ def plot_interactive_3D(
         positions,
         pop_id_vs_color,
         pop_id_vs_radii,
-    ) = extract_position_info(nml_model, verbose)
+    ) = extract_position_info(plottable_nml_model, verbose)
 
     logger.debug(f"positions: {positions}")
     logger.debug(f"pop_id_vs_cell: {pop_id_vs_cell}")
@@ -380,16 +527,18 @@ def plot_interactive_3D(
         except AttributeError:
             total_segments += len(positions[pop_id])
 
-    logger.info(
+    logger.debug(
         f"Visualising {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
     )
-    logger.info(
+    logger.debug(
         f"Grouping into mesh instances by diameters at {precision[0]} decimal places"
     )
     # not used later, clear up
     del cell_id_vs_cell
 
     if len(positions) > 1:
+        if upright:
+            raise AttributeError("Argument upright can be True only for single cells")
         only_pos = []
         for posdict in positions.values():
             for poss in posdict.values():
@@ -415,12 +564,11 @@ def plot_interactive_3D(
         z_max = numpy.max(pos_array[:, 2])
         z_len = abs(z_max - z_min)
 
-        view_min = center - numpy.array([x_len, y_len, z_len])
-        view_max = center + numpy.array([x_len, y_len, z_len])
-        logger.debug(f"center, view_min, max are {center}, {view_min}, {view_max}")
-
+        view_min = center - numpy.array([x_len, y_len, z_len]) / 2
+        view_max = center + numpy.array([x_len, y_len, z_len]) / 2
     else:
         cell = list(pop_id_vs_cell.values())[0]
+
         if cell is not None:
             view_min, view_max = get_cell_bound_box(cell)
         else:
@@ -429,11 +577,27 @@ def plot_interactive_3D(
             view_min = list(numpy.array(pos))
             view_max = list(numpy.array(pos))
 
-    current_canvas, current_view = create_new_vispy_canvas(
-        view_min, view_max, title, theme=theme
+    if upright:
+        view_center = [0.0, 0.0, 0.0]
+    else:
+        view_center = None
+
+    logger.debug(
+        f"Before canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
     )
 
-    logger.debug(f"figure extents are: {view_min}, {view_max}")
+    current_canvas, current_view = create_new_vispy_canvas(
+        view_min,
+        view_max,
+        title,
+        axes_pos=axes_pos,
+        theme=theme,
+        view_center=view_center,
+    )
+
+    logger.debug(
+        f"After canvas creation: center, view_min, max are {view_center}, {view_min}, {view_max}"
+    )
 
     # process plot_spec
     point_cells = []
@@ -459,15 +623,26 @@ def plot_interactive_3D(
             pass
 
     meshdata = {}  # type: typing.Dict[typing.Any, typing.Any]
-    logger.info("Processing cells")
-    pbar = progressbar.ProgressBar(
-        max_value=total_cells,
-        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
-        redirect_stdout=True,
-    )
+    logger.info("Processing %s cells" % total_cells)
+
+    # do not show this pbar in jupyter notebooks
+    if not pynml_in_jupyter:
+        pbar = progressbar.ProgressBar(
+            max_value=total_cells,
+            widgets=[
+                progressbar.SimpleProgress(),
+                progressbar.Bar(),
+                progressbar.Timer(),
+            ],
+            redirect_stdout=True,
+        )
+    else:
+        pbar = None
+
     pbar_ctr = 0
     while pop_id_vs_cell:
-        pbar.update(pbar_ctr)
+        if pbar is not None:
+            pbar.update(pbar_ctr)
         pop_id, cell = pop_id_vs_cell.popitem()
         pos_pop = positions[pop_id]
 
@@ -524,6 +699,7 @@ def plot_interactive_3D(
                     logger.debug(f"meshdata added: {key}: {meshdata[key]}")
 
                 elif plot_type == "schematic" or cell.id in schematic_cells:
+                    logger.debug(f"Cell for 3d schematic is: {cell.id}")
                     plot_3D_schematic(
                         offset=pos,
                         cell=cell,
@@ -532,9 +708,11 @@ def plot_interactive_3D(
                         verbose=verbose,
                         current_canvas=current_canvas,
                         current_view=current_view,
+                        axes_pos=axes_pos,
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
+                        upright=upright,
                     )
                 elif (
                     plot_type == "detailed"
@@ -543,6 +721,12 @@ def plot_interactive_3D(
                     or cell.id in constant_cells
                 ):
                     logger.debug(f"Cell for 3d is: {cell.id}")
+                    cell_highlight_spec = {}
+                    try:
+                        cell_highlight_spec = highlight_spec[cell.id]
+                    except KeyError:
+                        pass
+
                     plot_3D_cell_morphology(
                         offset=pos,
                         cell=cell,
@@ -551,29 +735,37 @@ def plot_interactive_3D(
                         verbose=verbose,
                         current_canvas=current_canvas,
                         current_view=current_view,
+                        axes_pos=axes_pos,
                         min_width=min_width,
                         nogui=True,
                         meshdata=meshdata,
                         mesh_precision=precision[0],
+                        highlight_spec=cell_highlight_spec,
+                        upright=upright,
                     )
 
             # if too many meshes, reduce precision and retry, recursively
             if (len(meshdata.keys()) > precision[1]) and (precision[0] > 0):
                 precision = (precision[0] - 1, precision[1])
-                pbar.finish(dirty=True)
+                if pbar is not None:
+                    pbar.finish(dirty=True)
+
                 logger.info(
                     f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
                 )
                 plot_interactive_3D(
-                    nml_model,
-                    min_width,
-                    verbose,
-                    plot_type,
-                    title,
-                    theme,
-                    nogui,
-                    plot_spec,
-                    precision,
+                    nml_file=plottable_nml_model,
+                    min_width=min_width,
+                    verbose=verbose,
+                    plot_type=plot_type,
+                    axes_pos=axes_pos,
+                    title=title,
+                    theme=theme,
+                    nogui=nogui,
+                    plot_spec=plot_spec,
+                    precision=precision,
+                    highlight_spec=highlight_spec,
+                    upright=upright,
                 )
                 # break the recursion, don't plot in the calling method
                 return
@@ -581,32 +773,44 @@ def plot_interactive_3D(
             pbar_ctr += 1
 
     if not nogui:
-        pbar.finish()
+        if pbar is not None:
+            pbar.finish()
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        current_canvas.show()
-        app.run()
+        if pynml_in_jupyter:
+            display(current_canvas)
+        else:
+            current_canvas.show()
+            app.run()
 
 
 def plot_3D_cell_morphology(
     offset: typing.List[float] = [0, 0, 0],
-    cell: Cell = None,
+    cell: Optional[Cell] = None,
     color: typing.Optional[str] = None,
     title: str = "",
     verbose: bool = False,
-    current_canvas: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
+    current_canvas: Optional[scene.SceneCanvas] = None,
+    current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
     axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     nogui: bool = True,
     plot_type: str = "constant",
     theme: str = "light",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
+    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    upright: bool = False,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
 
     .. versionadded:: 1.0.0
+
+    .. versionadded:: 1.1.12
+        The hightlight_spec parameter
 
     .. seealso::
 
@@ -638,6 +842,16 @@ def plot_3D_cell_morphology(
     :type min_width: float
     :param axis_min_max: min, max value of axes
     :type axis_min_max: [float, float]
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param title: title of plot
     :type title: str
     :param verbose: show extra information (default: False)
@@ -670,6 +884,25 @@ def plot_3D_cell_morphology(
         instances: more precision means more detail (meshes), means less
         performance
     :type mesh_precision: int
+    :param highlight_spec: dictionary that allows passing some
+        specifications to allow highlighting of particular elements. Mostly
+        only helpful for marking segments on multi-compartmental cells. In the
+        main dictionary are more dictionaries, one for each segment id which
+        will be the key:
+
+        - marker_color: color of the marker
+        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+          is used)
+
+    :type highlight_spec: dict
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
     :raises: ValueError if `cell` is None
 
     """
@@ -678,6 +911,15 @@ def plot_3D_cell_morphology(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
 
+    if highlight_spec is None:
+        highlight_spec = {}
+    logging.debug("highlight_spec is " + str(highlight_spec))
+
+    view_center = None
+    if upright:
+        cell = make_cell_upright(cell)
+        current_canvas = current_view = None
+        view_center = [0.0, 0.0, 0.0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -694,7 +936,12 @@ def plot_3D_cell_morphology(
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
         current_canvas, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme
+            view_min,
+            view_max,
+            title,
+            theme=theme,
+            axes_pos=axes_pos,
+            view_center=view_center,
         )
 
     if color == "Groups":
@@ -723,10 +970,36 @@ def plot_3D_cell_morphology(
         length = cell.get_segment_length(seg.id)
 
         # round up to precision
-        r = round(p.diameter / 2, mesh_precision)
+        r1 = round(p.diameter / 2, mesh_precision)
+        r2 = round(d.diameter / 2, mesh_precision)
+
+        segment_spec = {
+            "marker_size": None,
+            "marker_color": None,
+        }
+        try:
+            segment_spec.update(highlight_spec[str(seg.id)])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+        # also test if segment id is given as int
+        try:
+            segment_spec.update(highlight_spec[seg.id])
+        # if there's no spec for this segment
+        except KeyError:
+            logger.debug("No segment highlight spec found for segment" + str(seg.id))
+
+        logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
+
+        if segment_spec["marker_size"] is not None:
+            if not isinstance(segment_spec["marker_size"], list):
+                raise RuntimeError("The marker size must be a list")
+            r1 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
+            r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)
+
         key = (
-            f"{r:.{mesh_precision}f}",
-            f"{r:.{mesh_precision}f}",
+            f"{r1:.{mesh_precision}f}",
+            f"{r2:.{mesh_precision}f}",
             f"{round(length, mesh_precision):.{mesh_precision}f}",
         )
 
@@ -754,6 +1027,9 @@ def plot_3D_cell_morphology(
         else:
             seg_color = color
 
+        if segment_spec["marker_color"] is not None:
+            seg_color = segment_spec["marker_color"]
+
         try:
             meshdata[key].append((p, d, seg_color, offset))
         except KeyError:
@@ -762,8 +1038,11 @@ def plot_3D_cell_morphology(
 
     if not nogui:
         create_instanced_meshes(meshdata, plot_type, current_view, min_width)
-        current_canvas.show()
-        app.run()
+        if pynml_in_jupyter:
+            display(current_canvas)
+        else:
+            current_canvas.show()
+            app.run()
     return meshdata
 
 
@@ -788,7 +1067,7 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
     total_mesh_instances = 0
     for d, i in meshdata.items():
         total_mesh_instances += len(i)
-    logger.info(
+    logger.debug(
         f"Visualising {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
     )
 
@@ -825,8 +1104,8 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
-            seg_mesh = create_cylinder(
-                rows=rows, cols=9, radius=[r1, r2], length=length
+            seg_mesh = create_cylindrical_mesh(
+                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
             )
             logger.debug(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
@@ -835,8 +1114,17 @@ def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
         instance_positions = []
         instance_transforms = []
         instance_colors = []
-        for im in i:
+
+        # if in a notebook, only update once per mesh, but not per mesh
+        # instance
+        if pynml_in_jupyter:
             pbar.update(progress_ctr)
+
+        for num, im in enumerate(i):
+            # if not in a notebook, update for each mesh instance
+            if not pynml_in_jupyter:
+                pbar.update(progress_ctr)
+
             progress_ctr += 1
             prox = im[0]
             dist = im[1]
@@ -901,12 +1189,16 @@ def plot_3D_schematic(
     verbose: bool = False,
     nogui: bool = False,
     title: str = "",
-    current_canvas: scene.SceneCanvas = None,
-    current_view: scene.ViewBox = None,
+    current_canvas: Optional[scene.SceneCanvas] = None,
+    current_view: Optional[scene.ViewBox] = None,
+    axes_pos: typing.Optional[
+        typing.Union[typing.List[float], typing.List[int], str]
+    ] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     mesh_precision: int = 2,
+    upright: bool = False,
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -951,6 +1243,16 @@ def plot_3D_schematic(
     :type current_canvas: scene.SceneCanvas
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
+    :param axes_pos: add x, y, z axes centered at given position with colours red,
+        green, blue for x, y, z axis respecitvely.
+
+        A few special values are supported:
+
+            - None: disable axes (default)
+            - "origin": automatically added at origin
+            - "bottom left": automatically added at bottom left
+
+    :type axes_pos: [float, float, float] or [int, int, int] or None or str
     :param theme: theme to use (light/dark)
     :type theme: str
     :param color: color to use for segment groups with some special values:
@@ -961,10 +1263,23 @@ def plot_3D_schematic(
           dendrites, and soma segments
 
     :type color: str
+    :param upright: bool only applicable for single cells: Makes cells "upright"
+        (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
+        and transforming cell co-ordinates to align along the rotated first principal
+        component. If the rotation around the z axis needed is < 0, then the cell is
+        rotated an additional 180 degrees. This is empirically found to rotate the cell
+        "upwards" instead of "downwards" in most cases. Note that the original cell object
+        is unchanged, this is for visualization purposes only.
+    :type upright: bool
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
 
+    view_center = None
+    if upright:
+        cell = make_cell_upright(cell)
+        current_canvas = current_view = None
+        view_center = [0.0, 0.0, 0.0]
     try:
         soma_segs = cell.get_all_segments_in_group("soma_group")
     except Exception:
@@ -989,11 +1304,15 @@ def plot_3D_schematic(
         segment_groups, check_parentage=False
     )
 
-    # if no canvas is defined, define a new one
     if current_canvas is None or current_view is None:
         view_min, view_max = get_cell_bound_box(cell)
         current_canvas, current_view = create_new_vispy_canvas(
-            view_min, view_max, title, theme=theme
+            view_min,
+            view_max,
+            title,
+            theme=theme,
+            axes_pos=axes_pos,
+            view_center=view_center,
         )
 
     # colors for cell
@@ -1052,4 +1371,92 @@ def plot_3D_schematic(
 
     if not nogui:
         create_instanced_meshes(meshdata, "Detailed", current_view, width)
-        app.run()
+        if pynml_in_jupyter:
+            display(current_canvas)
+        else:
+            app.run()
+
+
+def create_cylindrical_mesh(
+    rows: int,
+    cols: int,
+    radius: typing.Union[float, typing.List[float]] = [1.0, 1.0],
+    length: float = 1.0,
+    closed: bool = True,
+):
+    """Create a cylinderical mesh, adapted from vispy's generation method:
+    https://github.com/vispy/vispy/blob/main/vispy/geometry/generation.py#L451
+
+    :param rows: number of rows to use for mesh
+    :type rows: int
+    :param cols: number of columns
+    :type cols: int
+    :param radius: float or pair of floats for the two radii of the cylinder
+    :type radius: float or [float, float][]
+    :param length: length of cylinder
+    :type length: float
+    :param closed: whether the cylinder should be closed
+    :type closed: bool
+    :returns: Vertices and faces computed for a cylindrical surface.
+    :rtype: MeshData
+
+    """
+    verts = numpy.empty((rows + 1, cols, 3), dtype=numpy.float32)
+    if isinstance(radius, int) or isinstance(radius, float):
+        radius = [radius, radius]  # convert to list
+
+    # compute theta values
+    th = numpy.linspace(2 * numpy.pi, 0, cols).reshape(1, cols)
+    logger.debug(f"Thetas are: {th}")
+
+    # radius as a function of z
+    r = numpy.linspace(radius[0], radius[1], num=rows + 1, endpoint=True).reshape(
+        rows + 1, 1
+    )
+
+    verts[..., 0] = r * numpy.cos(th)  # x = r cos(th)
+    verts[..., 1] = r * numpy.sin(th)  # y = r sin(th)
+    verts[..., 2] = numpy.linspace(0, length, num=rows + 1, endpoint=True).reshape(
+        rows + 1, 1
+    )  # z
+    # just reshape: no redundant vertices...
+    verts = verts.reshape((rows + 1) * cols, 3)
+
+    # add extra points for center of two circular planes that form the caps
+    if closed is True:
+        verts = numpy.append(verts, [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], axis=0)
+    logger.debug(f"Verts are: {verts}")
+
+    # compute faces
+    faces = numpy.empty((rows * cols * 2, 3), dtype=numpy.uint32)
+    rowtemplate1 = (
+        (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 1, 0]])) % cols
+    ) + numpy.array([[0, 0, cols]])
+    logger.debug(f"Template1 is: {rowtemplate1}")
+
+    rowtemplate2 = (
+        (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 1, 1]])) % cols
+    ) + numpy.array([[cols, 0, cols]])
+    # logger.debug(f"Template2 is: {rowtemplate2}")
+
+    for row in range(rows):
+        start = row * cols * 2
+        faces[start : start + cols] = rowtemplate1 + row * cols
+        faces[start + cols : start + (cols * 2)] = rowtemplate2 + row * cols
+
+    # add extra faces to cover the caps
+    if closed is True:
+        cap1 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
+        cap1[..., 0] = len(verts) - 2
+        cap2 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
+        cap2[..., 0] = len(verts) - 1
+
+        logger.debug(f"cap1 is {cap1}")
+        logger.debug(f"cap2 is {cap2}")
+
+        faces = numpy.append(faces, cap1, axis=0)
+        faces = numpy.append(faces, cap2, axis=0)
+
+    logger.debug(f"Faces are: {faces}")
+
+    return MeshData(vertices=verts, faces=faces)

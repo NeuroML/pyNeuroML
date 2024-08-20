@@ -36,6 +36,8 @@ DEFAULTS = {
     "plotType": "detailed",
     "theme": "light",
     "pointFraction": 0,
+    "upright": False,
+    "showAxes": None,
 }  # type: dict[str, typing.Any]
 
 
@@ -317,14 +319,16 @@ def get_cell_bound_box(cell: Cell):
     :returns: tuple (min view, max view)
 
     """
-    seg0 = cell.morphology.segments[0]  # type: Segment
+    # first segment
+    seg0: Segment = cell.morphology.segments[0]
     ex1 = numpy.array([seg0.distal.x, seg0.distal.y, seg0.distal.z])
-    seg1 = cell.morphology.segments[-1]  # type: Segment
+    # last segment
+    seg1: Segment = cell.morphology.segments[-1]
     ex2 = numpy.array([seg1.distal.x, seg1.distal.y, seg1.distal.z])
     center = (ex1 + ex2) / 2
-    diff = numpy.linalg.norm(ex2 - ex1)
-    view_min = center - diff
-    view_max = center + diff
+    diff = abs(ex2 - ex1)
+    view_min = center - diff / 2
+    view_max = center + diff / 2
 
     return view_min, view_max
 
@@ -348,6 +352,7 @@ def load_minimal_morphplottable__model(
     required_members = [
         "id",
         "cells",
+        "morphology",
         "cell2_ca_poolses",
         "networks",
         "populations",
@@ -356,6 +361,7 @@ def load_minimal_morphplottable__model(
     for m in model_members:
         if m not in required_members:
             setattr(nml_model, m, None)
+            logger.debug(f"Dropped {m}")
 
     # if the model contains a network, use it
     if len(nml_model.networks) > 0:
@@ -381,7 +387,7 @@ def load_minimal_morphplottable__model(
                         acell.biophysical_properties = None
                         nml_model.add(acell)
     else:
-        # add any included cells to the main document
+        # add any included cells or morphologies to the main document
         for inc in nml_model.includes:
             incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
             if os.path.isfile(incl_loc):
@@ -389,3 +395,5 @@ def load_minimal_morphplottable__model(
                 for acell in inc.cells:
                     acell.biophysical_properties = None
                     nml_model.add(acell)
+                for morph in inc.morphology:
+                    nml_model.add(morph)

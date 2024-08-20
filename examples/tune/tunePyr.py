@@ -30,7 +30,6 @@ if __name__ == "__main__":
         "cell:pyr_4_sym/channelDensity:Kdr_pyr_soma_group/mS_per_cm2": 80,
     }
     if "-tune" in sys.argv:
-
         parameters = [
             "cell:pyr_4_sym/channelDensity:Na_pyr_soma_group/mS_per_cm2",
             "cell:pyr_4_sym/channelDensity:Kdr_pyr_soma_group/mS_per_cm2",

@@ -12,7 +12,6 @@ def main(args=None):
         nml_doc = pynml.read_neuroml2_file(f)
 
         for ct in nml_doc.ComponentType:
-
             ys = []
             for v in vs:
                 req_variables = {"v": "%sV" % v, "vShift": "10mV"}

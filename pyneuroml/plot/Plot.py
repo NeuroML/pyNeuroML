@@ -7,11 +7,15 @@ File: pyneuroml/plot/Plot.py
 Copyright 2023 NeuroML contributors
 """
 
-import os
 import logging
+import os
 import typing
+from typing import Optional
+
 import matplotlib
+import matplotlib.animation as animation
 import matplotlib.axes
+import progressbar
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,24 +31,28 @@ def generate_plot(
     linewidths: typing.Optional[typing.List[str]] = None,
     markers: typing.Optional[typing.List[str]] = None,
     markersizes: typing.Optional[typing.List[str]] = None,
-    xaxis: str = None,
-    yaxis: str = None,
-    xlim: typing.List[float] = None,
-    ylim: typing.List[float] = None,
+    xaxis: Optional[str] = None,
+    yaxis: Optional[str] = None,
+    xlim: Optional[typing.List[float]] = None,
+    ylim: Optional[typing.List[float]] = None,
     show_xticklabels: bool = True,
     show_yticklabels: bool = True,
     grid: bool = False,
     logx: bool = False,
     logy: bool = False,
-    font_size: int = 12,
+    font_size: typing.Optional[int] = None,
     bottom_left_spines_only: bool = False,
     cols_in_legend_box: int = 3,
     legend_position: typing.Optional[str] = "best",
     show_plot_already: bool = True,
+    animate: bool = False,
+    animate_duration: int = 5,
+    animate_writer: typing.Tuple[str, typing.List[str]] = ("pillow", []),
     save_figure_to: typing.Optional[str] = None,
     title_above_plot: bool = False,
     verbose: bool = False,
     close_plot: bool = False,
+    interactive_legend: bool = True,
 ) -> typing.Optional[matplotlib.axes.Axes]:
     """Utility function to generate plots using the Matplotlib library.
 
@@ -64,6 +72,11 @@ def generate_plot(
     styles and colours:
     - https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html
     - https://matplotlib.org/stable/gallery/index.html
+
+    .. versionadded:: 1.2.15
+
+        - animate
+        - interactive_legend
 
     :param xvalues: X values
     :type xvalues: list of lists
@@ -88,11 +101,15 @@ def generate_plot(
     :param yaxis: label of Y axis (default: None)
     :type yaxis: str
     :param xlim: left and right extents of x axis (default: None)
-    :type xlim: tuple of (float, float) or individual arguments: (left=float), (right=float)
+
                 See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.xlim.html
+
+    :type xlim: tuple of (float, float) or individual arguments: (left=float), (right=float)
     :param ylim: top and bottom extents of y axis (default: None)
-    :type ylim: tuple of (float, float) or individual arguments: (top=float), (bottom=float)
+
                 See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.ylim.html
+
+    :type ylim: tuple of (float, float) or individual arguments: (top=float), (bottom=float)
     :param show_xticklabels: whether labels should be shown on xtics (default: True)
     :type show_xticklabels: boolean
     :param show_yticklabels: whether labels should be shown on ytics (default: True)
@@ -103,7 +120,7 @@ def generate_plot(
     :type logx: boolean
     :param logy: should the y ayis be in log scale (default: False)
     :type logy: boolean
-    :param font_size: font size (default: 12)
+    :param font_size: font size
     :type font_size: float
     :param bottom_left_spines_only: enable/disable spines on right and top (default: False)
                 (a spine is the line noting the data area boundary)
@@ -112,37 +129,101 @@ def generate_plot(
     :type cols_in_legend_box: float
     :param legend_position: position of legend:
                 See: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html
+
                 Extra options:
 
                 - "outer right" places the legend on the right, but outside the axes box
                 - "bottom center" places the legend on the bottom, below the
                   figure
 
+                Note that if labels is None, a legend is not shown
+
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
     :type show_plot_already: boolean
-    :param save_figure_to: location to save generated figure to (default: None)
+    :param animate: if plot should be animated (default: False)
+    :type animate: boolean
+    :param animate_duration: approx duration (seconds) of the animation. animate should be True (default: 5)
+    :type animate_duration: int
+    :param animate_writer: writer for saving animation (default: :code:`("pillow", []))`
+
+        See: https://matplotlib.org/stable/users/explain/animations/animations.html#saving-animations
+
+        - format : :code:`writer=( "writer name", ["extra args list"])`
+        - example : :code:`writer=( "imagemagick", ["-quality", "100"])`
+
+    :type animate_writer: tuple
+    :param save_figure_to: location to save generated figure/animation to (default: None)
     :type save_figure_to: str
     :param title_above_plot: enable/disable title above the plot (default: False)
     :type title_above_plot: boolean
     :param verbose: enable/disable verbose logging (default: False)
     :type verbose: boolean
-    :param close_plot: call pyplot.close() to close plot after plotting
+    :param close_plot: call :code:`pyplot.close()` to close plot after
+        plotting, this is always done if using animation
     :type close_plot: bool
+    :param interactive_legend: enable clicking on legend to toggle plot lines
+        when using the matplotlib UI
+    :type interactive_legend: bool
     :returns: matplotlib.axes.Axes object if plot is not closed, else None
+    :raises ValueError: if the dimensions of xvalues/yvalues and option
+        arguments colors/labels/linestyles/linewidths/markers/markersizes do
+        not match
     """
+
+    # Some basic checks to ensure the right values are being passed
+    if len(xvalues) != len(yvalues):
+        raise ValueError(
+            f"xvalues ({len(xvalues)}) and yvalues ({len(yvalues)}) must have the same length"
+        )
+
+    if labels and len(labels) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and labels ({len(labels)}) must have the same length"
+        )
+
+    if colors and len(colors) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and colors ({len(colors)}) must have the same length"
+        )
+
+    if linestyles and len(linestyles) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and linestyles ({len(linestyles)}) must have the same length"
+        )
+
+    if linewidths and len(linewidths) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and linewidths ({len(linewidths)}) must have the same length"
+        )
+
+    if markers and len(markers) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and markers ({len(markers)}) must have the same length"
+        )
+
+    if markersizes and len(markersizes) != len(xvalues):
+        raise ValueError(
+            f"values to plot ({len(xvalues)}) and markersizes ({len(markersizes)}) must have the same length"
+        )
 
     logger.info("Generating plot: %s" % (title))
 
     from matplotlib import pyplot as plt
     from matplotlib import rcParams
 
-    rcParams.update({"font.size": font_size})
+    if font_size is not None:
+        rcParams.update({"font.size": font_size})
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    plt.get_current_fig_manager().set_window_title(title)
+    fig_manager = plt.get_current_fig_manager()
+    if fig_manager:
+        fig_manager.set_window_title(title)
+    else:
+        logger.warning("Unable to get current figure manager to set plot title")
+
     if title_above_plot:
         plt.title(title)
 
@@ -152,7 +233,7 @@ def generate_plot(
         plt.ylabel(yaxis)
 
     if grid:
-        plt.grid("on")
+        plt.grid(True)
 
     if logx:
         ax.set_xscale("log")
@@ -170,16 +251,18 @@ def generate_plot(
     if not show_yticklabels:
         ax.set_yticklabels([])
 
-    for i in range(len(xvalues)):
+    legend_box = None
+    artists = []
 
-        linestyle = "-" if not linestyles else linestyles[i]
+    for i in range(len(xvalues)):
+        linestyle = rcParams["lines.linestyle"] if not linestyles else linestyles[i]
         label = "" if not labels else labels[i]
-        marker = None if not markers else markers[i]
-        linewidth = 1 if not linewidths else linewidths[i]
-        markersize = None if not markersizes else markersizes[i]
+        marker = rcParams["lines.marker"] if not markers else markers[i]
+        linewidth = rcParams["lines.linewidth"] if not linewidths else linewidths[i]
+        markersize = rcParams["lines.markersize"] if not markersizes else markersizes[i]
 
         if colors:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -190,7 +273,7 @@ def generate_plot(
                 label=label,
             )
         else:
-            plt.plot(
+            (artist,) = plt.plot(
                 xvalues[i],
                 yvalues[i],
                 marker=marker,
@@ -199,25 +282,29 @@ def generate_plot(
                 linewidth=linewidth,
                 label=label,
             )
+        artists.append(artist)
 
     if labels:
+        legend_position = (
+            rcParams["legend.loc"] if not legend_position else legend_position
+        )
         if legend_position == "outer right":
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            ax.set_position((box.x0, box.y0, box.width * 0.8, box.height))
             # Put a legend to the right of the current axis
-            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+            legend_box = ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
         elif legend_position == "bottom center":
-            plt.legend(
+            legend_box = plt.legend(
                 loc="upper center",
                 # to ensure it does not cover the lower axis label
-                bbox_to_anchor=(0.5, -0.15),
+                bbox_to_anchor=(0.5, -0.05),
                 fancybox=True,
                 shadow=True,
                 ncol=cols_in_legend_box,
             )
         else:
-            plt.legend(
+            legend_box = plt.legend(
                 loc=legend_position,
                 fancybox=True,
                 shadow=True,
@@ -229,17 +316,105 @@ def generate_plot(
     if ylim:
         plt.ylim(ylim)
 
-    if save_figure_to:
-        logger.info(
-            "Saving image to %s of plot: %s" % (os.path.abspath(save_figure_to), title)
+    if animate:
+        duration = animate_duration * 1000  # in ms
+        size = max(len(val) for val in xvalues)  # maximum length
+        interval = 50  # Delay between frames in milliseconds
+        pockets = duration // interval
+        skip = max(size // pockets, 1)
+        logger.debug(
+            "Animation hyperparameters : duration=%sms, size=%s, interval=%s, pockets=%s, skip=%s"
+            % (duration, size, interval, pockets, skip)
         )
-        plt.savefig(save_figure_to, bbox_inches="tight")
-        logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
+
+        def update(frame):
+            for i, artist in enumerate(artists):
+                artist.set_xdata(xvalues[i][: frame * skip])
+                artist.set_ydata(yvalues[i][: frame * skip])
+            return artists
+
+        ani = animation.FuncAnimation(
+            fig=fig,
+            frames=size - 1,
+            func=update,
+            interval=interval,
+            blit=True,
+            cache_frame_data=False,
+        )
+
+        if save_figure_to:
+            pbar = progressbar.ProgressBar(
+                max_value=size - 1,
+                widgets=[
+                    progressbar.SimpleProgress(),
+                    progressbar.Bar(),
+                    progressbar.Timer(),
+                ],
+                redirect_stdout=True,
+            )
+
+            writers = ["pillow", "html", "ffmpeg", "imagemagick"]
+            writer_name, writer_extra = animate_writer
+            if writer_name not in writers:
+                writer_name = "pillow"
+                writer_extra = []
+
+            logger.info(
+                f"Saving animation of {duration}ms to {save_figure_to} using {writer_name}"
+            )
+            logger.info("This could take a while..")
+
+            try:
+                ani.save(
+                    filename=save_figure_to,
+                    writer=writer_name,
+                    extra_args=writer_extra,
+                    progress_callback=lambda i, n: pbar.update(i),
+                )
+            # pillow doesn't take extra_args, throws TypeError
+            except TypeError:
+                ani.save(
+                    filename=save_figure_to,
+                    writer=writer_name,
+                    progress_callback=lambda i, n: pbar.update(i),
+                )
+
+            pbar.finish(dirty=False)
+            logger.info("Saved animation to %s" % (save_figure_to))
+    else:
+        if save_figure_to:
+            logger.info(
+                "Saving image to %s of plot: %s"
+                % (os.path.abspath(save_figure_to), title)
+            )
+            plt.savefig(save_figure_to, bbox_inches="tight")
+            logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
 
     if show_plot_already:
+        if interactive_legend is True and legend_box is not None:
+            map_legend_to_ax = {}
+            pickradius = 5
+            for legend_line, ax_line in zip(legend_box.get_lines(), artists):
+                legend_line.set_picker(pickradius)
+                map_legend_to_ax[legend_line] = ax_line
+
+            def on_pick(event):
+                legend_line = event.artist
+
+                if legend_line not in map_legend_to_ax:
+                    return
+
+                ax_line = map_legend_to_ax[legend_line]
+                visible = not ax_line.get_visible()
+                ax_line.set_visible(visible)
+                legend_line.set_alpha(1.0 if visible else 0.2)
+                fig.canvas.draw()
+
+            fig.canvas.mpl_connect("pick_event", on_pick)
+
         plt.show()
 
-    if close_plot:
+    if close_plot or animate:
         logger.info("Closing plot")
         plt.close()
     else:
@@ -263,9 +438,9 @@ def generate_interactive_plot(
     ] = None,
     plot_bgcolor: typing.Optional[str] = None,
     modes: typing.Optional[typing.List[str]] = None,
-    xaxis: str = None,
-    yaxis: str = None,
-    legend_title: str = None,
+    xaxis: Optional[str] = None,
+    yaxis: Optional[str] = None,
+    legend_title: Optional[str] = None,
     xaxis_color: str = "#fff",
     yaxis_color: str = "#fff",
     xaxis_width: typing.Union[float, int] = 1,
@@ -374,6 +549,7 @@ def generate_interactive_plot(
     :type save_figure_to: str
     """
     import plotly.graph_objects as go
+
     fig = go.Figure()
 
     if len(xvalues) != len(yvalues):

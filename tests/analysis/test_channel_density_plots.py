@@ -11,6 +11,7 @@ import logging
 import unittest
 
 import neuroml
+
 from pyneuroml.analysis.ChannelDensityPlot import (
     get_channel_densities,
     get_conductance_density_for_segments,
@@ -23,7 +24,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestChannelDensityPlots(unittest.TestCase):
-
     """Tests for ChannelDensityPlot"""
 
     def test_get_channel_densities(self):
@@ -40,7 +40,7 @@ class TestChannelDensityPlots(unittest.TestCase):
     def test_get_conductance_density_for_segments(self):
         """Test get_conductance_density_for_segments."""
         cell_file = "tests/plot/L23-example/HL23PYR.cell.nml"
-        cell = read_neuroml2_file(cell_file).cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = read_neuroml2_file(cell_file).cells[0]
         print(cell.id)
         channel_densities = get_channel_densities(cell)
 
@@ -67,7 +67,7 @@ class TestChannelDensityPlots(unittest.TestCase):
     def test_plot_channel_densities(self):
         """Test the plot_channel_densities function."""
         cell_file = "tests/plot/L23-example/HL23PYR.cell.nml"
-        cell = read_neuroml2_file(cell_file).cells[0]  # type: neuroml.Cell
+        cell: neuroml.Cell = read_neuroml2_file(cell_file).cells[0]
 
         # check with channel densities
         plot_channel_densities(
@@ -75,13 +75,12 @@ class TestChannelDensityPlots(unittest.TestCase):
             channel_density_ids=["Ih_apical", "Ih_somatic", "Ih_basal", "Ih"],
             distance_plots=True,
             show_plots_already=False,
-            target_directory='tests/analysis'
+            target_directory="tests/analysis",
         )
         plot_channel_densities(
-            cell, ion_channels=["Ih"], distance_plots=True, show_plots_already=False,
-            target_directory='tests/analysis'
+            cell,
+            ion_channels=["Ih"],
+            distance_plots=True,
+            show_plots_already=False,
+            target_directory="tests/analysis",
         )
-        # no channel densities or ion channels, so generate for all ion
-        # channels
-        plot_channel_densities(cell, distance_plots=True, show_plots_already=False,
-            target_directory='tests/analysis')

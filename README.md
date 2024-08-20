@@ -77,7 +77,7 @@ Fedora users can install pyNeuroML using the following commands:
 This will also pull in all the necessary dependencies (Java, lxml, graphviz).
 Please see the [project documentation](https://docs.fedoraproject.org/en-US/neurofedora/copr/) for more information.
 
-### Installation from source
+### Installation from the source
 
 Clone the repository:
 

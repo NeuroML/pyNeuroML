@@ -9,15 +9,22 @@ File: pyneuroml/plot/PlotMorphologyPlotly.py
 Copyright 2023 NeuroML contributors
 """
 
+import logging
 import os
 import typing
-import logging
-import plotly.graph_objects as go
+
 from neuroml import Cell, NeuroMLDocument
+
 from pyneuroml.pynml import read_neuroml2_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+try:
+    import plotly.graph_objects as go
+except ImportError:
+    logger.warning("Please install optional dependencies to use plotly features:")
+    logger.warning("pip install pyneuroml[plotly]")
 
 
 def plot_3D_cell_morphology_plotly(
@@ -62,7 +69,7 @@ def plot_3D_cell_morphology_plotly(
             "plot_type must be one of 'detailed', 'constant', or 'schematic'"
         )
 
-    if type(nml_file) == str:
+    if isinstance(nml_file, str):
         nml_model = read_neuroml2_file(
             nml_file,
             include_includes=True,
@@ -76,7 +83,9 @@ def plot_3D_cell_morphology_plotly(
     elif isinstance(nml_file, NeuroMLDocument):
         nml_model = nml_file
     else:
-        raise TypeError("Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument")
+        raise TypeError(
+            "Passed model is not a NeuroML file path, nor a neuroml.Cell, nor a neuroml.NeuroMLDocument"
+        )
 
     fig = go.Figure()
     for cell in nml_model.cells:

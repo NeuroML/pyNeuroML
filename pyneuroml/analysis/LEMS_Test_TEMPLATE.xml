@@ -139,10 +139,10 @@
 #end## 
 
 #foreach ($g in $gates)##
-        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g}.inf.lems${dat_suffix}.dat">
+        <OutputFile id="${g}_inf_of1" fileName="${channel}.${g.replace("/","_")}.inf.lems${dat_suffix}.dat">
             <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/inf"/> 
         </OutputFile>
-        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g}.tau.lems${dat_suffix}.dat">
+        <OutputFile id="${g}_tau_of1" fileName="${channel}.${g.replace("/","_")}.tau.lems${dat_suffix}.dat">
             <OutputColumn id="${g}" quantity="rampCellPop0[0]/test/${channel}/${g}/tau"/> 
         </OutputFile>
 #end## 
