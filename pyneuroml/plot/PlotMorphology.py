@@ -355,10 +355,22 @@ def plot_2D(
         logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
+    # if it's a document, figure out if it's a cell or morphology
     elif isinstance(nml_model, NeuroMLDocument):
-        plottable_nml_model = fix_external_morphs_biophys_in_cell(
-            nml_model, overwrite=False
-        )
+        logger.debug("Received document, checking for cells/morphologies")
+        if len(nml_model.cells) > 0:
+            logger.debug("Received document with cells")
+            plottable_nml_model = fix_external_morphs_biophys_in_cell(
+                nml_model, overwrite=False
+            )
+        elif len(nml_model.morphology) > 0:
+            logger.debug("Received document with morphologies, adding to dummy cells")
+            plottable_nml_model = NeuroMLDocument(id="newdoc")
+            for m in nml_model.morphology:
+                plottable_nml_model.add(Cell, id=m.id, morphology=m, validate=False)
+            logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+            # use title from original model document
+            title = nml_model.id
 
     if title is None:
         title = f"{plottable_nml_model.id}"
