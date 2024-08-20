@@ -567,7 +567,7 @@ def _evaluate_arguments(args):
 
     # Deal with the SBML validation option which doesn't call run_jneuroml
     if args.validate_sbml or args.validate_sbml_units:
-        file_types = ["sbml"]
+        file_types = ["sbml","xml"]
         try:
             from pyneuroml.sbml import validate_sbml_files
         except Exception:
