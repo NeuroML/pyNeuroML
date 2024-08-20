@@ -14,7 +14,7 @@ from neuroml import (
 )
 from neuroml.nml.nml import Point3DWithDiam, SegmentParent
 
-from .LoadSWC import SWCGraph, SWCNode
+from .LoadSWC import SWCGraph, SWCNode, load_swc
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -57,6 +57,7 @@ class NeuroMLWriter:
         self.next_segment_id = 0
         self.processed_nodes = set()
         self.segment_types = {}
+        self.second_points_of_new_types = set()
         self.segment_groups = {
             "all": set(),
             "soma_group": set(),
@@ -183,7 +184,7 @@ class NeuroMLWriter:
         if this_point.type == SWCNode.SOMA:
             self.handle_soma(this_point, parent_point)
         else:
-            if this_point.id not in self.processed_nodes:
+            if this_point.id not in self.second_points_of_new_types:
                 logger.debug(f"Creating segment for point {this_point.id}")
                 self.create_segment(this_point, parent_point, new_branch or type_change)
                 self.processed_nodes.add(this_point.id)
@@ -349,7 +350,7 @@ class NeuroMLWriter:
         self,
         this_point: SWCNode,
         parent_point: SWCNode,
-        new_branch: bool,
+        new_branch: True,
     ) -> None:
         """
         Create a NeuroML segment from an SWC point.
@@ -377,6 +378,15 @@ class NeuroMLWriter:
 
         is_branch_point = len(parent_point.children) > 1
         is_type_change = this_point.type != parent_point.type
+        parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id)
+
+        # Print the second point of new branches
+        if parent_seg_id is not None and is_type_change and this_point.children:
+            second_point = this_point.children[0]
+            print(
+                f"{second_point.id} {second_point.type} {second_point.x} {second_point.y} {second_point.z} {this_point.id}"
+            )
+            self.second_points_of_new_types.add(second_point.id)
 
         if parent_point.id in self.point_indices_vs_seg_ids:
             parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
@@ -406,7 +416,6 @@ class NeuroMLWriter:
                     diameter=2 * this_point.radius,
                 )
 
-            print(f"Processed nodes: {self.processed_nodes}")
         elif is_branch_point:
             segment.proximal = Point3DWithDiam(
                 x=parent_point.x,
@@ -420,7 +429,7 @@ class NeuroMLWriter:
                 z=this_point.z,
                 diameter=2 * this_point.radius,
             )
-        elif this_point.id not in self.processed_nodes:
+        elif this_point.id not in self.second_points_of_new_types:
             segment.distal = Point3DWithDiam(
                 x=this_point.x,
                 y=this_point.y,
