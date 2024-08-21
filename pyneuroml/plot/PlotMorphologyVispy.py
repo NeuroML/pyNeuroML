@@ -545,7 +545,10 @@ def plot_interactive_3D(
         if len(nml_model.cells) > 0:
             logger.debug("Received document with cells")
             plottable_nml_model = fix_external_morphs_biophys_in_cell(
-                nml_model, overwrite=False
+                nml_model,
+                overwrite=False,
+                load_morphology=True,
+                load_biophysical_properties=False,
             )
         elif len(nml_model.morphology) > 0:
             logger.debug("Received document with morphologies, adding to dummy cells")
