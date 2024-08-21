@@ -1296,6 +1296,7 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
     :type min_width: float
     """
     total_mesh_instances = len(meshdata)
+    pbar_interval = pow(10, (len(str(total_mesh_instances)) - 2))
 
     main_mesh_vertices = []
     num_vertices = 0
@@ -1396,7 +1397,8 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
 
             num_vertices += len(translated_vertices)
 
-        pbar.update(progress_ctr)
+        if (progress_ctr % pbar_interval) == 0:
+            pbar.update(progress_ctr)
         progress_ctr += 1
 
     numpy_mesh_vertices = numpy.concatenate(main_mesh_vertices, axis=0)
