@@ -1335,8 +1335,6 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
         # Note: we can't check if r1 == r2 == length because there
         # may be cylinders with such a set of parameters
 
-        # meshdata.append((f"{first_prox.diameter/2}", f"{last_dist.diameter/2}", f"{length}", first_prox, last_dist, branch_color, offset))
-
         if r1 == r2 and ((prox is None and dist is None) or (length == 0.0)):
             seg_mesh = create_sphere(9, 9, radius=r1)
             logger.debug(f"Created spherical mesh template with radius {r1}")
