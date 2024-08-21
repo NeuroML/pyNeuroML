@@ -558,6 +558,9 @@ def plot_interactive_3D(
         # other networks
         else:
             plottable_nml_model = nml_model
+    # what did we get?
+    else:
+        raise ValueError(f"Could not process argument: {nml_model}")
 
     if title is None:
         title = f"{plottable_nml_model.id}"
@@ -728,7 +731,11 @@ def plot_interactive_3D(
             # if hightlight spec has a color for the cell, use that
             try:
                 color = highlight_spec[cell.id]["cell_color"]
+            # no key for this cell
             except KeyError:
+                pass
+            # point cell
+            except AttributeError:
                 pass
 
             try:
