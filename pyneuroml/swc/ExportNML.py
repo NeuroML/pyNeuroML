@@ -1,8 +1,7 @@
 import logging
 import os
-import sys
 import tempfile
-from typing import Dict, List
+from typing import List
 
 import neuroml.writers as writers
 from neuroml import (
@@ -16,7 +15,7 @@ from neuroml import (
 )
 from neuroml.nml.nml import Point3DWithDiam, SegmentParent
 
-from .LoadSWC import SWCGraph, SWCNode, load_swc
+from .LoadSWC import SWCGraph, SWCNode
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -299,7 +298,10 @@ class NeuroMLWriter:
             if this_point == sorted_soma_points[0]:
                 logger.debug("Processing multi-point soma")
 
-                for i, current_point in enumerate(sorted_soma_points):
+                for i in range(len(sorted_soma_points) - 1):  # Change here
+                    current_point = sorted_soma_points[i]
+                    next_point = sorted_soma_points[i + 1]
+
                     segment = Segment(
                         id=self.next_segment_id,
                         name=f"soma_Seg_{self.next_segment_id}",
@@ -317,21 +319,12 @@ class NeuroMLWriter:
                             segments=self.next_segment_id - 1
                         )
 
-                    if i < len(sorted_soma_points) - 1:
-                        next_point = sorted_soma_points[i + 1]
-                        segment.distal = Point3DWithDiam(
-                            x=next_point.x,
-                            y=next_point.y,
-                            z=next_point.z,
-                            diameter=2 * next_point.radius,
-                        )
-                    else:
-                        segment.distal = Point3DWithDiam(
-                            x=current_point.x,
-                            y=current_point.y,
-                            z=current_point.z,
-                            diameter=2 * current_point.radius,
-                        )
+                    segment.distal = Point3DWithDiam(
+                        x=next_point.x,
+                        y=next_point.y,
+                        z=next_point.z,
+                        diameter=2 * next_point.radius,
+                    )
 
                     self.cell.morphology.segments.append(segment)
                     self.point_indices_vs_seg_ids[current_point.id] = (
@@ -344,6 +337,8 @@ class NeuroMLWriter:
                         self.processed_nodes.add(current_point.id)
 
                     self.next_segment_id += 1
+
+                self.processed_nodes.add(sorted_soma_points[-1].id)
 
             else:
                 logger.debug(f"Soma point {this_point.id} not the first, skipping")
