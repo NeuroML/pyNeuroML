@@ -1481,8 +1481,9 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
     for d, i in meshdata.items():
         total_mesh_instances += len(i)
 
-    main_mesh_vertices = numpy.empty(shape=(0, 3))
-    main_mesh_faces = numpy.empty(shape=(0, 3), dtype=int)
+    main_mesh_vertices = []
+    num_vertices = 0
+    main_mesh_faces = []
     main_mesh_colors = []
 
     pbar = progressbar.ProgressBar(
@@ -1570,37 +1571,31 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
                     [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
                 )
                 translated_vertices = rotated_vertices + translator
-                main_mesh_faces = numpy.concatenate(
-                    (
-                        main_mesh_faces,
-                        seg_mesh.get_faces() + (len(main_mesh_vertices) - 0),
-                    ),
-                    axis=0,
-                )
-                main_mesh_vertices = numpy.concatenate(
-                    (main_mesh_vertices, translated_vertices), axis=0
-                )
+                main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+                main_mesh_vertices.append(translated_vertices)
 
+                num_vertices += len(vertices)
             else:
+                # only translation here
                 translator = numpy.array([offset[0], offset[1], offset[2]])
-                main_mesh_faces = numpy.concatenate(
-                    (
-                        main_mesh_faces,
-                        seg_mesh.get_faces() + (len(main_mesh_vertices) - 0),
-                    ),
-                    axis=0,
-                )
-                main_mesh_vertices = numpy.concatenate(
-                    (main_mesh_vertices, translated_vertices + translator), axis=0
-                )
+                vertices = seg_mesh.get_vertices()
+                translated_vertices = vertices + translator
 
-        logger.debug(f"Vertices: {main_mesh_vertices.shape}")
-        logger.debug(f"Faces: {main_mesh_faces.shape}")
+                main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+                main_mesh_vertices.append(translated_vertices)
 
-        mesh = Mesh(
-            vertices=main_mesh_vertices,
-            faces=main_mesh_faces,
-            parent=current_view.scene,
-        )
-        assert mesh is not None
+                num_vertices += len(translated_vertices)
+
+    numpy_mesh_vertices = numpy.concatenate(main_mesh_vertices, axis=0)
+    numpy_mesh_faces = numpy.concatenate(main_mesh_faces, axis=0)
+
+    logger.info(f"Vertices: {numpy_mesh_vertices.shape}")
+    logger.info(f"Faces: {numpy_mesh_faces.shape}")
+
+    mesh = Mesh(
+        vertices=numpy_mesh_vertices,
+        faces=numpy_mesh_faces,
+        parent=current_view.scene,
+    )
+    assert mesh is not None
     pbar.finish()
