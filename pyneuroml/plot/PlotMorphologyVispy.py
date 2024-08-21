@@ -39,7 +39,7 @@ try:
     from vispy import app, scene, use
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
-    from vispy.scene.visuals import InstancedMesh, Mesh
+    from vispy.scene.visuals import Mesh
     from vispy.util.transforms import rotate
 
     if app.Application.is_interactive(app):
@@ -1285,9 +1285,8 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
 
     See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.Mesh
 
-    :param meshdata: meshdata to plot: dictionary with:
-        key: (r1, r2, length)
-        value: [(prox, dist, color, offset)]
+    :param meshdata: meshdata to plot: list with:
+        [(r1, r2, length, prox, dist, color, offset)]
     :param plot_type: type of plot
     :type plot_type: str
     :param current_view: vispy viewbox to use
