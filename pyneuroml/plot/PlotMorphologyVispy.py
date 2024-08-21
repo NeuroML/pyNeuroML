@@ -1532,7 +1532,7 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
             pbar.update(progress_ctr)
 
         for num, im in enumerate(i):
-            # if not in a notebook, update for each mesh instance
+            # if not in a notebook, update for each entry
             if not pynml_in_jupyter:
                 pbar.update(progress_ctr)
 
@@ -1542,9 +1542,9 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
             color = im[2]
             offset = im[3]
 
-            logger.info(f"Color is {color}")
+            logger.debug(f"Color is {color}")
 
-            # points, spherical meshes
+            # cylinders
             if prox is not None and dist is not None:
                 orig_vec = [0, 0, length]
                 dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
@@ -1572,7 +1572,9 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
                 )
                 translated_vertices = rotated_vertices + translator
                 main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+
                 main_mesh_vertices.append(translated_vertices)
+                main_mesh_colors.append([[*color, 1]] * len(vertices))
 
                 num_vertices += len(vertices)
             else:
@@ -1582,12 +1584,15 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
                 translated_vertices = vertices + translator
 
                 main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+
                 main_mesh_vertices.append(translated_vertices)
+                main_mesh_colors.append([[*color, 1]] * len(vertices))
 
                 num_vertices += len(translated_vertices)
 
     numpy_mesh_vertices = numpy.concatenate(main_mesh_vertices, axis=0)
     numpy_mesh_faces = numpy.concatenate(main_mesh_faces, axis=0)
+    numpy_mesh_colors = numpy.concatenate(main_mesh_colors, axis=0)
 
     logger.info(f"Vertices: {numpy_mesh_vertices.shape}")
     logger.info(f"Faces: {numpy_mesh_faces.shape}")
@@ -1596,6 +1601,7 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
         vertices=numpy_mesh_vertices,
         faces=numpy_mesh_faces,
         parent=current_view.scene,
+        vertex_colors=numpy_mesh_colors,
     )
     assert mesh is not None
     pbar.finish()
