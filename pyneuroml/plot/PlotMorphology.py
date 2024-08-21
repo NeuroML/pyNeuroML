@@ -315,11 +315,19 @@ def plot_2D(
                 check_validity_pre_include=False,
                 verbose=False,
                 optimized=True,
-                fix_external_morphs_biophys=True,
+                fix_external_morphs_biophys=False,
             )
+            # If it's a model that refers to external files for cells, and
+            # other bits, only load ones that we need for visualization
             load_minimal_morphplottable__model(nml_model, nml_file)
-            # note that from this point, the model object is not necessarily valid,
-            # because we've removed lots of bits.
+            # Note that from this point, the model object is not necessarily valid,
+            # because we've removed lots of bits that are not required for
+            # visualization.
+
+            # call manually so we can only load morphology, not biophysics
+            fix_external_morphs_biophys_in_cell(
+                nml_model, load_morphology=True, load_biophysical_properties=False
+            )
     else:
         nml_model = nml_file
 
