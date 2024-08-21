@@ -1055,6 +1055,14 @@ def plot_3D_cell_morphology(
 
 
 def clicked_on_seg(position, segment_info):
+    """
+    Associates instance_position to segment's proximal position and returns the segment's id and other information
+
+    :param position: coordinates
+    :type position: tuple(numpy.float32, numpy.float32, numpy.float32)
+    :segment_info: dictionary with positions as keys and segment ids and cell objects and values
+    :type: {position: [seg_id, neuroml.Cell]}
+    """
     seg_id = segment_info[position][0]
     cell = segment_info[position][1]
     print(f"the segment id is {seg_id}")
@@ -1080,6 +1088,10 @@ def create_instanced_meshes(
         :type current_view: ViewBox
         :param min_width: minimum width of tubes
         :type min_width: float
+        :segment_info: dictionary with positions as keys and segment ids and cell objects and values
+        :type: {position: [seg_id, neuroml.Cell]}
+        :param: current_canvas: vispy canvas to use
+        :type: SceneCanvas
     """
     total_mesh_instances = 0
     for d, i in meshdata.items():
@@ -1202,9 +1214,8 @@ def create_instanced_meshes(
         clicked_mesh = current_canvas.visual_at(event.pos)
         if isinstance(clicked_mesh, InstancedMesh):
             pos1, min, min_pos = get_view_axis_in_scene_coordinates(
-                current_view, event.pos, clicked_mesh
+                event.pos, clicked_mesh
             )
-
             print(f"visual at : {clicked_mesh}")
             print(f"event.pos : {event.pos}")
             print(f"min distance : {min} and min_pos : {min_pos}")
@@ -1216,9 +1227,21 @@ def create_instanced_meshes(
     pbar.finish()
 
 
-def get_view_axis_in_scene_coordinates(view, pos, mesh):
+def get_view_axis_in_scene_coordinates(pos, mesh):
+    """
+    Gets the event position (of the click) that is in 2d coordinates and an InstancedMesh object, converts
+    the instanced_positions from visual to canvas coordinates and finds the instanced_position that is closest to the
+    clicked position.
+    Returns a list of the instance_positions projected on canvas coordinates, the minimum distance (float) and the closest instance_position(list)
+
+        :param pos: the event position
+        :type pos: list [float, float]
+        :param mesh: InstancedMesh object that was clicked
+        :type mesh: InstancedMesh object
+    """
     event_pos = numpy.array([pos[0], pos[1], 0, 1])  # in homogeneous screen coordinates
     instance_on_canvas = []
+    # Translate each position to corresponding 2d canvas coordinates
     for instance in mesh.instance_positions:
         on_canvas = mesh.get_transform(map_from="visual", map_to="canvas").map(instance)
         on_canvas /= on_canvas[3:]
@@ -1226,6 +1249,7 @@ def get_view_axis_in_scene_coordinates(view, pos, mesh):
 
     min = 10000
     min_pos = None
+    # Find the closest position to the clicked position
     for i, instance_pos in enumerate(instance_on_canvas):
         # Not minding z axis
         temp_min = numpy.linalg.norm(
