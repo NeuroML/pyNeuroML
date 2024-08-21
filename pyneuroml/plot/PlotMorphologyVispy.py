@@ -39,7 +39,7 @@ try:
     from vispy import app, scene, use
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
-    from vispy.scene.visuals import InstancedMesh
+    from vispy.scene.visuals import InstancedMesh, Mesh
     from vispy.util.transforms import rotate
 
     if app.Application.is_interactive(app):
@@ -775,7 +775,7 @@ def plot_interactive_3D(
     if not nogui:
         if pbar is not None:
             pbar.finish()
-        create_instanced_meshes(meshdata, plot_type, current_view, min_width)
+        create_mesh(meshdata, plot_type, current_view, min_width)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1037,7 +1037,7 @@ def plot_3D_cell_morphology(
         logger.debug(f"meshdata added: {key}: {(p, d, seg_color, offset)}")
 
     if not nogui:
-        create_instanced_meshes(meshdata, plot_type, current_view, min_width)
+        create_mesh(meshdata, plot_type, current_view, min_width)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1370,7 +1370,7 @@ def plot_3D_schematic(
             meshdata[key] = [(first_prox, last_dist, branch_color, offset)]
 
     if not nogui:
-        create_instanced_meshes(meshdata, "Detailed", current_view, width)
+        create_mesh(meshdata, "Detailed", current_view, width)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1460,3 +1460,147 @@ def create_cylindrical_mesh(
     logger.debug(f"Faces are: {faces}")
 
     return MeshData(vertices=verts, faces=faces)
+
+
+def create_mesh(meshdata, plot_type, current_view, min_width):
+    """Internal function to create a mesh from the mesh data
+
+    See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.Mesh
+
+    :param meshdata: meshdata to plot: dictionary with:
+        key: (r1, r2, length)
+        value: [(prox, dist, color, offset)]
+    :param plot_type: type of plot
+    :type plot_type: str
+    :param current_view: vispy viewbox to use
+    :type current_view: ViewBox
+    :param min_width: minimum width of tubes
+    :type min_width: float
+    """
+    total_mesh_instances = 0
+    for d, i in meshdata.items():
+        total_mesh_instances += len(i)
+
+    main_mesh_vertices = numpy.empty(shape=(0, 3))
+    main_mesh_faces = numpy.empty(shape=(0, 3), dtype=int)
+    main_mesh_colors = []
+
+    pbar = progressbar.ProgressBar(
+        max_value=total_mesh_instances,
+        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
+        redirect_stdout=True,
+    )
+    progress_ctr = 0
+    for d, i in meshdata.items():
+        r1 = float(d[0])
+        r2 = float(d[1])
+        length = float(d[2])
+
+        # actual plotting bits
+        if plot_type == "constant":
+            r1 = min_width
+            r2 = min_width
+
+        if r1 < min_width:
+            r1 = min_width
+        if r2 < min_width:
+            r2 = min_width
+
+        seg_mesh = None
+        # 1: for points, we set the prox/dist to None since they only have
+        # positions.
+        # 2: single compartment cells with r1, r2, and length 0
+        # Note: we can't check if r1 == r2 == length because there
+        # may be cylinders with such a set of parameters
+
+        if r1 == r2 and ((i[0][0] is None and i[0][1] is None) or (length == 0.0)):
+            seg_mesh = create_sphere(9, 9, radius=r1)
+            logger.debug(f"Created spherical mesh template with radius {r1}")
+        else:
+            rows = 2 + int(length / 2)
+            seg_mesh = create_cylindrical_mesh(
+                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
+            )
+            logger.debug(
+                f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
+            )
+
+        # if in a notebook, only update once per mesh, but not per mesh
+        # instance
+        if pynml_in_jupyter:
+            pbar.update(progress_ctr)
+
+        for num, im in enumerate(i):
+            # if not in a notebook, update for each mesh instance
+            if not pynml_in_jupyter:
+                pbar.update(progress_ctr)
+
+            progress_ctr += 1
+            prox = im[0]
+            dist = im[1]
+            color = im[2]
+            offset = im[3]
+
+            logger.info(f"Color is {color}")
+
+            # points, spherical meshes
+            if prox is not None and dist is not None:
+                orig_vec = [0, 0, length]
+                dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
+                k = numpy.cross(orig_vec, dir_vector)
+                mag_k = numpy.linalg.norm(k)
+
+                if mag_k != 0.0:
+                    k = k / mag_k
+                    theta = math.acos(
+                        numpy.dot(orig_vec, dir_vector)
+                        / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
+                    )
+                    logger.debug(f"k is {k}, theta is {theta}")
+                    rot_matrix = rotate(math.degrees(theta), k).T
+                    rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+                else:
+                    logger.debug("k is [0..], using zeros for rotation matrix")
+                    rot_matrix = numpy.zeros((3, 3))
+                    rot_obj = Rotation.from_matrix(rot_matrix)
+
+                vertices = seg_mesh.get_vertices()
+                rotated_vertices = rot_obj.apply(vertices)
+                translator = numpy.array(
+                    [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
+                )
+                translated_vertices = rotated_vertices + translator
+                main_mesh_faces = numpy.concatenate(
+                    (
+                        main_mesh_faces,
+                        seg_mesh.get_faces() + (len(main_mesh_vertices) - 0),
+                    ),
+                    axis=0,
+                )
+                main_mesh_vertices = numpy.concatenate(
+                    (main_mesh_vertices, translated_vertices), axis=0
+                )
+
+            else:
+                translator = numpy.array([offset[0], offset[1], offset[2]])
+                main_mesh_faces = numpy.concatenate(
+                    (
+                        main_mesh_faces,
+                        seg_mesh.get_faces() + (len(main_mesh_vertices) - 0),
+                    ),
+                    axis=0,
+                )
+                main_mesh_vertices = numpy.concatenate(
+                    (main_mesh_vertices, translated_vertices + translator), axis=0
+                )
+
+        logger.debug(f"Vertices: {main_mesh_vertices.shape}")
+        logger.debug(f"Faces: {main_mesh_faces.shape}")
+
+        mesh = Mesh(
+            vertices=main_mesh_vertices,
+            faces=main_mesh_faces,
+            parent=current_view.scene,
+        )
+        assert mesh is not None
+    pbar.finish()
