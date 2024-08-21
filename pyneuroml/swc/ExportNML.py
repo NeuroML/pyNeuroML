@@ -1,4 +1,6 @@
 import logging
+import os
+import sys
 import tempfile
 from typing import Dict, List
 
@@ -16,13 +18,21 @@ from neuroml.nml.nml import Point3DWithDiam, SegmentParent
 
 from .LoadSWC import SWCGraph, SWCNode, load_swc
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    filename="neuroml_conversion.log",
-    filemode="w",
-)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+fh = logging.FileHandler("neuroml_conversion.log")
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 
 class NeuroMLWriter:
@@ -172,7 +182,10 @@ class NeuroMLWriter:
         :param this_point: The current point being processed.
         :type this_point: SWCNode
         """
-        if this_point.id in self.processed_nodes:
+        if (
+            this_point.id in self.processed_nodes
+            and this_point.id not in self.second_points_of_new_types
+        ):
             logger.debug(f"Point {this_point.id} already processed, skipping")
             return
 
@@ -185,7 +198,7 @@ class NeuroMLWriter:
             self.handle_soma(this_point, parent_point)
         else:
             if this_point.id not in self.second_points_of_new_types:
-                logger.debug(f"Creating segment for point {this_point.id}")
+                logger.debug(f"Processing non-soma point: {this_point.id}")
                 self.create_segment(this_point, parent_point, new_branch or type_change)
                 self.processed_nodes.add(this_point.id)
             else:
@@ -290,61 +303,63 @@ class NeuroMLWriter:
             self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
             self.next_segment_id += 1
 
-        else:
+        elif len(soma_points) > 3:
+            logger.debug(f"Processing multi-point soma with {len(soma_points)} points")
             sorted_soma_points = sorted(soma_points, key=lambda p: p.x)
 
             if this_point == sorted_soma_points[0]:
                 logger.debug("Processing multi-point soma")
 
                 for i, current_point in enumerate(sorted_soma_points):
-                    if current_point.id not in self.processed_nodes:
-                        segment = Segment(
-                            id=self.next_segment_id,
-                            name=f"soma_Seg_{self.next_segment_id}",
+                    segment = Segment(
+                        id=self.next_segment_id,
+                        name=f"soma_Seg_{self.next_segment_id}",
+                    )
+
+                    if i == 0:
+                        segment.proximal = Point3DWithDiam(
+                            x=current_point.x,
+                            y=current_point.y,
+                            z=current_point.z,
+                            diameter=2 * current_point.radius,
+                        )
+                    else:
+                        segment.parent = SegmentParent(
+                            segments=self.next_segment_id - 1
                         )
 
-                        if i == 0:
-                            segment.proximal = Point3DWithDiam(
-                                x=current_point.x,
-                                y=current_point.y,
-                                z=current_point.z,
-                                diameter=2 * current_point.radius,
-                            )
-                        else:
-                            segment.parent = SegmentParent(
-                                segments=self.next_segment_id - 1
-                            )
-
-                        if i < len(sorted_soma_points) - 1:
-                            next_point = sorted_soma_points[i + 1]
-                            segment.distal = Point3DWithDiam(
-                                x=next_point.x,
-                                y=next_point.y,
-                                z=next_point.z,
-                                diameter=2 * next_point.radius,
-                            )
-                        else:
-                            segment.distal = Point3DWithDiam(
-                                x=current_point.x,
-                                y=current_point.y,
-                                z=current_point.z,
-                                diameter=2 * current_point.radius,
-                            )
-
-                        self.cell.morphology.segments.append(segment)
-                        self.point_indices_vs_seg_ids[current_point.id] = (
-                            self.next_segment_id
+                    if i < len(sorted_soma_points) - 1:
+                        next_point = sorted_soma_points[i + 1]
+                        segment.distal = Point3DWithDiam(
+                            x=next_point.x,
+                            y=next_point.y,
+                            z=next_point.z,
+                            diameter=2 * next_point.radius,
                         )
-                        self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                        self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
-                        self.processed_nodes.add(current_point.id)
+                    else:
+                        segment.distal = Point3DWithDiam(
+                            x=current_point.x,
+                            y=current_point.y,
+                            z=current_point.z,
+                            diameter=2 * current_point.radius,
+                        )
 
-                        self.next_segment_id += 1
+                    self.cell.morphology.segments.append(segment)
+                    self.point_indices_vs_seg_ids[current_point.id] = (
+                        self.next_segment_id
+                    )
+                    self.segment_types[self.next_segment_id] = SWCNode.SOMA
+                    self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+                    self.processed_nodes.add(current_point.id)
 
-            elif this_point != sorted_soma_points[0]:
+                    self.next_segment_id += 1
+
+            else:
                 logger.debug(f"Soma point {this_point.id} not the first, skipping")
 
-        self.processed_nodes.add(this_point.id)
+        logger.debug(f"Finished handling soma point: {this_point.id}")
+        logger.debug(f"Processed nodes after soma: {self.processed_nodes}")
+        logger.debug(f"Total segments created so far: {self.next_segment_id}")
 
     def create_segment(
         self,
@@ -388,6 +403,7 @@ class NeuroMLWriter:
             )
             self.second_points_of_new_types.add(second_point.id)
 
+            self.point_indices_vs_seg_ids[second_point.id] = seg_id
         if parent_point.id in self.point_indices_vs_seg_ids:
             parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
             segment.parent = SegmentParent(segments=parent_seg_id)
@@ -417,6 +433,7 @@ class NeuroMLWriter:
                 )
 
         elif is_branch_point:
+            logger.debug("Setting proximal and distal for branch point")
             segment.proximal = Point3DWithDiam(
                 x=parent_point.x,
                 y=parent_point.y,
