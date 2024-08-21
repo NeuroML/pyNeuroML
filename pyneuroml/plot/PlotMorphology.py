@@ -371,6 +371,8 @@ def plot_2D(
             logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
             # use title from original model document
             title = nml_model.id
+        else:
+            plottable_nml_model = nml_model
 
     if title is None:
         title = f"{plottable_nml_model.id}"
