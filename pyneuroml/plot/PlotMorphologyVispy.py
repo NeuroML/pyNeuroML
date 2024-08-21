@@ -1054,17 +1054,11 @@ def plot_3D_cell_morphology(
     return meshdata, segment_info
 
 
-# TODO
-# Dictionary key is the same as position but does not read (probably type issue)
 def clicked_on_seg(position, segment_info):
-    print(f"dic type: {type(next(iter(segment_info.keys())))}")
-    print(f"pos type: {type(position[0])}")
     seg_id = segment_info[position][0]
     cell = segment_info[position][1]
     print(f"the segment id is {seg_id}")
     print(cell.get_segment_location_info(seg_id))
-
-    return segment_info[position]
 
 
 def create_instanced_meshes(
@@ -1216,8 +1210,8 @@ def create_instanced_meshes(
             print(f"min distance : {min} and min_pos : {min_pos}")
 
             # TODO handle when there multiple segments with same proximal
-            # if segment_info is not None:
-            #     clicked_on_seg(min_pos, segment_info)
+            if segment_info is not None:
+                clicked_on_seg(tuple(min_pos), segment_info)
 
     pbar.finish()
 
