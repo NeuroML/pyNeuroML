@@ -220,6 +220,9 @@ class NeuroMLWriter:
             return
 
         soma_points = [p for p in self.points if p.type == SWCNode.SOMA]
+        if len(soma_points) == 0:
+            logger.debug("No soma points found, processing as non-soma point")
+            return
         if len(soma_points) == 3:
             if this_point.id == soma_points[0].id:
                 logger.debug("Processing first point of 3-point soma")
@@ -497,11 +500,20 @@ class NeuroMLWriter:
                     group.members.append(Member(segments=member_id))
                 self.cell.morphology.segment_groups.append(group)
 
-        root_segment_id = min(
-            seg_id
-            for seg_id, seg_type in self.segment_types.items()
-            if seg_type == SWCNode.SOMA
-        )
+        if not self.segment_types:
+            logger.warning(
+                "No segments were created. Skipping unbranched segment group creation."
+            )
+            return
+
+        if any(seg_type == SWCNode.SOMA for seg_type in self.segment_types.values()):
+            root_segment_id = min(
+                seg_id
+                for seg_id, seg_type in self.segment_types.items()
+                if seg_type == SWCNode.SOMA
+            )
+        else:
+            root_segment_id = min(self.segment_types.keys())
 
         self.cell.create_unbranched_segment_group_branches(
             root_segment_id,
