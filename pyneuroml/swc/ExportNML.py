@@ -24,17 +24,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-fh = logging.FileHandler("neuroml_conversion.log")
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
-logger.addHandler(fh)
-
-
 class NeuroMLWriter:
     """
     A class to convert SWC graph data to NeuroML format.
@@ -350,7 +339,9 @@ class NeuroMLWriter:
                     )
                     self.segment_types[self.next_segment_id] = SWCNode.SOMA
                     self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
-                    self.processed_nodes.add(current_point.id)
+
+                    if current_point.id == this_point.id:
+                        self.processed_nodes.add(current_point.id)
 
                     self.next_segment_id += 1
 
