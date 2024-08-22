@@ -40,11 +40,12 @@ pynml_in_jupyter = False
 
 try:
     from vispy import app, scene, use
-    from vispy.color import get_color_dict
+    from vispy.color import get_color_dict, get_color_names
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
     from vispy.scene.visuals import Mesh
     from vispy.util.transforms import rotate
+    from vispy.visuals.filters import ShadingFilter
 
     if app.Application.is_interactive(app):
         pynml_in_jupyter = True
@@ -651,7 +652,7 @@ def plot_interactive_3D(
             color = (
                 pop_id_vs_color[pop_id]
                 if pop_id in pop_id_vs_color
-                else get_next_hex_color()
+                else random.choice(get_color_names())
             )
 
             try:
@@ -965,7 +966,7 @@ def plot_3D_cell_morphology(
         seg_color = "white"
         if color is None:
             seg_color = get_next_hex_color()
-        elif color.lower() == "groups":
+        elif isinstance(color, str) and color.lower() == "groups":
             try:
                 seg_color = color_dict[seg.id]
             except KeyError:
@@ -976,7 +977,7 @@ def plot_3D_cell_morphology(
                     seg_color = "red"
                 elif seg.id in dend_segs:
                     seg_color = "blue"
-        elif color.lower() == "default groups":
+        elif isinstance(color, str) and color.lower() == "default groups":
             if seg.id in soma_segs:
                 seg_color = "green"
             elif seg.id in axon_segs:
