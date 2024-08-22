@@ -1004,7 +1004,7 @@ def plot_3D_cell_morphology(
 
 def plot_3D_schematic(
     cell: Cell,
-    segment_groups: typing.Optional[typing.List[SegmentGroup]],
+    segment_groups: typing.Optional[typing.List[SegmentGroup]] = None,
     offset: typing.List[float] = [0, 0, 0],
     labels: bool = False,
     width: float = 5.0,
@@ -1047,7 +1047,7 @@ def plot_3D_schematic(
     :type offset: [float, float, float]
     :param cell: cell to plot
     :type cell: neuroml.Cell
-    :param segment_groups: list of unbranched segment groups to plot
+    :param segment_groups: list of unbranched segment groups to plot, all if None
     :type segment_groups: list(SegmentGroup)
     :param labels: toggle labelling of segment groups
     :type labels: bool
