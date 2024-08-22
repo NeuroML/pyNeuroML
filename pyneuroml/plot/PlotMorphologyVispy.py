@@ -113,7 +113,9 @@ def create_new_vispy_canvas(
     view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[
+            typing.Tuple[float, float, float], typing.Tuple[float, float, float], str
+        ]
     ] = None,
     axes_length: float = 100,
     axes_width: int = 2,
@@ -141,7 +143,7 @@ def create_new_vispy_canvas(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or (int, int, int) or None or str
     :param axes_length: length of axes
     :type axes_length: float
     :param axes_width: width of axes lines
@@ -185,7 +187,10 @@ def create_new_vispy_canvas(
     cam_index = 1
     view.camera = cams[cam_index]
 
-    calc_axes_pos = None  # type: typing.Optional[typing.Union[typing.List[float], typing.List[int]]]
+    calc_axes_pos: typing.Optional[
+        typing.Union[typing.Tuple[float, float, float], typing.Tuple[int, int, int]]
+    ] = None
+
     if view_min is not None and view_max is not None:
         x_width = abs(view_min[0] - view_max[0])
         y_width = abs(view_min[1] - view_max[1])
@@ -235,9 +240,9 @@ def create_new_vispy_canvas(
                 except ValueError:
                     z_bit = view_min[0]
 
-                calc_axes_pos = [x_bit, view_min[1], z_bit]
+                calc_axes_pos = (x_bit, view_min[1], z_bit)
             elif axes_pos == "origin":
-                calc_axes_pos = [0.0, 0.0, 0.0]
+                calc_axes_pos = (0.0, 0.0, 0.0)
             else:
                 raise ValueError(f"Invalid value for axes_pos: {axes_pos}")
         # if it's either None, or a point
@@ -753,6 +758,7 @@ def plot_interactive_3D(
                         highlight_spec=frozendict(cell_highlight_spec),
                         upright=upright,
                     )
+                    assert new_meshdata is not None
                     mesh_data_with_offset = [(*x, pos) for x in new_meshdata]
                     meshdata.extend(mesh_data_with_offset)
 
@@ -785,7 +791,7 @@ def plot_3D_cell_morphology(
             typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
         ]
     ] = None,
-    nogui: bool = True,
+    nogui: bool = False,
     plot_type: str = "constant",
     theme: str = "light",
     meshdata: typing.Optional[typing.List[typing.Any]] = None,
