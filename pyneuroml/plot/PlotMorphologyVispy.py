@@ -19,6 +19,7 @@ from typing import Optional
 
 import numpy
 import progressbar
+from frozendict import frozendict
 from matplotlib.colors import to_rgb
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
@@ -317,7 +318,7 @@ def plot_interactive_3D(
     verbose: bool = False,
     plot_type: str = "constant",
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[typing.Tuple[float], typing.Tuple[int], str]
     ] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
@@ -375,7 +376,7 @@ def plot_interactive_3D(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or (int, int, int) or None or str
     :param title: title of plot
     :type title: str
     :param theme: theme to use (light/dark)
@@ -510,17 +511,11 @@ def plot_interactive_3D(
 
     # calculate total cells and segments to be plotted
     total_cells = 0
-    total_segments = 0
     for pop_id, cell in pop_id_vs_cell.items():
         total_cells += len(positions[pop_id])
-        try:
-            total_segments += len(positions[pop_id]) * len(cell.morphology.segments)
-        except AttributeError:
-            total_segments += len(positions[pop_id])
 
-    logger.debug(
-        f"Visualising {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
-    )
+    logger.info("Processing %s cells" % total_cells)
+
     # not used later, clear up
     del cell_id_vs_cell
 
@@ -611,7 +606,6 @@ def plot_interactive_3D(
             pass
 
     meshdata = []  # type: typing.List[typing.Any]
-    logger.info("Processing %s cells" % total_cells)
 
     # do not show this pbar in jupyter notebooks
     if not pynml_in_jupyter:
@@ -726,8 +720,16 @@ def plot_interactive_3D(
                     except KeyError:
                         pass
 
-                    plot_3D_cell_morphology(
-                        offset=pos,
+                    # Pass no offset (pos) here to take advantage of the
+                    # lru_cache.  The offset is not really used in anyway other
+                    # than to create the meshdata. So we can add it to the
+                    # mesdata after This means that the plot_3D_cell_morphology
+                    # function will not be run if the same cell object is
+                    # passed to it, a common usecase for networks where there
+                    # are populations of the same cell. Instead, the cache will
+                    # be used.
+                    new_meshdata = plot_3D_cell_morphology(
+                        offset=None,
                         cell=cell,
                         color=color,
                         plot_type=plot_type,
@@ -737,10 +739,12 @@ def plot_interactive_3D(
                         axes_pos=axes_pos,
                         min_width=min_width,
                         nogui=True,
-                        meshdata=meshdata,
-                        highlight_spec=cell_highlight_spec,
+                        meshdata=None,
+                        highlight_spec=frozendict(cell_highlight_spec),
                         upright=upright,
                     )
+                    mesh_data_with_offset = [(*x, pos) for x in new_meshdata]
+                    meshdata.extend(mesh_data_with_offset)
 
             pbar_ctr += 1
 
@@ -755,8 +759,9 @@ def plot_interactive_3D(
             app.run()
 
 
+@lru_cache(maxsize=100)
 def plot_3D_cell_morphology(
-    offset: typing.List[float] = [0, 0, 0],
+    offset: typing.Optional[typing.Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     cell: Optional[Cell] = None,
     color: typing.Optional[str] = None,
     title: str = "",
@@ -764,15 +769,17 @@ def plot_3D_cell_morphology(
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
-    axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    axis_min_max: typing.Tuple = (float("inf"), -1 * float("inf")),
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[
+            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
+        ]
     ] = None,
     nogui: bool = True,
     plot_type: str = "constant",
     theme: str = "light",
     meshdata: typing.Optional[typing.List[typing.Any]] = None,
-    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    highlight_spec: typing.Optional[typing.Union[typing.Dict, frozendict]] = None,
     upright: bool = False,
 ):
     """Plot the detailed 3D morphology of a cell using vispy.
@@ -795,7 +802,10 @@ def plot_3D_cell_morphology(
             for plotting point cells
 
     :param offset: offset for cell
-    :type offset: [float, float]
+        Note that this is only used in creating the meshdata. If set to None,
+        this is ommitted from the meshdata, and the mesh creator will set it to
+        origin.
+    :type offset: (float, float, float) or None
     :param cell: cell to plot
     :type cell: neuroml.Cell
     :param color: color to use for segments, with some special values:
@@ -822,7 +832,7 @@ def plot_3D_cell_morphology(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or None or str
     :param title: title of plot
     :type title: str
     :param verbose: show extra information (default: False)
@@ -990,7 +1000,10 @@ def plot_3D_cell_morphology(
         if segment_spec["marker_color"] is not None:
             seg_color = segment_spec["marker_color"]
 
-        meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color, offset))
+        if offset is not None:
+            meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color, offset))
+        else:
+            meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color))
         logger.debug(f"meshdata added: {meshdata[-1]}")
 
     if not nogui:
@@ -1350,6 +1363,8 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
         dist = d[4]
         color = d[5]
         offset = d[6]
+        if offset is None:
+            offset = (0.0, 0.0, 0.0)
 
         # actual plotting bits
         if plot_type == "constant":
