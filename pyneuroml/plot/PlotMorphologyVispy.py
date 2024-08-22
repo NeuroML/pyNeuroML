@@ -965,7 +965,7 @@ def plot_3D_cell_morphology(
         seg_color = "white"
         if color is None:
             seg_color = get_next_hex_color()
-        elif color == "Groups":
+        elif color.lower() == "groups":
             try:
                 seg_color = color_dict[seg.id]
             except KeyError:
@@ -976,7 +976,7 @@ def plot_3D_cell_morphology(
                     seg_color = "red"
                 elif seg.id in dend_segs:
                     seg_color = "blue"
-        elif color == "Default Groups":
+        elif color.lower() == "default groups":
             if seg.id in soma_segs:
                 seg_color = "green"
             elif seg.id in axon_segs:
@@ -1165,9 +1165,9 @@ def plot_3D_schematic(
         branch_color = color
         if color is None:
             branch_color = get_next_hex_color()
-        elif color == "Cell":
+        elif color.lower() == "cell":
             branch_color = cell_color_soma
-        elif color == "Default Groups":
+        elif color.lower() == "default groups":
             if first_seg.id in soma_segs:
                 branch_color = cell_color_soma
             elif first_seg.id in axon_segs:
