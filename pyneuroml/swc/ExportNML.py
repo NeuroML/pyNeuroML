@@ -318,14 +318,13 @@ class NeuroMLWriter:
 
         elif len(soma_points) > 3:
             logger.debug(f"Processing multi-point soma with {len(soma_points)} points")
-            sorted_soma_points = sorted(soma_points, key=lambda p: p.x)
 
-            if this_point == sorted_soma_points[0]:
+            if this_point == soma_points[0]:
                 logger.debug("Processing multi-point soma")
 
-                for i in range(len(sorted_soma_points) - 1):
-                    current_point = sorted_soma_points[i]
-                    next_point = sorted_soma_points[i + 1]
+                for i in range(len(soma_points) - 1):
+                    current_point = soma_points[i]
+                    next_point = soma_points[i + 1]
 
                     segment = Segment(
                         id=self.next_segment_id,
@@ -363,7 +362,7 @@ class NeuroMLWriter:
 
                     self.next_segment_id += 1
 
-                self.processed_nodes.add(sorted_soma_points[-1].id)
+                self.processed_nodes.add(soma_points[-1].id)
 
             else:
                 logger.debug(f"Soma point {this_point.id} not the first, skipping")
