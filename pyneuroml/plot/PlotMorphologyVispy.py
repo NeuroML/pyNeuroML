@@ -41,11 +41,12 @@ pynml_in_jupyter = False
 
 try:
     from vispy import app, scene, use
-    from vispy.color import get_color_dict
+    from vispy.color import get_color_dict, get_color_names
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
     from vispy.scene.visuals import Mesh
     from vispy.util.transforms import rotate
+    from vispy.visuals.filters import ShadingFilter
 
     if app.Application.is_interactive(app):
         pynml_in_jupyter = True
@@ -724,7 +725,7 @@ def plot_interactive_3D(
             color = (
                 pop_id_vs_color[pop_id]
                 if pop_id in pop_id_vs_color
-                else get_next_hex_color()
+                else random.choice(get_color_names())
             )
             # if hightlight spec has a color for the cell, use that
             try:
@@ -1571,5 +1572,40 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
     assert mesh is not None
     pbar.finish()
     mesh_end = time.time()
-
     logger.debug(f"Mesh creation took {(mesh_end - mesh_start)}")
+
+    # lighting
+    # light dir from the front right and above
+    # for vispy, y is up, z is to the right, and x is inwards
+    # so, go diagonally from bounds to get the light vector, not quite
+    # diagonally
+    cam = current_view.camera
+    cam_center = cam.center
+    logger.debug(f"Cam center is {cam_center}")
+    logger.debug(f"Cam lims are {cam._xlim}, {cam._ylim}, {cam._zlim}")
+    light_dir = (
+        cam._xlim[1] - cam._xlim[0] / 2,
+        -1 * (cam._ylim[1] - cam._ylim[0] / 2),
+        -1 * (cam._zlim[1] - cam._zlim[0] / 2),
+        0,
+    )
+    logger.debug(f"Light dir is: {light_dir}")
+    shading_filter = ShadingFilter(
+        shading="smooth",
+        shininess=10,
+        ambient_light=(1, 1, 1, 0.5),
+        specular_light=(1, 1, 1, 0.5),
+        light_dir=light_dir[:3],
+    )
+    mesh.attach(shading_filter)
+
+    def attach_headlight(current_view):
+        shading_filter.light_dir = light_dir[:3]
+        initial_light_dir = current_view.camera.transform.imap(light_dir)
+
+        @current_view.scene.transform.changed.connect
+        def on_transform_change(event):
+            transform = current_view.camera.transform
+            shading_filter.light_dir = transform.map(initial_light_dir)[:3]
+
+    attach_headlight(current_view)
