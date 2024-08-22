@@ -12,11 +12,14 @@ Copyright 2023 NeuroML contributors
 import logging
 import math
 import random
+import time
 import typing
+from functools import lru_cache
 from typing import Optional
 
 import numpy
 import progressbar
+from matplotlib.colors import to_rgb
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from scipy.spatial.transform import Rotation
@@ -37,6 +40,7 @@ pynml_in_jupyter = False
 
 try:
     from vispy import app, scene, use
+    from vispy.color import get_color_dict
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
     from vispy.scene.visuals import Mesh
@@ -1195,10 +1199,33 @@ def plot_3D_schematic(
             app.run()
 
 
+@lru_cache(maxsize=10000)
+def create_spherical_mesh(
+    rows=10,
+    cols=10,
+    depth=10,
+    radius=1.0,
+    offset=True,
+    subdivisions=3,
+    method="latitude",
+):
+    """Wrapper around vispy.geometry.create_sphere to allow the use of a cache"""
+    return create_sphere(
+        rows=rows,
+        cols=cols,
+        depth=depth,
+        radius=radius,
+        offset=offset,
+        subdivisions=subdivisions,
+        method=method,
+    )
+
+
+@lru_cache(maxsize=10000)
 def create_cylindrical_mesh(
     rows: int,
     cols: int,
-    radius: typing.Union[float, typing.List[float]] = [1.0, 1.0],
+    radius: typing.Union[float, typing.Tuple[float, float]] = (1.0, 1.0),
     length: float = 1.0,
     closed: bool = True,
 ):
@@ -1210,7 +1237,7 @@ def create_cylindrical_mesh(
     :param cols: number of columns
     :type cols: int
     :param radius: float or pair of floats for the two radii of the cylinder
-    :type radius: float or [float, float][]
+    :type radius: float or (float, float)
     :param length: length of cylinder
     :type length: float
     :param closed: whether the cylinder should be closed
@@ -1221,7 +1248,7 @@ def create_cylindrical_mesh(
     """
     verts = numpy.empty((rows + 1, cols, 3), dtype=numpy.float32)
     if isinstance(radius, int) or isinstance(radius, float):
-        radius = [radius, radius]  # convert to list
+        radius = (radius, radius)  # convert to tuple
 
     # compute theta values
     th = numpy.linspace(2 * numpy.pi, 0, cols).reshape(1, cols)
@@ -1294,8 +1321,13 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
     :param min_width: minimum width of tubes
     :type min_width: float
     """
+    mesh_start = time.time()
     total_mesh_instances = len(meshdata)
-    pbar_interval = pow(10, (len(str(total_mesh_instances)) - 2))
+    logger.info(f"Processing {total_mesh_instances} segments")
+
+    pbar_interval = max(1, pow(10, (len(str(total_mesh_instances)) - 3)))
+
+    vispy_color_dict = get_color_dict()
 
     main_mesh_vertices = []
     num_vertices = 0
@@ -1335,18 +1367,36 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
         # may be cylinders with such a set of parameters
 
         if r1 == r2 and ((prox is None and dist is None) or (length == 0.0)):
-            seg_mesh = create_sphere(9, 9, radius=r1)
+            seg_mesh = create_spherical_mesh(9, 9, radius=r1)
             logger.debug(f"Created spherical mesh template with radius {r1}")
         else:
             rows = 2 + int(length / 2)
             seg_mesh = create_cylindrical_mesh(
-                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
+                rows=rows, cols=9, radius=(r1, r2), length=length, closed=True
             )
             logger.debug(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
             )
 
         logger.debug(f"Color is {color}")
+        if isinstance(color, str):
+            if color.startswith("#"):
+                color = to_rgb(color)
+            else:
+                try:
+                    vispy_color_hash = vispy_color_dict[color.lower()]
+                    color = to_rgb(vispy_color_hash)
+                except KeyError:
+                    logger.warning(f"{color} is not recognised by vispy")
+                    logger.warning(
+                        "Valid colors can be seen using `vispy.color.get_color_names`, or you may use the hex notation"
+                    )
+                    # get a new random color, and add it to dict so it's used
+                    # everywhere in the mesh
+                    new_color = random.choice(list(vispy_color_dict.keys()))
+                    vispy_color_dict[color] = vispy_color_dict[new_color]
+                    logger.warning(f"Using {new_color} instead")
+                    color = to_rgb(vispy_color_dict[color])
 
         # cylinders
         if prox is not None and dist is not None:
@@ -1413,3 +1463,6 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
     )
     assert mesh is not None
     pbar.finish()
+    mesh_end = time.time()
+
+    logger.debug(f"Mesh creation took {(mesh_end - mesh_start)}")
