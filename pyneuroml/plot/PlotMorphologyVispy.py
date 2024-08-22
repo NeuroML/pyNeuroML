@@ -19,6 +19,7 @@ from typing import Optional
 
 import numpy
 import progressbar
+from frozendict import frozendict
 from matplotlib.colors import to_rgb
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
@@ -113,7 +114,9 @@ def create_new_vispy_canvas(
     view_max: typing.Optional[typing.List[float]] = None,
     title: str = "",
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[
+            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
+        ]
     ] = None,
     axes_length: float = 100,
     axes_width: int = 2,
@@ -141,7 +144,7 @@ def create_new_vispy_canvas(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or (int, int, int) or None or str
     :param axes_length: length of axes
     :type axes_length: float
     :param axes_width: width of axes lines
@@ -185,7 +188,10 @@ def create_new_vispy_canvas(
     cam_index = 1
     view.camera = cams[cam_index]
 
-    calc_axes_pos = None  # type: typing.Optional[typing.Union[typing.List[float], typing.List[int]]]
+    calc_axes_pos: typing.Optional[
+        typing.Union[typing.Tuple[float, float, float], typing.Tuple[int, int, int]]
+    ] = None
+
     if view_min is not None and view_max is not None:
         x_width = abs(view_min[0] - view_max[0])
         y_width = abs(view_min[1] - view_max[1])
@@ -235,9 +241,9 @@ def create_new_vispy_canvas(
                 except ValueError:
                     z_bit = view_min[0]
 
-                calc_axes_pos = [x_bit, view_min[1], z_bit]
+                calc_axes_pos = (x_bit, view_min[1], z_bit)
             elif axes_pos == "origin":
-                calc_axes_pos = [0.0, 0.0, 0.0]
+                calc_axes_pos = (0.0, 0.0, 0.0)
             else:
                 raise ValueError(f"Invalid value for axes_pos: {axes_pos}")
         # if it's either None, or a point
@@ -318,7 +324,7 @@ def plot_interactive_3D(
     verbose: bool = False,
     plot_type: str = "constant",
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[typing.Tuple[float], typing.Tuple[int], str]
     ] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
@@ -376,7 +382,7 @@ def plot_interactive_3D(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or (int, int, int) or None or str
     :param title: title of plot
     :type title: str
     :param theme: theme to use (light/dark)
@@ -583,17 +589,11 @@ def plot_interactive_3D(
 
     # calculate total cells and segments to be plotted
     total_cells = 0
-    total_segments = 0
     for pop_id, cell in pop_id_vs_cell.items():
         total_cells += len(positions[pop_id])
-        try:
-            total_segments += len(positions[pop_id]) * len(cell.morphology.segments)
-        except AttributeError:
-            total_segments += len(positions[pop_id])
 
-    logger.debug(
-        f"Visualising {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
-    )
+    logger.info("Processing %s cells" % total_cells)
+
     # not used later, clear up
     del cell_id_vs_cell
 
@@ -650,7 +650,7 @@ def plot_interactive_3D(
     current_canvas, current_view = create_new_vispy_canvas(
         view_min,
         view_max,
-        title,
+        title if title else "",
         axes_pos=axes_pos,
         theme=theme,
         view_center=view_center,
@@ -684,7 +684,6 @@ def plot_interactive_3D(
             pass
 
     meshdata = []  # type: typing.List[typing.Any]
-    logger.info("Processing %s cells" % total_cells)
 
     # do not show this pbar in jupyter notebooks
     if not pynml_in_jupyter:
@@ -782,8 +781,16 @@ def plot_interactive_3D(
 
                 elif plot_type == "schematic" or cell.id in schematic_cells:
                     logger.debug(f"Cell for 3d schematic is: {cell.id}")
-                    plot_3D_schematic(
-                        offset=pos,
+                    # Pass no offset (pos) here to take advantage of the
+                    # lru_cache.  The offset is not really used in anyway other
+                    # than to create the meshdata. So we can add it to the
+                    # mesdata after. This means that the plot_3D_cell_morphology
+                    # function will not be run if the same cell object is
+                    # passed to it, a common usecase for networks where there
+                    # are populations of the same cell. Instead, the cache will
+                    # be used.
+                    new_meshdata = plot_3D_schematic(
+                        offset=None,
                         cell=cell,
                         segment_groups=None,
                         color=color,
@@ -792,9 +799,11 @@ def plot_interactive_3D(
                         current_view=current_view,
                         axes_pos=axes_pos,
                         nogui=True,
-                        meshdata=meshdata,
+                        meshdata=None,
                         upright=upright,
                     )
+                    mesh_data_with_offset = [(*x, pos) for x in new_meshdata]
+                    meshdata.extend(mesh_data_with_offset)
                 elif (
                     plot_type == "detailed"
                     or cell.id in detailed_cells
@@ -808,8 +817,16 @@ def plot_interactive_3D(
                     except KeyError:
                         pass
 
-                    plot_3D_cell_morphology(
-                        offset=pos,
+                    # Pass no offset (pos) here to take advantage of the
+                    # lru_cache.  The offset is not really used in anyway other
+                    # than to create the meshdata. So we can add it to the
+                    # mesdata after. This means that the plot_3D_cell_morphology
+                    # function will not be run if the same cell object is
+                    # passed to it, a common usecase for networks where there
+                    # are populations of the same cell. Instead, the cache will
+                    # be used.
+                    new_meshdata = plot_3D_cell_morphology(
+                        offset=None,
                         cell=cell,
                         color=color,
                         plot_type=plot_type,
@@ -819,10 +836,13 @@ def plot_interactive_3D(
                         axes_pos=axes_pos,
                         min_width=min_width,
                         nogui=True,
-                        meshdata=meshdata,
-                        highlight_spec=cell_highlight_spec,
+                        meshdata=None,
+                        highlight_spec=frozendict(cell_highlight_spec),
                         upright=upright,
                     )
+                    assert new_meshdata is not None
+                    mesh_data_with_offset = [(*x, pos) for x in new_meshdata]
+                    meshdata.extend(mesh_data_with_offset)
 
             pbar_ctr += 1
 
@@ -837,8 +857,9 @@ def plot_interactive_3D(
             app.run()
 
 
+@lru_cache(maxsize=100)
 def plot_3D_cell_morphology(
-    offset: typing.List[float] = [0, 0, 0],
+    offset: typing.Optional[typing.Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     cell: Optional[Cell] = None,
     color: typing.Optional[str] = None,
     title: str = "",
@@ -846,17 +867,19 @@ def plot_3D_cell_morphology(
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
-    axis_min_max: typing.List = [float("inf"), -1 * float("inf")],
+    axis_min_max: typing.Tuple = (float("inf"), -1 * float("inf")),
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[
+            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
+        ]
     ] = None,
-    nogui: bool = True,
+    nogui: bool = False,
     plot_type: str = "constant",
     theme: str = "light",
     meshdata: typing.Optional[typing.List[typing.Any]] = None,
-    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    highlight_spec: typing.Optional[typing.Union[typing.Dict, frozendict]] = None,
     upright: bool = False,
-):
+) -> typing.Optional[typing.List[typing.Any]]:
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
 
@@ -877,7 +900,10 @@ def plot_3D_cell_morphology(
             for plotting point cells
 
     :param offset: offset for cell
-    :type offset: [float, float]
+        Note that this is only used in creating the meshdata. If set to None,
+        this is ommitted from the meshdata, and the mesh creator will set it to
+        origin.
+    :type offset: (float, float, float) or None
     :param cell: cell to plot
     :type cell: neuroml.Cell
     :param color: color to use for segments, with some special values:
@@ -904,7 +930,7 @@ def plot_3D_cell_morphology(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or None or str
     :param title: title of plot
     :type title: str
     :param verbose: show extra information (default: False)
@@ -954,6 +980,7 @@ def plot_3D_cell_morphology(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :returns: meshdata
     :raises: ValueError if `cell` is None
 
     """
@@ -1082,7 +1109,10 @@ def plot_3D_cell_morphology(
         if segment_spec["marker_color"] is not None:
             seg_color = segment_spec["marker_color"]
 
-        meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color, offset))
+        if offset is not None:
+            meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color, offset))
+        else:
+            meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color))
         logger.debug(f"meshdata added: {meshdata[-1]}")
 
     if not nogui:
@@ -1095,10 +1125,11 @@ def plot_3D_cell_morphology(
     return meshdata
 
 
+@lru_cache(maxsize=100)
 def plot_3D_schematic(
     cell: Cell,
     segment_groups: typing.Optional[typing.List[SegmentGroup]] = None,
-    offset: typing.List[float] = [0, 0, 0],
+    offset: typing.Optional[typing.Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     labels: bool = False,
     width: float = 5.0,
     verbose: bool = False,
@@ -1107,13 +1138,15 @@ def plot_3D_schematic(
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
     axes_pos: typing.Optional[
-        typing.Union[typing.List[float], typing.List[int], str]
+        typing.Union[
+            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
+        ]
     ] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.List[typing.Any]] = None,
     upright: bool = False,
-) -> None:
+) -> typing.Optional[typing.List[typing.Any]]:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
 
@@ -1137,7 +1170,10 @@ def plot_3D_schematic(
             for plotting cells with detailed morphologies
 
     :param offset: offset for cell
-    :type offset: [float, float, float]
+        Note that this is only used in creating the meshdata. If set to None,
+        this is ommitted from the meshdata, and the mesh creator will set it to
+        origin.
+    :type offset: (float, float, float) or None
     :param cell: cell to plot
     :type cell: neuroml.Cell
     :param segment_groups: list of unbranched segment groups to plot, all if None
@@ -1192,6 +1228,7 @@ def plot_3D_schematic(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :returns: meshdata
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
@@ -1272,9 +1309,9 @@ def plot_3D_schematic(
         branch_color = color
         if color is None:
             branch_color = get_next_hex_color()
-        elif color.lower() == "cell":
+        elif isinstance(color, str) and color.lower() == "cell":
             branch_color = cell_color_soma
-        elif color.lower() == "default groups":
+        elif isinstance(color, str) and color.lower() == "default groups":
             if first_seg.id in soma_segs:
                 branch_color = cell_color_soma
             elif first_seg.id in axon_segs:
@@ -1286,17 +1323,29 @@ def plot_3D_schematic(
         else:
             branch_color = color
 
-        meshdata.append(
-            (
-                f"{first_prox.diameter/2}",
-                f"{last_dist.diameter/2}",
-                f"{length}",
-                first_prox,
-                last_dist,
-                branch_color,
-                offset,
+        if offset is not None:
+            meshdata.append(
+                (
+                    f"{first_prox.diameter/2}",
+                    f"{last_dist.diameter/2}",
+                    f"{length}",
+                    first_prox,
+                    last_dist,
+                    branch_color,
+                    offset,
+                )
             )
-        )
+        else:
+            meshdata.append(
+                (
+                    f"{first_prox.diameter/2}",
+                    f"{last_dist.diameter/2}",
+                    f"{length}",
+                    first_prox,
+                    last_dist,
+                    branch_color,
+                )
+            )
 
     if not nogui:
         create_mesh(meshdata, "Detailed", current_view, width)
@@ -1305,6 +1354,7 @@ def plot_3D_schematic(
         else:
             current_canvas.show()
             app.run()
+    return meshdata
 
 
 @lru_cache(maxsize=10000)
@@ -1456,6 +1506,8 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
         dist = d[4]
         color = d[5]
         offset = d[6]
+        if offset is None:
+            offset = (0.0, 0.0, 0.0)
 
         # actual plotting bits
         if plot_type == "constant":
