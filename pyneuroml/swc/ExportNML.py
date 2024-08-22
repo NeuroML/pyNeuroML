@@ -206,7 +206,29 @@ class NeuroMLWriter:
         parent_point: SWCNode,
     ) -> None:
         """
-        Handle the creation of soma segments.
+
+        Handle the creation of soma segments based on different soma representation cases.
+         This method implements the soma representation guidelines as described in
+        "Soma format representation in NeuroMorpho.Org as of version 5.3".
+         For full details, see: https://github.com/NeuroML/Cvapp-NeuroMorpho.org/blob/master/caseExamples/SomaFormat-NMOv5.3.pdf
+          The method handles the following cases:
+         1. Single contour (most common, ~80% of cases):
+          Converted to a three-point soma cylinder.
+         2. Soma absent (~8% of cases):
+          Not handled in this method (no changes made).
+         3. Multiple contours (~5% of cases):
+          Converted to a three-point soma cylinder, averaging all contour points.
+         4. Multiple cylinders (~4% of cases):
+          Kept as is, no conversion needed.
+         5. Single point (~3% of cases):
+          Converted to a three-point soma cylinder.
+         The three-point soma representation consists of:
+         - First point: Center of the soma
+         - Second point: Shifted -r_s in y-direction
+         - Third point: Shifted +r_s in y-direction
+         Where r_s is the equivalent radius computed from the soma surface area.
+         This method specifically handles cases 1, 3, and 5. Case 2 is not applicable,
+         and case 4 is handled implicitly by not modifying the existing representation.
 
         :param this_point: The current soma point being processed.
         :type this_point: SWCNode
@@ -301,7 +323,7 @@ class NeuroMLWriter:
             if this_point == sorted_soma_points[0]:
                 logger.debug("Processing multi-point soma")
 
-                for i in range(len(sorted_soma_points) - 1):  # Change here
+                for i in range(len(sorted_soma_points) - 1):
                     current_point = sorted_soma_points[i]
                     next_point = sorted_soma_points[i + 1]
 
