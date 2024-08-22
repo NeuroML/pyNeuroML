@@ -1196,6 +1196,7 @@ def plot_3D_schematic(
         if pynml_in_jupyter:
             display(current_canvas)
         else:
+            current_canvas.show()
             app.run()
 
 
