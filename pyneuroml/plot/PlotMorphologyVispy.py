@@ -12,11 +12,14 @@ Copyright 2023 NeuroML contributors
 import logging
 import math
 import random
+import time
 import typing
+from functools import lru_cache
 from typing import Optional
 
 import numpy
 import progressbar
+from matplotlib.colors import to_rgb
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from neuroml.utils import fix_external_morphs_biophys_in_cell
@@ -38,9 +41,10 @@ pynml_in_jupyter = False
 
 try:
     from vispy import app, scene, use
+    from vispy.color import get_color_dict
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
-    from vispy.scene.visuals import InstancedMesh
+    from vispy.scene.visuals import Mesh
     from vispy.util.transforms import rotate
 
     if app.Application.is_interactive(app):
@@ -58,8 +62,6 @@ VISPY_THEME = {
     "dark": {"bg": "black", "fg": "white"},
 }
 PYNEUROML_VISPY_THEME = "light"
-
-MAX_MESH_PRECISION = 3
 
 
 def add_text_to_vispy_3D_plot(
@@ -324,7 +326,6 @@ def plot_interactive_3D(
         typing.Dict[str, typing.Union[str, typing.List[int], float]]
     ] = None,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
-    precision: typing.Tuple[int, int] = (4, 200),
     upright: bool = False,
 ):
     """Plot interactive plots in 3D using Vispy
@@ -436,18 +437,6 @@ def plot_interactive_3D(
         Please see the function docstrings for more information.
 
     :type highlight_spec: dict
-    :param precision: tuple containing two values: (number of decimal places,
-        maximum number of meshes). The first is used to group segments into
-        meshes to create instances. More precision means fewer segments will be
-        grouped into meshes---this may increase detail, but will reduce
-        performance. The second argument is used to limit the total number of
-        meshes. The function will keep reducing precision until the number of
-        meshes is fewer than the value provided here. The precision is passed
-        to :py:func:`round` and so may be negative.
-
-        If you have a good GPU, you can increase both these values to get more
-        detailed visualizations
-    :type precision: (int, int)
     :param upright: bool only applicable for single cells: Makes cells "upright"
         (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
         and transforming cell co-ordinates to align along the rotated first principal
@@ -604,9 +593,6 @@ def plot_interactive_3D(
     logger.debug(
         f"Visualising {total_segments} segments in {total_cells} cells in {len(pop_id_vs_cell)} populations"
     )
-    logger.debug(
-        f"Grouping into mesh instances by diameters at {precision[0]} decimal places"
-    )
     # not used later, clear up
     del cell_id_vs_cell
 
@@ -696,7 +682,7 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
-    meshdata = {}  # type: typing.Dict[typing.Any, typing.Any]
+    meshdata = []  # type: typing.List[typing.Any]
     logger.info("Processing %s cells" % total_cells)
 
     # do not show this pbar in jupyter notebooks
@@ -756,11 +742,17 @@ def plot_interactive_3D(
                 logging.debug(f"Plotting a point cell at {pos}")
 
             if cell is None:
-                key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
-                try:
-                    meshdata[key].append((None, None, color, pos))
-                except KeyError:
-                    meshdata[key] = [(None, None, color, pos)]
+                meshdata.append(
+                    (
+                        f"{radius:.1f}",
+                        f"{radius:.1f}",
+                        f"{radius:.1f}",
+                        None,
+                        None,
+                        color,
+                        pos,
+                    )
+                )
             else:
                 if (
                     plot_type == "point"
@@ -774,12 +766,18 @@ def plot_interactive_3D(
                         pos[1] + soma_x_y_z.y,
                         pos[2] + soma_x_y_z.z,
                     ]
-                    key = (f"{radius:.1f}", f"{radius:.1f}", f"{radius:.1f}")
-                    try:
-                        meshdata[key].append((None, None, color, pos1))
-                    except KeyError:
-                        meshdata[key] = [(None, None, color, pos1)]
-                    logger.debug(f"meshdata added: {key}: {meshdata[key]}")
+                    meshdata.append(
+                        (
+                            f"{radius:.1f}",
+                            f"{radius:.1f}",
+                            f"{radius:.1f}",
+                            None,
+                            None,
+                            color,
+                            pos1,
+                        )
+                    )
+                    logger.debug(f"meshdata added: {meshdata[-1]}")
 
                 elif plot_type == "schematic" or cell.id in schematic_cells:
                     logger.debug(f"Cell for 3d schematic is: {cell.id}")
@@ -794,7 +792,6 @@ def plot_interactive_3D(
                         axes_pos=axes_pos,
                         nogui=True,
                         meshdata=meshdata,
-                        mesh_precision=precision[0],
                         upright=upright,
                     )
                 elif (
@@ -822,43 +819,16 @@ def plot_interactive_3D(
                         min_width=min_width,
                         nogui=True,
                         meshdata=meshdata,
-                        mesh_precision=precision[0],
                         highlight_spec=cell_highlight_spec,
                         upright=upright,
                     )
-
-            # if too many meshes, reduce precision and retry, recursively
-            if (len(meshdata.keys()) > precision[1]) and (precision[0] > 0):
-                precision = (precision[0] - 1, precision[1])
-                if pbar is not None:
-                    pbar.finish(dirty=True)
-
-                logger.info(
-                    f"More meshes than threshold ({len(meshdata.keys())}/{precision[1]}), reducing precision to {precision[0]} and re-calculating."
-                )
-                plot_interactive_3D(
-                    nml_file=plottable_nml_model,
-                    min_width=min_width,
-                    verbose=verbose,
-                    plot_type=plot_type,
-                    axes_pos=axes_pos,
-                    title=title,
-                    theme=theme,
-                    nogui=nogui,
-                    plot_spec=plot_spec,
-                    precision=precision,
-                    highlight_spec=highlight_spec,
-                    upright=upright,
-                )
-                # break the recursion, don't plot in the calling method
-                return
 
             pbar_ctr += 1
 
     if not nogui:
         if pbar is not None:
             pbar.finish()
-        create_instanced_meshes(meshdata, plot_type, current_view, min_width)
+        create_mesh(meshdata, plot_type, current_view, min_width)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -882,8 +852,7 @@ def plot_3D_cell_morphology(
     nogui: bool = True,
     plot_type: str = "constant",
     theme: str = "light",
-    meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
-    mesh_precision: int = 2,
+    meshdata: typing.Optional[typing.List[typing.Any]] = None,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     upright: bool = False,
 ):
@@ -960,13 +929,9 @@ def plot_3D_cell_morphology(
     :type plot_type: str
     :param theme: theme to use (dark/light)
     :type theme: str
-    :param meshdata: dictionary used to store mesh related data for vispy
+    :param meshdata: list used to store mesh related data for vispy
         visualisation
-    :type meshdata: dict
-    :param mesh_precision: what decimal places to use to group meshes into
-        instances: more precision means more detail (meshes), means less
-        performance (passed to :py:func:`round` and so may be negative)
-    :type mesh_precision: int
+    :type meshdata: list
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements. Mostly
         only helpful for marking segments on multi-compartmental cells. In the
@@ -1054,16 +1019,15 @@ def plot_3D_cell_morphology(
                 color_dict[s.id] = c
 
     if meshdata is None:
-        meshdata = {}
+        meshdata = []
 
     for seg in cell.morphology.segments:
         p = cell.get_actual_proximal(seg.id)
         d = seg.distal
         length = cell.get_segment_length(seg.id)
 
-        # round up to precision
-        r1 = round(p.diameter / 2, mesh_precision)
-        r2 = round(d.diameter / 2, mesh_precision)
+        r1 = p.diameter / 2
+        r2 = d.diameter / 2
 
         segment_spec = {
             "marker_size": None,
@@ -1087,27 +1051,13 @@ def plot_3D_cell_morphology(
         if segment_spec["marker_size"] is not None:
             if not isinstance(segment_spec["marker_size"], list):
                 raise RuntimeError("The marker size must be a list")
-            r1 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
-            r2 = round(float(segment_spec["marker_size"][1]) / 2, mesh_precision)
-
-        if (
-            segment_spec["marker_type"] is not None
-            and segment_spec["marker_type"].lower() == "sphere"
-        ):
-            logger.debug("Changing marker type to sphere")
-            r1 = r2 = round(float(segment_spec["marker_size"][0]) / 2, mesh_precision)
-            length = 0.0
-
-        key = (
-            f"{r1:.{abs(mesh_precision)}f}",
-            f"{r2:.{abs(mesh_precision)}f}",
-            f"{round(length, mesh_precision):.{abs(mesh_precision)}f}",
-        )
+            r1 = float(segment_spec["marker_size"][0]) / 2
+            r2 = float(segment_spec["marker_size"][1]) / 2
 
         seg_color = "white"
         if color is None:
             seg_color = get_next_hex_color()
-        elif isinstance(color, str) and color.lower() == "Groups".lower():
+        elif isinstance(color, str) and color.lower() == "groups":
             try:
                 seg_color = color_dict[seg.id]
             except KeyError:
@@ -1118,7 +1068,7 @@ def plot_3D_cell_morphology(
                     seg_color = "red"
                 elif seg.id in dend_segs:
                     seg_color = "blue"
-        elif isinstance(color, str) and color.lower() == "Default Groups".lower():
+        elif isinstance(color, str) and color.lower() == "default groups":
             if seg.id in soma_segs:
                 seg_color = "green"
             elif seg.id in axon_segs:
@@ -1131,14 +1081,11 @@ def plot_3D_cell_morphology(
         if segment_spec["marker_color"] is not None:
             seg_color = segment_spec["marker_color"]
 
-        try:
-            meshdata[key].append((p, d, seg_color, offset))
-        except KeyError:
-            meshdata[key] = [(p, d, seg_color, offset)]
-        logger.debug(f"meshdata added: {key}: {(p, d, seg_color, offset)}")
+        meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color, offset))
+        logger.debug(f"meshdata added: {meshdata[-1]}")
 
     if not nogui:
-        create_instanced_meshes(meshdata, plot_type, current_view, min_width)
+        create_mesh(meshdata, plot_type, current_view, min_width)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1147,143 +1094,9 @@ def plot_3D_cell_morphology(
     return meshdata
 
 
-def create_instanced_meshes(meshdata, plot_type, current_view, min_width):
-    """Internal function to plot instanced meshes from mesh data.
-
-    It is more efficient to collect all the segments that require the same
-    cylindrical mesh and to create instanced meshes for them.
-
-    See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.InstancedMesh
-
-    :param meshdata: meshdata to plot: dictionary with:
-        key: (r1, r2, length)
-        value: [(prox, dist, color, offset)]
-    :param plot_type: type of plot
-    :type plot_type: str
-    :param current_view: vispy viewbox to use
-    :type current_view: ViewBox
-    :param min_width: minimum width of tubes
-    :type min_width: float
-    """
-    total_mesh_instances = 0
-    for d, i in meshdata.items():
-        total_mesh_instances += len(i)
-    logger.debug(
-        f"Visualising {len(meshdata.keys())} meshes with {total_mesh_instances} instances"
-    )
-
-    pbar = progressbar.ProgressBar(
-        max_value=total_mesh_instances,
-        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
-        redirect_stdout=True,
-    )
-    progress_ctr = 0
-    for d, i in meshdata.items():
-        r1 = float(d[0])
-        r2 = float(d[1])
-        length = float(d[2])
-
-        # actual plotting bits
-        if plot_type == "constant":
-            r1 = min_width
-            r2 = min_width
-
-        if r1 < min_width:
-            r1 = min_width
-        if r2 < min_width:
-            r2 = min_width
-
-        seg_mesh = None
-        # 1: for points, we set the prox/dist to None since they only have
-        # positions.
-        # 2: single compartment cells with r1, r2, and length 0
-        # Note: we can't check if r1 == r2 == length because there
-        # may be cylinders with such a set of parameters
-
-        if r1 == r2 and ((i[0][0] is None and i[0][1] is None) or (length == 0.0)):
-            seg_mesh = create_sphere(9, 9, radius=r1)
-            logger.debug(f"Created spherical mesh template with radius {r1}")
-        else:
-            rows = 2 + int(length / 2)
-            seg_mesh = create_cylindrical_mesh(
-                rows=rows, cols=9, radius=[r1, r2], length=length, closed=True
-            )
-            logger.debug(
-                f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
-            )
-
-        instance_positions = []
-        instance_transforms = []
-        instance_colors = []
-
-        # if in a notebook, only update once per mesh, but not per mesh
-        # instance
-        if pynml_in_jupyter:
-            pbar.update(progress_ctr)
-
-        for num, im in enumerate(i):
-            # if not in a notebook, update for each mesh instance
-            if not pynml_in_jupyter:
-                pbar.update(progress_ctr)
-
-            progress_ctr += 1
-            prox = im[0]
-            dist = im[1]
-            color = im[2]
-            offset = im[3]
-
-            # points, spherical meshes
-            if prox is not None and dist is not None:
-                orig_vec = [0, 0, length]
-                dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
-                k = numpy.cross(orig_vec, dir_vector)
-                mag_k = numpy.linalg.norm(k)
-
-                if mag_k != 0.0:
-                    k = k / mag_k
-                    theta = math.acos(
-                        numpy.dot(orig_vec, dir_vector)
-                        / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
-                    )
-                    logger.debug(f"k is {k}, theta is {theta}")
-                    rot_matrix = rotate(math.degrees(theta), k).T
-                    rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
-                else:
-                    logger.debug("k is [0..], using zeros for rotation matrix")
-                    rot_matrix = numpy.zeros((3, 3))
-                    rot_obj = Rotation.from_matrix(rot_matrix)
-
-                instance_positions.append(
-                    [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
-                )
-            else:
-                instance_positions.append(offset)
-                rot_matrix = numpy.zeros((3, 3))
-                rot_obj = Rotation.from_matrix(rot_matrix)
-
-            instance_transforms.append(rot_obj.as_matrix())
-            instance_colors.append(color)
-
-        assert len(instance_positions) == len(instance_transforms)
-        logger.debug(
-            f"Instanced: positions: {instance_positions}, transforms: {instance_transforms}"
-        )
-
-        mesh = InstancedMesh(
-            meshdata=seg_mesh,
-            instance_positions=instance_positions,
-            instance_transforms=instance_transforms,
-            instance_colors=instance_colors,
-            parent=current_view.scene,
-        )
-        # TODO: add a shading filter for light?
-        assert mesh is not None
-    pbar.finish()
-
-
 def plot_3D_schematic(
     cell: Cell,
-    segment_groups: typing.Optional[typing.List[SegmentGroup]],
+    segment_groups: typing.Optional[typing.List[SegmentGroup]] = None,
     offset: typing.List[float] = [0, 0, 0],
     labels: bool = False,
     width: float = 5.0,
@@ -1297,8 +1110,7 @@ def plot_3D_schematic(
     ] = None,
     theme: str = "light",
     color: typing.Optional[str] = "Cell",
-    meshdata: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
-    mesh_precision: int = 2,
+    meshdata: typing.Optional[typing.List[typing.Any]] = None,
     upright: bool = False,
 ) -> None:
     """Plot a 3D schematic of the provided segment groups using vispy.
@@ -1327,7 +1139,7 @@ def plot_3D_schematic(
     :type offset: [float, float, float]
     :param cell: cell to plot
     :type cell: neuroml.Cell
-    :param segment_groups: list of unbranched segment groups to plot
+    :param segment_groups: list of unbranched segment groups to plot, all if None
     :type segment_groups: list(SegmentGroup)
     :param labels: toggle labelling of segment groups
     :type labels: bool
@@ -1436,7 +1248,7 @@ def plot_3D_schematic(
     cell_color_dendrites = get_next_hex_color()
 
     if meshdata is None:
-        meshdata = {}
+        meshdata = []
 
     for sgid, segs in ord_segs.items():
         sgobj = cell.get_segment_group(sgid)
@@ -1456,18 +1268,12 @@ def plot_3D_schematic(
             (last_dist.x, last_dist.y, last_dist.z),
         )
 
-        key = (
-            f"{round(first_prox.diameter/2, mesh_precision):.{mesh_precision}f}",
-            f"{round(last_dist.diameter/2, mesh_precision):.{mesh_precision}f}",
-            f"{round(length, mesh_precision):.{mesh_precision}f}",
-        )
-
         branch_color = color
         if color is None:
             branch_color = get_next_hex_color()
-        elif color == "Cell":
+        elif color.lower() == "cell":
             branch_color = cell_color_soma
-        elif color == "Default Groups":
+        elif color.lower() == "default groups":
             if first_seg.id in soma_segs:
                 branch_color = cell_color_soma
             elif first_seg.id in axon_segs:
@@ -1479,23 +1285,54 @@ def plot_3D_schematic(
         else:
             branch_color = color
 
-        try:
-            meshdata[key].append((first_prox, last_dist, branch_color, offset))
-        except KeyError:
-            meshdata[key] = [(first_prox, last_dist, branch_color, offset)]
+        meshdata.append(
+            (
+                f"{first_prox.diameter/2}",
+                f"{last_dist.diameter/2}",
+                f"{length}",
+                first_prox,
+                last_dist,
+                branch_color,
+                offset,
+            )
+        )
 
     if not nogui:
-        create_instanced_meshes(meshdata, "Detailed", current_view, width)
+        create_mesh(meshdata, "Detailed", current_view, width)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
+            current_canvas.show()
             app.run()
 
 
+@lru_cache(maxsize=10000)
+def create_spherical_mesh(
+    rows=10,
+    cols=10,
+    depth=10,
+    radius=1.0,
+    offset=True,
+    subdivisions=3,
+    method="latitude",
+):
+    """Wrapper around vispy.geometry.create_sphere to allow the use of a cache"""
+    return create_sphere(
+        rows=rows,
+        cols=cols,
+        depth=depth,
+        radius=radius,
+        offset=offset,
+        subdivisions=subdivisions,
+        method=method,
+    )
+
+
+@lru_cache(maxsize=10000)
 def create_cylindrical_mesh(
     rows: int,
     cols: int,
-    radius: typing.Union[float, typing.List[float]] = [1.0, 1.0],
+    radius: typing.Union[float, typing.Tuple[float, float]] = (1.0, 1.0),
     length: float = 1.0,
     closed: bool = True,
 ):
@@ -1507,7 +1344,7 @@ def create_cylindrical_mesh(
     :param cols: number of columns
     :type cols: int
     :param radius: float or pair of floats for the two radii of the cylinder
-    :type radius: float or [float, float][]
+    :type radius: float or (float, float)
     :param length: length of cylinder
     :type length: float
     :param closed: whether the cylinder should be closed
@@ -1518,7 +1355,7 @@ def create_cylindrical_mesh(
     """
     verts = numpy.empty((rows + 1, cols, 3), dtype=numpy.float32)
     if isinstance(radius, int) or isinstance(radius, float):
-        radius = [radius, radius]  # convert to list
+        radius = (radius, radius)  # convert to tuple
 
     # compute theta values
     th = numpy.linspace(2 * numpy.pi, 0, cols).reshape(1, cols)
@@ -1575,3 +1412,164 @@ def create_cylindrical_mesh(
     logger.debug(f"Faces are: {faces}")
 
     return MeshData(vertices=verts, faces=faces)
+
+
+def create_mesh(meshdata, plot_type, current_view, min_width):
+    """Internal function to create a mesh from the mesh data
+
+    See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.Mesh
+
+    :param meshdata: meshdata to plot: list with:
+        [(r1, r2, length, prox, dist, color, offset)]
+    :param plot_type: type of plot
+    :type plot_type: str
+    :param current_view: vispy viewbox to use
+    :type current_view: ViewBox
+    :param min_width: minimum width of tubes
+    :type min_width: float
+    """
+    mesh_start = time.time()
+    total_mesh_instances = len(meshdata)
+    logger.info(f"Processing {total_mesh_instances} segments")
+
+    pbar_interval = max(1, pow(10, (len(str(total_mesh_instances)) - 3)))
+
+    vispy_color_dict = get_color_dict()
+
+    main_mesh_vertices = []
+    num_vertices = 0
+    main_mesh_faces = []
+    main_mesh_colors = []
+
+    pbar = progressbar.ProgressBar(
+        max_value=total_mesh_instances,
+        widgets=[progressbar.SimpleProgress(), progressbar.Bar(), progressbar.Timer()],
+        redirect_stdout=True,
+    )
+    progress_ctr = 0
+    for d in meshdata:
+        r1 = float(d[0])
+        r2 = float(d[1])
+        length = float(d[2])
+        prox = d[3]
+        dist = d[4]
+        color = d[5]
+        offset = d[6]
+
+        # actual plotting bits
+        if plot_type == "constant":
+            r1 = min_width
+            r2 = min_width
+
+        if r1 < min_width:
+            r1 = min_width
+        if r2 < min_width:
+            r2 = min_width
+
+        seg_mesh = None
+        # 1: for points, we set the prox/dist to None since they only have
+        # positions.
+        # 2: single compartment cells with r1, r2, and length 0
+        # Note: we can't check if r1 == r2 == length because there
+        # may be cylinders with such a set of parameters
+
+        if r1 == r2 and ((prox is None and dist is None) or (length == 0.0)):
+            seg_mesh = create_spherical_mesh(9, 9, radius=r1)
+            logger.debug(f"Created spherical mesh template with radius {r1}")
+        else:
+            rows = 2 + int(length / 2)
+            seg_mesh = create_cylindrical_mesh(
+                rows=rows, cols=9, radius=(r1, r2), length=length, closed=True
+            )
+            logger.debug(
+                f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
+            )
+
+        logger.debug(f"Color is {color}")
+        if isinstance(color, str):
+            if color.startswith("#"):
+                color = to_rgb(color)
+            else:
+                try:
+                    vispy_color_hash = vispy_color_dict[color.lower()]
+                    color = to_rgb(vispy_color_hash)
+                except KeyError:
+                    logger.warning(f"{color} is not recognised by vispy")
+                    logger.warning(
+                        "Valid colors can be seen using `vispy.color.get_color_names`, or you may use the hex notation"
+                    )
+                    # get a new random color, and add it to dict so it's used
+                    # everywhere in the mesh
+                    new_color = random.choice(list(vispy_color_dict.keys()))
+                    vispy_color_dict[color] = vispy_color_dict[new_color]
+                    logger.warning(f"Using {new_color} instead")
+                    color = to_rgb(vispy_color_dict[color])
+
+        # cylinders
+        if prox is not None and dist is not None:
+            orig_vec = [0, 0, length]
+            dir_vector = [dist.x - prox.x, dist.y - prox.y, dist.z - prox.z]
+            k = numpy.cross(orig_vec, dir_vector)
+            mag_k = numpy.linalg.norm(k)
+
+            if mag_k != 0.0:
+                k = k / mag_k
+                theta = math.acos(
+                    numpy.dot(orig_vec, dir_vector)
+                    / (numpy.linalg.norm(orig_vec) * numpy.linalg.norm(dir_vector))
+                )
+                logger.debug(f"k is {k}, theta is {theta}")
+                rot_matrix = rotate(math.degrees(theta), k).T
+                rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+            else:
+                logger.debug("k is [0..], using zeros for rotation matrix")
+                rot_matrix = numpy.zeros((3, 3))
+                rot_obj = Rotation.from_matrix(rot_matrix)
+
+            vertices = seg_mesh.get_vertices()
+            rotated_vertices = rot_obj.apply(vertices)
+            translator = numpy.array(
+                [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
+            )
+            translated_vertices = rotated_vertices + translator
+            main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+
+            main_mesh_vertices.append(translated_vertices)
+            main_mesh_colors.append([[*color, 1]] * len(vertices))
+
+            num_vertices += len(vertices)
+        else:
+            # only translation here
+            translator = numpy.array([offset[0], offset[1], offset[2]])
+            vertices = seg_mesh.get_vertices()
+            translated_vertices = vertices + translator
+
+            main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+
+            main_mesh_vertices.append(translated_vertices)
+            main_mesh_colors.append([[*color, 1]] * len(vertices))
+
+            num_vertices += len(translated_vertices)
+
+        if (progress_ctr % pbar_interval) == 0:
+            pbar.update(progress_ctr)
+        progress_ctr += 1
+
+    numpy_mesh_vertices = numpy.concatenate(main_mesh_vertices, axis=0)
+    numpy_mesh_faces = numpy.concatenate(main_mesh_faces, axis=0)
+    numpy_mesh_colors = numpy.concatenate(main_mesh_colors, axis=0)
+
+    logger.debug(f"Vertices: {numpy_mesh_vertices.shape}")
+    logger.debug(f"Faces: {numpy_mesh_faces.shape}")
+
+    mesh = Mesh(
+        vertices=numpy_mesh_vertices,
+        faces=numpy_mesh_faces,
+        parent=current_view.scene,
+        vertex_colors=numpy_mesh_colors,
+    )
+    assert mesh is not None
+    pbar.finish()
+    mesh_end = time.time()
+
+    logger.debug(f"Mesh creation took {(mesh_end - mesh_start)}")
