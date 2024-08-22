@@ -114,7 +114,7 @@ def create_new_vispy_canvas(
     title: str = "",
     axes_pos: typing.Optional[
         typing.Union[
-            typing.Tuple[float, float, float], typing.Tuple[float, float, float], str
+            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
         ]
     ] = None,
     axes_length: float = 100,
@@ -577,7 +577,7 @@ def plot_interactive_3D(
     current_canvas, current_view = create_new_vispy_canvas(
         view_min,
         view_max,
-        title,
+        title if title else "",
         axes_pos=axes_pos,
         theme=theme,
         view_center=view_center,
