@@ -44,6 +44,7 @@ try:
     from vispy.color import get_color_dict, get_color_names
     from vispy.geometry.generation import create_sphere
     from vispy.geometry.meshdata import MeshData
+    from vispy.io.mesh import write_mesh
     from vispy.scene.visuals import Mesh
     from vispy.util.transforms import rotate
     from vispy.visuals.filters import ShadingFilter
@@ -333,6 +334,7 @@ def plot_interactive_3D(
     ] = None,
     highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
     upright: bool = False,
+    save_mesh_to: typing.Optional[str] = None,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -438,6 +440,8 @@ def plot_interactive_3D(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :param save_mesh_to: name of file to save mesh object to
+    :type save_mesh_to: str or None
 
     :throws ValueError: if `plot_type` is not one of "detailed", "constant",
         "schematic", or "point"
@@ -719,7 +723,9 @@ def plot_interactive_3D(
                         nogui=True,
                         meshdata=None,
                         upright=upright,
+                        save_mesh_to=None,
                     )
+                    assert new_meshdata is not None
                     mesh_data_with_offset = [(*x, pos) for x in new_meshdata]
                     meshdata.extend(mesh_data_with_offset)
                 elif (
@@ -757,6 +763,7 @@ def plot_interactive_3D(
                         meshdata=None,
                         highlight_spec=frozendict(cell_highlight_spec),
                         upright=upright,
+                        save_mesh_to=None,
                     )
                     assert new_meshdata is not None
                     mesh_data_with_offset = [(*x, pos) for x in new_meshdata]
@@ -767,7 +774,9 @@ def plot_interactive_3D(
     if not nogui:
         if pbar is not None:
             pbar.finish()
-        create_mesh(meshdata, plot_type, current_view, min_width)
+        create_mesh(
+            meshdata, plot_type, current_view, min_width, save_mesh_to=save_mesh_to
+        )
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -797,6 +806,7 @@ def plot_3D_cell_morphology(
     meshdata: typing.Optional[typing.List[typing.Any]] = None,
     highlight_spec: typing.Optional[typing.Union[typing.Dict, frozendict]] = None,
     upright: bool = False,
+    save_mesh_to: typing.Optional[str] = None,
 ) -> typing.Optional[typing.List[typing.Any]]:
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
@@ -896,6 +906,8 @@ def plot_3D_cell_morphology(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :param save_mesh_to: name of file to save mesh object to
+    :type save_mesh_to: str or None
     :returns: meshdata
     :raises: ValueError if `cell` is None
 
@@ -1024,7 +1036,9 @@ def plot_3D_cell_morphology(
         logger.debug(f"meshdata added: {meshdata[-1]}")
 
     if not nogui:
-        create_mesh(meshdata, plot_type, current_view, min_width)
+        create_mesh(
+            meshdata, plot_type, current_view, min_width, save_mesh_to=save_mesh_to
+        )
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1054,6 +1068,7 @@ def plot_3D_schematic(
     color: typing.Optional[str] = "Cell",
     meshdata: typing.Optional[typing.List[typing.Any]] = None,
     upright: bool = False,
+    save_mesh_to: typing.Optional[str] = None,
 ) -> typing.Optional[typing.List[typing.Any]]:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
@@ -1129,6 +1144,8 @@ def plot_3D_schematic(
         "upwards" instead of "downwards" in most cases. Note that the original cell object
         is unchanged, this is for visualization purposes only.
     :type upright: bool
+    :param save_mesh_to: name of file to save mesh object to
+    :type save_mesh_to: str or None
     :returns: meshdata
     """
     if title == "":
@@ -1242,7 +1259,9 @@ def plot_3D_schematic(
             )
 
     if not nogui:
-        create_mesh(meshdata, "Detailed", current_view, width)
+        create_mesh(
+            meshdata, "Detailed", current_view, width, save_mesh_to=save_mesh_to
+        )
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1359,7 +1378,7 @@ def create_cylindrical_mesh(
     return MeshData(vertices=verts, faces=faces)
 
 
-def create_mesh(meshdata, plot_type, current_view, min_width):
+def create_mesh(meshdata, plot_type, current_view, min_width, save_mesh_to):
     """Internal function to create a mesh from the mesh data
 
     See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.Mesh
@@ -1372,6 +1391,8 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
     :type current_view: ViewBox
     :param min_width: minimum width of tubes
     :type min_width: float
+    :param save_mesh_to: name of file to save mesh object to
+    :type save_mesh_to: str or None
     """
     mesh_start = time.time()
     total_mesh_instances = len(meshdata)
@@ -1555,3 +1576,20 @@ def create_mesh(meshdata, plot_type, current_view, min_width):
             shading_filter.light_dir = transform.map(initial_light_dir)[:3]
 
     attach_headlight(current_view)
+
+    if save_mesh_to is not None:
+        if not save_mesh_to.endswith((".obj", ".gz")):
+            logger.info(
+                f"Vispy requires mesh file to end in '.obj' or '.gz', appending '.obj' to {save_mesh_to}"
+            )
+            save_mesh_to += ".obj"
+
+        logger.info(f"Saving mesh to {save_mesh_to}")
+        write_mesh(
+            fname=save_mesh_to,
+            vertices=mesh.mesh_data.get_vertices(),
+            faces=mesh.mesh_data.get_faces(),
+            normals=None,
+            texcoords=None,
+            overwrite=False,
+        )
