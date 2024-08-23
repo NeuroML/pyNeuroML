@@ -133,6 +133,14 @@ def process_args():
     )
 
     parser.add_argument(
+        "-saveMeshTo",
+        type=str,
+        metavar="<Mesh file name (must end in '.obj' or '.gz')>",
+        default=None,
+        help="Name of the file to save 3D mesh data to",
+    )
+
+    parser.add_argument(
         "-square",
         action="store_true",
         default=DEFAULTS["square"],
@@ -170,6 +178,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             plot_spec={"point_fraction": a.point_fraction},
             upright=a.upright,
             axes_pos=a.show_axes,
+            save_mesh_to=a.save_mesh_to,
         )
     else:
         plot_2D(
