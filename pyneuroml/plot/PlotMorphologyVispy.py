@@ -23,6 +23,7 @@ from frozendict import frozendict
 from matplotlib.colors import to_rgb
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+from neuroml.utils import fix_external_morphs_biophys_in_cell
 from scipy.spatial.transform import Rotation
 
 from pyneuroml.pynml import read_neuroml2_file
@@ -348,7 +349,7 @@ def plot_interactive_3D(
         QT_QPA_PLATFORM=wayland-egl
 
     .. versionadded:: 1.1.12
-        The hightlight_spec parameter
+        The highlight_spec parameter
 
 
     :param nml_file: path to NeuroML cell file or
@@ -408,15 +409,18 @@ def plot_interactive_3D(
     :param highlight_spec: dictionary that allows passing some
         specifications to allow highlighting of particular elements.  Only used
         when plotting multi-compartmental cells for marking segments on them
-        ("plot_type" is either "constant" or "detailed")
+        ("plot_type" is "detailed", since for "constant" `min_width` is always
+        used.)
 
         Each key in the dictionary will be of the cell id and the values will
-        be more dictionaries, with the segment id as key and the following keys
-        in it:
+        be a "cell_color" or more dictionaries, with the segment id as key and
+        the following keys in it:
 
         - marker_color: color of the marker
         - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
           is used)
+        - marker_type: "sphere" (otherwise the default shape of the segment is
+          used, which could either be a sphere or a cylinder)
 
         E.g.:
 
@@ -424,12 +428,22 @@ def plot_interactive_3D(
 
             {
                 "cell id1": {
+                "cell_color": "red",
                     "seg id1": {
                         "marker_color": "blue",
-                        "marker_size": [0.1, 0.1]
+                        "marker_size": [0.1, 0.1],
+                        "marker_type": "sphere"
                     }
                 }
             }
+
+
+        The `cell_color` can be one of:
+
+        - valid color options of :py:func:`plot_3D_cell_morphology` for a "detailed" plot_type
+        - valid color options of :py:func:`plot_3D_schematic` for a "schematic" plot_type
+
+        Please see the function docstrings for more information.
 
     :type highlight_spec: dict
     :param upright: bool only applicable for single cells: Makes cells "upright"
@@ -456,6 +470,19 @@ def plot_interactive_3D(
     if highlight_spec is None:
         highlight_spec = {}
 
+    if plot_type != "detailed" and len(highlight_spec.items()) > 0:
+        if plot_type == "constant":
+            logger.warning(
+                "Plot type is 'constant', `marker_size` in `highlight_spec` will be ignored and provided `min_width` used"
+            )
+        elif plot_type == "schematic" or plot_type == "point":
+            logger.warning(
+                f"Plot type is '{plot_type}', `highlight_spec` will be ignored"
+            )
+        logger.warning(
+            "Please use `plot_type='detailed' if you also want to use `marker_size`"
+        )
+
     if verbose:
         logger.info(f"Visualising {nml_file}")
 
@@ -466,43 +493,89 @@ def plot_interactive_3D(
         if nml_file.endswith(".h5"):
             nml_model = read_neuroml2_file(nml_file)
         else:
+            # do not fix external morphs here, we do it later below
             nml_model = read_neuroml2_file(
                 nml_file,
                 include_includes=False,
                 check_validity_pre_include=False,
                 verbose=False,
                 optimized=True,
+                fix_external_morphs_biophys=False,
             )
+            # If it's a model that refers to external files for cells, and
+            # other bits, only load ones that we need for visualization
             load_minimal_morphplottable__model(nml_model, nml_file)
-            # note that from this point, the model object is not necessarily valid,
-            # because we've removed lots of bits.
+            # Note that from this point, the model object is not necessarily valid,
+            # because we've removed lots of bits that are not required for
+            # visualization.
+
+            # call manually so we can only load morphology, not biophysics
+            fix_external_morphs_biophys_in_cell(
+                nml_model, load_morphology=True, load_biophysical_properties=False
+            )
     else:
         nml_model = nml_file
 
     # if it isn't a NeuroMLDocument, create one
     if isinstance(nml_model, Cell):
         logger.debug("Got a cell")
+        if nml_model.morphology is None:
+            if nml_model.morphology_attr is None:
+                logger.error(
+                    "Neither morphology nor a reference to an external morphology are included in the Cell. Cannot plot."
+                )
+                return
+            else:
+                logger.error(
+                    "An external morphology is has been reference in the cell but I do not have the whole document to load it. Please pass the NeuroMLDocument or filename to the function instead."
+                )
+                return
+
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         plottable_nml_model.add(nml_model)
         logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
 
-    # if it's only a cell, add it to an empty cell in a document
+    # if it's only a morphology, add it to an empty cell in a document
     elif isinstance(nml_model, Morphology):
         logger.debug("Received morph, adding to a dummy cell")
         plottable_nml_model = NeuroMLDocument(id="newdoc")
-        nml_cell = plottable_nml_model.add(
+        plottable_nml_model.add(
             Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
-        plottable_nml_model.add(nml_cell)
         logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
+
+    # if it's a document, figure out if it's a cell or morphology
     elif isinstance(nml_model, NeuroMLDocument):
-        plottable_nml_model = nml_model
-        if title is None:
-            title = f"{plottable_nml_model.id}"
+        logger.debug("Received document, checking for cells/morphologies")
+        if len(nml_model.cells) > 0:
+            logger.debug("Received document with cells")
+            plottable_nml_model = fix_external_morphs_biophys_in_cell(
+                nml_model,
+                overwrite=False,
+                load_morphology=True,
+                load_biophysical_properties=False,
+            )
+        elif len(nml_model.morphology) > 0:
+            logger.debug("Received document with morphologies, adding to dummy cells")
+            plottable_nml_model = NeuroMLDocument(id="newdoc")
+            for m in nml_model.morphology:
+                plottable_nml_model.add(Cell, id=m.id, morphology=m, validate=False)
+            logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+            # use title from original model document
+            title = nml_model.id
+        # other networks
+        else:
+            plottable_nml_model = nml_model
+    # what did we get?
+    else:
+        raise ValueError(f"Could not process argument: {nml_model}")
+
+    if title is None:
+        title = f"{plottable_nml_model.id}"
 
     (
         cell_id_vs_cell,
@@ -657,6 +730,15 @@ def plot_interactive_3D(
                 if pop_id in pop_id_vs_color
                 else random.choice(get_color_names())
             )
+            # if hightlight spec has a color for the cell, use that
+            try:
+                color = highlight_spec[cell.id]["cell_color"]
+            # no key for this cell
+            except KeyError:
+                pass
+            # point cell
+            except AttributeError:
+                pass
 
             try:
                 logging.debug(f"Plotting {cell.id}")
@@ -814,7 +896,7 @@ def plot_3D_cell_morphology(
     .. versionadded:: 1.0.0
 
     .. versionadded:: 1.1.12
-        The hightlight_spec parameter
+        The highlight_spec parameter
 
     .. seealso::
 
@@ -896,6 +978,8 @@ def plot_3D_cell_morphology(
         - marker_color: color of the marker
         - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
           is used)
+        - marker_type: "sphere" (otherwise the default shape of the segment is
+          used, which could either be a sphere or a cylinder)
 
     :type highlight_spec: dict
     :param upright: bool only applicable for single cells: Makes cells "upright"
@@ -916,6 +1000,13 @@ def plot_3D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_interactive_3D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
 
     if highlight_spec is None:
         highlight_spec = {}
@@ -981,6 +1072,7 @@ def plot_3D_cell_morphology(
         segment_spec = {
             "marker_size": None,
             "marker_color": None,
+            "marker_type": None,
         }
         try:
             segment_spec.update(highlight_spec[str(seg.id)])
@@ -1131,11 +1223,18 @@ def plot_3D_schematic(
     :param color: color to use for segment groups with some special values:
 
         - if None, each unbranched segment group is given a unique color,
-        - if "Cell", each cell is given a unique color
+        - if "Cell", the whole cell is given one color
         - if "Default Groups", each cell is given unique colors for all axons,
           dendrites, and soma segments
 
     :type color: str
+    :param meshdata: dictionary used to store mesh related data for vispy
+        visualisation
+    :type meshdata: dict
+    :param mesh_precision: what decimal places to use to group meshes into
+        instances: more precision means more detail (meshes), means less
+        performance (passed to :py:func:`round` and so may be negative)
+    :type mesh_precision: int
     :param upright: bool only applicable for single cells: Makes cells "upright"
         (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
         and transforming cell co-ordinates to align along the rotated first principal
@@ -1150,6 +1249,13 @@ def plot_3D_schematic(
     """
     if title == "":
         title = f"3D schematic of segment groups from {cell.id}"
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_interactive_3D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
 
     view_center = None
     if upright:
