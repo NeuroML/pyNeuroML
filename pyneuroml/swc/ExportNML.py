@@ -10,7 +10,6 @@ import argparse
 import logging
 from typing import Dict, List, Optional, Set
 
-import neuroml.writers as writers
 from neuroml import (
     Cell,
     Member,
@@ -29,7 +28,7 @@ from pyneuroml.utils.cli import build_namespace
 from .LoadSWC import SWCGraph, SWCNode, load_swc
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class NeuroMLWriter:
@@ -47,7 +46,7 @@ class NeuroMLWriter:
         :param swc_graph: The SWC graph to be converted to NeuroML.
         :type swc_graph: SWCGraph
         """
-        logger.info("Initializing NeuroMLWriter")
+        logger.debug("Initializing NeuroMLWriter")
         self.swc_graph = swc_graph
         self.points = swc_graph.nodes
         self.section_types = [
@@ -82,7 +81,7 @@ class NeuroMLWriter:
         :return: The created Cell object.
         :rtype: Cell
         """
-        logger.info("Creating Cell object")
+        logger.debug("Creating Cell object")
         cell_name = self.__get_cell_name()
         notes = f"Neuronal morphology exported from Python Based Converter. Original file: {self.morphology_origin}"
         self.cell = Cell(id=cell_name, notes=notes)
@@ -120,7 +119,7 @@ class NeuroMLWriter:
 
         Main worker function
         """
-        logger.info("Starting NeuroML generation")
+        logger.debug("Starting NeuroML generation")
         if (
             len(self.points) < 2
             or len(self.section_types) < 2
@@ -141,7 +140,7 @@ class NeuroMLWriter:
         self.nml_doc = NeuroMLDocument(id=self.cell.id)
         self.nml_doc.cells.append(self.cell)
 
-        logger.info("NeuroML generation completed")
+        logger.debug("NeuroML generation completed")
 
     def __find_start_point(self) -> SWCNode:
         """
@@ -411,7 +410,7 @@ class NeuroMLWriter:
         # Print the second point of new branches
         if parent_seg_id is not None and is_type_change and this_point.children:
             second_point = this_point.children[0]
-            print(
+            logger.debug(
                 f"{second_point.id} {second_point.type} {second_point.x} {second_point.y} {second_point.z} {this_point.id}"
             )
             self.second_points_of_new_types.add(second_point.id)
@@ -515,7 +514,7 @@ class NeuroMLWriter:
         """
         Create NeuroML segment groups based on the segments created.
         """
-        logger.info("Creating segment groups")
+        logger.debug("Creating segment groups")
 
         for group_name, members in self.segment_groups.items():
             if members:
@@ -550,7 +549,7 @@ class NeuroMLWriter:
             Property(tag="cell_type", value="converted_from_swc")
         )
 
-        logger.info("Segment groups created successfully")
+        logger.debug("Segment groups created successfully")
 
     def export_to_nml_file(self, filename: str) -> None:
         """
@@ -587,7 +586,12 @@ def main(args=None):
     a = build_namespace(DEFAULTS={}, a=args)
     logger.debug(a)
 
-    convert_swc_to_neuroml(swc_file=a.swc_file, neuroml_file=a.neuroml_file)
+    if args.neuroml_file is None:
+        neuroml_file = args.swc_file.replace(".swc", ".cell.nml")
+    else:
+        neuroml_file = a.neuroml_file
+
+    convert_swc_to_neuroml(swc_file=a.swc_file, neuroml_file=neuroml_file)
 
 
 def process_args():
@@ -606,10 +610,11 @@ def process_args():
     )
 
     parser.add_argument(
-        "neuromlFile",
+        "-neuromlFile",
         type=str,
         metavar="<NeuroML file>",
         help="Name of the output NeuroML file",
+        required=False,
     )
 
     return parser.parse_args()
