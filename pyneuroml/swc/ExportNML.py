@@ -17,11 +17,12 @@ from neuroml import (
     Member,
     Morphology,
     NeuroMLDocument,
+    Point3DWithDiam,
     Property,
     Segment,
     SegmentGroup,
+    SegmentParent,
 )
-from neuroml.nml.nml import Point3DWithDiam, SegmentParent
 
 from .LoadSWC import SWCGraph, SWCNode
 
