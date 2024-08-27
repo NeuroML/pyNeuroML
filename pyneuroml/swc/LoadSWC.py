@@ -357,4 +357,8 @@ def load_swc(filename: str) -> SWCGraph:
             node = SWCNode(node_id, type_id, x, y, z, radius, parent_id)
             tree.add_node(node)
 
+    # add file name as new metadata if not included
+    if "ORIGINAL_SOURCE" not in tree.metadata.keys():
+        tree.metadata["ORIGINAL_SOURCE"] = filename
+
     return tree
