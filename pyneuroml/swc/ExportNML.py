@@ -129,7 +129,7 @@ class NeuroMLWriter:
             return ""
 
         self.__create_cell()
-        start_point = self.__find_start_point()
+        start_point = self.swc_graph.root
 
         logger.debug(f"Cell name: {self.cell.id}")
         logger.debug(f"Start point: {start_point}")
@@ -141,21 +141,6 @@ class NeuroMLWriter:
         self.nml_doc.cells.append(self.cell)
 
         logger.debug("NeuroML generation completed")
-
-    def __find_start_point(self) -> SWCNode:
-        """
-        Find the starting point (soma) in the SWC graph.
-
-        :return: The starting point (soma) of the neuron.
-        :rtype: SWCNode
-        """
-        logger.debug("Finding start point (soma)")
-        for point in self.points:
-            if point.type == SWCNode.SOMA:
-                logger.debug(f"Soma found: {point}")
-                return point
-        logger.warning("No soma points found, using first point")
-        return self.points[0]
 
     def __parse_tree(
         self,
