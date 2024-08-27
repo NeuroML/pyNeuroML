@@ -1,8 +1,9 @@
 """
 Module for loading SWC files
 
-.. versionadded:: 1.3.4
+.. versionadded:: 1.3.9
 
+Copyright 2024 NeuroML contributors
 """
 
 import logging

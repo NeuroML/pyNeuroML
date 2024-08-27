@@ -1,3 +1,11 @@
+"""
+Module for exporting NeuroML from SWC files.
+
+.. versionadded:: 1.3.9
+
+Copyright 2024 NeuroML contributors
+"""
+
 import logging
 import os
 import tempfile
