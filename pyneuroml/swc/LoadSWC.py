@@ -309,8 +309,8 @@ def parse_header(line: str) -> typing.Optional[typing.Tuple[str, str]]:
         match = re.match(rf"{field}\s+(.+)", line, re.IGNORECASE)
         if match:
             return field, match.group(1).strip()
-        else:
-            logger.warn(f"Line beginning with '#' does not match header format: {line}")
+
+    logger.warn(f"Line beginning with '#' does not match header format: {line}")
     return None
 
 
@@ -330,8 +330,11 @@ def load_swc(filename: str) -> SWCGraph:
     with open(filename, "r") as file:
         for line_number, line in enumerate(file, 1):
             line = line.strip()
+            logger.debug(f"Processing line {line_number}: '{line}'")
+
             if not line:
                 continue
+
             if line.startswith("#"):
                 header = parse_header(line[1:].strip())
                 if header:
