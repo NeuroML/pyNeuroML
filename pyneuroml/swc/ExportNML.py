@@ -6,8 +6,8 @@ Module for exporting NeuroML from SWC files.
 Copyright 2024 NeuroML contributors
 """
 
+import argparse
 import logging
-import tempfile
 from typing import Dict, List, Optional, Set
 
 import neuroml.writers as writers
@@ -23,7 +23,10 @@ from neuroml import (
     SegmentParent,
 )
 
-from .LoadSWC import SWCGraph, SWCNode
+from pyneuroml.io import write_neuroml2_file
+from pyneuroml.utils.cli import build_namespace
+
+from .LoadSWC import SWCGraph, SWCNode, load_swc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -85,6 +88,8 @@ class NeuroMLWriter:
         self.cell = Cell(id=cell_name, notes=notes)
         self.cell.morphology = Morphology(id=f"morphology_{cell_name}")
         logger.debug(f"Created Cell object with name: {cell_name}")
+
+        assert self.cell is not None
         return self.cell
 
     def __get_cell_name(self) -> str:
@@ -110,12 +115,10 @@ class NeuroMLWriter:
         logger.debug(f"Generated cell name: {cell_name}")
         return cell_name
 
-    def nml_string(self) -> str:
-        """
-        Generate the NeuroML representation as a string.
+    def __generate_neuroml(self):
+        """Generate NeuroML representation.
 
-        :return: The NeuroML representation as a string.
-        :rtype: str
+        Main worker function
         """
         logger.info("Starting NeuroML generation")
         if (
@@ -138,15 +141,7 @@ class NeuroMLWriter:
         self.nml_doc = NeuroMLDocument(id=self.cell.id)
         self.nml_doc.cells.append(self.cell)
 
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-            writers.NeuroMLWriter.write(self.nml_doc, temp_file)
-            temp_file_path = temp_file.name
-
-        with open(temp_file_path, "r") as temp_file:
-            nml_content = temp_file.read()
-
         logger.info("NeuroML generation completed")
-        return nml_content
 
     def __find_start_point(self) -> SWCNode:
         """
@@ -565,7 +560,56 @@ class NeuroMLWriter:
         :type filename: str
         """
         if self.nml_doc is None:
-            self.nml_string()
+            self.__generate_neuroml()
 
-        writers.NeuroMLWriter.write(self.nml_doc, filename)
+        write_neuroml2_file(self.nml_doc, filename, validate=True)
         logger.info(f"NeuroML file exported to: {filename}")
+
+
+def convert_swc_to_neuroml(swc_file: str, neuroml_file: str):
+    """Convert an SWC file to NeuroML
+
+    :param swc_file: SWC input file
+    :type swc_file: str
+    :param neuroml_file: output NeuroML file
+    :type neuroml_file: str
+    """
+    swc_graph = load_swc(swc_file)
+    writer = NeuroMLWriter(swc_graph)
+    writer.export_to_nml_file(neuroml_file)
+
+
+def main(args=None):
+    "Main CLI runner method"
+    if args is None:
+        args = process_args()
+
+    a = build_namespace(DEFAULTS={}, a=args)
+    logger.debug(a)
+
+    convert_swc_to_neuroml(swc_file=a.swc_file, neuroml_file=a.neuroml_file)
+
+
+def process_args():
+    """
+    Parse command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=("Convert provided SWC file to NeuroML2")
+    )
+
+    parser.add_argument(
+        "swcFile",
+        type=str,
+        metavar="<SWC file>",
+        help="Name of the input SWC file",
+    )
+
+    parser.add_argument(
+        "nmlFile",
+        type=str,
+        metavar="<NeuroML file>",
+        help="Name of the output NeuroML file",
+    )
+
+    return parser.parse_args()
