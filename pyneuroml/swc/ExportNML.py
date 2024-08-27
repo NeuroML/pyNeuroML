@@ -606,7 +606,7 @@ def process_args():
     )
 
     parser.add_argument(
-        "nmlFile",
+        "neuromlFile",
         type=str,
         metavar="<NeuroML file>",
         help="Name of the output NeuroML file",
