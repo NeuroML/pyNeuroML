@@ -294,10 +294,14 @@ class SWCGraph:
                 )
 
 
-def parse_header(line: str) -> typing.Optional[typing.Tuple[str, str]]:
+def parse_header(
+    line_number: int, line: str
+) -> typing.Optional[typing.Tuple[str, str]]:
     """
     Parse a header line from an SWC file.
 
+    :param line_number: line number, for logging purposes
+    :type line_number: int
     :param line: A single line from the SWC file header
     :type line: str
     :return: A tuple containing the matched header field name and corresponding value (or None if no match)
@@ -310,7 +314,7 @@ def parse_header(line: str) -> typing.Optional[typing.Tuple[str, str]]:
         if match:
             return field, match.group(1).strip()
 
-    logger.warn(f"Line beginning with '#' does not match header format: {line}")
+    logger.warn(f"Ignoring line {line_number}: does not match header format: # {line}")
     return None
 
 
@@ -336,7 +340,7 @@ def load_swc(filename: str) -> SWCGraph:
                 continue
 
             if line.startswith("#"):
-                header = parse_header(line[1:].strip())
+                header = parse_header(line_number, line[1:].strip())
                 if header:
                     tree.add_metadata(header[0], header[1])
                 continue
