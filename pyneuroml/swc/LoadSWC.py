@@ -9,7 +9,6 @@ import logging
 import re
 import typing
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -130,7 +129,6 @@ class SWCGraph:
         :raises ValueError: If a node with the same ID already exists in the graph or if multiple root nodes are detected
         """
         if any(existing_node.id == node.id for existing_node in self.nodes):
-            logger.error(f"Duplicate node ID: {node.id}")
             raise ValueError(f"Duplicate node ID: {node.id}")
 
         if node.parent_id == -1:
