@@ -393,7 +393,9 @@ class NeuroMLWriter:
             if this_point.type < len(self.section_types)
             else f"type_{this_point.type}"
         )
-        segment = Segment(id=seg_id, name=f"{segment_type}_Seg_{seg_id}")
+        segment = Segment(
+            id=seg_id, name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}"
+        )
 
         is_branch_point = len(parent_point.children) > 1
         is_type_change = this_point.type != parent_point.type
