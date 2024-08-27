@@ -179,17 +179,12 @@ class NeuroMLWriter:
 
         logger.debug(f"Parsing tree: Point {this_point.id}, Type {this_point.type}")
 
-        type_change = this_point.type != parent_point.type
-        new_branch = len(parent_point.children) > 1 if parent_point else False
-
         if this_point.type == SWCNode.SOMA:
             self.__handle_soma(this_point, parent_point)
         else:
             if this_point.id not in self.second_points_of_new_types:
                 logger.debug(f"Processing non-soma point: {this_point.id}")
-                self.__create_segment(
-                    this_point, parent_point, new_branch or type_change
-                )
+                self.__create_segment(parent_point, this_point)
                 self.processed_nodes.add(this_point.id)
             else:
                 logger.debug(
@@ -375,19 +370,16 @@ class NeuroMLWriter:
 
     def __create_segment(
         self,
-        this_point: SWCNode,
         parent_point: SWCNode,
-        new_branch: True,
+        this_point: SWCNode,
     ) -> None:
         """
         Create a NeuroML segment from an SWC point.
 
-        :param this_point: The current point being processed.
-        :type this_point: SWCNode
         :param parent_point: The parent point of the current point.
         :type parent_point: SWCNode
-        :param new_branch: Whether this point starts a new branch.
-        :type new_branch: bool
+        :param this_point: The current point being processed.
+        :type this_point: SWCNode
         """
 
         logger.debug(
