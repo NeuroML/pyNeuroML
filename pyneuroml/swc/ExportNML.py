@@ -545,31 +545,45 @@ class NeuroMLWriter:
 
         logger.debug("Segment groups created successfully")
 
-    def export_to_nml_file(self, filename: str) -> None:
+    def export_to_nml_file(
+        self, filename: str, standalone_morphology: bool = True
+    ) -> None:
         """
         Export the NeuroML representation to a file.
 
         :param filename: The name of the file to export to.
         :type filename: str
+        :param standalone_morphology: export morphology as standalone object
+            (not as part of a Cell object)
+        :type standalone_morphology: bool
         """
         if self.nml_doc is None:
             self.__generate_neuroml()
+
+        if standalone_morphology:
+            self.nml_doc.morphology.append(self.cell.morphology)
+            self.nml_doc.cells = []
 
         write_neuroml2_file(self.nml_doc, filename, validate=True)
         logger.info(f"NeuroML file exported to: {filename}")
 
 
-def convert_swc_to_neuroml(swc_file: str, neuroml_file: str):
+def convert_swc_to_neuroml(
+    swc_file: str, neuroml_file: str, standalone_morphology: bool = True
+):
     """Convert an SWC file to NeuroML
 
     :param swc_file: SWC input file
     :type swc_file: str
     :param neuroml_file: output NeuroML file
     :type neuroml_file: str
+    :param standalone_morphology: export morphology as standalone object
+        (not as part of a Cell object)
+    :type standalone_morphology: bool
     """
     swc_graph = load_swc(swc_file)
     writer = NeuroMLWriter(swc_graph)
-    writer.export_to_nml_file(neuroml_file)
+    writer.export_to_nml_file(neuroml_file, standalone_morphology)
 
 
 def main(args=None):
@@ -585,7 +599,11 @@ def main(args=None):
     else:
         neuroml_file = a.neuroml_file
 
-    convert_swc_to_neuroml(swc_file=a.swc_file, neuroml_file=neuroml_file)
+    convert_swc_to_neuroml(
+        swc_file=a.swc_file,
+        neuroml_file=neuroml_file,
+        standalone_morphology=a.morph_only,
+    )
 
 
 def process_args():
@@ -609,6 +627,13 @@ def process_args():
         metavar="<NeuroML file>",
         help="Name of the output NeuroML file",
         required=False,
+    )
+
+    parser.add_argument(
+        "-morphOnly",
+        action="store_true",
+        help="Export as standalone Morphology, not as a Cell",
+        default=False,
     )
 
     return parser.parse_args()
