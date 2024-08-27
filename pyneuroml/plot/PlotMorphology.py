@@ -20,6 +20,7 @@ import numpy
 from matplotlib import pyplot as plt
 from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
 from neuroml.neuro_lex_ids import neuro_lex_ids
+from neuroml.utils import fix_external_morphs_biophys_in_cell
 
 from pyneuroml.pynml import read_neuroml2_file
 from pyneuroml.utils import extract_position_info
@@ -132,6 +133,14 @@ def process_args():
     )
 
     parser.add_argument(
+        "-saveMeshTo",
+        type=str,
+        metavar="<Mesh file name (must end in '.obj' or '.gz')>",
+        default=None,
+        help="Name of the file to save 3D mesh data to",
+    )
+
+    parser.add_argument(
         "-square",
         action="store_true",
         default=DEFAULTS["square"],
@@ -169,6 +178,7 @@ def plot_from_console(a: typing.Optional[typing.Any] = None, **kwargs: str):
             plot_spec={"point_fraction": a.point_fraction},
             upright=a.upright,
             axes_pos=a.show_axes,
+            save_mesh_to=a.save_mesh_to,
         )
     else:
         plot_2D(
@@ -314,37 +324,75 @@ def plot_2D(
                 check_validity_pre_include=False,
                 verbose=False,
                 optimized=True,
+                fix_external_morphs_biophys=False,
             )
+            # If it's a model that refers to external files for cells, and
+            # other bits, only load ones that we need for visualization
             load_minimal_morphplottable__model(nml_model, nml_file)
-            # note that from this point, the model object is not necessarily valid,
-            # because we've removed lots of bits.
+            # Note that from this point, the model object is not necessarily valid,
+            # because we've removed lots of bits that are not required for
+            # visualization.
+
+            # call manually so we can only load morphology, not biophysics
+            fix_external_morphs_biophys_in_cell(
+                nml_model, load_morphology=True, load_biophysical_properties=False
+            )
     else:
         nml_model = nml_file
 
     # if it isn't a NeuroMLDocument, create one
     if isinstance(nml_model, Cell):
-        logger.info("Got a cell")
+        logger.debug("Got a cell")
+        if nml_model.morphology is None:
+            if nml_model.morphology_attr is None:
+                logger.error(
+                    "Neither morphology nor a reference to an external morphology are included in the Cell. Cannot plot."
+                )
+                return
+            else:
+                logger.error(
+                    "An external morphology is has been reference in the cell but I do not have the whole document to load it. Please pass the NeuroMLDocument or filename to the function instead."
+                )
+                return
+
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         plottable_nml_model.add(nml_model)
-        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
 
     # if it's only a cell, add it to an empty cell in a document
     elif isinstance(nml_model, Morphology):
-        logger.info("Received morph, adding to a dummy cell")
+        logger.debug("Received morph, adding to a dummy cell")
         plottable_nml_model = NeuroMLDocument(id="newdoc")
         nml_cell = plottable_nml_model.add(
             Cell, id=nml_model.id, morphology=nml_model, validate=False
         )
         plottable_nml_model.add(nml_cell)
-        logger.info(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+        logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
         if title is None:
             title = f"{plottable_nml_model.cells[0].id}"
+    # if it's a document, figure out if it's a cell or morphology
     elif isinstance(nml_model, NeuroMLDocument):
-        plottable_nml_model = nml_model
-        if title is None:
-            title = f"{plottable_nml_model.id}"
+        logger.debug("Received document, checking for cells/morphologies")
+        if len(nml_model.cells) > 0:
+            logger.debug("Received document with cells")
+            plottable_nml_model = fix_external_morphs_biophys_in_cell(
+                nml_model, overwrite=False
+            )
+        elif len(nml_model.morphology) > 0:
+            logger.debug("Received document with morphologies, adding to dummy cells")
+            plottable_nml_model = NeuroMLDocument(id="newdoc")
+            for m in nml_model.morphology:
+                plottable_nml_model.add(Cell, id=m.id, morphology=m, validate=False)
+            logger.debug(f"plottable cell model is: {plottable_nml_model.cells[0]}")
+            # use title from original model document
+            title = nml_model.id
+        else:
+            plottable_nml_model = nml_model
+
+    if title is None:
+        title = f"{plottable_nml_model.id}"
 
     (
         cell_id_vs_cell,
@@ -617,6 +665,13 @@ def plot_2D_cell_morphology(
         raise ValueError(
             "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
         )
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_2D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
 
     if highlight_spec is None:
         highlight_spec = {}
@@ -1036,6 +1091,18 @@ def plot_2D_schematic(
     :type close_plot: bool
 
     """
+    if cell is None:
+        raise ValueError(
+            "No cell provided. If you would like to plot a network of point neurons, consider using `plot_2D_point_cells` instead"
+        )
+
+    if cell.morphology is None:
+        logger.error("Cell does not contain a morphology. Cannot visualise.")
+        logger.error(
+            "If the cell is referencing an external morphology, please use the `plot_2D` function and pass the complete document and we will try to load the morphology."
+        )
+        return
+
     if title == "":
         title = f"2D schematic of segment groups from {cell.id}"
 

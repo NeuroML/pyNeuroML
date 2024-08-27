@@ -72,6 +72,19 @@ def extract_position_info(
     - pop_id_vs_color: dict(pop id, colour property)
     - pop_id_vs_radii: dict(pop id, radius property)
 
+    A few notes about this utility function:
+
+    - it expects cells to be "flattened" and complete, i.e., they should
+      contain their own morphologies and not refer to other "standalone"
+      morphology elements. You can use the
+      :py:func:`neuroml.utils.fix_external_morphs_biophys_in_cell` function in
+      the libNeuroML package to flatten cell models.
+
+    - if the NeuroMLDocument contains cells, it will only process those and
+      ignore any standalone Morphology elements. Only if the document has no
+      cells will it attempt to process morphologies by placing them in dummy
+      cells and networks.
+
     :param nml_model: NeuroML2 model to extract position information from
     :type nml_model: NeuroMLDocument
     :param verbose: toggle function verbosity
@@ -93,12 +106,15 @@ def extract_position_info(
     cell_elements.extend(nml_model.cells)
     cell_elements.extend(nml_model.cell2_ca_poolses)
 
-    # handle morphology elements by adding them into dummy cells
-    ctr = 1
-    morph_elements.extend(nml_model.morphology)
-    for m in morph_elements:
-        cell_elements.append(neuroml.Cell(id=f"Dummy cell {ctr}", morphology=m))
-        ctr += 1
+    # if there are no cells, look at morphologies
+    if len(cell_elements) == 0:
+        logger.info("No cells found, looking for morphologies.")
+        # handle morphology elements by adding them into dummy cells
+        ctr = 1
+        morph_elements.extend(nml_model.morphology)
+        for m in morph_elements:
+            cell_elements.append(neuroml.Cell(id=f"Dummy cell {ctr}", morphology=m))
+            ctr += 1
 
     # if the model does not include a network, plot all the cells in the
     # model in new dummy populations

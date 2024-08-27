@@ -15,16 +15,25 @@ import textwrap
 import typing
 from typing import Optional
 
+import lems.model.model as lems_model
 import neuroml.loaders as loaders
 import neuroml.writers as writers
 from neuroml import NeuroMLDocument
 
-import lems.model.model as lems_model
-from pyneuroml.errors import FILE_NOT_FOUND_ERR
+from pyneuroml.errors import ARGUMENT_ERR, FILE_NOT_FOUND_ERR, NMLFileTypeError
 from pyneuroml.validators import validate_neuroml2
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+# extension: standard
+pynml_file_type_dict = {
+    "xml": "LEMS",
+    "nml": "NeuroML",
+    "sedml": "SED-ML",
+    "sbml": "SBML",
+}
 
 
 def read_neuroml2_file(
@@ -130,10 +139,10 @@ def read_neuroml2_file(
 
         if fix_external_morphs_biophys:
             from neuroml.utils import fix_external_morphs_biophys_in_cell
+
             fix_external_morphs_biophys_in_cell(nml2_doc)
 
     return nml2_doc
-
 
 
 def write_neuroml2_file(
@@ -228,49 +237,98 @@ def confirm_file_exists(filename: str) -> None:
         sys.exit(FILE_NOT_FOUND_ERR)
 
 
-def confirm_neuroml_file(filename: str) -> None:
+def confirm_neuroml_file(filename: str, sys_error: bool = False) -> None:
     """Confirm that file exists and is a NeuroML file before proceeding with
     processing.
 
     :param filename: Names of files to check
     :type filename: str
+    :param sys_error: toggle whether function should exit or raise exception
+    :type sys_error: bool
     """
-    # print('Checking file: %s'%filename)
-    # Some conditions to check if a LEMS file was entered
-    # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
-    confirm_file_exists(filename)
-    if filename.startswith("LEMS_"):
-        logger.warning(
-            textwrap.dedent(
-                """
-            *************************************************************************************
-            **  Warning, you may be trying to use a LEMS XML file (containing <Simulation> etc.)
-            **  for a pyNeuroML option when a NeuroML2 file is required...
-            *************************************************************************************
-            """
-            )
-        )
+    error_string = textwrap.dedent(
+        """
+    *************************************************************************************
+    **  You may be trying to use a LEMS XML file (containing <Simulation> etc.)
+    **  for a pyNeuroML option when a NeuroML2 file is required.
+    *************************************************************************************
+    """
+    )
+
+    try:
+        confirm_file_type(filename, ["nml"])
+    except NMLFileTypeError as e:
+        if filename.startswith("LEMS_"):
+            logger.warning(error_string)
+        if sys_error is True:
+            logger.error(e)
+            sys.exit(ARGUMENT_ERR)
+        else:
+            raise e
 
 
-def confirm_lems_file(filename: str) -> None:
+def confirm_lems_file(filename: str, sys_error: bool = False) -> None:
     """Confirm that file exists and is a LEMS file before proceeding with
     processing.
 
     :param filename: Names of files to check
     :type filename: list of strings
+    :param sys_error: toggle whether function should exit or raise exception
+    :type sys_error: bool
     """
     # print('Checking file: %s'%filename)
     # Some conditions to check if a LEMS file was entered
     # TODO: Ideally we'd like to check the root node: checking file extensions is brittle
+    error_string = textwrap.dedent(
+        """
+    *************************************************************************************
+    **  You may be trying to use a NeuroML2 file for a pyNeuroML option
+    **  when a LEMS XML file (containing <Simulation> etc.) is required.
+    *************************************************************************************
+    """
+    )
+    try:
+        confirm_file_type(filename, ["xml"])
+    except NMLFileTypeError as e:
+        if filename.endswith("nml"):
+            logger.warning(error_string)
+        if sys_error is True:
+            logger.error(e)
+            sys.exit(ARGUMENT_ERR)
+        else:
+            raise e
+
+
+def confirm_file_type(
+    filename: str,
+    file_exts: typing.List[str],
+    error_str: typing.Optional[str] = None,
+    sys_error: bool = False,
+) -> None:
+    """Confirm that a file exists and has the necessary extension
+
+    :param filename: filename to confirm
+    :type filename: str
+    :param file_exts: list of valid file extensions, without the leading dot
+    :type file_exts: list of strings
+    :param error_str: an optional error string to print along with the thrown
+        exception
+    :type error_str: string (optional)
+
+    :raises NMLFileTypeError: if file does not have one of the provided extensions
+
+    """
     confirm_file_exists(filename)
-    if filename.endswith("nml"):
-        logger.warning(
-            textwrap.dedent(
-                """
-            *************************************************************************************
-            **  Warning, you may be trying to use a NeuroML2 file for a pyNeuroML option
-            **  when a LEMS XML file (containing <Simulation> etc.) is required...
-            *************************************************************************************
-            """
-            )
+    filename_ext = filename.split(".")[-1]
+    file_types = [f"{x} ({pynml_file_type_dict[x]})" for x in file_exts]
+    if filename_ext not in file_exts:
+        error_string = (
+            f"Expected file extension(s): {', '.join(file_types)}; got {filename_ext}"
         )
+        if error_str is not None:
+            error_string += "\n" + error_str
+        if sys_error is True:
+            logger.error(error_string)
+            sys.exit(ARGUMENT_ERR)
+        else:
+            raise NMLFileTypeError(error_string)
