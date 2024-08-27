@@ -7,9 +7,8 @@ Copyright 2024 NeuroML contributors
 """
 
 import logging
-import os
 import tempfile
-from typing import List
+from typing import Dict, List, Optional, Set
 
 import neuroml.writers as writers
 from neuroml import (
@@ -25,8 +24,6 @@ from neuroml import (
 )
 
 from .LoadSWC import SWCGraph, SWCNode
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -58,14 +55,14 @@ class NeuroMLWriter:
             "apical dendrite",
         ]
         self.morphology_origin = swc_graph.metadata.get("ORIGINAL_SOURCE", "Unknown")
-        self.cell = None
-        self.nml_doc = None
-        self.point_indices_vs_seg_ids = {}
+        self.cell: Optional[Cell] = None
+        self.nml_doc: Optional[NeuroMLDocument] = None
+        self.point_indices_vs_seg_ids: Dict[str, str] = {}
         self.next_segment_id = 0
-        self.processed_nodes = set()
-        self.segment_types = {}
-        self.second_points_of_new_types = set()
-        self.segment_groups = {
+        self.processed_nodes: Set[int] = set()
+        self.segment_types: Dict[str, int] = {}
+        self.second_points_of_new_types: Set[str] = set()
+        self.segment_groups: Dict[str, Set[str]] = {
             "all": set(),
             "soma_group": set(),
             "axon_group": set(),
@@ -75,7 +72,7 @@ class NeuroMLWriter:
         }
         logger.debug(f"NeuroMLWriter initialized with {len(self.points)} points")
 
-    def create_cell(self) -> Cell:
+    def __create_cell(self) -> Cell:
         """
         Create a Cell object for the NeuroML representation.
 
@@ -83,14 +80,14 @@ class NeuroMLWriter:
         :rtype: Cell
         """
         logger.info("Creating Cell object")
-        cell_name = self.get_cell_name()
+        cell_name = self.__get_cell_name()
         notes = f"Neuronal morphology exported from Python Based Converter. Original file: {self.morphology_origin}"
         self.cell = Cell(id=cell_name, notes=notes)
         self.cell.morphology = Morphology(id=f"morphology_{cell_name}")
         logger.debug(f"Created Cell object with name: {cell_name}")
         return self.cell
 
-    def get_cell_name(self) -> str:
+    def __get_cell_name(self) -> str:
         """
         Generate a cell name based on the morphology origin.
 
@@ -129,14 +126,14 @@ class NeuroMLWriter:
             logger.error("Null data or section types in nmlWrite")
             return ""
 
-        self.create_cell()
-        start_point = self.find_start_point()
+        self.__create_cell()
+        start_point = self.__find_start_point()
 
         logger.debug(f"Cell name: {self.cell.id}")
         logger.debug(f"Start point: {start_point}")
 
-        self.parse_tree(start_point, start_point)
-        self.create_segment_groups()
+        self.__parse_tree(start_point, start_point)
+        self.__create_segment_groups()
 
         self.nml_doc = NeuroMLDocument(id=self.cell.id)
         self.nml_doc.cells.append(self.cell)
@@ -151,7 +148,7 @@ class NeuroMLWriter:
         logger.info("NeuroML generation completed")
         return nml_content
 
-    def find_start_point(self) -> SWCNode:
+    def __find_start_point(self) -> SWCNode:
         """
         Find the starting point (soma) in the SWC graph.
 
@@ -166,7 +163,7 @@ class NeuroMLWriter:
         logger.warning("No soma points found, using first point")
         return self.points[0]
 
-    def parse_tree(
+    def __parse_tree(
         self,
         parent_point: SWCNode,
         this_point: SWCNode,
@@ -192,11 +189,13 @@ class NeuroMLWriter:
         new_branch = len(parent_point.children) > 1 if parent_point else False
 
         if this_point.type == SWCNode.SOMA:
-            self.handle_soma(this_point, parent_point)
+            self.__handle_soma(this_point, parent_point)
         else:
             if this_point.id not in self.second_points_of_new_types:
                 logger.debug(f"Processing non-soma point: {this_point.id}")
-                self.create_segment(this_point, parent_point, new_branch or type_change)
+                self.__create_segment(
+                    this_point, parent_point, new_branch or type_change
+                )
                 self.processed_nodes.add(this_point.id)
             else:
                 logger.debug(
@@ -207,9 +206,9 @@ class NeuroMLWriter:
 
         for child_point in this_point.children:
             if child_point.id not in self.processed_nodes:
-                self.parse_tree(this_point, child_point)
+                self.__parse_tree(this_point, child_point)
 
-    def handle_soma(
+    def __handle_soma(
         self,
         this_point: SWCNode,
         parent_point: SWCNode,
@@ -278,7 +277,7 @@ class NeuroMLWriter:
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
 
                 segment = Segment(
@@ -294,7 +293,7 @@ class NeuroMLWriter:
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
                 self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
 
             elif (
@@ -322,7 +321,7 @@ class NeuroMLWriter:
             self.cell.morphology.segments.append(segment)
             self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
             self.segment_types[self.next_segment_id] = SWCNode.SOMA
-            self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+            self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
             self.next_segment_id += 1
 
         elif len(soma_points) > 3:
@@ -364,7 +363,7 @@ class NeuroMLWriter:
                         self.next_segment_id
                     )
                     self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                    self.add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+                    self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
 
                     if current_point.id == this_point.id:
                         self.processed_nodes.add(current_point.id)
@@ -380,7 +379,7 @@ class NeuroMLWriter:
         logger.debug(f"Processed nodes after soma: {self.processed_nodes}")
         logger.debug(f"Total segments created so far: {self.next_segment_id}")
 
-    def create_segment(
+    def __create_segment(
         self,
         this_point: SWCNode,
         parent_point: SWCNode,
@@ -476,13 +475,13 @@ class NeuroMLWriter:
         self.cell.morphology.segments.append(segment)
         self.point_indices_vs_seg_ids[this_point.id] = seg_id
         self.segment_types[seg_id] = this_point.type
-        self.add_segment_to_groups(seg_id, this_point.type)
+        self.__add_segment_to_groups(seg_id, this_point.type)
 
         self.processed_nodes.add(this_point.id)
 
         logger.debug(f"Created segment {seg_id} for point {this_point.id}")
 
-    def add_segment_to_groups(self, seg_id: int, segment_type: int) -> None:
+    def __add_segment_to_groups(self, seg_id: int, segment_type: int) -> None:
         """
         Add a segment to the appropriate segment groups.
 
@@ -491,11 +490,11 @@ class NeuroMLWriter:
         :param segment_type: The type of the segment.
         :type segment_type: int
         """
-        groups = self.get_groups_for_type(segment_type)
+        groups = self.__get_groups_for_type(segment_type)
         for group in groups:
             self.segment_groups[group].add(seg_id)
 
-    def get_groups_for_type(self, segment_type: int) -> List[str]:
+    def __get_groups_for_type(self, segment_type: int) -> List[str]:
         """
         Get the list of group names a segment should belong to based on its type.
 
@@ -517,7 +516,7 @@ class NeuroMLWriter:
             groups.append("dendrite_group")
         return groups
 
-    def create_segment_groups(self) -> None:
+    def __create_segment_groups(self) -> None:
         """
         Create NeuroML segment groups based on the segments created.
         """
