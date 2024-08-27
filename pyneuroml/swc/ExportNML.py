@@ -165,7 +165,7 @@ class NeuroMLWriter:
         logger.debug(f"Parsing tree: Point {this_point.id}, Type {this_point.type}")
 
         if this_point.type == SWCNode.SOMA:
-            self.__handle_soma(this_point, parent_point)
+            self.__handle_soma(parent_point, this_point)
         else:
             if this_point.id not in self.second_points_of_new_types:
                 logger.debug(f"Processing non-soma point: {this_point.id}")
@@ -184,8 +184,8 @@ class NeuroMLWriter:
 
     def __handle_soma(
         self,
-        this_point: SWCNode,
         parent_point: SWCNode,
+        this_point: SWCNode,
     ) -> None:
         """
 
@@ -212,10 +212,10 @@ class NeuroMLWriter:
          This method specifically handles cases 1, 3, and 5. Case 2 is not applicable,
          and case 4 is handled implicitly by not modifying the existing representation.
 
-        :param this_point: The current soma point being processed.
-        :type this_point: SWCNode
         :param parent_point: The parent point of the current soma point.
         :type parent_point: SWCNode
+        :param this_point: The current soma point being processed.
+        :type this_point: SWCNode
         """
         logger.debug(f"Handling soma point: {this_point.id}")
 
