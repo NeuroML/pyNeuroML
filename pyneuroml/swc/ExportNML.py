@@ -84,8 +84,8 @@ class NeuroMLWriter:
         logger.debug("Creating Cell object")
         cell_name = self.__get_cell_name()
         notes = f"Neuronal morphology exported from Python Based Converter. Original file: {self.morphology_origin}"
-        self.cell = Cell(id=cell_name, notes=notes)
-        self.cell.morphology = Morphology(id=f"morphology_{cell_name}")
+        self.cell = Cell(id=cell_name)
+        self.cell.morphology = Morphology(id=f"morphology_{cell_name}", notes=notes)
         logger.debug(f"Created Cell object with name: {cell_name}")
 
         assert self.cell is not None
