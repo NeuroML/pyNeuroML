@@ -56,14 +56,25 @@ class NeuroMLWriter:
             "basal dendrite",
             "apical dendrite",
         ]
+        # TODO: use something better than UNKNOWN
         self.morphology_origin = swc_graph.metadata.get("ORIGINAL_SOURCE", "Unknown")
+        # hold the cell object
         self.cell: Optional[Cell] = None
+        # holds the NeuroML document object
         self.nml_doc: Optional[NeuroMLDocument] = None
-        self.point_indices_vs_seg_ids: Dict[str, str] = {}
+        # dict, key is the index of a point, value is the corresponding segment
+        # id
+        self.point_indices_vs_seg_ids: Dict[int, int] = {}
+        # keeps track of the next segment id, incremented after a segment is
+        # processed
         self.next_segment_id = 0
+        # stores processed nodes
         self.processed_nodes: Set[int] = set()
-        self.segment_types: Dict[str, int] = {}
-        self.second_points_of_new_types: Set[str] = set()
+        # dict, key is the segment id, value is the segment type
+        self.segment_types: Dict[int, int] = {}
+        # set of points that are the second point after a type change
+        self.second_points_of_new_types: Set[int] = set()
+        # holds different default segment groups
         self.segment_groups: Dict[str, Set[str]] = {
             "all": set(),
             "soma_group": set(),
