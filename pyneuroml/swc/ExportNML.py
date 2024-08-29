@@ -49,6 +49,7 @@ class NeuroMLWriter:
         logger.debug("Initializing NeuroMLWriter")
         self.swc_graph = swc_graph
         self.points = swc_graph.nodes
+        # segment group types
         self.section_types = [
             "undefined",
             "soma",
@@ -384,17 +385,23 @@ class NeuroMLWriter:
         seg_id = self.next_segment_id
         self.next_segment_id += 1
 
+        # get the segment type
         segment_type = (
             self.section_types[this_point.type]
             if this_point.type < len(self.section_types)
             else f"type_{this_point.type}"
         )
+
+        # create a new segment
         segment = Segment(
             id=seg_id, name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}"
         )
 
+        # is this a branch point (more than one children)
         is_branch_point = len(parent_point.children) > 1
+        # is the point type changing?
         is_type_change = this_point.type != parent_point.type
+        # segment parent id
         parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id)
 
         # Print the second point of new branches
@@ -404,8 +411,8 @@ class NeuroMLWriter:
                 f"{second_point.id} {second_point.type} {second_point.x} {second_point.y} {second_point.z} {this_point.id}"
             )
             self.second_points_of_new_types.add(second_point.id)
-
             self.point_indices_vs_seg_ids[second_point.id] = seg_id
+
         if parent_point.id in self.point_indices_vs_seg_ids:
             parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
             segment.parent = SegmentParent(segments=parent_seg_id)
@@ -436,6 +443,7 @@ class NeuroMLWriter:
 
         elif is_branch_point:
             logger.debug("Setting proximal and distal for branch point")
+            # WRONG
             segment.proximal = Point3DWithDiam(
                 x=parent_point.x,
                 y=parent_point.y,
