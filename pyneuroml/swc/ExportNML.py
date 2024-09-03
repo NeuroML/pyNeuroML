@@ -386,11 +386,10 @@ class NeuroMLWriter:
         self.next_segment_id += 1
 
         # get the segment type
-        segment_type = (
-            self.section_types[this_point.type]
-            if this_point.type < len(self.section_types)
-            else f"type_{this_point.type}"
-        )
+        try:
+            segment_type = self.section_types[this_point.type]
+        except IndexError:
+            segment_type = f"type_{this_point.type}"
 
         # create a new segment
         segment = Segment(
