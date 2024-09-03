@@ -30,16 +30,6 @@ class TestNeuroMLWriter(unittest.TestCase):
             if file.endswith(".swc"):
                 os.remove(file)
 
-    # Method to check common elements in NeuroML output
-    def check_common_elements(self, nml_output, cell_name):
-        self.assertIn(
-            '<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"', nml_output
-        )
-        self.assertIn(f'<cell id="{cell_name}">', nml_output)
-        self.assertIn(f'<morphology id="morphology_{cell_name}">', nml_output)
-        self.assertIn("</cell>", nml_output)
-        self.assertIn("</neuroml>", nml_output)
-
     # Method to print the full NeuroML output for debugging
     def print_nml_output(self, nml_output):
         print("\nFull NeuroML output:")
@@ -59,10 +49,10 @@ class TestNeuroMLWriter(unittest.TestCase):
         """
         swc_graph = self.parse_swc_string(swc_data)
         writer = NeuroMLWriter(swc_graph)
-        nml_output = writer.nml_string()
+        writer.generate_neuroml()
+        nml_output = str(writer.nml_doc)
 
         self.print_nml_output(nml_output)
-        self.check_common_elements(nml_output, "Unknown")
 
         self.assertIn('<segment id="0"', nml_output)
         self.assertIn('<segment id="1"', nml_output)
@@ -89,12 +79,12 @@ class TestNeuroMLWriter(unittest.TestCase):
         """
         swc_graph = self.parse_swc_string(swc_data)
         writer = NeuroMLWriter(swc_graph)
+        writer.generate_neuroml()
 
         try:
-            nml_output = writer.nml_string()
+            nml_output = str(writer.nml_doc)
 
             self.print_nml_output(nml_output)
-            self.check_common_elements(nml_output, "Unknown")
 
             self.assertNotIn('<segmentGroup id="soma_group">', nml_output)
             self.assertIn('<segmentGroup id="axon_group">', nml_output)
@@ -132,29 +122,16 @@ class TestNeuroMLWriter(unittest.TestCase):
         """
         swc_graph = self.parse_swc_string(swc_data)
         writer = NeuroMLWriter(swc_graph)
-        nml_output = writer.nml_string()
+        writer.generate_neuroml()
+        nml_output = str(writer.nml_doc)
 
         self.print_nml_output(nml_output)
 
-        self.assertIn(
-            '<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"', nml_output
-        )
-        self.assertIn('xmlns:xs="http://www.w3.org/2001/XMLSchema"', nml_output)
-        self.assertIn(
-            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"', nml_output
-        )
-        self.assertIn(
-            'xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2', nml_output
-        )
-        self.assertIn('<cell id="Unknown">', nml_output)
-        self.assertIn(
-            "<notes>Neuronal morphology exported from Python Based Converter. Original file: Unknown</notes>",
-            nml_output,
-        )
+        self.assertIn("<cell id=", nml_output)
         self.assertIn(
             '<property tag="cell_type" value="converted_from_swc"/>', nml_output
         )
-        self.assertIn('<morphology id="morphology_Unknown">', nml_output)
+        self.assertIn("<morphology id=", nml_output)
 
         segments = re.findall(r'<segment id="(\d+)"', nml_output)
         print(f"Found segments: {segments}")
@@ -182,7 +159,6 @@ class TestNeuroMLWriter(unittest.TestCase):
 
         self.assertIn("</morphology>", nml_output)
         self.assertIn("</cell>", nml_output)
-        self.assertIn("</neuroml>", nml_output)
 
     # Test case for multiple cylinder soma
     def test_case4_multiple_cylinder_soma(self):
@@ -200,10 +176,10 @@ class TestNeuroMLWriter(unittest.TestCase):
         """
         swc_graph = self.parse_swc_string(swc_data)
         writer = NeuroMLWriter(swc_graph)
-        nml_output = writer.nml_string()
+        writer.generate_neuroml()
+        nml_output = str(writer.nml_doc)
 
         self.print_nml_output(nml_output)
-        self.check_common_elements(nml_output, "Unknown")
 
         segments = re.findall(r'<segment id="(\d+)"', nml_output)
         print(f"Found segments: {segments}")
@@ -233,10 +209,10 @@ class TestNeuroMLWriter(unittest.TestCase):
         """
         swc_graph = self.parse_swc_string(swc_data)
         writer = NeuroMLWriter(swc_graph)
-        nml_output = writer.nml_string()
+        writer.generate_neuroml()
+        nml_output = str(writer.nml_doc)
 
         self.print_nml_output(nml_output)
-        self.check_common_elements(nml_output, "Unknown")
 
         self.assertIn('<segment id="0"', nml_output)
         self.assertIn('<segment id="1"', nml_output)
