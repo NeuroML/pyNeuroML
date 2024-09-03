@@ -314,7 +314,9 @@ def parse_header(
         if match:
             return field, match.group(1).strip()
 
-    logger.warn(f"Ignoring line {line_number}: does not match header format: # {line}")
+    logger.warning(
+        f"Ignoring line {line_number}: does not match header format: # {line}"
+    )
     return None
 
 
