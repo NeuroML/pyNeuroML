@@ -76,7 +76,7 @@ class NeuroMLWriter:
         # set of points that are the second point after a type change
         self.second_points_of_new_types: Set[int] = set()
         # holds different default segment groups
-        self.segment_groups: Dict[str, Set[str]] = {
+        self.segment_groups: Dict[str, Set[int]] = {
             "all": set(),
             "soma_group": set(),
             "axon_group": set(),
@@ -126,7 +126,7 @@ class NeuroMLWriter:
         logger.debug(f"Generated cell name: {cell_name}")
         return cell_name
 
-    def __generate_neuroml(self):
+    def generate_neuroml(self):
         """Generate NeuroML representation.
 
         Main worker function
@@ -143,7 +143,6 @@ class NeuroMLWriter:
         self.__create_cell()
         start_point = self.swc_graph.root
 
-        logger.debug(f"Cell name: {self.cell.id}")
         logger.debug(f"Start point: {start_point}")
 
         self.__parse_tree(start_point, start_point)
@@ -373,11 +372,38 @@ class NeuroMLWriter:
         """
         Create a NeuroML segment from an SWC point.
 
+
+        Cases:
+
+        1. if a point's parent is a soma point, but the point itself is not, we
+           do not create a new segment with the point as the distal point (under
+           the assumption that the distal of the previous point is the
+           proximal). Instead, in this case, the point becomes the proximal of
+           the new segment, and its first child becomes the distal point.
+
+           This is because, it's quite possible for non-soma points to not be
+           connected to the soma, i.e., they can float at a distance. While
+           from a morphology perspective, this is incorrect, from a modelling
+           perspective, this is OK since by specifying the soma as a parent, we
+           continue to have the soma and the floating segment electrically
+           connected.
+
+
+        2. if the parent and child are of different types, but the parent is
+           not of a soma type, treat it like any other segment (below)
+
+        3. create new segment for all other cases with current point as distal
+           and the parent's distal assumed to be proximal (which does not need to
+           be specified)
+
         :param parent_point: The parent point of the current point.
         :type parent_point: SWCNode
         :param this_point: The current point being processed.
         :type this_point: SWCNode
         """
+
+        # cell cannot be None at this point
+        assert self.cell
 
         logger.debug(
             f"Creating segment: Point {this_point.id}, Type {this_point.type}, Parent {parent_point.id}"
@@ -391,80 +417,80 @@ class NeuroMLWriter:
         except IndexError:
             segment_type = f"type_{this_point.type}"
 
-        # create a new segment
-        segment = Segment(
-            id=seg_id, name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}"
-        )
-
-        # is this a branch point (more than one children)
-        is_branch_point = len(parent_point.children) > 1
+        # is first point: only possible if there's no soma at all
+        is_first_point = parent_point == this_point
         # is the point type changing?
         is_type_change = this_point.type != parent_point.type
-        # segment parent id
-        parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id)
+        # is the parent a soma: special case
+        is_parent_soma = parent_point.type == SWCNode.SOMA
 
-        # Print the second point of new branches
-        if parent_seg_id is not None and is_type_change and this_point.children:
-            second_point = this_point.children[0]
-            logger.debug(
-                f"{second_point.id} {second_point.type} {second_point.x} {second_point.y} {second_point.z} {this_point.id}"
-            )
-            self.second_points_of_new_types.add(second_point.id)
-            self.point_indices_vs_seg_ids[second_point.id] = seg_id
-
-        if parent_point.id in self.point_indices_vs_seg_ids:
-            parent_seg_id = self.point_indices_vs_seg_ids[parent_point.id]
-            segment.parent = SegmentParent(segments=parent_seg_id)
-
-        if is_type_change:
-            segment.proximal = Point3DWithDiam(
-                x=this_point.x,
-                y=this_point.y,
-                z=this_point.z,
-                diameter=2 * this_point.radius,
-            )
-
-            if this_point.children:
-                next_point = this_point.children[0]
-                segment.distal = Point3DWithDiam(
-                    x=next_point.x,
-                    y=next_point.y,
-                    z=next_point.z,
-                    diameter=2 * next_point.radius,
-                )
+        # Case 1
+        if is_first_point or (is_type_change and is_parent_soma):
+            if is_first_point:
+                logger.debug(f"First point: {this_point}")
             else:
-                segment.distal = Point3DWithDiam(
-                    x=this_point.x,
-                    y=this_point.y,
-                    z=this_point.z,
-                    diameter=2 * this_point.radius,
-                )
+                logger.debug(f"Type change and parent is soma: {this_point}")
 
-        elif is_branch_point:
-            logger.debug("Setting proximal and distal for branch point")
-            # WRONG
-            segment.proximal = Point3DWithDiam(
-                x=parent_point.x,
-                y=parent_point.y,
-                z=parent_point.z,
-                diameter=2 * parent_point.radius,
-            )
-            segment.distal = Point3DWithDiam(
-                x=this_point.x,
-                y=this_point.y,
-                z=this_point.z,
-                diameter=2 * this_point.radius,
-            )
-        elif this_point.id not in self.second_points_of_new_types:
-            segment.distal = Point3DWithDiam(
-                x=this_point.x,
-                y=this_point.y,
-                z=this_point.z,
-                diameter=2 * this_point.radius,
+            # there must be a second point, otherwise it should error
+            second_point = this_point.children[0]
+
+            # parent segment
+            parent = None
+            if not is_first_point:
+                parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id, None)
+
+                if parent_seg_id is not None:
+                    parent = self.cell.get_segment(parent_seg_id)
+                else:
+                    raise ValueError(f"Parent not found for {this_point}")
+
+            # addition to segment groups is handled separately after all
+            # segments have been created
+            self.cell.add_segment(
+                prox=[this_point.x, this_point.y, this_point.z, 2 * this_point.radius],
+                dist=[
+                    second_point.x,
+                    second_point.y,
+                    second_point.z,
+                    2 * second_point.radius,
+                ],
+                seg_id=seg_id,
+                name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
+                parent=parent,
+                fraction_along=1.0,
+                use_convention=False,
+                reorder_segment_groups=False,
+                optimise_segment_groups=False,
             )
 
-        self.cell.morphology.segments.append(segment)
-        self.point_indices_vs_seg_ids[this_point.id] = seg_id
+            self.point_indices_vs_seg_ids[this_point.id] = seg_id
+            self.point_indices_vs_seg_ids[second_point.id] = seg_id
+            self.second_points_of_new_types.add(second_point.id)
+
+        else:
+            # segment parent id
+            parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id, None)
+
+            if parent_seg_id is not None:
+                parent = self.cell.get_segment(parent_seg_id)
+            else:
+                raise ValueError(f"Parent not found for {this_point}")
+
+            self.cell.add_segment(
+                prox=None,
+                dist=[this_point.x, this_point.y, this_point.z, 2 * this_point.radius],
+                seg_id=seg_id,
+                name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
+                parent=parent,
+                fraction_along=1.0,
+                use_convention=False,
+                reorder_segment_groups=False,
+                optimise_segment_groups=False,
+            )
+            self.point_indices_vs_seg_ids[this_point.id] = seg_id
+
+        # common for all cases
+        # add to groups
         self.segment_types[seg_id] = this_point.type
         self.__add_segment_to_groups(seg_id, this_point.type)
 
@@ -474,7 +500,7 @@ class NeuroMLWriter:
 
     def __add_segment_to_groups(self, seg_id: int, segment_type: int) -> None:
         """
-        Add a segment to the appropriate segment groups.
+        Add a segment to the appropriate segment group set.
 
         :param seg_id: The ID of the segment to add.
         :type seg_id: int
@@ -511,20 +537,19 @@ class NeuroMLWriter:
         """
         Create NeuroML segment groups based on the segments created.
         """
-        logger.debug("Creating segment groups")
+        assert self.cell
 
+        if not self.segment_types:
+            logger.warning("No segments were created. Skipping segment group creation.")
+            return
+
+        logger.debug("Creating segment groups")
         for group_name, members in self.segment_groups.items():
             if members:
                 group = SegmentGroup(id=group_name)
                 for member_id in sorted(members):
                     group.members.append(Member(segments=member_id))
                 self.cell.morphology.segment_groups.append(group)
-
-        if not self.segment_types:
-            logger.warning(
-                "No segments were created. Skipping unbranched segment group creation."
-            )
-            return
 
         if any(seg_type == SWCNode.SOMA for seg_type in self.segment_types.values()):
             root_segment_id = min(
@@ -561,7 +586,7 @@ class NeuroMLWriter:
         :type standalone_morphology: bool
         """
         if self.nml_doc is None:
-            self.__generate_neuroml()
+            self.generate_neuroml()
 
         if standalone_morphology:
             self.nml_doc.morphology.append(self.cell.morphology)
