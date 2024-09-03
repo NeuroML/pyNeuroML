@@ -100,7 +100,7 @@ class NeuroMLWriter:
         self.cell.morphology = Morphology(id=f"morphology_{cell_name}", notes=notes)
         logger.debug(f"Created Cell object with name: {cell_name}")
 
-        assert self.cell is not None
+        assert self.cell
         return self.cell
 
     def __get_cell_name(self) -> str:
@@ -126,32 +126,39 @@ class NeuroMLWriter:
         logger.debug(f"Generated cell name: {cell_name}")
         return cell_name
 
-    def generate_neuroml(self):
+    def generate_neuroml(self) -> NeuroMLDocument:
         """Generate NeuroML representation.
 
         Main worker function
+
+        :returns: the NeuroML document
+        :rtype: NeuroMLDocument
         """
+        if self.nml_doc is not None:
+            return self.nml_doc
+
         logger.debug("Starting NeuroML generation")
-        if (
-            len(self.points) < 2
-            or len(self.section_types) < 2
-            or self.section_types[1].lower() != "soma"
-        ):
-            logger.error("Null data or section types in nmlWrite")
-            return ""
+        if len(self.points) < 2:
+            ValueError("SWC has fewer than two points. Cannot convert.")
 
         self.__create_cell()
+        assert self.cell
+
         start_point = self.swc_graph.root
 
         logger.debug(f"Start point: {start_point}")
 
+        # create all the segments
         self.__parse_tree(start_point, start_point)
+        # create all the groups
         self.__create_segment_groups()
 
         self.nml_doc = NeuroMLDocument(id=self.cell.id)
         self.nml_doc.cells.append(self.cell)
 
         logger.debug("NeuroML generation completed")
+
+        return self.nml_doc
 
     def __parse_tree(
         self,
@@ -585,8 +592,9 @@ class NeuroMLWriter:
             (not as part of a Cell object)
         :type standalone_morphology: bool
         """
-        if self.nml_doc is None:
-            self.generate_neuroml()
+        self.generate_neuroml()
+        assert self.nml_doc
+        assert self.cell
 
         if standalone_morphology:
             self.nml_doc.morphology.append(self.cell.morphology)
@@ -597,21 +605,29 @@ class NeuroMLWriter:
 
 
 def convert_swc_to_neuroml(
-    swc_file: str, neuroml_file: str, standalone_morphology: bool = True
-):
-    """Convert an SWC file to NeuroML
+    swc_file: str,
+    neuroml_file: Optional[str] = None,
+    standalone_morphology: bool = True,
+) -> NeuroMLDocument:
+    """Convert an SWC file to NeuroML.
+
+    If `neuroml_file` is provided, will also write to file.
 
     :param swc_file: SWC input file
     :type swc_file: str
-    :param neuroml_file: output NeuroML file
+    :param neuroml_file: output NeuroML file (optional)
     :type neuroml_file: str
     :param standalone_morphology: export morphology as standalone object
         (not as part of a Cell object)
     :type standalone_morphology: bool
+
+    :returns: NeuroML document
     """
     swc_graph = load_swc(swc_file)
     writer = NeuroMLWriter(swc_graph)
-    writer.export_to_nml_file(neuroml_file, standalone_morphology)
+    if neuroml_file is not None:
+        writer.export_to_nml_file(neuroml_file, standalone_morphology)
+    return writer.generate_neuroml()
 
 
 def main(args=None):
