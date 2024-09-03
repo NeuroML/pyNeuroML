@@ -48,7 +48,10 @@ class NeuroMLWriter:
         """
         logger.debug("Initializing NeuroMLWriter")
         self.swc_graph = swc_graph
+        # all nodes
         self.points = swc_graph.nodes
+        # soma nodes
+        self.soma_points = self.swc_graph.get_nodes_by_type(SWCNode.SOMA)
         # segment group types
         self.section_types = [
             "undefined",
@@ -73,8 +76,14 @@ class NeuroMLWriter:
         self.processed_nodes: Set[int] = set()
         # dict, key is the segment id, value is the segment type
         self.segment_types: Dict[int, int] = {}
-        # set of points that are the second point after a type change
-        self.second_points_of_new_types: Set[int] = set()
+
+        # Set of points that are used to create segments during the processing
+        # of other points, for example, after a type change when the current
+        # point is used as the proximal and the next point is used as distal.
+        # The trees from these points do need to be parsed, but they are not
+        # used for creating segments again.
+        self.unprocessed_but_in_segment_nodes: Set[int] = set()
+
         # holds different default segment groups
         self.segment_groups: Dict[str, Set[int]] = {
             "all": set(),
@@ -141,23 +150,26 @@ class NeuroMLWriter:
         """
         if (
             this_point.id in self.processed_nodes
-            and this_point.id not in self.second_points_of_new_types
+            and this_point.id not in self.unprocessed_but_in_segment_nodes
         ):
             logger.debug(f"Point {this_point.id} already processed, skipping")
             return
 
         logger.debug(f"Parsing tree: Point {this_point.id}, Type {this_point.type}")
 
+        # All soma points will be used for segment creation the first time a
+        # soma point is encountered, but they can all be roots of sub-trees so
+        # their trees do need to be parsed again below.
+        # The __handle_soma method is careful about marking nodes as processed.
         if this_point.type == SWCNode.SOMA:
             self.__handle_soma(parent_point, this_point)
         else:
-            if this_point.id not in self.second_points_of_new_types:
-                logger.debug(f"Processing non-soma point: {this_point.id}")
+            # do not create a segment, but do parse the tree from this point
+            if this_point.id not in self.unprocessed_but_in_segment_nodes:
                 self.__create_segment(parent_point, this_point)
-                self.processed_nodes.add(this_point.id)
             else:
                 logger.debug(
-                    f"Point {this_point.id} already processed, skipping segment creation"
+                    f"Point {this_point.id} processed as second point for a segment, skipping"
                 )
 
         self.processed_nodes.add(this_point.id)
@@ -165,6 +177,8 @@ class NeuroMLWriter:
         for child_point in this_point.children:
             if child_point.id not in self.processed_nodes:
                 self.__parse_tree(this_point, child_point)
+
+        logger.debug(f"Processed nodes are: {self.processed_nodes}")
 
     def __handle_soma(
         self,
@@ -207,15 +221,11 @@ class NeuroMLWriter:
             logger.debug(f"Soma point {this_point.id} already processed, skipping")
             return
 
-        soma_points = [p for p in self.points if p.type == SWCNode.SOMA]
-        if len(soma_points) == 0:
-            logger.debug("No soma points found, processing as non-soma point")
-            return
-        if len(soma_points) == 3:
-            if this_point.id == soma_points[0].id:
+        if len(self.soma_points) == 3:
+            if this_point.id == self.soma_points[0].id:
                 logger.debug("Processing first point of 3-point soma")
-                middle_point = soma_points[1]
-                end_point = soma_points[2]
+                middle_point = self.soma_points[1]
+                end_point = self.soma_points[2]
 
                 segment = Segment(
                     id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
@@ -234,6 +244,9 @@ class NeuroMLWriter:
                 )
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
+                self.processed_nodes.add(this_point.id)
+                self.point_indices_vs_seg_ids[middle_point.id] = self.next_segment_id
+
                 self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
@@ -250,16 +263,17 @@ class NeuroMLWriter:
                 )
                 self.cell.morphology.segments.append(segment)
                 self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
+
                 self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
 
-            elif (
-                this_point.id == soma_points[1].id or this_point.id == soma_points[2].id
-            ):
-                pass  # These points are already handled
+            # ignore the other points when the method is called with them
+            # because they have already been used in segment creation
+            else:
+                pass
 
-        elif len(soma_points) == 1:
+        elif len(self.soma_points) == 1:
             logger.debug("Processing single-point soma")
             segment = Segment(
                 id=self.next_segment_id, name=f"soma_Seg_{self.next_segment_id}"
@@ -281,16 +295,19 @@ class NeuroMLWriter:
             self.segment_types[self.next_segment_id] = SWCNode.SOMA
             self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
             self.next_segment_id += 1
+            self.processed_nodes.add(this_point.id)
 
-        elif len(soma_points) > 3:
-            logger.debug(f"Processing multi-point soma with {len(soma_points)} points")
+        elif len(self.soma_points) > 3:
+            logger.debug(
+                f"Processing multi-point soma with {len(self.soma_points)} points"
+            )
 
-            if this_point == soma_points[0]:
+            if this_point == self.soma_points[0]:
                 logger.debug("Processing multi-point soma")
 
-                for i in range(len(soma_points) - 1):
-                    current_point = soma_points[i]
-                    next_point = soma_points[i + 1]
+                for i in range(len(self.soma_points) - 1):
+                    current_point = self.soma_points[i]
+                    next_point = self.soma_points[i + 1]
 
                     segment = Segment(
                         id=self.next_segment_id,
@@ -323,19 +340,20 @@ class NeuroMLWriter:
                     self.segment_types[self.next_segment_id] = SWCNode.SOMA
                     self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
 
-                    if current_point.id == this_point.id:
-                        self.processed_nodes.add(current_point.id)
-
                     self.next_segment_id += 1
 
-                self.processed_nodes.add(soma_points[-1].id)
+                # add first point of soma to processed
+                self.processed_nodes.add(this_point.id)
+                # add last point of soma to point vs segment dict
+                self.point_indices_vs_seg_ids[self.soma_points[-1].id] = (
+                    self.next_segment_id - 1
+                )
 
             else:
-                logger.debug(f"Soma point {this_point.id} not the first, skipping")
+                logger.debug(f"Point {this_point} already processed as part of soma.")
+                pass
 
         logger.debug(f"Finished handling soma point: {this_point.id}")
-        logger.debug(f"Processed nodes after soma: {self.processed_nodes}")
-        logger.debug(f"Total segments created so far: {self.next_segment_id}")
 
     def __create_segment(
         self,
@@ -343,12 +361,21 @@ class NeuroMLWriter:
         this_point: SWCNode,
     ) -> None:
         """
-        Create a NeuroML segment from an SWC point.
+        Create a NeuroML segment from an non-soma SWC point. Soma points are
+        handled by py:meth:`__handle_soma`.
 
 
         Cases:
 
-        1. if a point's parent is a soma point, but the point itself is not, we
+        #. somatic points are handled by py:func:`__handle_soma`.
+
+           If there is no soma, we create the first segment as having both
+           proximal and distal points as the first points.
+
+           This is to replicate CVApp behaviour (but the logic is unclear to me
+           at the time of writing this).
+
+        #. if a point's parent is a soma point, but the point itself is not, we
            do not create a new segment with the point as the distal point (under
            the assumption that the distal of the previous point is the
            proximal). Instead, in this case, the point becomes the proximal of
@@ -362,12 +389,13 @@ class NeuroMLWriter:
            connected.
 
 
-        2. if the parent and child are of different types, but the parent is
-           not of a soma type, treat it like any other segment (below)
+        #. if the parent and child are of different types, but the parent is
+           not of a soma type, treat it like any other segment (below: 3)
 
-        3. create new segment for all other cases with current point as distal
+        #. create new segment for all other cases with current point as distal
            and the parent's distal assumed to be proximal (which does not need to
            be specified)
+
 
         :param parent_point: The parent point of the current point.
         :type parent_point: SWCNode
@@ -378,8 +406,9 @@ class NeuroMLWriter:
         # cell cannot be None at this point
         assert self.cell
 
+        # no point being processed here can be a soma
         logger.debug(
-            f"Creating segment: Point {this_point.id}, Type {this_point.type}, Parent {parent_point.id}"
+            f"Processing non-soma point segment: Point {this_point.id}, Type {this_point.type}, Parent {parent_point.id}"
         )
         seg_id = self.next_segment_id
         self.next_segment_id += 1
@@ -390,7 +419,8 @@ class NeuroMLWriter:
         except IndexError:
             segment_type = f"type_{this_point.type}"
 
-        # is first point: only possible if there's no soma at all
+        # is first point: only possible, once if there's no soma at all, since
+        # this function only deals with non-soma points
         is_first_point = parent_point == this_point
         # is the point type changing?
         is_type_change = this_point.type != parent_point.type
@@ -398,18 +428,74 @@ class NeuroMLWriter:
         is_parent_soma = parent_point.type == SWCNode.SOMA
 
         # Case 1
-        if is_first_point or (is_type_change and is_parent_soma):
-            if is_first_point:
-                logger.debug(f"First point: {this_point}")
-            else:
+        # first point, but is non-soma
+        if is_first_point:
+            logger.debug(f"First point and non-soma: {this_point}")
+            self.cell.add_segment(
+                prox=[this_point.x, this_point.y, this_point.z, 2 * this_point.radius],
+                dist=[this_point.x, this_point.y, this_point.z, 2 * this_point.radius],
+                seg_id=seg_id,
+                name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
+                parent=None,
+                fraction_along=1.0,
+                use_convention=False,
+                reorder_segment_groups=False,
+                optimise_segment_groups=False,
+            )
+            self.point_indices_vs_seg_ids[this_point.id] = seg_id
+
+        else:
+            # Case 2
+            # Parent is soma, but point is not
+            if is_parent_soma and is_type_change:
                 logger.debug(f"Type change and parent is soma: {this_point}")
 
-            # there must be a second point, otherwise it should error
-            second_point = this_point.children[0]
+                # there must be a second point, otherwise it should error
+                second_point = this_point.children[0]
 
-            # parent segment
-            parent = None
-            if not is_first_point:
+                # parent segment
+                parent = None
+                if not is_first_point:
+                    parent_seg_id = self.point_indices_vs_seg_ids.get(
+                        parent_point.id, None
+                    )
+
+                    if parent_seg_id is not None:
+                        parent = self.cell.get_segment(parent_seg_id)
+                    else:
+                        raise ValueError(f"Parent not found for {this_point}")
+
+                self.cell.add_segment(
+                    prox=[
+                        this_point.x,
+                        this_point.y,
+                        this_point.z,
+                        2 * this_point.radius,
+                    ],
+                    dist=[
+                        second_point.x,
+                        second_point.y,
+                        second_point.z,
+                        2 * second_point.radius,
+                    ],
+                    seg_id=seg_id,
+                    name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
+                    parent=parent,
+                    fraction_along=1.0,
+                    use_convention=False,
+                    reorder_segment_groups=False,
+                    optimise_segment_groups=False,
+                )
+
+                self.point_indices_vs_seg_ids[this_point.id] = seg_id
+                self.point_indices_vs_seg_ids[second_point.id] = seg_id
+                self.unprocessed_but_in_segment_nodes.add(second_point.id)
+
+            # Cases 3, 4
+            # All other cases ("normal" segment creation with parent as
+            # proximal and current point as distal)
+            else:
+                # segment parent id
                 parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id, None)
 
                 if parent_seg_id is not None:
@@ -417,50 +503,23 @@ class NeuroMLWriter:
                 else:
                     raise ValueError(f"Parent not found for {this_point}")
 
-            # addition to segment groups is handled separately after all
-            # segments have been created
-            self.cell.add_segment(
-                prox=[this_point.x, this_point.y, this_point.z, 2 * this_point.radius],
-                dist=[
-                    second_point.x,
-                    second_point.y,
-                    second_point.z,
-                    2 * second_point.radius,
-                ],
-                seg_id=seg_id,
-                name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
-                parent=parent,
-                fraction_along=1.0,
-                use_convention=False,
-                reorder_segment_groups=False,
-                optimise_segment_groups=False,
-            )
-
-            self.point_indices_vs_seg_ids[this_point.id] = seg_id
-            self.point_indices_vs_seg_ids[second_point.id] = seg_id
-            self.second_points_of_new_types.add(second_point.id)
-
-        else:
-            # segment parent id
-            parent_seg_id = self.point_indices_vs_seg_ids.get(parent_point.id, None)
-
-            if parent_seg_id is not None:
-                parent = self.cell.get_segment(parent_seg_id)
-            else:
-                raise ValueError(f"Parent not found for {this_point}")
-
-            self.cell.add_segment(
-                prox=None,
-                dist=[this_point.x, this_point.y, this_point.z, 2 * this_point.radius],
-                seg_id=seg_id,
-                name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
-                parent=parent,
-                fraction_along=1.0,
-                use_convention=False,
-                reorder_segment_groups=False,
-                optimise_segment_groups=False,
-            )
-            self.point_indices_vs_seg_ids[this_point.id] = seg_id
+                self.cell.add_segment(
+                    prox=None,
+                    dist=[
+                        this_point.x,
+                        this_point.y,
+                        this_point.z,
+                        2 * this_point.radius,
+                    ],
+                    seg_id=seg_id,
+                    name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
+                    parent=parent,
+                    fraction_along=1.0,
+                    use_convention=False,
+                    reorder_segment_groups=False,
+                    optimise_segment_groups=False,
+                )
+                self.point_indices_vs_seg_ids[this_point.id] = seg_id
 
         # common for all cases
         # add to groups
