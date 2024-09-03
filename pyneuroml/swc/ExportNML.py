@@ -187,28 +187,47 @@ class NeuroMLWriter:
     ) -> None:
         """
 
-        Handle the creation of soma segments based on different soma representation cases.
-         This method implements the soma representation guidelines as described in
-        "Soma format representation in NeuroMorpho.Org as of version 5.3".
-         For full details, see: https://github.com/NeuroML/Cvapp-NeuroMorpho.org/blob/master/caseExamples/SomaFormat-NMOv5.3.pdf
-          The method handles the following cases:
-         1. Single contour (most common, ~80% of cases):
-          Converted to a three-point soma cylinder.
-         2. Soma absent (~8% of cases):
-          Not handled in this method (no changes made).
-         3. Multiple contours (~5% of cases):
-          Converted to a three-point soma cylinder, averaging all contour points.
-         4. Multiple cylinders (~4% of cases):
-          Kept as is, no conversion needed.
-         5. Single point (~3% of cases):
-          Converted to a three-point soma cylinder.
-         The three-point soma representation consists of:
-         - First point: Center of the soma
-         - Second point: Shifted -r_s in y-direction
-         - Third point: Shifted +r_s in y-direction
-         Where r_s is the equivalent radius computed from the soma surface area.
-         This method specifically handles cases 1, 3, and 5. Case 2 is not applicable,
-         and case 4 is handled implicitly by not modifying the existing representation.
+        Handle the creation of soma segments based on different soma
+        representation cases.  This method implements the soma representation
+        guidelines as described in:
+
+        "Soma format representation in NeuroMorpho.Org as of version 5.3".  For
+        full details, see:
+        https://github.com/NeuroML/Cvapp-NeuroMorpho.org/blob/master/caseExamples/SomaFormat-NMOv5.3.pdf
+
+        In summary, NeuroMorpho makes the following conversions to standardise
+        the SWC representation:
+        1. Single contour (most common, ~80% of cases):
+           Converted to a three-point soma cylinder.
+
+        2. Soma absent (~8% of cases):
+           Not handled in this method (no changes made).
+
+        3. Multiple contours (~5% of cases):
+           Converted to a three-point soma cylinder, averaging all contour points.
+
+        4. Multiple cylinders (~4% of cases):
+           Kept as is, no conversion needed.
+
+        5. Single point (~3% of cases):
+           Converted to a three-point soma cylinder.
+
+        This method handles the standardised NeuroMorpho SWC representation:
+
+
+        1. Single point soma: a spherical segment is created
+
+        2. Three point soma: two segments with the "middle" point in the center
+
+        3. More than three points: multiple cylinders (as a cable)
+
+
+        Note that this function only marks the current point as "processed"
+        even if it does use other points to create the segments. This is
+        because even if other points are part of the soma segments, they may
+        still be the roots of subtrees where other segments are attached to
+        them. So, they still need to be parsed by :py:func:`__parse_tree`
+        recursively.
 
         :param parent_point: The parent point of the current soma point.
         :type parent_point: SWCNode
@@ -217,63 +236,13 @@ class NeuroMLWriter:
         """
         logger.debug(f"Handling soma point: {this_point.id}")
 
+        assert self.cell
+
         if this_point.id in self.processed_nodes:
             logger.debug(f"Soma point {this_point.id} already processed, skipping")
             return
 
-        if len(self.soma_points) == 3:
-            if this_point.id == self.soma_points[0].id:
-                logger.debug("Processing first point of 3-point soma")
-                middle_point = self.soma_points[1]
-                end_point = self.soma_points[2]
-
-                segment = Segment(
-                    id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
-                )
-                segment.proximal = Point3DWithDiam(
-                    x=middle_point.x,
-                    y=middle_point.y,
-                    z=middle_point.z,
-                    diameter=2 * middle_point.radius,
-                )
-                segment.distal = Point3DWithDiam(
-                    x=this_point.x,
-                    y=this_point.y,
-                    z=this_point.z,
-                    diameter=2 * this_point.radius,
-                )
-                self.cell.morphology.segments.append(segment)
-                self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
-                self.processed_nodes.add(this_point.id)
-                self.point_indices_vs_seg_ids[middle_point.id] = self.next_segment_id
-
-                self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
-                self.next_segment_id += 1
-
-                segment = Segment(
-                    id=self.next_segment_id, name=f"Seg_{self.next_segment_id}"
-                )
-                segment.parent = SegmentParent(segments=self.next_segment_id - 1)
-                segment.distal = Point3DWithDiam(
-                    x=end_point.x,
-                    y=end_point.y,
-                    z=end_point.z,
-                    diameter=2 * end_point.radius,
-                )
-                self.cell.morphology.segments.append(segment)
-                self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
-
-                self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
-                self.next_segment_id += 1
-
-            # ignore the other points when the method is called with them
-            # because they have already been used in segment creation
-            else:
-                pass
-
-        elif len(self.soma_points) == 1:
+        if len(self.soma_points) == 1:
             logger.debug("Processing single-point soma")
             segment = Segment(
                 id=self.next_segment_id, name=f"soma_Seg_{self.next_segment_id}"
@@ -296,6 +265,70 @@ class NeuroMLWriter:
             self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
             self.next_segment_id += 1
             self.processed_nodes.add(this_point.id)
+
+        elif len(self.soma_points) == 3:
+            if this_point.id == self.soma_points[0].id:
+                logger.debug("Processing first point of 3-point soma")
+                middle_point = self.soma_points[1]
+                end_point = self.soma_points[2]
+
+                first_seg = self.cell.add_segment(
+                    prox=[
+                        middle_point.x,
+                        middle_point.y,
+                        middle_point.z,
+                        2 * middle_point.radius,
+                    ],
+                    dist=[
+                        this_point.x,
+                        this_point.y,
+                        this_point.z,
+                        2 * this_point.radius,
+                    ],
+                    seg_id=self.next_segment_id,
+                    name=f"soma_Seg_{self.next_segment_id}",
+                    parent=None,
+                    fraction_along=1.0,
+                    use_convention=False,
+                    reorder_segment_groups=False,
+                    optimise_segment_groups=False,
+                )
+
+                self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
+                self.point_indices_vs_seg_ids[middle_point.id] = self.next_segment_id
+                self.processed_nodes.add(this_point.id)
+
+                self.segment_types[self.next_segment_id] = SWCNode.SOMA
+                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+                self.next_segment_id += 1
+
+                self.cell.add_segment(
+                    prox=None,
+                    dist=[
+                        end_point.x,
+                        end_point.y,
+                        end_point.z,
+                        2 * end_point.radius,
+                    ],
+                    seg_id=self.next_segment_id,
+                    name=f"soma_Seg_{self.next_segment_id}",
+                    parent=first_seg.id,
+                    fraction_along=1.0,
+                    use_convention=False,
+                    reorder_segment_groups=False,
+                    optimise_segment_groups=False,
+                )
+
+                self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
+
+                self.segment_types[self.next_segment_id] = SWCNode.SOMA
+                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
+                self.next_segment_id += 1
+
+            # ignore the other points when the method is called with them
+            # because they have already been used in segment creation
+            else:
+                pass
 
         elif len(self.soma_points) > 3:
             logger.debug(
@@ -344,7 +377,7 @@ class NeuroMLWriter:
 
                 # add first point of soma to processed
                 self.processed_nodes.add(this_point.id)
-                # add last point of soma to point vs segment dict
+                # also add last point of soma to point vs segment dict
                 self.point_indices_vs_seg_ids[self.soma_points[-1].id] = (
                     self.next_segment_id - 1
                 )
