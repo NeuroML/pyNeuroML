@@ -312,7 +312,7 @@ class NeuroMLWriter:
                     ],
                     seg_id=self.next_segment_id,
                     name=f"soma_Seg_{self.next_segment_id}",
-                    parent=first_seg.id,
+                    parent=first_seg,
                     fraction_along=1.0,
                     use_convention=False,
                     reorder_segment_groups=False,
