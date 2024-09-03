@@ -334,7 +334,7 @@ def load_swc(filename: str) -> SWCGraph:
 
     tree = SWCGraph()
     with open(filename, "r") as file:
-        point_line_count = 1
+        point_line_count = 0
         for line_number, line in enumerate(file, 1):
             line = line.strip()
             logger.debug(f"Processing line {line_number}: '{line}'")
@@ -358,7 +358,7 @@ def load_swc(filename: str) -> SWCGraph:
             # expected
             node_id, type_id, x, y, z, radius, parent_id = parts
 
-            if point_line_count == 1:
+            if point_line_count == 0:
                 if parent_id != "-1":
                     raise ValueError(
                         f"First point in file must have parent '-1' (root). Got: {line}"
