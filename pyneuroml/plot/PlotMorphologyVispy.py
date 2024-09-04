@@ -725,11 +725,19 @@ def plot_interactive_3D(
         while pos_pop:
             cell_index, pos = pos_pop.popitem()
             radius = pop_id_vs_radii[pop_id] if pop_id in pop_id_vs_radii else 10
-            color = (
-                pop_id_vs_color[pop_id]
-                if pop_id in pop_id_vs_color
-                else random.choice(get_color_names())
-            )
+
+            # use color if specified in property
+            try:
+                color = pop_id_vs_color[pop_id]
+            except KeyError:
+                # if single cell only, use default groups
+                if total_cells == 1:
+                    print(f"We have {len(pop_id_vs_cell)} cells!")
+                    color = "default groups"
+                # if multiple cells, use different colors for each cell
+                else:
+                    color = random.choice(get_color_names())
+
             # if hightlight spec has a color for the cell, use that
             try:
                 color = highlight_spec[cell.id]["cell_color"]
