@@ -55,7 +55,35 @@ class TestNeuroMLWriter(unittest.TestCase):
 
         num_segments_cvapp = len(cvapp_doc.morphology[0].segments)
         num_segments_nml = len(exported_nml_doc.morphology[0].segments)
-        self.assertEqual(num_segments_cvapp, num_segments_nml, "Segments do not match")
+        self.assertEqual(
+            num_segments_cvapp, num_segments_nml, "Number of segments does not match"
+        )
+
+        # Match parents and distal points
+        # Do not match proximal points because our exporter does unbranched
+        # segment groups differently from CVapp, and adds proximal points to
+        # the root segments of all unbranched segment groups.
+        matched = []
+        for seg in cvapp_doc.morphology[0].segments:
+            for seg_nml in exported_nml_doc.morphology[0].segments:
+                print(f"Comparing {seg} - {seg_nml}")
+                if (
+                    (float(seg.distal.x) == float(seg_nml.distal.x))
+                    and (float(seg.distal.y) == float(seg_nml.distal.y))
+                    and (float(seg.distal.z) == float(seg_nml.distal.z))
+                    and (float(seg.distal.diameter) == float(seg_nml.distal.diameter))
+                ):
+                    if seg.parent and seg_nml.parent:
+                        if seg.parent.segments == seg_nml.parent.segments:
+                            matched.append(seg_nml)
+                            print("Matched")
+                            break
+                    else:
+                        matched.append(seg_nml)
+                        print("Matched")
+                        break
+
+        self.assertEqual(len(matched), num_segments_nml, "All segments do not match")
 
     # https://pypi.org/project/parameterized/#description
     @parameterized.expand(
