@@ -19,7 +19,6 @@ from neuroml import (
     Property,
     Segment,
     SegmentGroup,
-    SegmentParent,
 )
 
 from pyneuroml.io import write_neuroml2_file
