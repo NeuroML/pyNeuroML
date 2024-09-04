@@ -672,13 +672,13 @@ def _evaluate_arguments(args):
     # TODO: handle these better
     if args.sbml_import or args.sbml_import_units or args.vhdl:
         if args.sbml_import:
-            file_types = ["sbml"]
+            file_types = ["sbml","xml"]
             pre_args = "-sbml-import"
             f = args.sbml_import[0]
             post_args = " ".join(args.sbml_import[1:])
             confirm_file_type(f, file_types, sys_error=True)
         elif args.sbml_import_units:
-            file_types = ["sbml"]
+            file_types = ["sbml","xml"]
             pre_args = "-smbl-import-units"
             f = args.sbml_import_units[0]
             post_args = " ".join(args.sbml_import_units[1:])
