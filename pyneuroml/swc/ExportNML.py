@@ -160,7 +160,6 @@ class NeuroMLWriter:
         # All soma points will be used for segment creation the first time a
         # soma point is encountered, but they can all be roots of sub-trees so
         # their trees do need to be parsed again below.
-        # The __handle_soma method is careful about marking nodes as processed.
         if this_point.type == SWCNode.SOMA:
             self.__handle_soma(parent_point, this_point)
         else:
@@ -172,6 +171,8 @@ class NeuroMLWriter:
                     f"Point {this_point.id} processed as second point for a segment, skipping"
                 )
 
+        # mark point as processed
+        # only done here, not anywhere else
         self.processed_nodes.add(this_point.id)
 
         for child_point in this_point.children:
@@ -264,7 +265,6 @@ class NeuroMLWriter:
             self.segment_types[self.next_segment_id] = SWCNode.SOMA
             self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
             self.next_segment_id += 1
-            self.processed_nodes.add(this_point.id)
 
         elif len(self.soma_points) == 3:
             if this_point.id == self.soma_points[0].id:
@@ -299,7 +299,6 @@ class NeuroMLWriter:
 
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.point_indices_vs_seg_ids[middle_point.id] = self.next_segment_id
-                self.processed_nodes.add(this_point.id)
 
                 self.segment_types[self.next_segment_id] = SWCNode.SOMA
                 self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
@@ -349,48 +348,60 @@ class NeuroMLWriter:
                     current_point = self.soma_points[i]
                     next_point = self.soma_points[i + 1]
 
-                    segment = Segment(
-                        id=self.next_segment_id,
-                        name=f"soma_Seg_{self.next_segment_id}",
-                    )
-
+                    # first point, no parent, so set a proximal
                     if i == 0:
-                        segment.proximal = Point3DWithDiam(
-                            x=current_point.x,
-                            y=current_point.y,
-                            z=current_point.z,
-                            diameter=2 * current_point.radius,
+                        prox = [
+                            current_point.x,
+                            current_point.y,
+                            current_point.z,
+                            2 * current_point.radius,
+                        ]
+
+                        # first point belongs to the first segment
+                        self.point_indices_vs_seg_ids[current_point.id] = (
+                            self.next_segment_id
                         )
+
+                        # will be initialised for the first point
+                        current_segment = None
+
+                    # not first point, don't set proximal (but parent will be
+                    # a valid segment created in previous iteration)
                     else:
-                        segment.parent = SegmentParent(
-                            segments=self.next_segment_id - 1
-                        )
+                        prox = None
 
-                    segment.distal = Point3DWithDiam(
-                        x=next_point.x,
-                        y=next_point.y,
-                        z=next_point.z,
-                        diameter=2 * next_point.radius,
+                    parent = current_segment
+
+                    distal = [
+                        next_point.x,
+                        next_point.y,
+                        next_point.z,
+                        2 * next_point.radius,
+                    ]
+
+                    current_segment = self.cell.add_segment(
+                        prox=prox,
+                        dist=distal,
+                        seg_id=self.next_segment_id,
+                        name=f"soma_Seg_{self.next_segment_id}",
+                        parent=parent,
+                        fraction_along=1.0,
+                        use_convention=False,
+                        reorder_segment_groups=False,
+                        optimise_segment_groups=False,
                     )
 
-                    self.cell.morphology.segments.append(segment)
-                    self.point_indices_vs_seg_ids[current_point.id] = (
-                        self.next_segment_id
-                    )
+                    # "next_point" belongs to the created segment
+                    self.point_indices_vs_seg_ids[next_point.id] = self.next_segment_id
                     self.segment_types[self.next_segment_id] = SWCNode.SOMA
                     self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
 
                     self.next_segment_id += 1
 
-                # add first point of soma to processed
-                self.processed_nodes.add(this_point.id)
-                # also add last point of soma to point vs segment dict
-                self.point_indices_vs_seg_ids[self.soma_points[-1].id] = (
-                    self.next_segment_id - 1
-                )
-
             else:
-                logger.debug(f"Point {this_point} already processed as part of soma.")
+                logger.debug(
+                    f"Point {this_point} already processed as part of multi-point soma."
+                )
                 pass
 
         logger.debug(f"Finished handling soma point: {this_point.id}")
@@ -451,7 +462,6 @@ class NeuroMLWriter:
             f"Processing non-soma point segment: Point {this_point.id}, Type {this_point.type}, Parent {parent_point.id}"
         )
         seg_id = self.next_segment_id
-        self.next_segment_id += 1
 
         # get the segment type
         try:
@@ -566,7 +576,7 @@ class NeuroMLWriter:
         self.segment_types[seg_id] = this_point.type
         self.__add_segment_to_groups(seg_id, this_point.type)
 
-        self.processed_nodes.add(this_point.id)
+        self.next_segment_id += 1
 
         logger.debug(f"Created segment {seg_id} for point {this_point.id}")
 
