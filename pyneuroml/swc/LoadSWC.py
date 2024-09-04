@@ -372,6 +372,6 @@ def load_swc(filename: str) -> SWCGraph:
     if "ORIGINAL_SOURCE" not in tree.metadata.keys():
         tree.metadata["ORIGINAL_SOURCE"] = filename
 
-    logger.info(f"Processed {point_line_count} points in {line_number} lines")
+    logger.info(f"Processed {point_line_count} SWC points in {line_number} lines")
 
     return tree
