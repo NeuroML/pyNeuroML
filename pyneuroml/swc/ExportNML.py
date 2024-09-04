@@ -220,7 +220,7 @@ class NeuroMLWriter:
 
         2. Three point soma: two segments with the "middle" point in the center
 
-        3. More than three points: multiple cylinders (as a cable)
+        3. All other cases: multiple cylinders (as a cable)
 
 
         Note that this function only marks the current point as "processed"
@@ -336,7 +336,8 @@ class NeuroMLWriter:
                 logger.debug("Processing (ignoring) 3-point soma: point 2/3")
                 pass
 
-        elif len(self.soma_points) > 3:
+        # all other cases
+        else:
             logger.debug(
                 f"Processing multi-point soma with {len(self.soma_points)} points"
             )
