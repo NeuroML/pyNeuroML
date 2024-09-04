@@ -9,18 +9,13 @@ Copyright 2024 NeuroML contributors
 import argparse
 import logging
 import time
-from typing import Dict, List, Optional, Set
+from typing import Dict, Optional, Set
 
 from neuroml import (
     Cell,
-    Member,
-    Morphology,
     NeuroMLDocument,
-    Point3DWithDiam,
-    Property,
-    Segment,
-    SegmentGroup,
 )
+from neuroml.utils import component_factory
 
 from pyneuroml.io import write_neuroml2_file
 from pyneuroml.utils.cli import build_namespace
@@ -74,8 +69,6 @@ class NeuroMLWriter:
         self.next_segment_id = 0
         # stores processed nodes
         self.processed_nodes: Set[int] = set()
-        # dict, key is the segment id, value is the segment type
-        self.segment_types: Dict[int, int] = {}
 
         # Set of points that are used to create segments during the processing
         # of other points, for example, after a type change when the current
@@ -84,15 +77,9 @@ class NeuroMLWriter:
         # used for creating segments again.
         self.unprocessed_but_in_segment_nodes: Set[int] = set()
 
-        # holds different default segment groups
-        self.segment_groups: Dict[str, Set[int]] = {
-            "all": set(),
-            "soma_group": set(),
-            "axon_group": set(),
-            "dendrite_group": set(),
-            "basal_dendrite": set(),
-            "apical_dendrite": set(),
-        }
+        # root segment id
+        self.root_segment_id = -1
+
         logger.debug(f"NeuroMLWriter initialized with {len(self.points)} points")
 
     def __create_cell(self) -> Cell:
@@ -105,8 +92,14 @@ class NeuroMLWriter:
         logger.debug("Creating Cell object")
         cell_name = self.__get_cell_name()
         notes = f"Neuronal morphology exported from Python Based Converter. Original file: {self.morphology_origin}"
-        self.cell = Cell(id=cell_name)
-        self.cell.morphology = Morphology(id=f"morphology_{cell_name}", notes=notes)
+        self.cell = component_factory("Cell", id=cell_name, notes=notes)
+        self.cell.setup_nml_cell(
+            default_groups=["all", "soma_group", "dendrite_group", "axon_group"]
+        )
+
+        # clear biophysical properties
+        self.cell.biophysical_properties = None
+
         logger.debug(f"Created Cell object with name: {cell_name}")
 
         assert self.cell
@@ -245,25 +238,30 @@ class NeuroMLWriter:
 
         if len(self.soma_points) == 1:
             logger.debug("Processing single-point soma")
-            segment = Segment(
-                id=self.next_segment_id, name=f"soma_Seg_{self.next_segment_id}"
+            first_seg = self.cell.add_segment(
+                prox=[
+                    this_point.x,
+                    this_point.y,
+                    this_point.z,
+                    2 * this_point.radius,
+                ],
+                dist=[
+                    this_point.x,
+                    this_point.y,
+                    this_point.z,
+                    2 * this_point.radius,
+                ],
+                seg_id=self.next_segment_id,
+                name=f"soma_Seg_{self.next_segment_id}",
+                parent=None,
+                fraction_along=1.0,
+                use_convention=True,
+                reorder_segment_groups=False,
+                optimise_segment_groups=False,
+                seg_type="soma",
             )
-            segment.proximal = Point3DWithDiam(
-                x=this_point.x,
-                y=this_point.y,
-                z=this_point.z,
-                diameter=2 * this_point.radius,
-            )
-            segment.distal = Point3DWithDiam(
-                x=this_point.x,
-                y=this_point.y,
-                z=this_point.z,
-                diameter=2 * this_point.radius,
-            )
-            self.cell.morphology.segments.append(segment)
+            self.root_segment_id = first_seg.id
             self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
-            self.segment_types[self.next_segment_id] = SWCNode.SOMA
-            self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
             self.next_segment_id += 1
 
         elif len(self.soma_points) == 3:
@@ -289,19 +287,19 @@ class NeuroMLWriter:
                     name=f"soma_Seg_{self.next_segment_id}",
                     parent=None,
                     fraction_along=1.0,
-                    use_convention=False,
+                    use_convention=True,
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
+                    seg_type="soma",
                 )
                 logger.debug(
                     f"First segment: {first_seg} ({first_seg.proximal} -> {first_seg.distal})"
                 )
+                self.root_segment_id = first_seg.id
 
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.point_indices_vs_seg_ids[middle_point.id] = self.next_segment_id
 
-                self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
 
                 second_seg = self.cell.add_segment(
@@ -316,9 +314,10 @@ class NeuroMLWriter:
                     name=f"soma_Seg_{self.next_segment_id}",
                     parent=first_seg,
                     fraction_along=1.0,
-                    use_convention=False,
+                    use_convention=True,
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
+                    seg_type="soma",
                 )
                 logger.debug(
                     f"Second segment: {second_seg} ({second_seg.proximal} -> {second_seg.distal})"
@@ -326,8 +325,6 @@ class NeuroMLWriter:
 
                 self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
 
-                self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
 
             # ignore the other points when the method is called with them
@@ -346,6 +343,7 @@ class NeuroMLWriter:
                 logger.debug("Processing multi-point soma")
 
                 for i in range(len(self.soma_points) - 1):
+                    segment = None
                     proximal_point = self.soma_points[i]
                     distal_point = self.soma_points[i + 1]
 
@@ -362,7 +360,6 @@ class NeuroMLWriter:
                         parent = None
 
                         # record the first point
-                        self.segment_types[first_point.id] = SWCNode.SOMA
                         self.point_indices_vs_seg_ids[first_point.id] = (
                             self.next_segment_id
                         )
@@ -384,23 +381,25 @@ class NeuroMLWriter:
                         2 * distal_point.radius,
                     ]
 
-                    self.cell.add_segment(
+                    segment = self.cell.add_segment(
                         prox=prox,
                         dist=distal,
                         seg_id=self.next_segment_id,
                         name=f"soma_Seg_{self.next_segment_id}",
                         parent=parent,
                         fraction_along=1.0,
-                        use_convention=False,
+                        use_convention=True,
                         reorder_segment_groups=False,
                         optimise_segment_groups=False,
+                        seg_type="soma",
                     )
+
+                    if i == 0:
+                        self.root_segment_id = segment.id
 
                     self.point_indices_vs_seg_ids[distal_point.id] = (
                         self.next_segment_id
                     )
-                    self.segment_types[self.next_segment_id] = SWCNode.SOMA
-                    self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
 
                     self.next_segment_id += 1
                 self.point_indices_vs_seg_ids[self.soma_points[-1].id] = (
@@ -486,6 +485,15 @@ class NeuroMLWriter:
         # is the parent a soma: special case
         is_parent_soma = parent_point.type == SWCNode.SOMA
 
+        if this_point.type >= 5:
+            logger.warning(
+                f"Point is of type: {SWCNode.TYPE_NAMES[this_point.type]}, treating as dendrite"
+            )
+            seg_type = "dendrite"
+        else:
+            # "Apical Dendrite" -> "apical_dendrite" and so on
+            seg_type = SWCNode.TYPE_NAMES[this_point.type].lower().replace(" ", "_")
+
         # Case 1
         # first point, but is non-soma
         if is_first_point:
@@ -500,6 +508,8 @@ class NeuroMLWriter:
                 use_convention=False,
                 reorder_segment_groups=False,
                 optimise_segment_groups=False,
+                seg_type="dendrite" if "dendrite" in seg_type else seg_type,
+                group_id=seg_type,
             )
             self.point_indices_vs_seg_ids[this_point.id] = seg_id
 
@@ -544,6 +554,8 @@ class NeuroMLWriter:
                     use_convention=False,
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
+                    seg_type="dendrite" if "dendrite" in seg_type else seg_type,
+                    group_id=seg_type,
                 )
 
                 self.point_indices_vs_seg_ids[this_point.id] = seg_id
@@ -574,55 +586,17 @@ class NeuroMLWriter:
                     name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
                     parent=parent,
                     fraction_along=1.0,
-                    use_convention=False,
+                    use_convention=True,
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
+                    seg_type="dendrite" if "dendrite" in seg_type else seg_type,
+                    group_id=seg_type,
                 )
                 self.point_indices_vs_seg_ids[this_point.id] = seg_id
-
-        # common for all cases
-        # add to groups
-        self.segment_types[seg_id] = this_point.type
-        self.__add_segment_to_groups(seg_id, this_point.type)
 
         self.next_segment_id += 1
 
         logger.debug(f"Created segment {seg_id} for point {this_point.id}")
-
-    def __add_segment_to_groups(self, seg_id: int, segment_type: int) -> None:
-        """
-        Add a segment to the appropriate segment group set.
-
-        :param seg_id: The ID of the segment to add.
-        :type seg_id: int
-        :param segment_type: The type of the segment.
-        :type segment_type: int
-        """
-        groups = self.__get_groups_for_type(segment_type)
-        for group in groups:
-            self.segment_groups[group].add(seg_id)
-
-    def __get_groups_for_type(self, segment_type: int) -> List[str]:
-        """
-        Get the list of group names a segment should belong to based on its type.
-
-        :param segment_type: The type of the segment.
-        :type segment_type: int
-        :return: A list of group names the segment should belong to.
-        :rtype: List[str]
-        """
-        groups = ["all"]
-        if segment_type == SWCNode.SOMA:
-            groups.extend(["soma_group"])
-        elif segment_type == SWCNode.AXON:
-            groups.extend(["axon_group"])
-        elif segment_type == SWCNode.BASAL_DENDRITE:
-            groups.extend(["basal_dendrite", "dendrite_group"])
-        elif segment_type == SWCNode.APICAL_DENDRITE:
-            groups.extend(["apical_dendrite", "dendrite_group"])
-        elif segment_type >= 5:
-            groups.append("dendrite_group")
-        return groups
 
     def __create_segment_groups(self) -> None:
         """
@@ -630,40 +604,24 @@ class NeuroMLWriter:
         """
         assert self.cell
 
-        if not self.segment_types:
+        if len(self.cell.morphology.segments) == 0:
             logger.warning("No segments were created. Skipping segment group creation.")
             return
 
-        logger.debug("Creating segment groups")
-        for group_name, members in self.segment_groups.items():
-            if members:
-                group = SegmentGroup(id=group_name)
-                for member_id in sorted(members):
-                    group.members.append(Member(segments=member_id))
-                self.cell.morphology.segment_groups.append(group)
-
-        if any(seg_type == SWCNode.SOMA for seg_type in self.segment_types.values()):
-            root_segment_id = min(
-                seg_id
-                for seg_id, seg_type in self.segment_types.items()
-                if seg_type == SWCNode.SOMA
-            )
-        else:
-            root_segment_id = min(self.segment_types.keys())
+        # if root segment id has not changed, we assume the first segment is
+        # the root
+        if self.root_segment_id == -1:
+            self.root_segment_id = 0
 
         # Note that this adds a proximal point to the root segment of each
         # unbranched segment group. If a proximal point is not specified, it
         # will get one using `get_actual_proximal` and insert it into the
         # segment.
         self.cell.create_unbranched_segment_group_branches(
-            root_segment_id,
+            self.root_segment_id,
             use_convention=True,
             reorder_segment_groups=True,
             optimise_segment_groups=True,
-        )
-
-        self.cell.properties.append(
-            Property(tag="cell_type", value="converted_from_swc")
         )
 
         logger.debug("Segment groups created successfully")
@@ -702,12 +660,12 @@ class NeuroMLWriter:
         self.__parse_tree(start_point, start_point)
 
         parse_time = time.time()
-        logger.debug(f"Parsing SWC took {parse_time - start_time} seconds")
+        logger.info(f"Parsing SWC took {parse_time - start_time} seconds")
 
         # create all the groups
         self.__create_segment_groups()
         segment_group_time = time.time()
-        logger.debug(
+        logger.info(
             f"Creating segment groups took {segment_group_time - parse_time} seconds"
         )
 
@@ -719,7 +677,7 @@ class NeuroMLWriter:
             self.nml_doc.cells.append(self.cell)
 
         logger.debug("NeuroML generation completed")
-        logger.debug(
+        logger.info(
             f"NeuroML generation took {segment_group_time - start_time} seconds"
         )
 
