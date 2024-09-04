@@ -732,7 +732,6 @@ def plot_interactive_3D(
             except KeyError:
                 # if single cell only, use default groups
                 if total_cells == 1:
-                    print(f"We have {len(pop_id_vs_cell)} cells!")
                     color = "default groups"
                 # if multiple cells, use different colors for each cell
                 else:
