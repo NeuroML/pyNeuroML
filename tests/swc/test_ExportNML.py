@@ -2,6 +2,7 @@ import os
 import unittest
 
 import pytest
+from parameterized import parameterized
 
 from pyneuroml.io import read_neuroml2_file
 from pyneuroml.swc.ExportNML import convert_swc_to_neuroml
@@ -33,7 +34,17 @@ class TestNeuroMLWriter(unittest.TestCase):
         Things we check:
 
         - same number of segments
-        - same number of segment groups
+        - proximals and distals of segments
+
+        Things we do not check
+
+        - same number of segment groups and their composition because there are
+          different ways of creating "unbranched segment groups". The way we do
+          it in PyNeuroML is to create a new one from each branching point, but
+          CVApp treats the soma as a special case. From a modelling
+          perspective, both are correct because a simulator will be able to
+          create sections (in NEURON) for example that result in the same
+          biophysics.
 
         :param cvapp_output_file: name of CVApp conversion file
         :type cvapp_output_file: str
@@ -46,61 +57,18 @@ class TestNeuroMLWriter(unittest.TestCase):
         num_segments_nml = len(exported_nml_doc.morphology[0].segments)
         self.assertEqual(num_segments_cvapp, num_segments_nml, "Segments do not match")
 
-        """
-        TODO: continue here
-        Possible bug in creation of unbranched segments groups in libNeuroML!
-        # segment groups but not the colour ones because we don't generate
-        # those in pynml
-        sgs_cvapp = [x for x in cvapp_doc.morphology[0].segment_groups if "color_"
-                     not in x.id]
-        len_sgs_cvapp = len(sgs_cvapp)
-        len_sgs_nml = len(exported_nml_doc.morphology[0].segment_groups)
-        self.assertEqual(len_sgs_nml, len_sgs_cvapp, "Segments do not match")
-        """
-
-    def test_case1_single_contour_soma(self):
-        "Test case 1: single contour soma"
-        swc_file = "Case1_new.swc"
-        swc_nml_file = swc_file.replace(".swc", "_cvapp.morph.nml")
-        nml_file = swc_file.replace(".swc", "_pynml.morph.nml")
-        nml_output = convert_swc_to_neuroml(swc_file, nml_file, True)
-
-        self.compare_to_cvapp_output(swc_nml_file, nml_output)
-        os.unlink(nml_file)
-
-    def test_case2_no_soma(self):
-        "Test case for a neuron with no soma"
-        swc_file = "Case2_new.swc"
-        swc_nml_file = swc_file.replace(".swc", "_cvapp.morph.nml")
-        nml_file = swc_file.replace(".swc", "_pynml.morph.nml")
-        nml_output = convert_swc_to_neuroml(swc_file, nml_file, True)
-
-        self.compare_to_cvapp_output(swc_nml_file, nml_output)
-        os.unlink(nml_file)
-
-    def test_case3_multiple_contours_soma(self):
-        "Test case for multiple contour soma"
-        swc_file = "Case3_new.swc"
-        swc_nml_file = swc_file.replace(".swc", "_cvapp.morph.nml")
-        nml_file = swc_file.replace(".swc", "_pynml.morph.nml")
-        nml_output = convert_swc_to_neuroml(swc_file, nml_file, True)
-
-        self.compare_to_cvapp_output(swc_nml_file, nml_output)
-        os.unlink(nml_file)
-
-    def test_case4_multiple_cylinder_soma(self):
-        "Test case for multiple cylinder soma"
-        swc_file = "Case4_new.swc"
-        swc_nml_file = swc_file.replace(".swc", "_cvapp.morph.nml")
-        nml_file = swc_file.replace(".swc", "_pynml.morph.nml")
-        nml_output = convert_swc_to_neuroml(swc_file, nml_file, True)
-
-        self.compare_to_cvapp_output(swc_nml_file, nml_output)
-        os.unlink(nml_file)
-
-    def test_case5_spherical_soma(self):
-        "Test case for spherical soma"
-        swc_file = "Case5_new.swc"
+    # https://pypi.org/project/parameterized/#description
+    @parameterized.expand(
+        [
+            "Case1_new.swc",
+            "Case2_new.swc",
+            "Case3_new.swc",
+            "Case4_new.swc",
+            "Case5_new.swc",
+        ]
+    )
+    def test_swc_conversions(self, swc_file):
+        "Test SWC conversions"
         swc_nml_file = swc_file.replace(".swc", "_cvapp.morph.nml")
         nml_file = swc_file.replace(".swc", "_pynml.morph.nml")
         nml_output = convert_swc_to_neuroml(swc_file, nml_file, True)
