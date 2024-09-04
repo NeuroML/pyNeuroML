@@ -268,7 +268,7 @@ class NeuroMLWriter:
 
         elif len(self.soma_points) == 3:
             if this_point.id == self.soma_points[0].id:
-                logger.debug("Processing first point of 3-point soma")
+                logger.debug("Processing 3-point soma: point 1")
                 middle_point = self.soma_points[1]
                 end_point = self.soma_points[2]
 
@@ -293,6 +293,9 @@ class NeuroMLWriter:
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
                 )
+                logger.debug(
+                    f"First segment: {first_seg} ({first_seg.proximal} -> {first_seg.distal})"
+                )
 
                 self.point_indices_vs_seg_ids[this_point.id] = self.next_segment_id
                 self.point_indices_vs_seg_ids[middle_point.id] = self.next_segment_id
@@ -302,7 +305,7 @@ class NeuroMLWriter:
                 self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
                 self.next_segment_id += 1
 
-                self.cell.add_segment(
+                second_seg = self.cell.add_segment(
                     prox=None,
                     dist=[
                         end_point.x,
@@ -318,6 +321,9 @@ class NeuroMLWriter:
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
                 )
+                logger.debug(
+                    f"Second segment: {second_seg} ({second_seg.proximal} -> {second_seg.distal})"
+                )
 
                 self.point_indices_vs_seg_ids[end_point.id] = self.next_segment_id
 
@@ -328,6 +334,7 @@ class NeuroMLWriter:
             # ignore the other points when the method is called with them
             # because they have already been used in segment creation
             else:
+                logger.debug("Processing (ignoring) 3-point soma: point 2/3")
                 pass
 
         elif len(self.soma_points) > 3:
@@ -625,6 +632,10 @@ class NeuroMLWriter:
         else:
             root_segment_id = min(self.segment_types.keys())
 
+        # Note that this adds a proximal point to the root segment of each
+        # unbranched segment group. If a proximal point is not specified, it
+        # will get one using `get_actual_proximal` and insert it into the
+        # segment.
         self.cell.create_unbranched_segment_group_branches(
             root_segment_id,
             use_convention=True,
@@ -655,6 +666,9 @@ class NeuroMLWriter:
         logger.debug("Starting NeuroML generation")
         if len(self.points) < 2:
             ValueError("SWC has fewer than two points. Cannot convert.")
+
+        logger.debug(f"Total points: {len(self.points)}")
+        logger.debug(f"Total soma points: {len(self.soma_points)}")
 
         self.__create_cell()
         assert self.cell
