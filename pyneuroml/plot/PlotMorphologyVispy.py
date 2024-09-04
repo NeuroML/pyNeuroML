@@ -1453,7 +1453,7 @@ def create_cylindrical_mesh(
 
     # add extra points for center of two circular planes that form the caps
     if closed is True:
-        verts = numpy.append(verts, [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], axis=0)
+        verts = numpy.append(verts, [[0.0, 0.0, 0.0], [0.0, 0.0, length]], axis=0)
     logger.debug(f"Verts are: {verts}")
 
     # compute faces
@@ -1477,11 +1477,17 @@ def create_cylindrical_mesh(
     if closed is True:
         cap1 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
         cap1[..., 0] = len(verts) - 2
-        cap2 = (numpy.arange(cols).reshape(cols, 1) + numpy.array([[0, 0, 1]])) % cols
-        cap2[..., 0] = len(verts) - 1
-
         logger.debug(f"cap1 is {cap1}")
-        logger.debug(f"cap2 is {cap2}")
+
+        cap2_start = rows * cols
+        cap2 = numpy.arange(cols).reshape(cols, 1)
+        logger.info(f"cap2 is {cap2}")
+        cap2 = cap2 + numpy.array([[cap2_start, cap2_start, cap2_start + 1]])
+        logger.info(f"cap2 is {cap2}")
+        cap2 = cap2 % cap2_start + cap2 * int(cap2 / cap2_start - 1)
+        logger.info(f"cap2 is {cap2}")
+        cap2[..., 0] = len(verts) - 1
+        logger.info(f"cap2 is {cap2}")
 
         faces = numpy.append(faces, cap1, axis=0)
         faces = numpy.append(faces, cap2, axis=0)
@@ -1562,7 +1568,7 @@ def create_mesh(meshdata, plot_type, current_view, min_width, save_mesh_to):
             seg_mesh = create_cylindrical_mesh(
                 rows=rows, cols=9, radius=(r1, r2), length=length, closed=True
             )
-            logger.debug(
+            logger.info(
                 f"Created cylinderical mesh template with radii {r1}, {r2}, {length}"
             )
 
@@ -1671,7 +1677,7 @@ def create_mesh(meshdata, plot_type, current_view, min_width, save_mesh_to):
     )
     logger.debug(f"Light dir is: {light_dir}")
     shading_filter = ShadingFilter(
-        shading="smooth",
+        shading="flat",
         shininess=10,
         ambient_light=(1, 1, 1, 0.5),
         specular_light=(1, 1, 1, 0.5),
