@@ -8,6 +8,7 @@ Copyright 2024 NeuroML contributors
 
 import argparse
 import logging
+import time
 from typing import Dict, List, Optional, Set
 
 from neuroml import (
@@ -344,41 +345,45 @@ class NeuroMLWriter:
                 logger.debug("Processing multi-point soma")
 
                 for i in range(len(self.soma_points) - 1):
-                    current_point = self.soma_points[i]
-                    next_point = self.soma_points[i + 1]
+                    proximal_point = self.soma_points[i]
+                    distal_point = self.soma_points[i + 1]
 
                     # first point, no parent, so set a proximal
                     if i == 0:
+                        first_point = proximal_point
                         prox = [
-                            current_point.x,
-                            current_point.y,
-                            current_point.z,
-                            2 * current_point.radius,
+                            first_point.x,
+                            first_point.y,
+                            first_point.z,
+                            2 * first_point.radius,
                         ]
 
-                        # first point belongs to the first segment
-                        self.point_indices_vs_seg_ids[current_point.id] = (
+                        parent = None
+
+                        # record the first point
+                        self.segment_types[first_point.id] = SWCNode.SOMA
+                        self.point_indices_vs_seg_ids[first_point.id] = (
                             self.next_segment_id
                         )
 
-                        # will be initialised for the first point
-                        current_segment = None
-
-                    # not first point, don't set proximal (but parent will be
-                    # a valid segment created in previous iteration)
+                    # Not first point, don't set proximal at all, instead set
+                    # the correct parent relationship
                     else:
                         prox = None
-
-                    parent = current_segment
+                        parent_id = distal_point.parent_id
+                        parent_seg_id = self.point_indices_vs_seg_ids.get(
+                            parent_id, None
+                        )
+                        parent = self.cell.get_segment(parent_seg_id)
 
                     distal = [
-                        next_point.x,
-                        next_point.y,
-                        next_point.z,
-                        2 * next_point.radius,
+                        distal_point.x,
+                        distal_point.y,
+                        distal_point.z,
+                        2 * distal_point.radius,
                     ]
 
-                    current_segment = self.cell.add_segment(
+                    self.cell.add_segment(
                         prox=prox,
                         dist=distal,
                         seg_id=self.next_segment_id,
@@ -390,12 +395,16 @@ class NeuroMLWriter:
                         optimise_segment_groups=False,
                     )
 
-                    # "next_point" belongs to the created segment
-                    self.point_indices_vs_seg_ids[next_point.id] = self.next_segment_id
+                    self.point_indices_vs_seg_ids[distal_point.id] = (
+                        self.next_segment_id
+                    )
                     self.segment_types[self.next_segment_id] = SWCNode.SOMA
                     self.__add_segment_to_groups(self.next_segment_id, SWCNode.SOMA)
 
                     self.next_segment_id += 1
+                self.point_indices_vs_seg_ids[self.soma_points[-1].id] = (
+                    self.next_segment_id - 1
+                )
 
             else:
                 logger.debug(
@@ -672,24 +681,34 @@ class NeuroMLWriter:
         if self.nml_doc is not None:
             return self.nml_doc
 
-        logger.debug("Starting NeuroML generation")
+        start_time = time.time()
+        logger.info("Starting NeuroML generation")
         if len(self.points) < 2:
             ValueError("SWC has fewer than two points. Cannot convert.")
 
-        logger.debug(f"Total points: {len(self.points)}")
+        logger.info(f"Total points: {len(self.points)}")
         logger.debug(f"Total soma points: {len(self.soma_points)}")
 
         self.__create_cell()
         assert self.cell
 
         start_point = self.swc_graph.root
+        assert start_point
 
         logger.debug(f"Start point: {start_point}")
 
         # create all the segments
         self.__parse_tree(start_point, start_point)
+
+        parse_time = time.time()
+        logger.debug(f"Parsing SWC took {parse_time - start_time} seconds")
+
         # create all the groups
         self.__create_segment_groups()
+        segment_group_time = time.time()
+        logger.debug(
+            f"Creating segment groups took {segment_group_time - parse_time} seconds"
+        )
 
         self.nml_doc = NeuroMLDocument(id=self.cell.id)
 
@@ -699,6 +718,9 @@ class NeuroMLWriter:
             self.nml_doc.cells.append(self.cell)
 
         logger.debug("NeuroML generation completed")
+        logger.debug(
+            f"NeuroML generation took {segment_group_time - start_time} seconds"
+        )
 
         return self.nml_doc
 
