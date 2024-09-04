@@ -138,7 +138,7 @@ examples/results/*.dat
 .mypy_cache/
 /examples/test_data/TwoCell.net.png
 /examples/test_data/Purk2M9s.png
-/.coverage
+**/.coverage
 /Nav.channel.nml
 /iv_izh2007RS0.net.nml
 /leak_chan.channel.nml

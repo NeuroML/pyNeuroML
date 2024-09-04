@@ -1,0 +1,26 @@
+# Original file l22.swc edited by Duncan Donohue using StdSwc version 1.21 on 7/25/05.
+# Irregularities and fixes documented in l22.swc.std.  See StdSwc1.21.doc for more information.
+#
+# ORIGINAL_SOURCE Neurolucida
+# CREATURE rat F344
+# REGION Hippocampus
+# FIELD/LAYER CA3
+# TYPE CA3c Pyramidal Cell in vivo young
+# CONTRIBUTOR Buzsaki_G & Turner_DA
+# REFERENCE J. Comp. Neurol. 356: 580-594, 1995
+# RAW l22.asc
+# EXTRAS Turner_P.CA3
+# SOMA_AREA 0.98E3
+# SHRINKAGE_CORRECTION 1.33 1.33 2.5
+# VERSION_NUMBER 2.0
+# VERSION_DATE 1998-03-27
+# *********************************************
+# SCALE 1.33  1.33  2.5
+#
+
+ 1 1 -2.913 28.103 10.7 3.42  -1
+ 2 3 -13.112 30.457 13.2 1     1
+ 3 3 -3.112 40.457 13.2 1     2
+ 4 3 -3.112 50.457 13.2 1     3
+ 5 3 -13.112 60.457 13.2 0.3     4
+ 6 3 3.112 60.457 13.2  0.3     4

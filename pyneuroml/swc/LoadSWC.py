@@ -1,15 +1,15 @@
 """
 Module for loading SWC files
 
-.. versionadded:: 1.3.4
+.. versionadded:: 1.3.9
 
+Copyright 2024 NeuroML contributors
 """
 
 import logging
 import re
 import typing
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -130,7 +130,6 @@ class SWCGraph:
         :raises ValueError: If a node with the same ID already exists in the graph or if multiple root nodes are detected
         """
         if any(existing_node.id == node.id for existing_node in self.nodes):
-            logger.error(f"Duplicate node ID: {node.id}")
             raise ValueError(f"Duplicate node ID: {node.id}")
 
         if node.parent_id == -1:
@@ -295,10 +294,14 @@ class SWCGraph:
                 )
 
 
-def parse_header(line: str) -> typing.Optional[typing.Tuple[str, str]]:
+def parse_header(
+    line_number: int, line: str
+) -> typing.Optional[typing.Tuple[str, str]]:
     """
     Parse a header line from an SWC file.
 
+    :param line_number: line number, for logging purposes
+    :type line_number: int
     :param line: A single line from the SWC file header
     :type line: str
     :return: A tuple containing the matched header field name and corresponding value (or None if no match)
@@ -310,8 +313,10 @@ def parse_header(line: str) -> typing.Optional[typing.Tuple[str, str]]:
         match = re.match(rf"{field}\s+(.+)", line, re.IGNORECASE)
         if match:
             return field, match.group(1).strip()
-        else:
-            logger.warn(f"Line beginning with '#' does not match header format: {line}")
+
+    logger.warning(
+        f"Ignoring line {line_number}: does not match header format: # {line}"
+    )
     return None
 
 
@@ -329,12 +334,16 @@ def load_swc(filename: str) -> SWCGraph:
 
     tree = SWCGraph()
     with open(filename, "r") as file:
+        point_line_count = 0
         for line_number, line in enumerate(file, 1):
             line = line.strip()
+            logger.debug(f"Processing line {line_number}: '{line}'")
+
             if not line:
                 continue
+
             if line.startswith("#"):
-                header = parse_header(line[1:].strip())
+                header = parse_header(line_number, line[1:].strip())
                 if header:
                     tree.add_metadata(header[0], header[1])
                 continue
@@ -348,7 +357,21 @@ def load_swc(filename: str) -> SWCGraph:
             # the add_node bit throws errors if things don't work out as
             # expected
             node_id, type_id, x, y, z, radius, parent_id = parts
+
+            if point_line_count == 0:
+                if parent_id != "-1":
+                    raise ValueError(
+                        f"First point in file must have parent '-1' (root). Got: {line}"
+                    )
+
             node = SWCNode(node_id, type_id, x, y, z, radius, parent_id)
             tree.add_node(node)
+            point_line_count += 1
+
+    # add file name as new metadata if not included
+    if "ORIGINAL_SOURCE" not in tree.metadata.keys():
+        tree.metadata["ORIGINAL_SOURCE"] = filename
+
+    logger.info(f"Processed {point_line_count} SWC points in {line_number} lines")
 
     return tree

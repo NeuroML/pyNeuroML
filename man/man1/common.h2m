@@ -11,6 +11,7 @@
 .BR pynml-povray (1),
 .BR pynml-sonata (1),
 .BR pynml-summary (1),
+.BR pynml-swc2nml (1),
 .BR pynml-tune (1),
 .BR pynml-xpp (1),
 .PP
