@@ -7,7 +7,7 @@ repos:
     - id: trailing-whitespace
     - id: end-of-file-fixer
     - id: check-added-large-files
-      args: [ "--maxkb=2048"]
+      args: [ "--maxkb=5000"]
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.4.1
   hooks:
