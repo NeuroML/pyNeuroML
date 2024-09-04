@@ -15,13 +15,20 @@ import random
 import time
 import typing
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy
 import progressbar
 from frozendict import frozendict
 from matplotlib.colors import to_rgb
-from neuroml import Cell, Morphology, NeuroMLDocument, SegmentGroup
+from neuroml import (
+    Cell,
+    Morphology,
+    NeuroMLDocument,
+    Point3DWithDiam,
+    Segment,
+    SegmentGroup,
+)
 from neuroml.neuro_lex_ids import neuro_lex_ids
 from neuroml.utils import fix_external_morphs_biophys_in_cell
 from scipy.spatial.transform import Rotation
@@ -47,6 +54,7 @@ try:
     from vispy.geometry.meshdata import MeshData
     from vispy.io.mesh import write_mesh
     from vispy.scene.visuals import Mesh
+    from vispy.scene.widgets.viewbox import ViewBox
     from vispy.util.transforms import rotate
     from vispy.visuals.filters import ShadingFilter
 
@@ -123,7 +131,7 @@ def create_new_vispy_canvas(
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
     view_center: typing.Optional[typing.List[float]] = None,
-):
+) -> Tuple[scene.SceneCanvas, ViewBox]:
     """Create a new vispy scene canvas with a view and optional axes lines
 
     Reference: https://vispy.org/gallery/scene/axes_plot.html
@@ -325,7 +333,9 @@ def plot_interactive_3D(
     verbose: bool = False,
     plot_type: str = "constant",
     axes_pos: typing.Optional[
-        typing.Union[typing.Tuple[float], typing.Tuple[int], str]
+        typing.Union[
+            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
+        ]
     ] = None,
     title: typing.Optional[str] = None,
     theme: str = "light",
@@ -1013,7 +1023,7 @@ def plot_3D_cell_morphology(
         logger.error(
             "If the cell is referencing an external morphology, please use the `plot_interactive_3D` function and pass the complete document and we will try to load the morphology."
         )
-        return
+        return None
 
     if highlight_spec is None:
         highlight_spec = {}
@@ -1262,7 +1272,7 @@ def plot_3D_schematic(
         logger.error(
             "If the cell is referencing an external morphology, please use the `plot_interactive_3D` function and pass the complete document and we will try to load the morphology."
         )
-        return
+        return None
 
     view_center = None
     if upright:
@@ -1320,10 +1330,10 @@ def plot_3D_schematic(
             )
 
         # get proximal and distal points
-        first_seg = segs[0]  # type: Segment
-        last_seg = segs[-1]  # type: Segment
-        first_prox = cell.get_actual_proximal(first_seg.id)  # type: Point3DWithDiam
-        last_dist = last_seg.distal  # type: Point3DWithDiam
+        first_seg: Segment = segs[0]
+        last_seg: Segment = segs[-1]
+        first_prox: Point3DWithDiam = cell.get_actual_proximal(first_seg.id)
+        last_dist: Point3DWithDiam = last_seg.distal
 
         length = math.dist(
             (first_prox.x, first_prox.y, first_prox.z),
@@ -1519,7 +1529,23 @@ def create_cylindrical_mesh(
     return MeshData(vertices=verts, faces=faces)
 
 
-def create_mesh(meshdata, plot_type, current_view, min_width, save_mesh_to):
+def create_mesh(
+    meshdata: List[
+        Tuple[
+            float,
+            float,
+            float,
+            Point3DWithDiam,
+            Point3DWithDiam,
+            Union[str, Tuple[float, float, float]],
+            Optional[Tuple[float, float, float]],
+        ]
+    ],
+    plot_type: str,
+    current_view: ViewBox,
+    min_width: float,
+    save_mesh_to: Optional[str],
+):
     """Internal function to create a mesh from the mesh data
 
     See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.Mesh
