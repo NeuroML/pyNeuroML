@@ -500,6 +500,8 @@ class NeuroMLWriter:
         else:
             group_id = seg_type
 
+        logger.debug(f"Adding segment of type {seg_type} to group: {group_id}")
+
         # Case 1
         # first point, but is non-soma
         if is_first_point:
@@ -511,7 +513,7 @@ class NeuroMLWriter:
                 name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
                 parent=None,
                 fraction_along=1.0,
-                use_convention=False,
+                use_convention=True,
                 reorder_segment_groups=False,
                 optimise_segment_groups=False,
                 seg_type="dendrite" if "dendrite" in seg_type else seg_type,
@@ -557,7 +559,7 @@ class NeuroMLWriter:
                     name=f"{segment_type.replace(' ', '_')}_Seg_{seg_id}",
                     parent=parent,
                     fraction_along=1.0,
-                    use_convention=False,
+                    use_convention=True,
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
                     seg_type="dendrite" if "dendrite" in seg_type else seg_type,
