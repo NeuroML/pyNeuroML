@@ -494,6 +494,12 @@ class NeuroMLWriter:
             # "Apical Dendrite" -> "apical_dendrite" and so on
             seg_type = SWCNode.TYPE_NAMES[this_point.type].lower().replace(" ", "_")
 
+        # if it's in the standard groups, do not add to another group
+        if seg_type in ["axon", "dendrite", "soma"]:
+            group_id = None
+        else:
+            group_id = seg_type
+
         # Case 1
         # first point, but is non-soma
         if is_first_point:
@@ -509,7 +515,7 @@ class NeuroMLWriter:
                 reorder_segment_groups=False,
                 optimise_segment_groups=False,
                 seg_type="dendrite" if "dendrite" in seg_type else seg_type,
-                group_id=seg_type,
+                group_id=group_id,
             )
             self.point_indices_vs_seg_ids[this_point.id] = seg_id
 
@@ -555,7 +561,7 @@ class NeuroMLWriter:
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
                     seg_type="dendrite" if "dendrite" in seg_type else seg_type,
-                    group_id=seg_type,
+                    group_id=group_id,
                 )
 
                 self.point_indices_vs_seg_ids[this_point.id] = seg_id
@@ -590,7 +596,7 @@ class NeuroMLWriter:
                     reorder_segment_groups=False,
                     optimise_segment_groups=False,
                     seg_type="dendrite" if "dendrite" in seg_type else seg_type,
-                    group_id=seg_type,
+                    group_id=group_id,
                 )
                 self.point_indices_vs_seg_ids[this_point.id] = seg_id
 
@@ -598,35 +604,9 @@ class NeuroMLWriter:
 
         logger.debug(f"Created segment {seg_id} for point {this_point.id}")
 
-    def __create_segment_groups(self) -> None:
-        """
-        Create NeuroML segment groups based on the segments created.
-        """
-        assert self.cell
-
-        if len(self.cell.morphology.segments) == 0:
-            logger.warning("No segments were created. Skipping segment group creation.")
-            return
-
-        # if root segment id has not changed, we assume the first segment is
-        # the root
-        if self.root_segment_id == -1:
-            self.root_segment_id = 0
-
-        # Note that this adds a proximal point to the root segment of each
-        # unbranched segment group. If a proximal point is not specified, it
-        # will get one using `get_actual_proximal` and insert it into the
-        # segment.
-        self.cell.create_unbranched_segment_group_branches(
-            self.root_segment_id,
-            use_convention=True,
-            reorder_segment_groups=True,
-            optimise_segment_groups=True,
-        )
-
-        logger.debug("Segment groups created successfully")
-
-    def generate_neuroml(self, standalone_morphology: bool = True) -> NeuroMLDocument:
+    def generate_neuroml(
+        self, standalone_morphology: bool = True, unbranched_segment_groups: bool = True
+    ) -> NeuroMLDocument:
         """Generate NeuroML representation.
 
         Main worker function
@@ -634,6 +614,8 @@ class NeuroMLWriter:
         :param standalone_morphology: export morphology as standalone object
             (not as part of a Cell object)
         :type standalone_morphology: bool
+        :param unbranched_segment_groups: toggle creation of unbranched segment groups
+        :type unbranched_segment_groups: bool
         :returns: the NeuroML document
         :rtype: NeuroMLDocument
         """
@@ -662,12 +644,37 @@ class NeuroMLWriter:
         parse_time = time.time()
         logger.info(f"Parsing SWC took {parse_time - start_time} seconds")
 
-        # create all the groups
-        self.__create_segment_groups()
-        segment_group_time = time.time()
-        logger.info(
-            f"Creating segment groups took {segment_group_time - parse_time} seconds"
-        )
+        if unbranched_segment_groups:
+            # create unbranched segment groups
+            if len(self.cell.morphology.segments) == 0:
+                logger.warning(
+                    "No segments were created. Skipping segment group creation."
+                )
+                return
+
+            # if root segment id has not changed, we assume the first segment is
+            # the root
+            if self.root_segment_id == -1:
+                self.root_segment_id = 0
+
+            # Note that this adds a proximal point to the root segment of each
+            # unbranched segment group. If a proximal point is not specified, it
+            # will get one using `get_actual_proximal` and insert it into the
+            # segment.
+            self.cell.create_unbranched_segment_group_branches(
+                self.root_segment_id,
+                use_convention=True,
+                reorder_segment_groups=True,
+                optimise_segment_groups=True,
+            )
+
+            segment_group_time = time.time()
+            logger.info(
+                f"Creating unbranched segment groups took {segment_group_time - parse_time} seconds"
+            )
+        else:
+            self.cell.reorder_segment_groups()
+            self.cell.optimise_segment_groups()
 
         self.nml_doc = NeuroMLDocument(id=self.cell.id)
 
@@ -676,15 +683,17 @@ class NeuroMLWriter:
         else:
             self.nml_doc.cells.append(self.cell)
 
+        end_time = time.time()
         logger.debug("NeuroML generation completed")
-        logger.info(
-            f"NeuroML generation took {segment_group_time - start_time} seconds"
-        )
+        logger.info(f"NeuroML generation took {end_time - start_time} seconds")
 
         return self.nml_doc
 
     def export_to_nml_file(
-        self, filename: str, standalone_morphology: bool = True
+        self,
+        filename: str,
+        standalone_morphology: bool = True,
+        unbranched_segment_groups: bool = True,
     ) -> None:
         """
         Export the NeuroML representation to a file.
@@ -694,6 +703,8 @@ class NeuroMLWriter:
         :param standalone_morphology: export morphology as standalone object
             (not as part of a Cell object)
         :type standalone_morphology: bool
+        :param unbranched_segment_groups: toggle creation of unbranched segment groups
+        :type unbranched_segment_groups: bool
         """
         self.generate_neuroml(standalone_morphology)
         assert self.nml_doc
@@ -707,6 +718,7 @@ def convert_swc_to_neuroml(
     swc_file: str,
     neuroml_file: Optional[str] = None,
     standalone_morphology: bool = True,
+    unbranched_segment_groups: bool = True,
 ) -> NeuroMLDocument:
     """Convert an SWC file to NeuroML.
 
@@ -726,8 +738,10 @@ def convert_swc_to_neuroml(
     swc_graph = load_swc(swc_file)
     writer = NeuroMLWriter(swc_graph)
     if neuroml_file is not None:
-        writer.export_to_nml_file(neuroml_file, standalone_morphology)
-    return writer.generate_neuroml(standalone_morphology)
+        writer.export_to_nml_file(
+            neuroml_file, standalone_morphology, unbranched_segment_groups
+        )
+    return writer.generate_neuroml(standalone_morphology, unbranched_segment_groups)
 
 
 def main(args=None):
