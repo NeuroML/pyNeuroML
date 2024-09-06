@@ -13,13 +13,16 @@ usage: pynml\-plotmorph [\-h] [\-v] [\-nogui] [\-plane2d <plane, e.g. xy, yz, zx
 [\-saveToFile <Image file name>]
 [\-saveMeshTo <Mesh file name (must end in '.obj' or '.gz')>]
 [\-square]
-<NeuroML 2 file>
+<NeuroML 2 file/SWC cell file>
 .PP
-A script which can generate plots of morphologies in NeuroML 2
+A script which can generate plots of morphologies in NeuroML 2. It can
+generate plots of single cells (either detailed or point cells), and networks
+that include these cells. It can also visualise single cell morphologies from
+SWC files, although it will first convert these to NeuroML.
 .SS "positional arguments:"
 .TP
-<NeuroML 2 file>
-Name of the NeuroML 2 file
+<NeuroML 2 file/SWC cell file>
+Name of the NeuroML 2 file/SWC cell file
 .SS "options:"
 .TP
 \fB\-h\fR, \fB\-\-help\fR
