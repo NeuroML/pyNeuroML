@@ -34,6 +34,7 @@ from neuroml.utils import fix_external_morphs_biophys_in_cell
 from scipy.spatial.transform import Rotation
 
 from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.swc.ExportNML import convert_swc_to_neuroml
 from pyneuroml.utils import extract_position_info, make_cell_upright
 from pyneuroml.utils.plot import (
     DEFAULTS,
@@ -361,8 +362,13 @@ def plot_interactive_3D(
     .. versionadded:: 1.1.12
         The highlight_spec parameter
 
+    If a file with a network containing multiple cells is provided, it will
+    plot all the cells. For detailed neuroml.Cell types, it will plot their
+    complete morphology. For point neurons, we only plot the points (locations)
+    where they are as spheres. For single cell SWC files, it will first convert
+    them to NeuroML and then plot them.
 
-    :param nml_file: path to NeuroML cell file or
+    :param nml_file: path to NeuroML cell file or single cell SWC file or
         :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell`
         or :py:class:`neuroml.Morphology` object
     :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell or
@@ -502,6 +508,14 @@ def plot_interactive_3D(
         # TODO: check if this is required: must for MultiscaleISN
         if nml_file.endswith(".h5"):
             nml_model = read_neuroml2_file(nml_file)
+        elif nml_file.endswith(".swc"):
+            nml_model_doc = convert_swc_to_neuroml(
+                nml_file,
+                neuroml_file=None,
+                standalone_morphology=False,
+                unbranched_segment_groups=False,
+            )
+            nml_model = nml_model_doc.cells[0]
         else:
             # do not fix external morphs here, we do it later below
             nml_model = read_neuroml2_file(
@@ -742,6 +756,7 @@ def plot_interactive_3D(
             except KeyError:
                 # if single cell only, use default groups
                 if total_cells == 1:
+                    logger.debug("Only one detailed cell, using default color groups")
                     color = "default groups"
                 # if multiple cells, use different colors for each cell
                 else:
@@ -917,14 +932,11 @@ def plot_3D_cell_morphology(
 
     .. seealso::
 
-        :py:func:`plot_2D`
+        :py:func:`plot_interactive_3D`
             general function for plotting
 
-        :py:func:`plot_2D_schematic`
+        :py:func:`plot_3D_schematic`
             for plotting only segmeng groups with their labels
-
-        :py:func:`plot_2D_point_cells`
-            for plotting point cells
 
     :param offset: offset for cell
         Note that this is only used in creating the meshdata. If set to None,

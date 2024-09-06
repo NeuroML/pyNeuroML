@@ -12,6 +12,7 @@ import logging
 import os
 import random
 import sys
+import textwrap
 import typing
 from typing import Optional
 
@@ -23,6 +24,7 @@ from neuroml.neuro_lex_ids import neuro_lex_ids
 from neuroml.utils import fix_external_morphs_biophys_in_cell
 
 from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.swc.ExportNML import convert_swc_to_neuroml
 from pyneuroml.utils import extract_position_info
 from pyneuroml.utils.cli import build_namespace
 from pyneuroml.utils.plot import (
@@ -46,14 +48,25 @@ def process_args():
     Parse command-line arguments.
     """
     parser = argparse.ArgumentParser(
-        description=("A script which can generate plots of morphologies in NeuroML 2")
+        description=(
+            textwrap.dedent(
+                """
+            A script which can generate plots of morphologies in NeuroML 2.
+            It can generate plots of single cells (either detailed or point
+            cells), and networks that include these cells.
+
+            It can also visualise single cell morphologies from SWC files,
+            although it will first convert these to NeuroML.
+            """
+            )
+        )
     )
 
     parser.add_argument(
         "nmlFile",
         type=str,
-        metavar="<NeuroML 2 file>",
-        help="Name of the NeuroML 2 file",
+        metavar="<NeuroML 2 file/SWC cell file>",
+        help="Name of the NeuroML 2 file/SWC cell file",
     )
 
     parser.add_argument(
@@ -215,7 +228,8 @@ def plot_2D(
     If a file with a network containing multiple cells is provided, it will
     plot all the cells. For detailed neuroml.Cell types, it will plot their
     complete morphology. For point neurons, we only plot the points (locations)
-    where they are.
+    where they are. For single cell SWC files, it will first convert them to
+    NeuroML and then plot them.
 
     This method uses matplotlib.
 
@@ -223,9 +237,11 @@ def plot_2D(
         The hightlight_spec parameter
 
 
-    :param nml_file: path to NeuroML cell file, or a NeuroMLDocument object
-    :type nml_file: str or :py:class:`neuroml.NeuroMLDocument` or
-        :py:class:`neuroml.Cell`
+    :param nml_file: path to NeuroML cell file or single cell SWC file or
+        :py:class:`neuroml.NeuroMLDocument` or :py:class:`neuroml.Cell`
+        or :py:class:`neuroml.Morphology` object
+    :type nml_file: str or neuroml.NeuroMLDocument or neuroml.Cell or
+        neuroml.Morphology
     :param plane2d: what plane to plot (xy/yx/yz/zy/zx/xz)
     :type plane2d: str
     :param min_width: minimum width for segments (useful for visualising very
@@ -317,6 +333,14 @@ def plot_2D(
         # TODO: check if this is required: must for MultiscaleISN
         if nml_file.endswith(".h5"):
             nml_model = read_neuroml2_file(nml_file)
+        elif nml_file.endswith(".swc"):
+            nml_model_doc = convert_swc_to_neuroml(
+                nml_file,
+                neuroml_file=None,
+                standalone_morphology=False,
+                unbranched_segment_groups=False,
+            )
+            nml_model = nml_model_doc.cells[0]
         else:
             nml_model = read_neuroml2_file(
                 nml_file,
