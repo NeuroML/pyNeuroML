@@ -486,6 +486,12 @@ def plot_interactive_3D(
     if highlight_spec is None:
         highlight_spec = {}
 
+    # convert axes_pos from list to tuple, it needs to be hashable for
+    # functions that use caching
+    if axes_pos:
+        if isinstance(axes_pos, list):
+            axes_pos = tuple(axes_pos)
+
     if plot_type != "detailed" and len(highlight_spec.items()) > 0:
         if plot_type == "constant":
             logger.warning(
