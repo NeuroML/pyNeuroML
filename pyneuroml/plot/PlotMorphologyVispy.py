@@ -341,7 +341,7 @@ def plot_interactive_3D(
     nml_file: Union[str, Cell, Morphology, NeuroMLDocument],
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
-    plot_type: str = "constant",
+    plot_type: str = "detailed",
     axes_pos: Optional[
         Union[Tuple[float, float, float], Tuple[int, int, int], str]
     ] = None,
@@ -925,7 +925,7 @@ def plot_3D_cell_morphology(
         Union[Tuple[float, float, float], Tuple[int, int, int], str]
     ] = None,
     nogui: bool = False,
-    plot_type: str = "constant",
+    plot_type: str = "detailed",
     theme: str = "light",
     meshdata: Optional[List[Any]] = None,
     highlight_spec: Optional[Union[Dict, frozendict]] = None,
