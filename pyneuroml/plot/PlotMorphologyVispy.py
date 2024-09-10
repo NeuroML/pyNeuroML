@@ -387,7 +387,8 @@ def plot_interactive_3D(
 
         - "detailed": show detailed morphology taking into account each segment's
           width
-        - "constant": show morphology, but use constant line widths
+        - "constant": show morphology, but use "min_width" for line widths; the
+          soma is made thicker to make it easy to see
         - "schematic": only plot each unbranched segment group as a straight
           line, not following each segment
         - "point": show all cells as points
@@ -900,9 +901,7 @@ def plot_interactive_3D(
     if not nogui:
         if pbar is not None:
             pbar.finish()
-        create_mesh(
-            meshdata, plot_type, current_view, min_width, save_mesh_to=save_mesh_to
-        )
+        create_mesh(meshdata, current_view, save_mesh_to=save_mesh_to)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -994,10 +993,9 @@ def plot_3D_cell_morphology(
     :param plot_type: type of plot, one of:
 
         - "detailed": show detailed morphology taking into account each segment's
-          width. This is not performant, because a new line is required for
-          each segment. To only be used for cells with small numbers of
-          segments
-        - "constant": show morphology, but use constant line widths
+          width.
+        - "constant": show morphology, but use min_width for line widths; the
+          soma is made 5 times thicker to make it easier to see.
 
         This is only applicable for neuroml.Cell cells (ones with some
         morphology)
@@ -1108,6 +1106,21 @@ def plot_3D_cell_morphology(
         r1 = p.diameter / 2
         r2 = d.diameter / 2
 
+        # ensure larger than provided minimum width
+        if r1 < min_width:
+            r1 = min_width
+        if r2 < min_width:
+            r2 = min_width
+
+        # if plot is a constant type, fix the widths
+        if plot_type == "constant":
+            r1 = min_width
+            r2 = min_width
+            # let soma be thicker so that it can be easily made out
+            if seg.id in soma_segs:
+                r1 = r1 * 5
+                r2 = r2 * 5
+
         segment_spec = {
             "marker_size": None,
             "marker_color": None,
@@ -1167,9 +1180,7 @@ def plot_3D_cell_morphology(
         logger.debug(f"meshdata added: {meshdata[-1]}")
 
     if not nogui:
-        create_mesh(
-            meshdata, plot_type, current_view, min_width, save_mesh_to=save_mesh_to
-        )
+        create_mesh(meshdata, current_view, save_mesh_to=save_mesh_to)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1184,7 +1195,7 @@ def plot_3D_schematic(
     segment_groups: Optional[List[SegmentGroup]] = None,
     offset: Optional[Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     labels: bool = False,
-    width: float = 5.0,
+    width: float = 1.0,
     verbose: bool = False,
     nogui: bool = False,
     title: str = "",
@@ -1254,7 +1265,7 @@ def plot_3D_schematic(
             - "origin": automatically added at origin
             - "bottom left": automatically added at bottom left
 
-    :type axes_pos: [float, float, float] or [int, int, int] or None or str
+    :type axes_pos: (float, float, float) or (int, int, int) or None or str
     :param theme: theme to use (light/dark)
     :type theme: str
     :param color: color to use for segment groups with some special values:
@@ -1268,10 +1279,6 @@ def plot_3D_schematic(
     :param meshdata: dictionary used to store mesh related data for vispy
         visualisation
     :type meshdata: dict
-    :param mesh_precision: what decimal places to use to group meshes into
-        instances: more precision means more detail (meshes), means less
-        performance (passed to :py:func:`round` and so may be negative)
-    :type mesh_precision: int
     :param upright: bool only applicable for single cells: Makes cells "upright"
         (along Y axis) by calculating its PCA, rotating it so it is along the Y axis,
         and transforming cell co-ordinates to align along the rotated first principal
@@ -1360,6 +1367,11 @@ def plot_3D_schematic(
             (last_dist.x, last_dist.y, last_dist.z),
         )
 
+        seg_width = width
+
+        if first_seg.id in soma_segs and last_seg.id in soma_segs:
+            seg_width = width * 5
+
         branch_color = color
         if color is None:
             branch_color = get_next_hex_color()
@@ -1380,8 +1392,8 @@ def plot_3D_schematic(
         if offset is not None:
             meshdata.append(
                 (
-                    f"{first_prox.diameter/2}",
-                    f"{last_dist.diameter/2}",
+                    seg_width,
+                    seg_width,
                     f"{length}",
                     first_prox,
                     last_dist,
@@ -1392,8 +1404,8 @@ def plot_3D_schematic(
         else:
             meshdata.append(
                 (
-                    f"{first_prox.diameter/2}",
-                    f"{last_dist.diameter/2}",
+                    seg_width,
+                    seg_width,
                     f"{length}",
                     first_prox,
                     last_dist,
@@ -1402,9 +1414,7 @@ def plot_3D_schematic(
             )
 
     if not nogui:
-        create_mesh(
-            meshdata, "Detailed", current_view, width, save_mesh_to=save_mesh_to
-        )
+        create_mesh(meshdata, current_view, save_mesh_to=save_mesh_to)
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1561,9 +1571,7 @@ def create_mesh(
             Optional[Tuple[float, float, float]],
         ]
     ],
-    plot_type: str,
     current_view: ViewBox,
-    min_width: float,
     save_mesh_to: Optional[str],
 ):
     """Internal function to create a mesh from the mesh data
@@ -1572,12 +1580,8 @@ def create_mesh(
 
     :param meshdata: meshdata to plot: list with:
         [(r1, r2, length, prox, dist, color, offset)]
-    :param plot_type: type of plot
-    :type plot_type: str
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
-    :param min_width: minimum width of tubes
-    :type min_width: float
     :param save_mesh_to: name of file to save mesh object to
     :type save_mesh_to: str or None
     """
@@ -1610,16 +1614,6 @@ def create_mesh(
         offset = d[6]
         if offset is None:
             offset = (0.0, 0.0, 0.0)
-
-        # actual plotting bits
-        if plot_type == "constant":
-            r1 = min_width
-            r2 = min_width
-
-        if r1 < min_width:
-            r1 = min_width
-        if r2 < min_width:
-            r2 = min_width
 
         seg_mesh = None
         # 1: for points, we set the prox/dist to None since they only have
