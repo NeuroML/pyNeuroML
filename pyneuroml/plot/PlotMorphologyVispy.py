@@ -13,9 +13,8 @@ import logging
 import math
 import random
 import time
-import typing
 from functools import lru_cache
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, TypedDict, Union
 
 import numpy
 import progressbar
@@ -41,6 +40,18 @@ from pyneuroml.utils.plot import (
     get_cell_bound_box,
     get_next_hex_color,
     load_minimal_morphplottable__model,
+)
+
+# define special type for plot_spec dictionary
+PlotSpec = TypedDict(
+    "PlotSpec",
+    {
+        "point_fraction": float,
+        "point_cells": List[str],
+        "schematic_cells": List[str],
+        "constant_cells": List[str],
+        "detailed_cells": List[str],
+    },
 )
 
 logger = logging.getLogger(__name__)
@@ -78,9 +89,9 @@ PYNEUROML_VISPY_THEME = "light"
 
 def add_text_to_vispy_3D_plot(
     current_canvas: scene.SceneCanvas,
-    xv: typing.List[float],
-    yv: typing.List[float],
-    zv: typing.List[float],
+    xv: List[float],
+    yv: List[float],
+    zv: List[float],
     color: str,
     text: str,
 ):
@@ -120,18 +131,16 @@ def add_text_to_vispy_3D_plot(
 
 
 def create_new_vispy_canvas(
-    view_min: typing.Optional[typing.List[float]] = None,
-    view_max: typing.Optional[typing.List[float]] = None,
+    view_min: Optional[List[float]] = None,
+    view_max: Optional[List[float]] = None,
     title: str = "",
-    axes_pos: typing.Optional[
-        typing.Union[
-            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
-        ]
+    axes_pos: Optional[
+        Union[Tuple[float, float, float], Tuple[int, int, int], str]
     ] = None,
     axes_length: float = 100,
     axes_width: int = 2,
     theme=PYNEUROML_VISPY_THEME,
-    view_center: typing.Optional[typing.List[float]] = None,
+    view_center: Optional[List[float]] = None,
 ) -> Tuple[scene.SceneCanvas, ViewBox]:
     """Create a new vispy scene canvas with a view and optional axes lines
 
@@ -198,9 +207,9 @@ def create_new_vispy_canvas(
     cam_index = 1
     view.camera = cams[cam_index]
 
-    calc_axes_pos: typing.Optional[
-        typing.Union[typing.Tuple[float, float, float], typing.Tuple[int, int, int]]
-    ] = None
+    calc_axes_pos: Optional[Union[Tuple[float, float, float], Tuple[int, int, int]]] = (
+        None
+    )
 
     if view_min is not None and view_max is not None:
         x_width = abs(view_min[0] - view_max[0])
@@ -329,24 +338,20 @@ def create_new_vispy_canvas(
 
 
 def plot_interactive_3D(
-    nml_file: typing.Union[str, Cell, Morphology, NeuroMLDocument],
+    nml_file: Union[str, Cell, Morphology, NeuroMLDocument],
     min_width: float = DEFAULTS["minWidth"],
     verbose: bool = False,
     plot_type: str = "constant",
-    axes_pos: typing.Optional[
-        typing.Union[
-            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
-        ]
+    axes_pos: Optional[
+        Union[Tuple[float, float, float], Tuple[int, int, int], str]
     ] = None,
-    title: typing.Optional[str] = None,
+    title: Optional[str] = None,
     theme: str = "light",
     nogui: bool = False,
-    plot_spec: typing.Optional[
-        typing.Dict[str, typing.Union[str, typing.List[int], float]]
-    ] = None,
-    highlight_spec: typing.Optional[typing.Dict[typing.Any, typing.Any]] = None,
+    plot_spec: Optional[PlotSpec] = None,
+    highlight_spec: Optional[Dict[Any, Any]] = None,
     upright: bool = False,
-    save_mesh_to: typing.Optional[str] = None,
+    save_mesh_to: Optional[str] = None,
 ):
     """Plot interactive plots in 3D using Vispy
 
@@ -417,9 +422,10 @@ def plot_interactive_3D(
         - points_cells: list of cell ids to plot as point cells
         - schematic_cells: list of cell ids to plot as schematics
         - constant_cells: list of cell ids to plot as constant widths
+        - detailed_cells: list of cell ids to plot in full detail
 
-        The last three lists override the point_fraction setting. If a cell id
-        is not included in the spec here, it will follow the plot_type provided
+        The lists override the point_fraction setting. If a cell id is not
+        included in the spec here, it will follow the plot_type provided
         before.
     :type plot_spec: dict
     :param highlight_spec: dictionary that allows passing some
@@ -695,10 +701,10 @@ def plot_interactive_3D(
     )
 
     # process plot_spec
-    point_cells = []
-    schematic_cells = []
-    constant_cells = []
-    detailed_cells = []
+    point_cells: List[str] = []
+    schematic_cells: List[str] = []
+    constant_cells: List[str] = []
+    detailed_cells: List[str] = []
     if plot_spec is not None:
         try:
             point_cells = plot_spec["point_cells"]
@@ -717,7 +723,7 @@ def plot_interactive_3D(
         except KeyError:
             pass
 
-    meshdata = []  # type: typing.List[typing.Any]
+    meshdata = []  # type: List[Any]
 
     # do not show this pbar in jupyter notebooks
     if not pynml_in_jupyter:
@@ -906,28 +912,26 @@ def plot_interactive_3D(
 
 @lru_cache(maxsize=100)
 def plot_3D_cell_morphology(
-    offset: typing.Optional[typing.Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    offset: Optional[Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     cell: Optional[Cell] = None,
-    color: typing.Optional[str] = None,
+    color: Optional[str] = None,
     title: str = "",
     verbose: bool = False,
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
     min_width: float = DEFAULTS["minWidth"],
-    axis_min_max: typing.Tuple = (float("inf"), -1 * float("inf")),
-    axes_pos: typing.Optional[
-        typing.Union[
-            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
-        ]
+    axis_min_max: Tuple = (float("inf"), -1 * float("inf")),
+    axes_pos: Optional[
+        Union[Tuple[float, float, float], Tuple[int, int, int], str]
     ] = None,
     nogui: bool = False,
     plot_type: str = "constant",
     theme: str = "light",
-    meshdata: typing.Optional[typing.List[typing.Any]] = None,
-    highlight_spec: typing.Optional[typing.Union[typing.Dict, frozendict]] = None,
+    meshdata: Optional[List[Any]] = None,
+    highlight_spec: Optional[Union[Dict, frozendict]] = None,
     upright: bool = False,
-    save_mesh_to: typing.Optional[str] = None,
-) -> typing.Optional[typing.List[typing.Any]]:
+    save_mesh_to: Optional[str] = None,
+) -> Optional[List[Any]]:
     """Plot the detailed 3D morphology of a cell using vispy.
     https://vispy.org/
 
@@ -1177,8 +1181,8 @@ def plot_3D_cell_morphology(
 @lru_cache(maxsize=100)
 def plot_3D_schematic(
     cell: Cell,
-    segment_groups: typing.Optional[typing.List[SegmentGroup]] = None,
-    offset: typing.Optional[typing.Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    segment_groups: Optional[List[SegmentGroup]] = None,
+    offset: Optional[Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     labels: bool = False,
     width: float = 5.0,
     verbose: bool = False,
@@ -1186,17 +1190,15 @@ def plot_3D_schematic(
     title: str = "",
     current_canvas: Optional[scene.SceneCanvas] = None,
     current_view: Optional[scene.ViewBox] = None,
-    axes_pos: typing.Optional[
-        typing.Union[
-            typing.Tuple[float, float, float], typing.Tuple[int, int, int], str
-        ]
+    axes_pos: Optional[
+        Union[Tuple[float, float, float], Tuple[int, int, int], str]
     ] = None,
     theme: str = "light",
-    color: typing.Optional[str] = "Cell",
-    meshdata: typing.Optional[typing.List[typing.Any]] = None,
+    color: Optional[str] = "Cell",
+    meshdata: Optional[List[Any]] = None,
     upright: bool = False,
-    save_mesh_to: typing.Optional[str] = None,
-) -> typing.Optional[typing.List[typing.Any]]:
+    save_mesh_to: Optional[str] = None,
+) -> Optional[List[Any]]:
     """Plot a 3D schematic of the provided segment groups using vispy.
     layer..
 
@@ -1495,7 +1497,7 @@ def compute_faces_of_cylindrical_mesh(rows: int, cols: int, closed: bool):
 def create_cylindrical_mesh(
     rows: int,
     cols: int,
-    radius: typing.Union[float, typing.Tuple[float, float]] = (1.0, 1.0),
+    radius: Union[float, Tuple[float, float]] = (1.0, 1.0),
     length: float = 1.0,
     closed: bool = True,
 ):
