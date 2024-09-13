@@ -7,8 +7,7 @@ import logging
 import os
 import os.path
 import random
-import typing
-from typing import Optional
+from typing import Any, Dict, List, Optional, Union
 
 import airspeed
 from neuroml import __version__ as libnml_ver
@@ -28,20 +27,19 @@ class LEMSSimulation:
 
     TEMPLATE_FILE = "%s/LEMS_TEMPLATE.xml" % (os.path.dirname(__file__))
 
-    lems_info: typing.Dict[str, typing.Any] = {}
     my_random = random.Random()
 
     def __init__(
         self,
         sim_id: str,
-        duration: typing.Union[float, str],
-        dt: typing.Union[float, str],
-        target: typing.Optional[str] = None,
+        duration: Union[float, str],
+        dt: Union[float, str],
+        target: Optional[str] = None,
         comment: str = "\n\n        This LEMS file has been automatically generated using PyNeuroML v%s (libNeuroML v%s)\n\n    "
         % (pynml_ver, libnml_ver),
-        lems_file_generate_seed: Optional[typing.Any] = None,
+        lems_file_generate_seed: Optional[Any] = None,
         simulation_seed: int = 12345,
-        meta: typing.Optional[typing.Dict[str, str]] = None,
+        meta: Optional[Dict[str, str]] = None,
     ) -> None:
         """Init a new LEMSSimulation object.
 
@@ -105,21 +103,21 @@ class LEMSSimulation:
         else:
             dt_mag_ms = float(dt)
 
-        self.lems_info["sim_id"] = sim_id
-        self.lems_info["duration"] = duration_mag_ms
-        self.lems_info["dt"] = dt_mag_ms
-        self.lems_info["comment"] = comment
-        self.lems_info["seed"] = int(simulation_seed)
-        self.lems_info["report"] = ""
+        self.sim_id = sim_id
+        self.duration = duration_mag_ms
+        self.dt = dt_mag_ms
+        self.comment = comment
+        self.seed = int(simulation_seed)
+        self.report = ""
 
-        self.lems_info["include_files"] = []
-        self.lems_info["displays"] = []
-        self.lems_info["output_files"] = []
-        self.lems_info["event_output_files"] = []
-        self.lems_info["meta"] = meta
+        self.include_files: List[str] = []
+        self.displays: List[Dict[str, Any]] = []
+        self.output_files: List[Dict[str, Any]] = []
+        self.event_output_files: List[Dict[str, Any]] = []
+        self.meta = meta
 
         if target:
-            self.lems_info["target"] = target
+            self.target = target
 
         if lems_file_generate_seed:
             self.my_random.seed(
@@ -128,22 +126,12 @@ class LEMSSimulation:
         else:
             self.my_random.seed(12345)
 
-        self.lems_file_name = f"LEMS_{self.lems_info['sim_id']}.xml"
+        self.lems_file_name = f"LEMS_{self.sim_id}.xml"
 
-    def __setattr__(self, attr: typing.Any, value: typing.Any) -> None:
-        """Set an attribute value.
-
-        :param attr: attribute to set value of
-        :type attr: Any
-        :param value: value to set
-        :type value: Any
-        :returns: None
-        :raises AttributeError: if provided attribute is not found in LEMSSimulation.
-        """
-        if attr in self.lems_info.keys():
-            self.lems_info[attr] = value
-        else:
-            raise AttributeError("There is not a field: %s in LEMSSimulation" % attr)
+    @property
+    def lems_info(self):
+        """Return the attributes"""
+        return vars(self)
 
     def assign_simulation_target(self, target: str) -> None:
         """Assign a simulation target.
@@ -152,7 +140,7 @@ class LEMSSimulation:
         :type target: str
         :returns: None
         """
-        self.lems_info["target"] = target
+        self.target = target
 
     def set_report_file(self, report_file_name: str) -> None:
         """Set a report file.
@@ -164,7 +152,7 @@ class LEMSSimulation:
         :returns: None
         """
         if report_file_name is not None:
-            self.lems_info["report"] = ' reportFile="%s"' % report_file_name
+            self.report = ' reportFile="%s"' % report_file_name
 
     def include_neuroml2_file(
         self,
@@ -190,8 +178,8 @@ class LEMSSimulation:
         full_path = os.path.abspath(relative_to_dir + "/" + nml2_file_name)
         base_path = os.path.dirname(full_path)
         # logger.info_v("Including in generated LEMS file: %s (%s)"%(nml2_file_name, full_path))
-        if nml2_file_name not in self.lems_info["include_files"]:
-            self.lems_info["include_files"].append(nml2_file_name)
+        if nml2_file_name not in self.include_files:
+            self.include_files.append(nml2_file_name)
 
         if include_included:
             cell = read_neuroml2_file(full_path)
@@ -212,13 +200,13 @@ class LEMSSimulation:
         :type include_included: bool
         :returns: None
         """
-        if lems_file_name not in self.lems_info["include_files"]:
-            self.lems_info["include_files"].append(lems_file_name)
+        if lems_file_name not in self.include_files:
+            self.include_files.append(lems_file_name)
 
         if include_included:
             model = read_lems_file(lems_file_name)
             for inc in model.included_files:
-                self.lems_info["include_files"].append(inc)
+                self.include_files.append(inc)
 
     def create_display(
         self, id: str, title: str, ymin: str, ymax: str, timeScale: str = "1ms"
@@ -237,8 +225,8 @@ class LEMSSimulation:
         :type timeScale: str
         :returns: None
         """
-        disp = {}  # type: dict[str, typing.Any]
-        self.lems_info["displays"].append(disp)
+        disp = {}  # type: dict[str, Any]
+        self.displays.append(disp)
         disp["id"] = id
         disp["title"] = title
         disp["ymin"] = ymin
@@ -259,8 +247,8 @@ class LEMSSimulation:
         :type file_name: str
         :returns: None
         """
-        of = {}  # type: dict[str, typing.Any]
-        self.lems_info["output_files"].append(of)
+        of = {}  # type: dict[str, Any]
+        self.output_files.append(of)
         of["id"] = id
         of["file_name"] = file_name
         of["columns"] = []
@@ -283,7 +271,7 @@ class LEMSSimulation:
         :returns: None
         """
         eof = {}
-        self.lems_info["event_output_files"].append(eof)
+        self.event_output_files.append(eof)
         eof["id"] = id
         eof["file_name"] = file_name
         eof["format"] = format
@@ -295,7 +283,7 @@ class LEMSSimulation:
         line_id: str,
         quantity: str,
         scale: str = "1",
-        color: typing.Optional[str] = None,
+        color: Optional[str] = None,
         timeScale: str = "1ms",
     ) -> None:
         """Add a new line to the display
@@ -316,7 +304,7 @@ class LEMSSimulation:
         :raises ValueError: if provided `display_id` has not been created yet.
         """
         disp = None
-        for d in self.lems_info["displays"]:
+        for d in self.displays:
             if d["id"] == display_id:
                 disp = d
         if not disp:
@@ -324,7 +312,7 @@ class LEMSSimulation:
                 f"Display with id {display_id} not found. Please check the provided display_id, or create it first."
             )
 
-        line = {}  # type: dict[str, typing.Any]
+        line = {}  # type: dict[str, Any]
         disp["lines"].append(line)
         line["id"] = line_id
         line["quantity"] = quantity
@@ -348,7 +336,7 @@ class LEMSSimulation:
         :raises ValueError: if provided `output_file_id` has not been created yet.
         """
         of = None
-        for o in self.lems_info["output_files"]:
+        for o in self.output_files:
             if o["id"] == output_file_id:
                 of = o
 
@@ -357,7 +345,7 @@ class LEMSSimulation:
                 f"Output file with id {output_file_id} not found.  Please check the provided output_file_id, or create it first."
             )
 
-        column = {}  # type: dict[str, typing.Any]
+        column = {}  # type: dict[str, Any]
         of["columns"].append(column)
         column["id"] = column_id
         column["quantity"] = quantity
@@ -381,7 +369,7 @@ class LEMSSimulation:
         :raises ValueError: if provided `event_output_file_id` has not been created yet.
         """
         eof = None
-        for o in self.lems_info["event_output_files"]:
+        for o in self.event_output_files:
             if o["id"] == event_output_file_id:
                 eof = o
         if not eof:
@@ -389,7 +377,7 @@ class LEMSSimulation:
                 f"Output file with id {event_output_file_id} not found.  Please check the provided event_output_file_id, or create it first."
             )
 
-        selection = {}  # type: dict[str, typing.Any]
+        selection = {}  # type: dict[str, Any]
         eof["selections"].append(selection)
         selection["id"] = event_id
         selection["select"] = select
@@ -406,9 +394,10 @@ class LEMSSimulation:
             templfile = "." + templfile
         with open(templfile) as f:
             templ = airspeed.Template(f.read())
+
         return templ.merge(self.lems_info)
 
-    def save_to_file(self, file_name: typing.Optional[str] = None):
+    def save_to_file(self, file_name: Optional[str] = None):
         """Save LEMSSimulation to a file.
 
         :param file_name: name of file to store to.
@@ -427,18 +416,14 @@ class LEMSSimulation:
             self.lems_file_name = file_name
 
         logger.info(
-            "Writing LEMS Simulation %s to file: %s..."
-            % (self.lems_info["sim_id"], file_name)
+            "Writing LEMS Simulation %s to file: %s..." % (self.sim_id, file_name)
         )
         with open(file_name, "w") as lems_file:
             lems_file.write(self.to_xml())
             lems_file.flush()
             os.fsync(lems_file.fileno())
 
-        logger.info(
-            "Written LEMS Simulation %s to file: %s"
-            % (self.lems_info["sim_id"], file_name)
-        )
+        logger.info("Written LEMS Simulation %s to file: %s" % (self.sim_id, file_name))
 
         return file_name
 
