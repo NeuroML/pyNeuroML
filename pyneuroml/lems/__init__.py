@@ -120,6 +120,9 @@ def generate_lems_file_for_neuroml(
     :type verbose: bool
     :param simulation_seed: simulation seed
     :type simulation_seed: int
+
+    :returns: tuple (list of saved quantities, LEMSSimulation object)
+    :rtype: (list, LEMSSimulation)
     """
     my_random = random.Random()
     if lems_file_generate_seed:
