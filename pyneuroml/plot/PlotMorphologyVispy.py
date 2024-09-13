@@ -68,7 +68,7 @@ try:
     from vispy.scene.visuals import Mesh
     from vispy.scene.widgets.viewbox import ViewBox
     from vispy.util.transforms import rotate
-    from vispy.visuals.filters import ShadingFilter
+    from vispy.visuals.filters import FacePickingFilter, ShadingFilter
 
     if app.Application.is_interactive(app):
         pynml_in_jupyter = True
@@ -901,7 +901,12 @@ def plot_interactive_3D(
     if not nogui:
         if pbar is not None:
             pbar.finish()
-        create_mesh(meshdata, current_view, save_mesh_to=save_mesh_to)
+        create_mesh(
+            meshdata,
+            current_view,
+            save_mesh_to=save_mesh_to,
+            current_canvas=current_canvas,
+        )
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1174,13 +1179,22 @@ def plot_3D_cell_morphology(
             seg_color = segment_spec["marker_color"]
 
         if offset is not None:
-            meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color, offset))
+            meshdata.append(
+                (f"{r1}", f"{r2}", f"{length}", p, d, seg_color, seg.id, cell, offset)
+            )
         else:
-            meshdata.append((f"{r1}", f"{r2}", f"{length}", p, d, seg_color))
+            meshdata.append(
+                (f"{r1}", f"{r2}", f"{length}", p, d, seg_color, seg.id, cell)
+            )
         logger.debug(f"meshdata added: {meshdata[-1]}")
 
     if not nogui:
-        create_mesh(meshdata, current_view, save_mesh_to=save_mesh_to)
+        create_mesh(
+            meshdata,
+            current_view,
+            save_mesh_to=save_mesh_to,
+            current_canvas=current_canvas,
+        )
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1414,7 +1428,12 @@ def plot_3D_schematic(
             )
 
     if not nogui:
-        create_mesh(meshdata, current_view, save_mesh_to=save_mesh_to)
+        create_mesh(
+            meshdata,
+            current_view,
+            save_mesh_to=save_mesh_to,
+            current_canvas=current_canvas,
+        )
         if pynml_in_jupyter:
             display(current_canvas)
         else:
@@ -1568,11 +1587,14 @@ def create_mesh(
             Point3DWithDiam,
             Point3DWithDiam,
             Union[str, Tuple[float, float, float]],
+            int,
+            Cell,
             Optional[Tuple[float, float, float]],
         ]
     ],
     current_view: ViewBox,
     save_mesh_to: Optional[str],
+    current_canvas: scene.SceneCanvas,
 ):
     """Internal function to create a mesh from the mesh data
 
@@ -1584,6 +1606,8 @@ def create_mesh(
     :type current_view: ViewBox
     :param save_mesh_to: name of file to save mesh object to
     :type save_mesh_to: str or None
+    :param scene: vispy scene object
+    :type scene: scene.SceneCanvas
     """
     mesh_start = time.time()
     total_mesh_instances = len(meshdata)
@@ -1597,6 +1621,7 @@ def create_mesh(
     num_vertices = 0
     main_mesh_faces = []
     main_mesh_colors = []
+    faces_to_segment = {}
 
     pbar = progressbar.ProgressBar(
         max_value=total_mesh_instances,
@@ -1611,7 +1636,9 @@ def create_mesh(
         prox = d[3]
         dist = d[4]
         color = d[5]
-        offset = d[6]
+        seg_id = d[6]
+        cell = d[7]
+        offset = d[8]
         if offset is None:
             offset = (0.0, 0.0, 0.0)
 
@@ -1682,6 +1709,9 @@ def create_mesh(
             )
             translated_vertices = rotated_vertices + translator
             main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+            # Faces to segments
+            for face in seg_mesh.get_faces() + num_vertices:
+                faces_to_segment[tuple(face)] = seg_id
 
             main_mesh_vertices.append(translated_vertices)
             main_mesh_colors.append([[*color, 1]] * len(vertices))
@@ -1694,6 +1724,9 @@ def create_mesh(
             translated_vertices = vertices + translator
 
             main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
+            # Faces to segments
+            for face in seg_mesh.get_faces() + num_vertices:
+                faces_to_segment[tuple(face)] = seg_id
 
             main_mesh_vertices.append(translated_vertices)
             main_mesh_colors.append([[*color, 1]] * len(vertices))
@@ -1707,6 +1740,7 @@ def create_mesh(
     numpy_mesh_vertices = numpy.concatenate(main_mesh_vertices, axis=0)
     numpy_mesh_faces = numpy.concatenate(main_mesh_faces, axis=0)
     numpy_mesh_colors = numpy.concatenate(main_mesh_colors, axis=0)
+    face_colors = numpy.tile((0.5, 0.0, 0.5, 1.0), (len(numpy_mesh_faces), 1))
 
     logger.debug(f"Vertices: {numpy_mesh_vertices.shape}")
     logger.debug(f"Faces: {numpy_mesh_faces.shape}")
@@ -1716,7 +1750,10 @@ def create_mesh(
         faces=numpy_mesh_faces,
         parent=current_view.scene,
         vertex_colors=numpy_mesh_colors,
+        face_colors=face_colors.copy(),
     )
+    mesh.interactive = True
+
     assert mesh is not None
     pbar.finish()
     mesh_end = time.time()
@@ -1745,7 +1782,9 @@ def create_mesh(
         specular_light=(1, 1, 1, 0.5),
         light_dir=light_dir[:3],
     )
+    face_picking_filter = FacePickingFilter()
     mesh.attach(shading_filter)
+    mesh.attach(face_picking_filter)
 
     def attach_headlight(current_view):
         shading_filter.light_dir = light_dir[:3]
@@ -1755,6 +1794,40 @@ def create_mesh(
         def on_transform_change(event):
             transform = current_view.camera.transform
             shading_filter.light_dir = transform.map(initial_light_dir)[:3]
+
+    @current_canvas.events.mouse_press.connect
+    def on_mouse_press(event):
+        clicked_mesh = current_canvas.visual_at(event.pos)
+        if isinstance(clicked_mesh, Mesh):
+            # adjust the event position for hidpi screens
+            render_size = tuple(
+                d * current_canvas.pixel_scale for d in current_canvas.size
+            )
+            x_pos = event.pos[0] * current_canvas.pixel_scale
+            y_pos = render_size[1] - (event.pos[1] * current_canvas.pixel_scale)
+
+            # render a small patch around the mouse cursor
+            restore_state = not face_picking_filter.enabled
+            face_picking_filter.enabled = True
+            mesh.update_gl_state(blend=False)
+            picking_render = current_canvas.render(
+                region=(x_pos - 1, y_pos - 1, 3, 3),
+                size=(3, 3),
+                bgcolor=(0, 0, 0, 0),
+                alpha=True,
+            )
+            if restore_state:
+                face_picking_filter.enabled = False
+            mesh.update_gl_state(blend=not face_picking_filter.enabled)
+
+            # unpack the face index from the color in the center pixel
+            face_idx = (picking_render.view(numpy.uint32) - 1)[1, 1, 0]
+            picked_face = tuple(mesh._meshdata._faces[face_idx])
+            picked_seg_id = faces_to_segment[picked_face]
+            print(f"face id is: {face_idx}")
+            print(f"face is: {picked_face}")
+            print(f"corresponding segment is: {picked_seg_id}")
+            clicked_on_seg(picked_seg_id, cell)
 
     attach_headlight(current_view)
 
@@ -1774,3 +1847,15 @@ def create_mesh(
             texcoords=None,
             overwrite=False,
         )
+
+
+def clicked_on_seg(seg_id, cell):
+    """
+    Associates instance_position to segment's proximal position and returns the segment's id and other information
+    :param position: coordinates
+    :type position: tuple(numpy.float32, numpy.float32, numpy.float32)
+    :segment_info: dictionary with positions as keys and segment ids and cell objects and values
+    :type: {position: [seg_id, neuroml.Cell]}
+    """
+    print(f"the segment id is {seg_id}")
+    print(cell.get_segment_location_info(seg_id))
