@@ -20,8 +20,8 @@ def generate_lems_file_for_neuroml(
     sim_id: str,
     neuroml_file: str,
     target: str,
-    duration: str,
-    dt: str,
+    duration: typing.Union[str, float, int],
+    dt: typing.Union[str, float, int],
     lems_file_name: str,
     target_dir: str,
     nml_doc: typing.Optional[neuroml.NeuroMLDocument] = None,
@@ -55,9 +55,9 @@ def generate_lems_file_for_neuroml(
     :param target: target element
     :type target: str
     :param duration: simulation duration
-    :type duration: str
+    :type duration: str or float or int
     :param dt: integration time step
-    :type dt: str
+    :type dt: str or float or int
     :param lems_file_name: name of LEMS file
     :type lems_file_name: str
     :param target_dir: directory to place LEMS file in
@@ -120,6 +120,9 @@ def generate_lems_file_for_neuroml(
     :type verbose: bool
     :param simulation_seed: simulation seed
     :type simulation_seed: int
+
+    :returns: tuple (list of saved quantities, LEMSSimulation object)
+    :rtype: (list, LEMSSimulation)
     """
     my_random = random.Random()
     if lems_file_generate_seed:
@@ -150,7 +153,8 @@ def generate_lems_file_for_neuroml(
     else:
         nml_doc_inc_not_included = nml_doc
 
-    ls.set_report_file(report_file_name)
+    if report_file_name is not None:
+        ls.set_report_file(report_file_name)
 
     quantities_saved = []
 
@@ -392,7 +396,7 @@ def generate_lems_file_for_neuroml(
                     for i in range(size):
                         quantity = quantity_template_e % (population.id, i)
                         ls.add_selection_to_event_output_file(
-                            eof0, i, quantity, "spike"
+                            eof0, str(i), quantity, "spike"
                         )
                         quantities_saved.append(quantity)
 
