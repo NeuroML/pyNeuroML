@@ -1636,9 +1636,14 @@ def create_mesh(
         prox = d[3]
         dist = d[4]
         color = d[5]
-        seg_id = d[6]
-        cell = d[7]
-        offset = d[8]
+        if len(d) >= 8:
+            seg_id = d[6]
+            cell = d[7]
+            offset = d[8]
+        else:
+            seg_id = None
+            cell = None
+            offset = d[6]
         if offset is None:
             offset = (0.0, 0.0, 0.0)
 
@@ -1710,8 +1715,9 @@ def create_mesh(
             translated_vertices = rotated_vertices + translator
             main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
             # Faces to segments
-            for face in seg_mesh.get_faces() + num_vertices:
-                faces_to_segment[tuple(face)] = seg_id
+            if seg_id is not None:
+                for face in seg_mesh.get_faces() + num_vertices:
+                    faces_to_segment[tuple(face)] = seg_id
 
             main_mesh_vertices.append(translated_vertices)
             main_mesh_colors.append([[*color, 1]] * len(vertices))
@@ -1725,8 +1731,9 @@ def create_mesh(
 
             main_mesh_faces.append(seg_mesh.get_faces() + num_vertices)
             # Faces to segments
-            for face in seg_mesh.get_faces() + num_vertices:
-                faces_to_segment[tuple(face)] = seg_id
+            if seg_id is not None:
+                for face in seg_mesh.get_faces() + num_vertices:
+                    faces_to_segment[tuple(face)] = seg_id
 
             main_mesh_vertices.append(translated_vertices)
             main_mesh_colors.append([[*color, 1]] * len(vertices))
@@ -1798,7 +1805,7 @@ def create_mesh(
     @current_canvas.events.mouse_press.connect
     def on_mouse_press(event):
         clicked_mesh = current_canvas.visual_at(event.pos)
-        if isinstance(clicked_mesh, Mesh):
+        if isinstance(clicked_mesh, Mesh) and seg_id is not None:
             # adjust the event position for hidpi screens
             render_size = tuple(
                 d * current_canvas.pixel_scale for d in current_canvas.size
