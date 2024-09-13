@@ -28,7 +28,7 @@ class LEMSSimulation:
 
     TEMPLATE_FILE = "%s/LEMS_TEMPLATE.xml" % (os.path.dirname(__file__))
 
-    lems_info = {}  # type: dict[str, typing.Any]
+    lems_info: typing.Dict[str, typing.Any] = {}
     my_random = random.Random()
 
     def __init__(
@@ -127,6 +127,8 @@ class LEMSSimulation:
             )  # To ensure same LEMS file (e.g. colours of plots) are generated every time for the same input
         else:
             self.my_random.seed(12345)
+
+        self.lems_file_name = f"LEMS_{self.lems_info['sim_id']}.xml"
 
     def __setattr__(self, attr: typing.Any, value: typing.Any) -> None:
         """Set an attribute value.
@@ -411,14 +413,18 @@ class LEMSSimulation:
 
         :param file_name: name of file to store to.
             `LEMS_<some id string>.xml` is the suggested format. Leave empty
-            to use `LEMS_<sim_id>.xml`
+            to use `LEMS_<sim_id>.xml`. If provided, this also sets the
+            `lems_file_name` attribute of the class so that it can be accessed
+            later.
         :type file_name: str
         :returns: name of file
         :rtype: str
         """
 
         if file_name is None:
-            file_name = "LEMS_%s.xml" % self.lems_info["sim_id"]
+            file_name = self.lems_file_name
+        else:
+            self.lems_file_name = file_name
 
         logger.info(
             "Writing LEMS Simulation %s to file: %s..."
