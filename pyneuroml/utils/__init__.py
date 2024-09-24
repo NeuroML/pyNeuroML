@@ -35,12 +35,6 @@ from pyneuroml.utils.plot import get_next_hex_color
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-try:
-    import libsedml
-except ModuleNotFoundError:
-    logger.warning("Please install optional dependencies to use SED-ML features:")
-    logger.warning("pip install pyneuroml[combine]")
-
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
 MIN_COLOUR = (255, 255, 0)  # type: typing.Tuple[int, int, int]
@@ -721,6 +715,13 @@ def get_model_file_list(
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     elif rootfile.endswith(".sedml"):
+
+        try:
+            import libsedml
+        except ModuleNotFoundError:
+            logger.error("Please install optional dependencies to use SED-ML features:")
+            logger.error("pip install pyneuroml[combine]")
+
         if pathlib.Path(rootfile).is_absolute():
             rootdoc = libsedml.readSedMLFromFile(rootfile)
         else:
