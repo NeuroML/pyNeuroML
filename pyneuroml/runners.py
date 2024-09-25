@@ -770,14 +770,11 @@ def run_jneuroml(
                     return False
 
         if report_jnml_output:
-            logger.debug(
+            logger.info(
                 "Successfully ran the following command using pyNeuroML v%s: \n    %s"
                 % (__version__, command)
             )
-            logger.debug("Output:\n\n%s" % output)
-
-    #  except KeyboardInterrupt as e:
-    #    raise e
+            logger.info("Output:\n\n%s" % output)
 
     except Exception as e:
         logger.error("*** Execution of jnml has failed! ***")

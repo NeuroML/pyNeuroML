@@ -874,13 +874,13 @@ def _evaluate_arguments(args):
 
             exit(0)
         elif args.validate:
-            file_types = ["nml"]
+            file_types = ["nml","xml"]
             pre_args = "-validate"
             exit_on_fail = True
             run_multi = True
 
         elif args.validatev1:
-            file_types = ["nml"]
+            file_types = ["nml","xml"]
             pre_args = "-validatev1"
             exit_on_fail = True
             run_multi = True
