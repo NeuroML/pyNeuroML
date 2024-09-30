@@ -1831,9 +1831,11 @@ def create_mesh(
             face_idx = (picking_render.view(numpy.uint32) - 1)[1, 1, 0]
             picked_face = tuple(mesh._meshdata._faces[face_idx])
             picked_seg_id = faces_to_segment[picked_face]
-            print(f"face id is: {face_idx}")
-            print(f"face is: {picked_face}")
-            print(f"corresponding segment is: {picked_seg_id}")
+
+            logger.debug(f"face id is: {face_idx}")
+            logger.debug(f"face is: {picked_face}")
+            logger.debug(f"corresponding segment is: {picked_seg_id}")
+
             clicked_on_seg(picked_seg_id, cell)
 
     attach_headlight(current_view)
