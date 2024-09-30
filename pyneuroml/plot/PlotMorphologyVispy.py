@@ -1601,7 +1601,8 @@ def create_mesh(
     See: https://vispy.org/api/vispy.scene.visuals.html#vispy.scene.visuals.Mesh
 
     :param meshdata: meshdata to plot: list with:
-        [(r1, r2, length, prox, dist, color, offset)]
+        [(r1, r2, length, prox, dist, color, seg id, cell object offset)]
+    :type meshdata: list of tuples
     :param current_view: vispy viewbox to use
     :type current_view: ViewBox
     :param save_mesh_to: name of file to save mesh object to
@@ -1621,6 +1622,7 @@ def create_mesh(
     num_vertices = 0
     main_mesh_faces = []
     main_mesh_colors = []
+    # dictionary storing faces as keys and corresponding segment ids as values
     faces_to_segment = {}
 
     pbar = progressbar.ProgressBar(
@@ -1802,6 +1804,9 @@ def create_mesh(
             transform = current_view.camera.transform
             shading_filter.light_dir = transform.map(initial_light_dir)[:3]
 
+    # For handling mouse press
+    # currently identifies the segment and prints some information out to the
+    # terminal about it.
     @current_canvas.events.mouse_press.connect
     def on_mouse_press(event):
         clicked_mesh = current_canvas.visual_at(event.pos)
@@ -1858,13 +1863,16 @@ def create_mesh(
         )
 
 
-def clicked_on_seg(seg_id, cell):
+def clicked_on_seg(seg_id: int, cell: Cell):
     """
-    Associates instance_position to segment's proximal position and returns the segment's id and other information
-    :param position: coordinates
-    :type position: tuple(numpy.float32, numpy.float32, numpy.float32)
-    :segment_info: dictionary with positions as keys and segment ids and cell objects and values
-    :type: {position: [seg_id, neuroml.Cell]}
+    Callback function called when a segment is clicked on.
+
+    Prints information about the segment.
+
+    :param seg_id: id of segment
+    :type seg_id: int
+    :param cell: cell object that segment belongs to
+    :type cell: Cell
     """
-    print(f"the segment id is {seg_id}")
-    print(cell.get_segment_location_info(seg_id))
+    print(f"Clicked on: Cell: {cell.id}; segment: {seg_id}.")
+    print(f"Segment info: {cell.get_segment_location_info(seg_id)}")
