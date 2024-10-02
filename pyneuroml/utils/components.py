@@ -11,6 +11,7 @@ import logging
 from typing import Optional
 
 from lems.model.component import Component
+from lems.model.model import Model
 from neuroml import IncludeType, NeuroMLDocument
 
 logger = logging.getLogger(__name__)
@@ -54,9 +55,9 @@ def add_new_component(
     :returns: the Component Object
     :rtype: Component
     """
+    newmodel = Model()
     newcomp = Component(id_=component_id, type_=component_type, **kwargs)
-
-    xml_str = newcomp.toxml()
+    newmodel.add_component(newcomp)
 
     if component_filename is None:
         component_filename = f"component_{component_id}.xml"
@@ -64,8 +65,7 @@ def add_new_component(
     logger.info(
         f"Saving component with id '{component_id}' and type '{component_type}' to {component_filename}"
     )
-    with open(component_filename, "w") as f:
-        print(xml_str, file=f)
+    newmodel.export_to_file(component_filename)
 
     logger.info(
         "Component file included in NeuroML document. Note that new components will not validate against the NeuroML schema."
