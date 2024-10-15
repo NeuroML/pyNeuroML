@@ -287,11 +287,9 @@ class TestUtils(BaseTestCase):
 
     def test_adding_new_components(self):
         """Test add_new_component method."""
-        newdoc = neuroml.utils.component_factory("NeuroMLDocument", id="test_doc")  # type: neuroml.NeuroMLDocument
-        new_comp = add_new_component(
-            newdoc, "newcomp", "sometype", param1="5v", param2="something"
+        new_comp, new_comp_file = add_new_component(
+            "newcomp", "sometype", param1="5v", param2="something"
         )
         self.assertIsNotNone(new_comp)
-        self.assertEqual(1, len(newdoc.includes))
-        self.assertIsFile("component_newcomp.xml")
-        os.unlink("component_newcomp.xml")
+        self.assertIsFile(new_comp_file)
+        os.unlink(new_comp_file)

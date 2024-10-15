@@ -19,7 +19,6 @@ logger.setLevel(logging.INFO)
 
 
 def add_new_component(
-    nmldoc: NeuroMLDocument,
     component_id: str,
     component_type: str,
     component_filename: Optional[str] = None,
@@ -52,8 +51,8 @@ def add_new_component(
         the component in
     :type component_filename: str
     :param **kwargs: parameters to pass to the Component
-    :returns: the Component Object
-    :rtype: Component
+    :returns: the Component Object, and the name of the XML file it was serialised in
+    :rtype: tuple(Component, str)
     """
     newmodel = Model()
     newcomp = Component(id_=component_id, type_=component_type, **kwargs)
@@ -70,6 +69,8 @@ def add_new_component(
     logger.info(
         "Component file included in NeuroML document. Note that new components will not validate against the NeuroML schema."
     )
-    nmldoc.add(IncludeType, href=component_filename)
+    logger.info(
+        f"Please also remember to include {component_filename} in the LEMS simulation file"
+    )
 
-    return newcomp
+    return newcomp, component_filename
