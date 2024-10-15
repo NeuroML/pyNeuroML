@@ -12,7 +12,6 @@ from typing import Optional
 
 from lems.model.component import Component
 from lems.model.model import Model
-from neuroml import IncludeType, NeuroMLDocument
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
