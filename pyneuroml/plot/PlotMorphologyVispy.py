@@ -1869,6 +1869,9 @@ def clicked_on_seg(seg_id: int, cell: Cell):
 
     Prints information about the segment.
 
+    Based on Vispy examples:
+    https://vispy.org/gallery/scene/face_picking.html#sphx-glr-gallery-scene-face-picking-py
+
     :param seg_id: id of segment
     :type seg_id: int
     :param cell: cell object that segment belongs to
