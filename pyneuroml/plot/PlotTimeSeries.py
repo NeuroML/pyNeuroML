@@ -208,7 +208,7 @@ def plot_time_series_from_lems_file(
 
 def plot_time_series_from_data_files(
     data_file_names: typing.Union[str, typing.List[str]],
-    columns: typing.Optional[typing.List[int]],
+    columns: typing.Optional[typing.List[int]] = None,
     **kwargs,
 ):
     """Plot time series from a data file.
