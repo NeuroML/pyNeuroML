@@ -24,7 +24,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-TIME_SERIES_PLOTTER_DEFAULTS = {"offset": False}
+TIME_SERIES_PLOTTER_DEFAULTS = {
+    "offset": False,
+    "labels": False,
+}
 
 
 def plot_time_series(
@@ -143,13 +146,15 @@ def plot_time_series(
     else:
         show_yticklabels = True
 
+    # if a scalebar is to be set, we need to wait for it to be added before
+    # showing the plot
     ax = pynmlplt.generate_plot(
         xvalues=xs,
         yvalues=ys,
         title=title,
         labels=labelvals,
         show_yticklabels=show_yticklabels,
-        show_plot_already=False,
+        show_plot_already=False if scalebar_location is not None else True,
         **kwargs_generate_plot,
     )
 
@@ -170,12 +175,16 @@ def plot_time_series(
         print(f"Note: length of the scalebar is {scalebar_length} units")
         ax.add_artist(scalebar_)
 
-    if show_plot_already is True:
-        plt.show()
+        if show_plot_already is True:
+            plt.show()
 
 
 def plot_time_series_from_lems_file(
-    lems_file_name: str, base_dir: str = ".", title: str = "", **kwargs
+    lems_file_name: str,
+    base_dir: str = ".",
+    title: str = "",
+    labels: bool = True,
+    **kwargs,
 ) -> None:
     """Plot time series from a LEMS file.
 
@@ -193,6 +202,8 @@ def plot_time_series_from_lems_file(
     :type lems_file_name: str
     :param base_dir: directory where LEMS file resides
     :type base_dir: str
+    :param labels: toggle whether plots should be labelled
+    :type labels: bool
     :param kwargs: other arguments passed to `plot_time_series`
     :returns: None
 
@@ -201,11 +212,14 @@ def plot_time_series_from_lems_file(
         lems_file_name, get_events=False, get_traces=True
     )
 
-    plot_time_series(traces, xaxis="Time (s)", **kwargs)
+    plot_time_series(traces, labels=labels, xaxis="Time (s)", **kwargs)
 
 
 def plot_time_series_from_data_files(
-    data_file_names: typing.Union[str, typing.List[str]], **kwargs
+    data_file_names: typing.Union[str, typing.List[str]],
+    labels: bool = True,
+    columns: typing.Optional[typing.List[int]] = None,
+    **kwargs,
 ):
     """Plot time series from a data file.
 
@@ -215,6 +229,10 @@ def plot_time_series_from_data_files(
 
     :param data_file_names: name/path to data file(s)
     :type data_file_names: str or list of strings
+    :param labels: toggle whether plots should be labelled
+    :type labels: bool
+    :param columns: column indices to plot
+    :type columns: list of ints: [1, 2, 3]
     :param kwargs: other key word arguments that are passed to the
         `plot_time_series` function
 
@@ -230,10 +248,14 @@ def plot_time_series_from_data_files(
         traces["t"] = data_array[:, 0]
         num_cols = numpy.shape(data_array)[1]
         for i in range(1, num_cols, 1):
-            traces[str(i)] = data_array[:, i]
+            if columns and len(columns) > 0:
+                if i not in columns:
+                    logger.warning(f"Skipping column {i}")
+                    continue
+            traces[f"{f}_{i}"] = data_array[:, i]
         all_traces.append(traces)
 
-    plot_time_series(all_traces, labels=False, **kwargs)
+    plot_time_series(all_traces, labels=labels, **kwargs)
 
 
 def _process_time_series_plotter_args():
@@ -248,15 +270,28 @@ def _process_time_series_plotter_args():
         "input_files",
         type=str,
         metavar="<a LEMS file or data files>",
-        nargs="*",
+        nargs="+",
         help="a LEMS file (LEMS_..) or data files to plot time series from",
     )
 
     parser.add_argument(
+        "-columns",
+        type=int,
+        metavar="<column indices to plot>",
+        nargs="*",
+        help="column indices to plot if data files are provided",
+    )
+    parser.add_argument(
+        "-labels",
+        action="store_true",
+        default=TIME_SERIES_PLOTTER_DEFAULTS["labels"],
+        help=("Label plots"),
+    )
+    parser.add_argument(
         "-offset",
         action="store_true",
         default=TIME_SERIES_PLOTTER_DEFAULTS["offset"],
-        help=("Toggle whether plots are overlaid or offset"),
+        help=("Offset plots"),
     )
     parser.add_argument(
         "-saveToFile",
@@ -280,13 +315,16 @@ def _time_series_plotter_main(args=None):
         plot_time_series_from_lems_file(
             a.input_files[0],
             offset=a.offset,
+            labels=a.labels,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
         )
     else:
         plot_time_series_from_data_files(
             a.input_files,
+            columns=a.columns,
             offset=a.offset,
+            labels=a.labels,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
         )
