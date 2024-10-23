@@ -24,7 +24,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-TIME_SERIES_PLOTTER_DEFAULTS = {"offset": False}
+TIME_SERIES_PLOTTER_DEFAULTS = {
+    "offset": False,
+    "labels": False,
+}
 
 
 def plot_time_series(
@@ -177,7 +180,11 @@ def plot_time_series(
 
 
 def plot_time_series_from_lems_file(
-    lems_file_name: str, base_dir: str = ".", title: str = "", **kwargs
+    lems_file_name: str,
+    base_dir: str = ".",
+    title: str = "",
+    labels: bool = False,
+    **kwargs,
 ) -> None:
     """Plot time series from a LEMS file.
 
@@ -195,6 +202,8 @@ def plot_time_series_from_lems_file(
     :type lems_file_name: str
     :param base_dir: directory where LEMS file resides
     :type base_dir: str
+    :param labels: toggle whether plots should be labelled
+    :type labels: bool
     :param kwargs: other arguments passed to `plot_time_series`
     :returns: None
 
@@ -203,11 +212,12 @@ def plot_time_series_from_lems_file(
         lems_file_name, get_events=False, get_traces=True
     )
 
-    plot_time_series(traces, xaxis="Time (s)", **kwargs)
+    plot_time_series(traces, labels=labels, xaxis="Time (s)", **kwargs)
 
 
 def plot_time_series_from_data_files(
     data_file_names: typing.Union[str, typing.List[str]],
+    labels: bool = True,
     columns: typing.Optional[typing.List[int]] = None,
     **kwargs,
 ):
@@ -219,6 +229,8 @@ def plot_time_series_from_data_files(
 
     :param data_file_names: name/path to data file(s)
     :type data_file_names: str or list of strings
+    :param labels: toggle whether plots should be labelled
+    :type labels: bool
     :param columns: column indices to plot
     :type columns: list of ints: [1, 2, 3]
     :param kwargs: other key word arguments that are passed to the
@@ -243,10 +255,7 @@ def plot_time_series_from_data_files(
             traces[f"{f}_{i}"] = data_array[:, i]
         all_traces.append(traces)
 
-    if columns and len(columns) > 0:
-        plot_time_series(all_traces, labels=True, **kwargs)
-    else:
-        plot_time_series(all_traces, labels=False, **kwargs)
+    plot_time_series(all_traces, labels=labels, **kwargs)
 
 
 def _process_time_series_plotter_args():
@@ -273,10 +282,16 @@ def _process_time_series_plotter_args():
         help="column indices to plot if data files are provided",
     )
     parser.add_argument(
+        "-labels",
+        action="store_true",
+        default=TIME_SERIES_PLOTTER_DEFAULTS["labels"],
+        help=("Label plots"),
+    )
+    parser.add_argument(
         "-offset",
         action="store_true",
         default=TIME_SERIES_PLOTTER_DEFAULTS["offset"],
-        help=("Toggle whether plots are overlaid or offset"),
+        help=("Offset plots"),
     )
     parser.add_argument(
         "-saveToFile",
@@ -300,6 +315,7 @@ def _time_series_plotter_main(args=None):
         plot_time_series_from_lems_file(
             a.input_files[0],
             offset=a.offset,
+            labels=a.labels,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
         )
@@ -308,6 +324,7 @@ def _time_series_plotter_main(args=None):
             a.input_files,
             columns=a.columns,
             offset=a.offset,
+            labels=a.labels,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
         )
