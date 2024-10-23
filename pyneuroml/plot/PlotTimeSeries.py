@@ -183,7 +183,7 @@ def plot_time_series_from_lems_file(
     lems_file_name: str,
     base_dir: str = ".",
     title: str = "",
-    labels: bool = False,
+    labels: bool = True,
     **kwargs,
 ) -> None:
     """Plot time series from a LEMS file.
