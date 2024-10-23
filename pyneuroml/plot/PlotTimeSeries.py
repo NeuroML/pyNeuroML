@@ -261,7 +261,7 @@ def _process_time_series_plotter_args():
         "input_files",
         type=str,
         metavar="<a LEMS file or data files>",
-        nargs="*",
+        nargs="+",
         help="a LEMS file (LEMS_..) or data files to plot time series from",
     )
 
