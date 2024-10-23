@@ -143,13 +143,15 @@ def plot_time_series(
     else:
         show_yticklabels = True
 
+    # if a scalebar is to be set, we need to wait for it to be added before
+    # showing the plot
     ax = pynmlplt.generate_plot(
         xvalues=xs,
         yvalues=ys,
         title=title,
         labels=labelvals,
         show_yticklabels=show_yticklabels,
-        show_plot_already=False,
+        show_plot_already=False if scalebar_location is not None else True,
         **kwargs_generate_plot,
     )
 
@@ -170,8 +172,8 @@ def plot_time_series(
         print(f"Note: length of the scalebar is {scalebar_length} units")
         ax.add_artist(scalebar_)
 
-    if show_plot_already is True:
-        plt.show()
+        if show_plot_already is True:
+            plt.show()
 
 
 def plot_time_series_from_lems_file(
