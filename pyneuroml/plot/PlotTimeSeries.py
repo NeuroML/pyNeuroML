@@ -207,7 +207,9 @@ def plot_time_series_from_lems_file(
 
 
 def plot_time_series_from_data_files(
-    data_file_names: typing.Union[str, typing.List[str]], **kwargs
+    data_file_names: typing.Union[str, typing.List[str]],
+    columns: typing.Optional[typing.List[int]],
+    **kwargs,
 ):
     """Plot time series from a data file.
 
@@ -217,6 +219,8 @@ def plot_time_series_from_data_files(
 
     :param data_file_names: name/path to data file(s)
     :type data_file_names: str or list of strings
+    :param columns: column indices to plot
+    :type columns: list of ints: [1, 2, 3]
     :param kwargs: other key word arguments that are passed to the
         `plot_time_series` function
 
@@ -232,10 +236,17 @@ def plot_time_series_from_data_files(
         traces["t"] = data_array[:, 0]
         num_cols = numpy.shape(data_array)[1]
         for i in range(1, num_cols, 1):
-            traces[str(i)] = data_array[:, i]
+            if columns and len(columns) > 0:
+                if i not in columns:
+                    logger.warning(f"Skipping column {i}")
+                    continue
+            traces[f"{f}_{i}"] = data_array[:, i]
         all_traces.append(traces)
 
-    plot_time_series(all_traces, labels=False, **kwargs)
+    if columns and len(columns) > 0:
+        plot_time_series(all_traces, labels=True, **kwargs)
+    else:
+        plot_time_series(all_traces, labels=False, **kwargs)
 
 
 def _process_time_series_plotter_args():
@@ -254,6 +265,13 @@ def _process_time_series_plotter_args():
         help="a LEMS file (LEMS_..) or data files to plot time series from",
     )
 
+    parser.add_argument(
+        "-columns",
+        type=int,
+        metavar="<column indices to plot>",
+        nargs="*",
+        help="column indices to plot if data files are provided",
+    )
     parser.add_argument(
         "-offset",
         action="store_true",
@@ -288,6 +306,7 @@ def _time_series_plotter_main(args=None):
     else:
         plot_time_series_from_data_files(
             a.input_files,
+            columns=a.columns,
             offset=a.offset,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
