@@ -21,7 +21,7 @@ import pyneuroml.plot.Plot as pynmlplt
 from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 
 TIME_SERIES_PLOTTER_DEFAULTS = {"offset": False}
