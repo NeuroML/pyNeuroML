@@ -5,7 +5,8 @@ pynml-plottimeseries \- manual page for pynml-plottimeseries v1.3.13
 .SH DESCRIPTION
 usage: pynml\-plottimeseries [\-h] [\-columns [<column indices to plot> ...]]
 .TP
-[\-offset] [\-saveToFile <Image file name>]
+[\-labels] [\-offset]
+[\-saveToFile <Image file name>]
 <a LEMS file or data files>
 [<a LEMS file or data files> ...]
 .PP
@@ -23,8 +24,11 @@ show this help message and exit
 \fB\-columns\fR [<column indices to plot> ...]
 column indices to plot if data files are provided
 .TP
+\fB\-labels\fR
+Label plots
+.TP
 \fB\-offset\fR
-Toggle whether plots are overlaid or offset
+Offset plots
 .TP
 \fB\-saveToFile\fR <Image file name>
 Name of the image file to save plot to
