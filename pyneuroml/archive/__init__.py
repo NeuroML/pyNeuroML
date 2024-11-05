@@ -119,7 +119,7 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
 def create_combine_archive(
     rootfile: str,
     zipfile_name: typing.Optional[str] = None,
-    zipfile_extension=".neux",
+    zipfile_extension=".neux.zip",
     filelist: typing.List[str] = [],
     extra_files: typing.List[str] = [],
 ):
