@@ -14,10 +14,10 @@ import shutil
 import typing
 from zipfile import ZipFile
 
-from pyneuroml.utils import get_model_file_list
-from pyneuroml.utils.cli import build_namespace
 from pyneuroml.runners import run_jneuroml
 from pyneuroml.sedml import validate_sedml_files
+from pyneuroml.utils import get_model_file_list
+from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -88,7 +88,7 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     a = build_namespace(DEFAULTS, a, **kwargs)
 
     rootfile = a.rootfile
-    zipfile_extension = None
+    zipfile_extension = ".neux.zip"
 
     # first generate SED-ML file
     # use .omex as extension
@@ -99,7 +99,7 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
         run_jneuroml("", a.rootfile, "-sedml")
 
         rootfile = a.rootfile.replace(".xml", ".sedml")
-        zipfile_extension = ".omex"
+        zipfile_extension = ".omex.zip"
 
         # validate the generated file
         validate_sedml_files([rootfile])
@@ -119,7 +119,7 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
 def create_combine_archive(
     rootfile: str,
     zipfile_name: typing.Optional[str] = None,
-    zipfile_extension=".neux",
+    zipfile_extension=".neux.zip",
     filelist: typing.List[str] = [],
     extra_files: typing.List[str] = [],
 ):
