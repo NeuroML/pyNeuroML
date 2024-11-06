@@ -12,8 +12,10 @@ import logging
 import sys
 import textwrap
 import typing
+from io import StringIO
 
 from neuroml import Cell, NeuroMLDocument
+
 from pyneuroml.io import read_neuroml2_file
 from pyneuroml.utils.units import convert_to_units, get_value_in_si
 
@@ -64,7 +66,7 @@ def summary(
         """
         Usage:
 
-        pynml-summary <NeuroML file> [-vh]
+        pynml-summary <NeuroML file> [-vVh]
 
         Required arguments:
             NeuroML file: name of file to summarise
@@ -72,9 +74,13 @@ def summary(
         Optional arguments:
 
             -v/--verbose:  enable verbose mode
+            -V/--very-verbose:  enable *very* verbose mode
             -h/--help:  print this help text and exit
         """
     )
+
+    verbose = False
+    very_verbose = False
 
     if len(sys.argv) < 2:
         print("Argument required.")
@@ -85,20 +91,41 @@ def summary(
         print(usage)
         return
 
-    if "-v" in sys.argv or "--verbose" in sys.argv:
+    if "-v" in sys.argv:
         verbose = True
         sys.argv.remove("-v")
 
+    if "--verbose" in sys.argv:
+        verbose = True
+        sys.argv.remove("--verbose")
+
+    if "-V" in sys.argv:
+        very_verbose = True
+        sys.argv.remove("-V")
+
+    if "--very-verbose" in sys.argv:
+        very_verbose = True
+        sys.argv.remove("-very-verbose")
+
     if nml2_doc is None:
         nml2_file_name = sys.argv[1]
-        nml2_doc = read_neuroml2_file(nml2_file_name, include_includes=verbose, fix_external_morphs_biophys=True)
+        nml2_doc = read_neuroml2_file(
+            nml2_file_name, include_includes=verbose, fix_external_morphs_biophys=True
+        )
 
     info = nml2_doc.summary(show_includes=False)
 
-    if verbose:
+    if verbose or very_verbose:
         cell_info_str = ""
-        for cell in nml2_doc.cells:
-            cell_info_str += cell_info(cell) + "*\n"
+        if very_verbose:
+            for cell in nml2_doc.cells:
+                cell_info_str += cell_info(cell) + "*\n"
+        else:
+            string_buffer = StringIO()
+            for cell in nml2_doc.cells:
+                cell.summary(morph=True, biophys=True, string_buffer=string_buffer)
+                cell_info_str += string_buffer.getvalue()
+
         lines = info.split("\n")
         info = ""
         still_to_add = False
