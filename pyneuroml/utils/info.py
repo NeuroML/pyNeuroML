@@ -151,22 +151,19 @@ def summary(
                     pass
 
             for attr, membs in nml2_doc_info.items():
-                if "members" in membs.keys():
+                num_members = len(membs["members"])
+                ctr = 0
+                for amemb in membs["members"]:
                     amemb_info = ""
-                    num_members = len(membs["members"])
-                    ctr = 0
-                    for amemb in membs["members"]:
-                        ctr += 1
-                        if isinstance(amemb, str):
-                            amemb_info += amemb
-                        else:
-                            amemb_info += amemb.info(
-                                show_contents="set", return_format="string"
-                            )
+                    ctr += 1
+                    if isinstance(amemb, str):
+                        amemb_info += amemb
+                    else:
+                        amemb_info += amemb.info(
+                            show_contents="set", return_format="string"
+                        )
                     if len(amemb_info) > 0:
                         info += f"*** {attr} ({ctr}/{num_members}) ***\n\n{amemb_info}\n*** {attr} ({ctr}/{num_members}) ***\n\n"
-                else:
-                    info += f"*** {attr} ***\n\n{membs}\n*** {attr} ***\n\n"
 
     print(info)
 
