@@ -66,7 +66,7 @@ def summary(
         """
         Usage:
 
-        pynml-summary <NeuroML file> [-vVh]
+        pynml-summary <NeuroML file> [-vh]
 
         Required arguments:
             NeuroML file: name of file to summarise
@@ -74,13 +74,9 @@ def summary(
         Optional arguments:
 
             -v/--verbose:  enable verbose mode
-            -V/--very-verbose:  enable *very* verbose mode
             -h/--help:  print this help text and exit
         """
     )
-
-    verbose = False
-    very_verbose = False
 
     if len(sys.argv) < 2:
         print("Argument required.")
@@ -91,21 +87,9 @@ def summary(
         print(usage)
         return
 
-    if "-v" in sys.argv:
+    if "-v" in sys.argv or "--verbose" in sys.argv:
         verbose = True
         sys.argv.remove("-v")
-
-    if "--verbose" in sys.argv:
-        verbose = True
-        sys.argv.remove("--verbose")
-
-    if "-V" in sys.argv:
-        very_verbose = True
-        sys.argv.remove("-V")
-
-    if "--very-verbose" in sys.argv:
-        very_verbose = True
-        sys.argv.remove("-very-verbose")
 
     if nml2_doc is None:
         nml2_file_name = sys.argv[1]
@@ -113,36 +97,77 @@ def summary(
             nml2_file_name, include_includes=verbose, fix_external_morphs_biophys=True
         )
 
-    info = nml2_doc.summary(show_includes=False)
-
-    if verbose or very_verbose:
-        cell_info_str = ""
-        if very_verbose:
+    info = ""
+    # network, show full
+    if len(nml2_doc.networks) > 0:
+        info = nml2_doc.summary(show_includes=False)
+        if verbose:
+            cell_info_str = ""
             for cell in nml2_doc.cells:
                 cell_info_str += cell_info(cell) + "*\n"
-        else:
-            string_buffer = StringIO()
-            for cell in nml2_doc.cells:
-                cell.summary(morph=True, biophys=True, string_buffer=string_buffer)
-                cell_info_str += string_buffer.getvalue()
-
-        lines = info.split("\n")
-        info = ""
-        still_to_add = False
-        for line in lines:
-            if "Cell: " in line:
-                still_to_add = True
-                pass
-            elif "Network: " in line:
-                still_to_add = False
-                if len(cell_info_str) > 0:
-                    info += "%s" % cell_info_str
-                info += "%s\n" % line
-            else:
-                if still_to_add and "******" in line:
+            lines = info.split("\n")
+            info = ""
+            still_to_add = False
+            for line in lines:
+                if "Cell: " in line:
+                    still_to_add = True
+                    pass
+                elif "Network: " in line:
+                    still_to_add = False
                     if len(cell_info_str) > 0:
                         info += "%s" % cell_info_str
-                info += "%s\n" % line
+                    info += "%s\n" % line
+                else:
+                    if still_to_add and "******" in line:
+                        if len(cell_info_str) > 0:
+                            info += "%s" % cell_info_str
+                    info += "%s\n" % line
+    else:
+        # not a full network
+        # cell file
+        if len(nml2_doc.cells) > 0:
+            for cell in nml2_doc.cells:
+                if verbose:
+                    info += cell_info(cell) + "*\n"
+                else:
+                    cell_info_buffer = StringIO()
+                    cell.summary(string_buffer=cell_info_buffer)
+                    info += cell_info_buffer.getvalue()
+        # other things, just use info
+        else:
+            nml2_doc_info = nml2_doc.info(show_contents=True, return_format="dict")
+
+            doc_id = nml2_doc_info.pop("id", None)
+            try:
+                info += f"** Summary: id: {doc_id['members']} **\n\n"
+            except (KeyError, AttributeError):
+                info += f"** Summary: id: {nml2_file_name} **\n\n"
+
+            notes = nml2_doc_info.pop("notes", None)
+            if notes:
+                try:
+                    info += f"{notes['members']}\n\n"
+                except KeyError:
+                    pass
+
+            for attr, membs in nml2_doc_info.items():
+                if "members" in membs.keys():
+                    amemb_info = ""
+                    num_members = len(membs["members"])
+                    ctr = 0
+                    for amemb in membs["members"]:
+                        ctr += 1
+                        if isinstance(amemb, str):
+                            amemb_info += amemb
+                        else:
+                            amemb_info += amemb.info(
+                                show_contents="set", return_format="string"
+                            )
+                    if len(amemb_info) > 0:
+                        info += f"*** {attr} ({ctr}/{num_members}) ***\n\n{amemb_info}\n*** {attr} ({ctr}/{num_members}) ***\n\n"
+                else:
+                    info += f"*** {attr} ***\n\n{membs}\n*** {attr} ***\n\n"
+
     print(info)
 
 
