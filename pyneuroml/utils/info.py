@@ -306,3 +306,29 @@ def cell_info(cell: Cell) -> str:
                 )
 
     return info
+
+
+def list_params(nml2_doc: NeuroMLDocument) -> str:
+    """List all parameters in ComponentType definitions.
+
+    :param nml2_doc: NeuroMLDocument object
+    :type nml2_doc: NeuroMLDocument
+    :returns: Formatted string listing parameters
+    """
+    info = f"Parameters in NeuroML 2 document: {nml2_doc.id}\n"
+
+    for component in nml2_doc.ComponentType:
+        info += f"\nComponentType: {component.name}\n"
+
+        members = inspect.getmembers(component)
+        params = [m[1] for m in members if m[0] == "parameters"]
+
+        if params:
+            for param in params[0]:
+                param_name = param.name if hasattr(param, "name") else "UnnamedParam"
+                param_value = param.value if hasattr(param, "value") else "NoValue"
+                info += f"  - {param_name}: {param_value}\n"
+        else:
+            info += "  No parameters found.\n"
+
+    return info
