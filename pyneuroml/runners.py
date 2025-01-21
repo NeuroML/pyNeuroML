@@ -902,7 +902,7 @@ def execute_command_in_dir_with_realtime_output(
         )
         with p.stdout:
             for line in iter(p.stdout.readline, ""):
-                print("# %s" % line.strip())
+                print(prefix+" %s" % line.strip())
         p.wait()  # wait for the subprocess to exit
 
         print("####################################################################")
@@ -920,7 +920,7 @@ def execute_command_in_dir_with_realtime_output(
 
     if not p.returncode == 0:
         logger.critical(
-            "*** Problem running command (return code: %s): \n       %s"
+            prefix+"*** Problem running command (return code: %s): \n       %s"
             % (p.returncode, command)
         )
 
