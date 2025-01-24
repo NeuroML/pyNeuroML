@@ -11,6 +11,7 @@ import logging
 import math
 import os
 import pathlib as pl
+from unittest.mock import MagicMock
 
 import neuroml
 
@@ -22,6 +23,7 @@ from pyneuroml.utils import (
     translate_cell_to_coords,
 )
 from pyneuroml.utils.components import add_new_component
+from pyneuroml.utils.info import list_params
 
 from .. import BaseTestCase
 
@@ -293,3 +295,49 @@ class TestUtils(BaseTestCase):
         self.assertIsNotNone(new_comp)
         self.assertIsFile(new_comp_file)
         os.unlink(new_comp_file)
+
+        def setUp(self):
+            """Set up a mock NeuroMLDocument with dummy ComponentType instances."""
+            self.nml_doc = neuroml.NeuroMLDocument(id="test_doc")
+
+            # Mock ComponentType objects with 'name' and 'parameters' attributes
+            self.mock_component_1 = MagicMock()
+            self.mock_component_1.name = "ComponentA"
+            self.mock_component_1.parameters = [
+                MagicMock(name="param1", value="10"),
+                MagicMock(name="param2", value="20"),
+            ]
+
+            self.mock_component_2 = MagicMock()
+            self.mock_component_2.name = "ComponentB"
+            self.mock_component_2.parameters = [
+                MagicMock(name="paramX", value="100"),
+            ]
+
+            # Component with no parameters
+            self.mock_component_3 = MagicMock()
+            self.mock_component_3.name = "ComponentC"
+            self.mock_component_3.parameters = []
+
+            # Add mocked components to NeuroMLDocument
+            self.nml_doc.ComponentType = [
+                self.mock_component_1,
+                self.mock_component_2,
+                self.mock_component_3,
+            ]
+
+    def test_list_params_output(self):
+        """Test if list_params correctly extracts and formats parameters."""
+        expected_output = (
+            "Parameters in NeuroML 2 document: test_doc\n"
+            "\nComponentType: ComponentA\n"
+            "  - param1: 10\n"
+            "  - param2: 20\n"
+            "\nComponentType: ComponentB\n"
+            "  - paramX: 100\n"
+            "\nComponentType: ComponentC\n"
+            "  No parameters found.\n"
+        )
+
+        output = list_params(self.nml_doc)
+        self.assertEqual(output.strip(), expected_output.strip())
