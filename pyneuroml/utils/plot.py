@@ -351,7 +351,6 @@ def load_minimal_morphplottable__model(
     model_members = list(vars(nml_model).keys())
     required_members = [
         "id",
-        "cells",
         "morphology",
         "cell2_ca_poolses",
         "networks",
@@ -359,7 +358,7 @@ def load_minimal_morphplottable__model(
         "includes",
     ]
     for m in model_members:
-        if m not in required_members:
+        if m not in required_members and "cells" not in m:
             setattr(nml_model, m, None)
             logger.debug(f"Dropped {m}")
 

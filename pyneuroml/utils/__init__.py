@@ -97,8 +97,12 @@ def extract_position_info(
     cell_elements = []
     popElements = []
 
-    cell_elements.extend(nml_model.cells)
-    cell_elements.extend(nml_model.cell2_ca_poolses)
+    members = nml_model.info(show_contents=True, return_format="dict")
+
+    for member, mdict in members.items():
+        if "cell" in mdict["type"].lower():
+            cell_elements.extend(mdict["members"])
+    # cell_elements.extend(nml_model.cell2_ca_poolses)
 
     # if there are no cells, look at morphologies
     if len(cell_elements) == 0:
@@ -715,7 +719,6 @@ def get_model_file_list(
             lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
 
     elif rootfile.endswith(".sedml"):
-
         try:
             import libsedml
         except ModuleNotFoundError:

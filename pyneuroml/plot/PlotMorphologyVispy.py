@@ -607,6 +607,9 @@ def plot_interactive_3D(
         # other networks
         else:
             plottable_nml_model = nml_model
+
+        logger.debug(plottable_nml_model.info(show_contents=True))
+
     # what did we get?
     else:
         raise ValueError(f"Could not process argument: {nml_model}")
@@ -671,7 +674,7 @@ def plot_interactive_3D(
     else:
         cell = list(pop_id_vs_cell.values())[0]
 
-        if cell is not None:
+        if cell is not None and isinstance(cell, Cell):
             view_min, view_max = get_cell_bound_box(cell)
         else:
             logger.debug("Got a point cell")
@@ -790,7 +793,8 @@ def plot_interactive_3D(
             except AttributeError:
                 logging.debug(f"Plotting a point cell at {pos}")
 
-            if cell is None:
+            # a point cell component type
+            if cell is None or not isinstance(cell, Cell):
                 meshdata.append(
                     (
                         f"{radius:.1f}",
