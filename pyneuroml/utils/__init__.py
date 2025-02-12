@@ -101,7 +101,10 @@ def extract_position_info(
 
     for member, mdict in members.items():
         if "cell" in mdict["type"].lower():
-            cell_elements.extend(mdict["members"])
+            try:
+                cell_elements.extend(mdict["members"])
+            except TypeError:
+                pass
     # cell_elements.extend(nml_model.cell2_ca_poolses)
 
     # if there are no cells, look at morphologies
