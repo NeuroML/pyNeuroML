@@ -439,11 +439,11 @@ def plot_interactive_3D(
         be a "cell_color" or more dictionaries, with the segment id as key and
         the following keys in it:
 
-        - marker_color: color of the marker
-        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
-          is used)
-        - marker_type: "sphere" (otherwise the default shape of the segment is
-          used, which could either be a sphere or a cylinder)
+        - marker_color: color of the marker (str)
+        - marker_size: (diameter 1, diameter 2) (tuple) (in case of sphere, the
+          first value is used)
+        - marker_type: "sphere" (str) (otherwise the default shape of the
+          segment is used, which could either be a sphere or a cylinder)
 
         E.g.:
 
@@ -451,11 +451,11 @@ def plot_interactive_3D(
 
             {
                 "cell id1": {
-                "cell_color": "red",
+                "cell_color": "red",                # string
                     "seg id1": {
-                        "marker_color": "blue",
-                        "marker_size": [0.1, 0.1],
-                        "marker_type": "sphere"
+                        "marker_color": "blue",     # string
+                        "marker_size": (0.1, 0.1),  # tuple
+                        "marker_type": "sphere"     # string
                     }
                 }
             }
@@ -1021,10 +1021,10 @@ def plot_3D_cell_morphology(
         main dictionary are more dictionaries, one for each segment id which
         will be the key:
 
-        - marker_color: color of the marker
-        - marker_size: [diameter 1, diameter 2] (in case of sphere, the first value
+        - marker_color: color of the marker (str)
+        - marker_size: (diameter 1, diameter 2) (tuple) (in case of sphere, the first value
           is used)
-        - marker_type: "sphere" (otherwise the default shape of the segment is
+        - marker_type: "sphere" (str) (otherwise the default shape of the segment is
           used, which could either be a sphere or a cylinder)
 
     :type highlight_spec: dict
@@ -1150,8 +1150,8 @@ def plot_3D_cell_morphology(
         logger.debug("segment_spec for " + str(seg.id) + " is" + str(segment_spec))
 
         if segment_spec["marker_size"] is not None:
-            if not isinstance(segment_spec["marker_size"], list):
-                raise RuntimeError("The marker size must be a list")
+            if not isinstance(segment_spec["marker_size"], (tuple)):
+                raise RuntimeError("The marker size must be a tuple")
             r1 = float(segment_spec["marker_size"][0]) / 2
             r2 = float(segment_spec["marker_size"][1]) / 2
 
