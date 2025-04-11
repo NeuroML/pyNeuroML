@@ -7,13 +7,13 @@ File: pyneuroml/utils/units.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import typing
 import zipfile
 
 import lems.model.model as lems_model
 from lems.parser.LEMS import LEMSFileParser
+
 import pyneuroml.utils.misc as pymisc
 
 logger = logging.getLogger(__name__)

@@ -902,7 +902,7 @@ def execute_command_in_dir_with_realtime_output(
         )
         with p.stdout:
             for line in iter(p.stdout.readline, ""):
-                print(" %s %s" % (prefix,line.strip()))
+                print(" %s %s" % (prefix, line.strip()))
         p.wait()  # wait for the subprocess to exit
 
         print("####################################################################")
@@ -993,9 +993,7 @@ def execute_command_in_dir(
         logger.critical("*** Problem running last command: %s" % e)
 
         print("####################################################################")
-        print(
-            "%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix))
-        )
+        print("%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix)))
         print("####################################################################")
         return (e.returncode, e.output.decode())
     except Exception as e:

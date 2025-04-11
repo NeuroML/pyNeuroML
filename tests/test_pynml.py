@@ -28,7 +28,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestJarUtils(unittest.TestCase):
-
     """Test jNeuroML jar related functions"""
 
     def test_lems_def_files_extraction(self):
@@ -53,7 +52,6 @@ class TestJarUtils(unittest.TestCase):
 
 
 class TestHelperUtils(unittest.TestCase):
-
     """Test helper utilities."""
 
     def test_exposure_listing(self):

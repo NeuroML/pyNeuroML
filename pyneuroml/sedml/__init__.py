@@ -3,10 +3,11 @@ use libsedml getErrorLog().getNumFailsWithSeverity(libsedml.LIBSEDML_SEV_ERROR) 
 based on example here https://github.com/SED-ML/libSEDML/blob/master/examples/python/echo_sedml.py
 """
 
-import os
 import errno
-import libsedml
+import os
 from typing import List
+
+import libsedml
 
 
 def check_file(file_name):

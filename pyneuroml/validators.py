@@ -7,7 +7,6 @@ File: pyneuroml/validators.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import typing
 import warnings

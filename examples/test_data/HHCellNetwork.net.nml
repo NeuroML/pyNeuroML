@@ -2,11 +2,11 @@
 
 <neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.githubusercontent.com/NeuroML/NeuroML2/master/Schemas/NeuroML2/NeuroML_v2beta3.xsd"   
+         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.githubusercontent.com/NeuroML/NeuroML2/master/Schemas/NeuroML2/NeuroML_v2beta3.xsd"
          id="HHCellNetwork">
 
     <notes>Network of 1 cell with Hodgkin Huxley cell and 2 input currents</notes>
-    
+
     <include href="hhcell.cell.nml"/> <!-- Include the cell definition -->
 
     <!-- Short small current pulse input & short larger current pulse input -->
@@ -18,4 +18,3 @@
     </network>
 
 </neuroml>
-

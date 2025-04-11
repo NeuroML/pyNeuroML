@@ -5,21 +5,20 @@ Please see https://neurotune.readthedocs.io/en/latest/architecture.html for
 more information on controllers in Neurotune.
 """
 
-import os.path
+import logging
 import os
+import os.path
+import pprint
+import shutil
 import sys
 import time
-import shutil
-import logging
-import pprint
-
+from collections import OrderedDict
 from io import StringIO
 
-from collections import OrderedDict
-import pyneuroml.pynml
-from pyneuroml import print_v
 import neuroml
 
+import pyneuroml.pynml
+from pyneuroml import print_v
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

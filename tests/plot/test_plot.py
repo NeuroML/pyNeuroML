@@ -7,13 +7,15 @@ File: tests/plot/test_plot.py
 Copyright 2023 NeuroML contributors
 """
 
-import random
-import pytest
-import unittest
 import logging
 import pathlib as pl
+import random
+import unittest
 
-from pyneuroml.plot import generate_plot, generate_interactive_plot
+import pytest
+
+from pyneuroml.plot import generate_interactive_plot, generate_plot
+
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)

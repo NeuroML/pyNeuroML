@@ -7,7 +7,6 @@ File: pyneuroml/utils/misc.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import os
 
 from pyneuroml import JNEUROML_VERSION

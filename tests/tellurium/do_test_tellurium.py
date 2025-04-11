@@ -8,10 +8,9 @@ from the examples directory
 as pytest is segfaulting
 """
 
+import os
 
 from pyneuroml import tellurium
-
-import os
 
 
 def test_run_tellurium_on_valid_file():

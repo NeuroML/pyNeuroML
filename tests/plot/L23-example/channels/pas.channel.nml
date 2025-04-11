@@ -7,7 +7,7 @@
 
         <notes>Simple example of a leak/passive conductance. Note: for GENESIS cells with a single leak conductance,
         it is better to use the Rm and Em variables for a passive current.</notes>
-                            
+
     </ionChannel>
 
 </neuroml>
