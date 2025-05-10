@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd"
          id="NML2_SingleCompHHCell">
 
     <!-- Single compartment cell with HH channels -->
-     
-    <!-- This is a "pure" NeuroML 2 file. It can be included in a LEMS file for use in a simulaton 
-    by the LEMS interpreter, see LEMS_NML2_Ex5_DetCell.xml -->    
-    
-     
+
+    <!-- This is a "pure" NeuroML 2 file. It can be included in a LEMS file for use in a simulaton
+    by the LEMS interpreter, see LEMS_NML2_Ex5_DetCell.xml -->
+
+
     <include href="NaConductance.channel.nml"/>
-    <include href="KConductance.channel.nml"/> 
-    <include href="LeakConductance.channel.nml"/> 
+    <include href="KConductance.channel.nml"/>
+    <include href="LeakConductance.channel.nml"/>
 
 
     <cell id="hhcell">
@@ -33,7 +33,7 @@
         <biophysicalProperties id="bioPhys1">
 
             <membraneProperties>
-                        
+
                 <channelDensity id="leak" ionChannel="LeakConductance" condDensity="3.0 S_per_m2" erev="-54.3mV" ion="non_specific"/>
                 <channelDensity id="NaConductances" ionChannel="NaConductance" condDensity="120.0 mS_per_cm2" erev="50.0 mV" ion="na"/>
                 <channelDensity id="KConductances" ionChannel="KConductance" condDensity="360 S_per_m2" erev="-77mV" ion="k"/>
@@ -61,4 +61,3 @@
     </network>
 
 </neuroml>
-

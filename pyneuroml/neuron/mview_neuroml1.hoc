@@ -1,9 +1,9 @@
 /*
-  This file is based on the original NeuroML v1.8.1 export class 
+  This file is based on the original NeuroML v1.8.1 export class
   (http://www.neuron.yale.edu/hg/neuron/nrn/file/477da879a623/share/lib/hoc/mview/mviewxml.hoc)
   as developed by Michael Hines and Padraig Gleeson.
 
-  While a version of this file will remain in the Neuron codebase, it has been copied here to allow 
+  While a version of this file will remain in the Neuron codebase, it has been copied here to allow
   easier updates as the NeuroML standard develops & to facilitate bugfixes
 
 */
@@ -156,7 +156,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
     // go over all points in all sections in all cells
 
-    assoc_cell_number(1, $o1) 
+    assoc_cell_number(1, $o1)
     $o1.printf("<cells>\n")
     totalnumcells = 0
 
@@ -172,7 +172,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
         cellName = cellref.name
         if (hoc_sf_.substr(cellName,"[")>=0 && hoc_sf_.substr(cellName,"]")>=0) {
             hoc_sf_.left(cellName, hoc_sf_.substr(cellName,"]"))
-            strdef index 
+            strdef index
             index = cellName
             hoc_sf_.left(cellName, hoc_sf_.substr(cellName,"["))
             hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -286,13 +286,13 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
             sectioncount = cm(.00001)
             tobj = new SectionRef()
 
-            strdef newSectionName 
+            strdef newSectionName
             newSectionName = secname()
             hoc_sf_.right(newSectionName, hoc_sf_.substr(newSectionName, ".")+1)
 
             if (hoc_sf_.substr(newSectionName,"[")>=0 && hoc_sf_.substr(newSectionName,"]")>=0) {
                 hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"]"))
-                strdef index 
+                strdef index
                 index = newSectionName
                 hoc_sf_.left(newSectionName, hoc_sf_.substr(newSectionName,"["))
                 hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -335,7 +335,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
                 if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                     hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
-                    strdef index 
+                    strdef index
                     index = groupName
                     hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"["))
                     hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -451,7 +451,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
 
             if (strcmp(dmech.name,"capacitance") != 0 && strcmp(dmech.name,"Ra") != 0 && hoc_sf_.substr(dmech.name, "_ion") == -1) {
-                strdef passiveAttr 
+                strdef passiveAttr
                 passiveAttr = ""
                 // If mech name is built in passive conductance in NEURON
                 if (strcmp(dmech.name,"pas") == 0) {
@@ -470,10 +470,10 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                     for dparm.parmiter(dpelm) {
                         for l=0, dpelm.parms.count - 1 {
 
-                            strdef paramNameToUse 
+                            strdef paramNameToUse
                             paramNameToUse = dparm.name
 
-                            strdef comment 
+                            strdef comment
                             comment = ""
 
                 // strip suffix
@@ -542,7 +542,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                     }
                 }
                 $o1.printf("      </bio:spec_capacitance>\n")
-            } 
+            }
         }
 
 
@@ -561,12 +561,12 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
                     }
                 }
                 $o1.printf("      </bio:spec_axial_resistance>\n")
-            } 
+            }
         }
 
        //////////// ion_xmlwrite($o1)
 
-        $o1.printf("    </biophysics>\n")   
+        $o1.printf("    </biophysics>\n")
 
 
     }
@@ -577,7 +577,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
     }
     $o1.printf("</cells>\n")
-    assoc_cell_number(0, $o1) 
+    assoc_cell_number(0, $o1)
     ////////PG: not required  ////  $o1.printf("</morphml>\n")
 
 
@@ -641,7 +641,7 @@ proc xmlwrite() {local proximalid, pointcount, segmentcount, sectioncount, i, j,
 
 proc artcell() {local i,j,l
     for i=0, mview.acview.alist.count-1 {
-        dmech = mview.acview.alist.object(i) 
+        dmech = mview.acview.alist.object(i)
 
         $o1.printf("  <mechanism name=\"%s\">\n",  dmech.name)
 
@@ -674,10 +674,10 @@ proc printparmval() {
 
         if (hoc_sf_.len($s3)>0) { // only incl if $s3 is set
 
-            strdef newParamName 
+            strdef newParamName
             newParamName = $s3
 
-            sprint(nameattr, " name=\"%s\"",  newParamName)  
+            sprint(nameattr, " name=\"%s\"",  newParamName)
         }
 
         $o1.printf("        <bio:parameter%s value=\"%g\">   %s\n",  nameattr, $o4.value * $5, $s6)
@@ -695,7 +695,7 @@ proc printparmval() {
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
-                strdef index 
+                strdef index
                 index = groupName
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"["))
                 hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -716,7 +716,7 @@ proc printparmval() {
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
-                strdef index 
+                strdef index
                 index = groupName
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"["))
                 hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -775,7 +775,7 @@ proc printparmval() {
 
 
 proc printsec() {
-    $o2.sec { 
+    $o2.sec {
         $o1.printf("      <section name=\"%s\"/>\n", secname())
     }
 }

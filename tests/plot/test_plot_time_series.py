@@ -7,14 +7,14 @@ File: test/plot/test_plot_time_series.py
 Copyright 2024 NeuroML contributors
 """
 
-
+import logging
 import os
+import tempfile
 import unittest
 
 import numpy
-import logging
+
 import pyneuroml.plot.PlotTimeSeries as pyplts
-import tempfile
 
 from .. import BaseTestCase
 

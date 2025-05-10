@@ -29,4 +29,3 @@ pyneuroml.povray.OverlaySimulation module
    :members:
    :undoc-members:
    :show-inheritance:
-

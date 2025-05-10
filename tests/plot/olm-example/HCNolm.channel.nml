@@ -4,21 +4,21 @@
     <notes>NeuroML file containing a single ion channel</notes>
 
     <ionChannel id="HCNolm" conductance="1pS" type="ionChannelHH" species="h">
-        
+
         <notes>Hyperpolarization-activated, CN-gated h channel description (from Lawrence 2006)</notes>
-        
+
         <gateHHtauInf id="r" instances="1">
             <timeCourse type="Bezaire_HCNolm_tau"/>
             <steadyState type="HHSigmoidVariable" rate="1" midpoint="-84.1mV" scale="-10.2mV"/>
         </gateHHtauInf>
-    
+
     </ionChannel>
-    
-    
+
+
     <ComponentType name="Bezaire_HCNolm_tau"
                    extends="baseVoltageDepTime"
                    description="Tau parameter to describe HCNolm">
-        
+
         <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>
 

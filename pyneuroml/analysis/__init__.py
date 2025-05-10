@@ -1,25 +1,23 @@
+import logging
 import math
 import os
-import logging
 import typing
+from typing import Optional
+
+import neuroml as nml
 import numpy as np
 
 from pyneuroml import pynml
-from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.lems import generate_lems_file_for_neuroml
-from pyneuroml.utils.plot import get_next_hex_color
+from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.plot import generate_plot
-import neuroml as nml
-
-from typing import Optional
-
+from pyneuroml.utils.plot import get_next_hex_color
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 try:
-    from pyelectro.analysis import max_min
-    from pyelectro.analysis import mean_spike_frequency
+    from pyelectro.analysis import max_min, mean_spike_frequency
 except ImportError:
     logger.warning("Please install optional dependencies to use analysis features:")
     logger.warning("pip install pyneuroml[analysis]")
@@ -516,8 +514,8 @@ def analyse_spiketime_vs_dt(
     save_figure_to=None,
     num_of_last_spikes=None,
 ):
-    from pyelectro.analysis import max_min
     import numpy as np
+    from pyelectro.analysis import max_min
 
     all_results = {}
 

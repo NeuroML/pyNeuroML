@@ -1,9 +1,9 @@
 /*
-  This file is based on the original NeuroML v1.8.1 export class 
+  This file is based on the original NeuroML v1.8.1 export class
   (http://www.neuron.yale.edu/hg/neuron/nrn/file/477da879a623/share/lib/hoc/mview/mviewxml.hoc)
   as developed by Michael Hines and Padraig Gleeson.
 
-  While a version of this file will remain in the Neuron codebase, it has been copied here to allow 
+  While a version of this file will remain in the Neuron codebase, it has been copied here to allow
   easier updates as the NeuroML standard develops & to facilitate bugfixes
 
 */
@@ -58,7 +58,7 @@ proc init() {local i
 
 
 // Main export procedure
-// Takes arguments: 
+// Takes arguments:
 //    $s1 fileName          Name of file to export to
 //    $2  level             (1 = no biophys; 2 = include biophys (channel densities etc.))
 //    $3  separateCellFiles (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
@@ -84,7 +84,7 @@ proc exportNeuroML2() {local ok
 
 
 // Print the NeuroML2 header
-proc header() { 
+proc header() {
     file_out = $o1
     file_out.printf("<neuroml xmlns=\"http://www.neuroml.org/schema/neuroml2\"\n")
     file_out.printf("    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
@@ -117,7 +117,7 @@ proc assoc_cell_number() {local i, j, pointcount
 
 
 // Write main body of XML file
-// Takes arguments: 
+// Takes arguments:
 //    $o1 file_out           File object to write to
 //    $2  nml2_level         (1 = no biophys; 2 = include biophys (channel densities etc.))
 //    $3  separateCellFiles  (1 = generate separate NeuroML2 files for each cell; 0 = all NeuroML info in one file)
@@ -146,7 +146,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
 
     // go over all points in all sections in all cells
 
-    assoc_cell_number(1, file_out) 
+    assoc_cell_number(1, file_out)
 
     totalnumcells = 0
 
@@ -184,13 +184,13 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             header(cellnml2file)
 
             mainnml2file.printf("  <include href=\"%s.cell.nml\"/>\n\n", cellName)
-        } 
+        }
 
         cellnml2file.printf("  <cell id=\"%s\">\n", cellName)
         cellnml2file.printf("    <notes>Cell: %s exported from NEURON ModelView</notes>\n", cellName)
         cellnml2file.printf("    <morphology id=\"morphology\">\n")
 
-        strdef segGrpsForSections 
+        strdef segGrpsForSections
         segGrpsForSections=""
 
         totalNumCables = 0
@@ -221,7 +221,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 sprint(segGrpsForSections, "%s        <annotation>\n", segGrpsForSections)
                 sprint(segGrpsForSections, "%s          <property tag=\"numberInternalDivisions\" value=\"%d\"/> <!-- Discretization of model at time of export from NEURON. Can be overridden by importing application -->\n", segGrpsForSections, nseg)
                 sprint(segGrpsForSections, "%s        </annotation>\n", segGrpsForSections)
-          
+
             }
             for i = 1, n3d() - 1 {
 
@@ -294,7 +294,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
                 pointcount += 1
                 segmentcount += 1
             }
-            
+
 
             sprint(segGrpsForSections, "%s      </segmentGroup>\n\n", segGrpsForSections)
         }
@@ -406,7 +406,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
         // biophysics element for THIS cell. Only include if level > 1
 
         if (nml2_level > 1) { // i.e. "Level 2" of NeuroML or greater
-        
+
             xmlwrite_biophysics(file_out)
         }
 
@@ -421,7 +421,7 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
             cellnml2file.close()
 
         }
-        
+
         cellindex = cellindex +1
 
     }
@@ -429,20 +429,20 @@ proc xmlwrite() { local proximalid, pointcount, segmentcount, sectioncount, i, j
     sprint(network, "%s\n  </network>\n", network)
     mainnml2file.printf("%s \n", network)
 
-    assoc_cell_number(0, mainnml2file) 
+    assoc_cell_number(0, mainnml2file)
 
     artcell(mainnml2file)
 }
 
 
-// Takes arguments: 
+// Takes arguments:
 //    $o1 file_out           File object to write to
 //
 
 proc xmlwrite_biophysics() {
 
     file_out = $o1
-    
+
     cellnml2file.printf("\n    <!-- Biophysical properties -->\n\n    <biophysicalProperties id=\"biophys\"> \n")
     cellnml2file.printf("\n      <membraneProperties> \n\n")
 
@@ -474,11 +474,11 @@ proc xmlwrite_biophysics() {
             for dparm.parmiter(dpelm) {
                 for l=0, dpelm.parms.count - 1 {
                     print "    - l ", l, " dparm ", dparm.name, " dpelm ", dpelm, ", value ", dpelm.parms.object(l).value
-                    
-                    
+
+
                     if (hoc_sf_.substr(dmech.name, "_ion") > 0) {
 
-                        strdef paramNameToUse 
+                        strdef paramNameToUse
                         paramNameToUse = dparm.name
                         strdef groupName
                         sprint(groupName, "%s", dpelm.parms.object(l).location)
@@ -501,18 +501,18 @@ proc xmlwrite_biophysics() {
                             print "Assuming the one and only value for ek is: ", erev_K, "mV"
                         }
                     } else {
-                    
-                        strdef paramNameToUse 
+
+                        strdef paramNameToUse
                         paramNameToUse = dparm.name
                         value = dpelm.parms.object(l).value
                         if  (hoc_sf_.substr(paramNameToUse, "_")>=0) {
                             hoc_sf_.left(paramNameToUse, hoc_sf_.substr(paramNameToUse, "_"))
                         }
-                        
+
                         print "    Initial parameter name: [", paramNameToUse, "], value: ", value
-                        
+
                         if (strcmp(paramNameToUse, "e") == 0) {
-                        
+
                             {p.set_erev_for_mechanism(dmech.name, value)}
                             {print p.get_erev_for_mechanism(dmech.name)}
                         }
@@ -521,9 +521,9 @@ proc xmlwrite_biophysics() {
             }
         }
 
-        
+
     }
-    
+
 
     for i=0, cellref.secanal.dmlist.count - 1 {
         dmech = cellref.secanal.dmlist.object(i)
@@ -535,12 +535,12 @@ proc xmlwrite_biophysics() {
 
 
         if (strcmp(dmech.name,"capacitance") != 0 && strcmp(dmech.name,"Ra") != 0 && hoc_sf_.substr(dmech.name, "_ion") == -1) {
-            
-            found_erev = 0 
+
+            found_erev = 0
             print "---------------------------------------------"
             print "Handling mechanism: ", dmech.name
 
-            strdef passiveAttr 
+            strdef passiveAttr
             passiveAttr = ""
             // If mech name is built in passive conductance in NEURON
             if (strcmp(dmech.name,"pas") == 0) {
@@ -552,7 +552,7 @@ proc xmlwrite_biophysics() {
                 // Not used in nml2
                 /////passiveAttr = " passive_conductance=\"true\""
             }
-            
+
             for j=0, dmech.location.subset.size()-1 {
                 secref = cellref.secanal.all.object(dmech.location.subset.x(j))
                 //              printsec(cellnml2file, secref)
@@ -561,15 +561,15 @@ proc xmlwrite_biophysics() {
                 //print dparm
                 for dparm.parmiter(dpelm) {
                     //print dpelm
-                    
-            
+
+
                     for l=0, dpelm.parms.count - 1 {
 
-                        strdef paramNameToUse 
+                        strdef paramNameToUse
                         paramNameToUse = dparm.name
                         print "    Initial parameter name: ", paramNameToUse
 
-                        strdef comment 
+                        strdef comment
                         comment = ""
 
                         // strip suffix
@@ -590,7 +590,7 @@ proc xmlwrite_biophysics() {
                             sprint(comment, "<!-- Assuming parameter g refers to passive maximum cond density, so replacing it with condDensity -->", paramNameToUse)
                         } else if (hoc_sf_.substr(paramNameToUse, "g")==0 && hoc_sf_.substr(paramNameToUse, "bar")>=1) {
                             sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
-                            paramNameToUse = "condDensity"                        
+                            paramNameToUse = "condDensity"
                         } else if (strcmp(paramNameToUse,"gl") == 0) {
                             paramNameToUse = "condDensity"
                             sprint(comment, "<!-- Assuming parameter gl refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
@@ -608,7 +608,7 @@ proc xmlwrite_biophysics() {
                         } else if (hoc_sf_.substr(paramNameToUse, "g")==0) {
                             sprint(comment, "<!-- Assuming parameter %s refers to the maximum cond density, so replacing it with condDensity -->", paramNameToUse)
                             paramNameToUse = "condDensity"
-                        } 
+                        }
                         print "    Checking param: ",paramNameToUse, " in ", dmech.name
                         if (strcmp(paramNameToUse,"e") == 0) {
                             found_erev = 1
@@ -619,7 +619,7 @@ proc xmlwrite_biophysics() {
 
 
                         factor = 1
-                        strdef units 
+                        strdef units
                         units = "???"
 
                         if (hoc_sf_.substr(paramNameToUse,"condDensity") >= 0) {
@@ -629,14 +629,14 @@ proc xmlwrite_biophysics() {
                         if (strcmp(paramNameToUse,"e") == 0) {
                             paramNameToUse = "erev"
                             units = "mV"
-                        } 
-                        
+                        }
+
                         if (strcmp(paramNameToUse, "condDensity")==0) {
-                        
+
                             cellnml2file.printf("        <channelDensity ionChannel=\"%s\" id=\"%s_XXX\"%s ", dmech.name, dmech.name, passiveAttr)
-                            
+
                             printparmval(cellnml2file, cellref.secanal.all, paramNameToUse, dpelm.parms.object(l), factor, comment, dmech.name, units)
-                            
+
                             if (hoc_sf_.substr(dmech.name,"Na")>=0) {
                                 cellnml2file.printf(" erev=\"%fmV\" ", erev_Na)
                             } else if (hoc_sf_.substr(dmech.name,"K")>=0) {
@@ -645,10 +645,10 @@ proc xmlwrite_biophysics() {
                                 value = p.get_erev_for_mechanism(dmech.name)
                                 cellnml2file.printf(" erev=\"%fmV\" ", value)
                             }
-                            
+
                             cellnml2file.printf("/>\n\n")
-                            
-                            
+
+
                         } else if (strcmp(paramNameToUse, "e")==0) {
                             print "Rev pot handled elsewhere..."
                         } else if (strcmp(paramNameToUse, "erev")==0) {
@@ -658,11 +658,11 @@ proc xmlwrite_biophysics() {
                             //quit()
                         }
                     }
-                    
-                   
+
+
                 }
             }
-            
+
         }
     }
 
@@ -679,7 +679,7 @@ proc xmlwrite_biophysics() {
 
             print "---------------------------------------------"
             print "Handling mechanism: ", dmech.name
-            strdef units 
+            strdef units
             units = "uF_per_cm2"
             cellnml2file.printf("        <specificCapacitance ")
             for dmech.parmiter(dparm) {
@@ -690,7 +690,7 @@ proc xmlwrite_biophysics() {
                 }
             }
             cellnml2file.printf("/>\n\n")
-        } 
+        }
     }
 
     cellnml2file.printf("      </membraneProperties> \n\n      <intracellularProperties>\n\n")
@@ -705,7 +705,7 @@ proc xmlwrite_biophysics() {
 
             print "---------------------------------------------"
             print "Handling mechanism: ", dmech.name
-            strdef units 
+            strdef units
             units = "kohm_cm"
             cellnml2file.printf("        <resistivity")
             for dmech.parmiter(dparm) {
@@ -716,12 +716,12 @@ proc xmlwrite_biophysics() {
                 }
             }
             cellnml2file.printf("/>\n\n")
-        } 
+        }
     }
 
     //////////// ion_xmlwrite(cellnml2file)
 
-    cellnml2file.printf("      </intracellularProperties>\n\n    </biophysicalProperties>\n\n")   
+    cellnml2file.printf("      </intracellularProperties>\n\n    </biophysicalProperties>\n\n")
 
     print "---------------------------------------------"
 
@@ -732,7 +732,7 @@ proc xmlwrite_biophysics() {
 proc artcell() {local i,j,l
     file_out = $o1
     for i=0, mview.acview.alist.count-1 {
-        dmech = mview.acview.alist.object(i) 
+        dmech = mview.acview.alist.object(i)
 
         file_out.printf("  <mechanism name=\"%s\">\n",  dmech.name)
 
@@ -770,7 +770,7 @@ proc printparmval() {
     comment1 = $s6
     ref = $s7
     units = $s8
-    
+
     print "    -- Generating parameter, type: ", param_obj.type(), " param: ", param, ", val: ", param_obj.value, ", scale: ", scale_factor, ", comm: [", comment1, "], ref: ", ref, ", units: ", units
     // 1 is ModelViewParmVal, 2 is ModelViewParmVec
     if (param_obj.type() == 1) {
@@ -783,10 +783,10 @@ proc printparmval() {
 
         if (hoc_sf_.len(param)>0) { // only incl if param is set => condDensity etc. not cap
 
-            strdef newParamName 
+            strdef newParamName
             newParamName = param
 
-            file_out.printf(" %s = \"%g %s\"",  newParamName, param_obj.value * scale_factor, units)  
+            file_out.printf(" %s = \"%g %s\"",  newParamName, param_obj.value * scale_factor, units)
         } else {
 
             file_out.printf(" value=\"%g %s\" %s", param_obj.value * scale_factor, units, comment1)   // specCapacitance, etc.
@@ -806,7 +806,7 @@ proc printparmval() {
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
-                strdef index 
+                strdef index
                 index = groupName
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"["))
                 hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -835,7 +835,7 @@ proc printparmval() {
 
             if (hoc_sf_.substr(groupName,"[")>=0 && hoc_sf_.substr(groupName,"]")>=0) {
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"]"))
-                strdef index 
+                strdef index
                 index = groupName
                 hoc_sf_.left(groupName, hoc_sf_.substr(groupName,"["))
                 hoc_sf_.right(index, hoc_sf_.substr(index,"[")+1)
@@ -894,8 +894,8 @@ objref temp_secref
 proc printsec() {
     file_out = $o1
     temp_secref = $o2
-    
-    temp_secref.sec { 
+
+    temp_secref.sec {
         file_out.printf("      <section name=\"%s\"/>\n", secname())
     }
 }
@@ -905,7 +905,7 @@ objref temp_param_obj
 proc printvecvals() {local i
     file_out = $o1
     temp_param_obj = $o2
-    
+
     temp_param_obj.location.realcell.all.object(temp_param_obj.location.isec).sec {
         file_out.printf("          <!-- NOTE: this mechanism is present on %s but has non uniform values. Expression for generating values cannot be retrieved! -->\n", secname())
         ///file_out.printf("        <section name=\"%s\">\n", secname())
@@ -920,7 +920,7 @@ proc printvecvals() {local i
 
 proc ion_xmlwrite() {
     file_out = $o1
-    
+
     for mview.dparm.mechs(tobj) {
         if (hoc_sf_.head(tobj.name, "_ion", tstr) != -1) {
             file_out.printf("      <bio:ion name=\"%s\" charge=\"%d\"/>\n", tstr, ion_charge(tobj.name))

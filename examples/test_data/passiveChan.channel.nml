@@ -5,12 +5,11 @@
          xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.githubusercontent.com/NeuroML/NeuroML2/master/Schemas/NeuroML2/NeuroML_v2beta3.xsd"
          id="passiveChan">
 
-     
+
     <ionChannelHH id="passiveChan" conductance="10pS" type="ionChannelPassive">
-        
+
         <notes>Single ion channel in NeuroML2 format: passive channel providing a leak conductance </notes>
-        
+
     </ionChannelHH>
 
 </neuroml>
-

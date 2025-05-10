@@ -1,4 +1,4 @@
-# Forced Fitzhugh-Nagumo fhn.ode 
+# Forced Fitzhugh-Nagumo fhn.ode
 dv/dt = f(v)-w+s(t)+I_0
 dw/dt = eps*(v-gamma*w)
 f(v)=v*(1-v)*(v-a)
