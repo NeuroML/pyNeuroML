@@ -14,6 +14,7 @@ from math import log
 
 import matplotlib.pyplot as pylab
 import neuron
+from pylab import plt
 
 from pyneuroml.utils import get_state_color
 from pyneuroml.utils.cli import build_namespace
@@ -378,8 +379,10 @@ def run(a=None, **kwargs):
                                         initSlopeVal[s],
                                         rateVal,
                                         h.t - timeToCheckTau,
-                                        fractOfInit,
-                                        log(fractOfInit),
+                                        # fractOfInit undefined, since initSlopeVal[s] == 0
+                                        "NA",
+                                        # log(fractOfInit) undefined, since initSlopeVal[s] == 0
+                                        "NA",
                                         tau,
                                     )
                                 )
