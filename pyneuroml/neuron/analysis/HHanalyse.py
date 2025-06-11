@@ -9,8 +9,7 @@ import logging
 import re
 import subprocess
 import sys
-from typing import List as typing_List
-from typing import Optional as typing_Optional
+import typing
 from math import log
 
 import matplotlib.pyplot as pylab
@@ -139,7 +138,7 @@ def remove_comments(txt):
     return clear_txt
 
 
-def get_states(txt: str) -> typing_List[str]:
+def get_states(txt: str) -> typing.List[str]:
     """Get list of states from mod file text.
 
     :param txt: mod file text
@@ -159,7 +158,7 @@ def get_states(txt: str) -> typing_List[str]:
     return state_list
 
 
-def get_suffix(txt: str) -> typing_Optional[str]:
+def get_suffix(txt: str) -> typing.Optional[str]:
     """Get suffix mod file text
 
     :param txt: mod file text
