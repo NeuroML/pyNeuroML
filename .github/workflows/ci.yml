@@ -45,6 +45,7 @@ jobs:
     - name: List packages so far
       run: |
         pip list
+        env
 
     - name: Run tests
       run: |
