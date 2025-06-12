@@ -705,6 +705,7 @@ def run_jneuroml(
     report_jnml_output: bool = True,
     exit_on_fail: bool = False,
     return_string: bool = False,
+    output_prefix: str = " jNeuroML >>  ",
 ) -> typing.Union[typing.Tuple[bool, str], bool]:
     """Run jnml with provided arguments.
 
@@ -726,6 +727,8 @@ def run_jneuroml(
     :type exit_on_fail: bool
     :param return_string: toggle whether the output string should be returned
     :type return_string: bool
+    :param output_prefix: string to prefix the returned jNeuroML output with
+    :type output_prefix: str
 
     :returns: either a bool, or a Tuple (bool, str) depending on the value of
         return_string: True of jnml ran successfully, False if not; along with the
@@ -756,7 +759,7 @@ def run_jneuroml(
     try:
         command = f'java -Xmx{max_memory} {pre_jar} -jar  "{jar_path}" {pre_args} {target_file} {post_args}'
         retcode, output = execute_command_in_dir(
-            command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+            command, exec_in_dir, verbose=verbose, prefix=output_prefix
         )
 
         if retcode != 0:
