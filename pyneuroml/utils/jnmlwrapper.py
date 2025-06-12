@@ -9,6 +9,7 @@ Copyright 2025 NeuroML contributors
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import logging
 import os
 import sys
 
@@ -25,12 +26,15 @@ def __jnmlwrapper():
 
     """
     max_memory = os.getenv("JNML_MAX_MEMORY_LOCAL", "400M")
+    logging.getLogger("pyneuroml.runners").setLevel(logging.ERROR)
 
-    run_jneuroml(
+    output = run_jneuroml(
         pre_args=" ".join(sys.argv[1:]),
         target_file="",
         post_args="",
         max_memory=max_memory,
-        report_jnml_output=True,
+        report_jnml_output=False,
         output_prefix="",
+        return_string=True,
     )
+    print(output[1])
