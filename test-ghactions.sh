@@ -28,7 +28,7 @@ echo "##   Testing all CLI tools"
 full_path=$(command -v pynml)
 bin_location=$(dirname $full_path)
 
-for f in ${bin_location}/pynml*
+for f in ${bin_location}/pynml* ${bin_location}/jnml
 do
     current_exec=$(basename $f)
     echo "-> Testing $current_exec runs"
