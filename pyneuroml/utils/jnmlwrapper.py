@@ -37,4 +37,6 @@ def __jnmlwrapper():
         output_prefix="",
         return_string=True,
     )
-    print(output[1])
+    # if it errors, it'll always print out the command line output
+    if output[0]:
+        print(output[1])
