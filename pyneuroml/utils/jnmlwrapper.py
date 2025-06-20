@@ -26,9 +26,9 @@ def __jnmlwrapper():
 
     """
     max_memory = os.getenv("JNML_MAX_MEMORY_LOCAL", "400M")
-    logging.getLogger("pyneuroml.runners").setLevel(logging.ERROR)
+    logging.getLogger("pyneuroml.runners").setLevel(logging.CRITICAL)
 
-    output = run_jneuroml(
+    retstat, output = run_jneuroml(
         pre_args=" ".join(sys.argv[1:]),
         target_file="",
         post_args="",
@@ -36,7 +36,10 @@ def __jnmlwrapper():
         report_jnml_output=False,
         output_prefix="",
         return_string=True,
+        exit_on_fail=True,
     )
-    # if it errors, it'll always print out the command line output
-    if output[0]:
-        print(output[1])
+
+    # if command ran successfully, print the output
+    # if it didn't, `run_jneuroml` will throw a critical error
+    if retstat is True:
+        print(output)
