@@ -922,7 +922,7 @@ def execute_command_in_dir_with_realtime_output(
         raise e
 
     if not p.returncode == 0:
-        logger.critical(
+        logger.error(
             "*** Problem running command (return code: %s): [%s]"
             % (p.returncode, command)
         )
@@ -993,14 +993,14 @@ def execute_command_in_dir(
         return return_string.decode("utf-8")
 
     except subprocess.CalledProcessError as e:
-        logger.critical("*** Problem running last command: %s" % e)
+        logger.error("*** Problem running last command: %s" % e)
 
         print("####################################################################")
         print("%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix)))
         print("####################################################################")
         return (e.returncode, e.output.decode())
     except Exception as e:
-        logger.critical("*** Unknown problem running command: %s" % e)
+        logger.error("*** Unknown problem running command: %s" % e)
         return (-1, str(e))
 
 

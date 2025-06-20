@@ -36,10 +36,13 @@ def __jnmlwrapper():
         report_jnml_output=False,
         output_prefix="",
         return_string=True,
-        exit_on_fail=True,
+        exit_on_fail=False,
     )
 
     # if command ran successfully, print the output
     # if it didn't, `run_jneuroml` will throw a critical error
     if retstat is True:
         print(output)
+        sys.exit(0)
+    else:
+        sys.exit(1)
