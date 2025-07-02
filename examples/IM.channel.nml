@@ -6,25 +6,25 @@
     <ionChannel id="IM" conductance="10pS" type="ionChannelHH" species="k">
 
         <notes>Slow M-type K+ current for spike frequency adaptation
-            
+
 Comment from original mod file:
 M-current, responsible for the adaptation of firing rate and the afterhyperpolarization (AHP) of cortical pyramidal cells
 First-order model described by hodgkin-Hyxley like equations.
 K+ current, activated by depolarization, noninactivating.
 
-Model taken from Yamada, W.M., Koch, C. and Adams, P.R.  Multiple channels and calcium dynamics.  In: Methods in Neuronal Modeling, 
+Model taken from Yamada, W.M., Koch, C. and Adams, P.R.  Multiple channels and calcium dynamics.  In: Methods in Neuronal Modeling,
 edited by C. Koch and I. Segev, MIT press, 1989, p 97-134.
-    
-See also: McCormick, D.A., Wang, Z. and Huguenard, J. Neurotransmitter control of neocortical neuronal activity and excitability. 
+
+See also: McCormick, D.A., Wang, Z. and Huguenard, J. Neurotransmitter control of neocortical neuronal activity and excitability.
 Cerebral Cortex 3: 387-398, 1993.
 
 Written by Alain Destexhe, Laval University, 1995
         </notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="IM">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Minimal Hodgkin-Huxley type models for different classes of cortical and thalamic neurons</rdf:li>
@@ -32,7 +32,7 @@ Written by Alain Destexhe, Laval University, 1995
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -48,7 +48,7 @@ Written by Alain Destexhe, Laval University, 1995
             <timeCourse type="IM_p_tau_tau"/>
             <steadyState type="IM_p_inf_inf"/>
         </gate>
-                            
+
     </ionChannel>
 
     <ComponentType name="IM_p_tau_tau" extends="baseVoltageDepTime">

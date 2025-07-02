@@ -6,7 +6,7 @@
     <ionChannel id="LeakConductance_bask" conductance="10pS" type="ionChannelPassive">
 
         <notes>Passive conductance for basket cell</notes>
-                            
+
     </ionChannel>
 
 </neuroml>

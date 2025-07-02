@@ -1,10 +1,9 @@
+import logging
 import sys
 import time
-import logging
 
-from pyneuroml import pynml, print_v
+from pyneuroml import print_v, pynml
 from pyneuroml.lems import generate_lems_file_for_neuroml
-
 
 logger = logging.getLogger(__name__)
 

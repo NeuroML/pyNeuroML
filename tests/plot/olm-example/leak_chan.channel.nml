@@ -4,5 +4,5 @@
     <notes>NeuroML file containing a single passive Channel description</notes>
 
     <ionChannel id="leak_chan" conductance="1pS" type="ionChannelPassive"/>
-    
+
 </neuroml>

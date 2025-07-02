@@ -8,7 +8,7 @@ number thetam=-30.0,sigmam=9.5,sigmah=-7.0,sigman=10.0,sigmaz=5.0
 number VCa=120
 number thetar=-20.0,sigmar=10.0,thetac=-30,sigmac=7
 number pwrc=1,pwrq=4
-# 
+#
 p gNa=35.0,gKdr=6.0,gL=0.05,Iapp=1.0
 p gA=1.4,gNaP=0.2,gZ=1.0
 p thetaz=-39.0,tauZs=75.0
@@ -44,7 +44,7 @@ IA=gA*Ainfs^3*bbs*(VVs-VK)
 Iz=gZ*zzs*(VVs-VK)
 ICa=gCa*rrs^2*(VVs-VCa)
 IKC=gKCa*mKCa*ccs*(VVs-VK)
-IAHP=gKAHP*qqs*(VVs-VK) 
+IAHP=gKAHP*qqs*(VVs-VK)
 #
 VVs(0)=-71.962
 hhs(0)=0.979199

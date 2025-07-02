@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 
-import unittest
 import pathlib as pl
+import unittest
 
 
 class BaseTestCase(unittest.TestCase):
-
     """Base test case class to implement extra assertions"""
 
     def assertIsFile(self, path):

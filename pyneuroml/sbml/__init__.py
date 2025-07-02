@@ -3,12 +3,10 @@ use libsbml.SBMLDocument.checkConsistency to check validaity of an SBML document
 based on https://github.com/combine-org/combine-notebooks/blob/main/src/combine_notebooks/validation/validation_sbml.py
 """
 
-import os
 import errno
-from typing import List
-
-
 import logging
+import os
+from typing import List
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -4,17 +4,17 @@
 
     This file is used to convert post v1.7.3 ChannelML files to the latest NeuroML 2 format.
 
-    Funding for this work has been received from the Medical Research Council and the 
+    Funding for this work has been received from the Medical Research Council and the
     Wellcome Trust. This file was initially developed as part of the neuroConstruct project
-    
+
     Author: Padraig Gleeson
     Copyright 2012 University College London
-    
+
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -909,7 +909,7 @@
       <xsl:call-template name="annotations"/>
       <xsl:apply-templates select="cml:current_voltage_relation"/>
       <xsl:text>
-                            
+
     </xsl:text>
     </xsl:element>
   </xsl:template>
@@ -922,7 +922,7 @@
         <xsl:choose>
           <xsl:when test="@cond_law = 'ohmic'">
             <!-- Need to add this after all attributes are added
-                                <xsl:if test="count(../cml:parameters) &gt; 0"> 
+                                <xsl:if test="count(../cml:parameters) &gt; 0">
                                     <xsl:for-each select="../cml:parameters/cml:parameter">
                                         <xsl:element name="parameter">
                                             <xsl:attribute name="id"><xsl:value-of select="@name"/></xsl:attribute>
@@ -1197,7 +1197,7 @@
                 </xsl:element>
               </xsl:when>
               <xsl:otherwise>
-        Error. The current implementation of this mapping from ChannelML to NeuroML2 depends on the 
+        Error. The current implementation of this mapping from ChannelML to NeuroML2 depends on the
         names of the transitions containing 'alpha' or 'beta' to determine whether they are forward or reverse transitions respectively.
         A more intelligent way to determine this should be possible, but is not yet implemented
                                         </xsl:otherwise>
@@ -1358,7 +1358,7 @@
   <xsl:template name="annotations">
     <xsl:if test="count(meta:publication) &gt; 0 or count(meta:neuronDBref) &gt; 0">
       <xsl:text>
-                
+
         </xsl:text>
       <xsl:element name="annotation">
         <xsl:text>

@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
       fail-fast: false
 
     steps:
@@ -36,12 +36,6 @@ jobs:
         echo "github.ref is: ${{ github.ref }}"
         echo "github.base_ref is: ${{ github.base_ref }}"
 
-    - name: Install HDF5 for pytables on ubuntu-latest
-      if: ${{ matrix.python-version == '3.13' }}
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install libhdf5-serial-dev
-        #sudo apt-get install libhdf5-serial-dev liblzo2-dev libgraphviz-dev -y
 
     - name: Upgrade pip, install deps
       run: |
@@ -52,6 +46,7 @@ jobs:
     - name: List packages so far
       run: |
         pip list
+        env
 
     - name: Run tests
       run: |

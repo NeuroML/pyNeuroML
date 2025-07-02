@@ -7,7 +7,6 @@ File: test_archive.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import logging
 import pathlib
 import unittest
@@ -109,7 +108,7 @@ class TestArchiveModule(unittest.TestCase):
             rootfile=dirname + "/HH_example_cell.nml",
             filelist=filelist,
         )
-        self.assertTrue(pathlib.Path(dirname + "/HH_example.neux").exists())
+        self.assertTrue(pathlib.Path(dirname + "/HH_example.neux.zip").exists())
 
         dirname = str(thispath.parent.parent.parent)
         filelist = []
@@ -119,7 +118,7 @@ class TestArchiveModule(unittest.TestCase):
             filelist=filelist,
         )
         self.assertTrue(
-            pathlib.Path(dirname + "/examples/LEMS_NML2_Ex5_DetCell.neux").exists()
+            pathlib.Path(dirname + "/examples/LEMS_NML2_Ex5_DetCell.neux.zip").exists()
         )
 
         dirname = str(thispath.parent.parent.parent)
@@ -130,5 +129,5 @@ class TestArchiveModule(unittest.TestCase):
             filelist=filelist,
         )
         self.assertTrue(
-            pathlib.Path(dirname + "/examples/NML2_SingleCompHHCell.neux").exists()
+            pathlib.Path(dirname + "/examples/NML2_SingleCompHHCell.neux.zip").exists()
         )

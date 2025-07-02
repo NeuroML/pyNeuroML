@@ -7,12 +7,13 @@ File: tests/channelml/test_channelml.py
 Copyright 2023 NeuroML contributors
 """
 
-import unittest
 import logging
 import pathlib as pl
+import unittest
 
 from pyneuroml.channelml import channelml2nml
 from pyneuroml.pynml import validate_neuroml2
+
 from .. import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestChannelML(BaseTestCase):
-
     """Test ChannelML module"""
 
     def test_channelml2nml(self):
