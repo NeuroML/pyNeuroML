@@ -1699,6 +1699,8 @@ def create_mesh(
             k = numpy.cross(orig_vec, dir_vector)
             mag_k = numpy.linalg.norm(k)
 
+            vertices = seg_mesh.get_vertices()
+
             if mag_k != 0.0:
                 k = k / mag_k
                 theta = math.acos(
@@ -1708,13 +1710,11 @@ def create_mesh(
                 logger.debug(f"k is {k}, theta is {theta}")
                 rot_matrix = rotate(math.degrees(theta), k).T
                 rot_obj = Rotation.from_matrix(rot_matrix[:3, :3])
+                rotated_vertices = rot_obj.apply(vertices)
             else:
-                logger.debug("k is [0..], using zeros for rotation matrix")
-                rot_matrix = numpy.zeros((3, 3))
-                rot_obj = Rotation.from_matrix(rot_matrix)
+                logger.debug("k is [0..], skipping rotation")
+                rotated_vertices = vertices
 
-            vertices = seg_mesh.get_vertices()
-            rotated_vertices = rot_obj.apply(vertices)
             translator = numpy.array(
                 [offset[0] + prox.x, offset[1] + prox.y, offset[2] + prox.z]
             )
