@@ -665,80 +665,105 @@ def get_model_file_list(
     :returns: value of lems_def_dir so that the temporary directory can be
         cleaned up. strings are immuatable in Python so the variable cannot be
         modified in the function.
-    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
+    :raises ValueError: if a file that does not have a valid extension is
+        encountered (xml/nml/sedml)
     """
-    logger.debug(f"Processing {rootfile}")
+    rootdirpath = pathlib.Path(rootdir)
+    rootfilepath = pathlib.Path(rootfile)
 
-    fullrootdir = pathlib.Path(rootdir).absolute()
-
-    # Only store path of file relative to the rootdir, if it's a descendent of
-    # rootdir
-    if rootfile.startswith(str(fullrootdir)):
-        relrootfile = rootfile.replace(str(fullrootdir), "")
-        if relrootfile.startswith("/"):
-            relrootfile = relrootfile[1:]
+    # convert rootdir path to relative
+    if rootdirpath.is_absolute():
+        rootdirpath_rel = rootdirpath.relative_to(pathlib.Path.cwd())
     else:
-        relrootfile = rootfile
+        rootdirpath_rel = rootdirpath
 
-    if relrootfile in filelist:
-        logger.debug(f"Already processed {rootfile}. No op.")
-        return lems_def_dir
+    rootdirpath_abs = rootdirpath.absolute()
 
-    logger.debug(f"Appending: {relrootfile}")
-    filelist.append(relrootfile)
+    # convert rootfile path to relative, relative to rootdir path
+    if rootfilepath.is_absolute():
+        rootfilepath_rel = rootfilepath.relative_to(rootdirpath_abs)
+    else:
+        rootfilepath_rel = rootfilepath.relative_to(pathlib.Path("./"))
 
-    if rootfile.endswith(".nml"):
-        if pathlib.Path(rootfile).is_absolute():
-            rootdoc = read_neuroml2_file(rootfile)
+    # limit the rootfile to the name of the file only, move other bits to the
+    # rootdir path so that they can be correctly passed on to other recursively
+    # included files
+    if len(rootfilepath_rel.parts) > 1:
+        rootdirpath_rel = rootdirpath_rel / rootfilepath_rel.parent
+
+    rootfile_name = pathlib.Path(rootfilepath.name)
+
+    logger.debug(f"Processing {rootfile_name} in {rootdirpath_rel}")
+
+    fullrootfile_rel = str(rootdirpath_rel / rootfile_name)
+
+    if str(rootdirpath_rel) == ".":
+        if str(rootfile_name) in filelist:
+            logger.debug("Already processed. No op.")
+            return lems_def_dir
         else:
-            rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
+            logger.debug(f"Appending: {rootfile_name}")
+            filelist.append(str(rootfile_name))
+    else:
+        if str(fullrootfile_rel) in filelist:
+            logger.debug("Already processed. No op.")
+            return lems_def_dir
+        else:
+            logger.debug(f"Appending: {fullrootfile_rel}")
+            filelist.append(str(fullrootfile_rel))
+
+    if str(rootfile_name).endswith(".nml"):
+        print(f"Processing NML file: {fullrootfile_rel}")
+        rootdoc = read_neuroml2_file(fullrootfile_rel)
         logger.debug(f"Has includes: {rootdoc.includes}")
+
         for inc in rootdoc.includes:
+            logger.debug(f"Processing includes: {inc.href} in {str(rootdirpath)}")
             lems_def_dir = get_model_file_list(
-                inc.href, filelist, rootdir, lems_def_dir
+                inc.href, filelist, str(rootdirpath_rel), lems_def_dir
             )
 
-    elif rootfile.endswith(".xml"):
+    elif str(rootfile_name).endswith(".xml"):
         # extract the standard NeuroML2 LEMS definitions into a directory
         # so that the LEMS parser can find them
         if lems_def_dir is None:
             lems_def_dir = extract_lems_definition_files()
 
-        if pathlib.Path(rootfile).is_absolute():
-            fullrootfilepath = rootfile
-        else:
-            fullrootfilepath = rootdir + "/" + rootfile
-
         model = Model(include_includes=True, fail_on_missing_includes=True)
         model.add_include_directory(lems_def_dir)
-        model.import_from_file(fullrootfilepath)
+        model.import_from_file(fullrootfile_rel)
 
         for inc in model.included_files:
+            # `inc` includes the folder name, but we want to keep the file name
+            # and the directory in which it is located separtely as the
+            # directory may have to be passed on recursively to other included
+            # files. So, we separate the name out.
             incfile = pathlib.Path(inc).name
             logger.debug(f"Processing include file {incfile} ({inc})")
             if incfile in STANDARD_LEMS_FILES:
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
-            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
+            lems_def_dir = get_model_file_list(
+                incfile, filelist, str(rootdirpath_rel), lems_def_dir
+            )
 
-    elif rootfile.endswith(".sedml"):
+    elif str(rootfile_name).endswith(".sedml"):
         try:
             import libsedml
         except ModuleNotFoundError:
             logger.error("Please install optional dependencies to use SED-ML features:")
             logger.error("pip install pyneuroml[combine]")
 
-        if pathlib.Path(rootfile).is_absolute():
-            rootdoc = libsedml.readSedMLFromFile(rootfile)
-        else:
-            rootdoc = libsedml.readSedMLFromFile(rootdir + "/" + rootfile)
+        rootdoc = libsedml.readSedMLFromFile(fullrootfile_rel)
 
         # there should only be one model
         assert rootdoc.getNumModels() == 1
         model = rootdoc.getModel(0)
-        lems_file = model.getSource()
-        logger.debug(f"Got {lems_file} from SED-ML file {rootdoc}")
-        lems_def_dir = get_model_file_list(lems_file, filelist, rootdir, lems_def_dir)
+        sedml_file = model.getSource()
+        logger.debug(f"Got {sedml_file} from SED-ML file {rootdoc}")
+        lems_def_dir = get_model_file_list(
+            sedml_file, filelist, str(rootdirpath_rel), lems_def_dir
+        )
 
     else:
         raise ValueError(

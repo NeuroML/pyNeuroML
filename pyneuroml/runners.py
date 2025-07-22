@@ -1088,9 +1088,7 @@ def reload_saved_data(
             #    file_name = os.path.join(os.getcwd(),'NeuroML2','results',name)
             # ... try relative to cwd in NeuroML2/results subdir.
             if not os.path.isfile(file_name):  # If not relative to the base dir...
-                raise OSError(
-                    ("Could not find simulation output " "file %s" % file_name)
-                )
+                raise OSError(("Could not find simulation output file %s" % file_name))
             format = of.attrib["format"]
             logger.info(
                 "Loading saved events from %s (format: %s)" % (file_name, format)
@@ -1150,7 +1148,7 @@ def reload_saved_data(
             file_name = os.path.join(os.getcwd(), "NeuroML2", "results", name)
             # ... try relative to cwd in NeuroML2/results subdir.
         if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            raise OSError(("Could not find simulation output " "file %s" % file_name))
+            raise OSError(("Could not find simulation output file %s" % file_name))
         t_file_mod = datetime.fromtimestamp(os.path.getmtime(file_name))
         if t_file_mod < t_run:
             raise Exception(
@@ -1306,6 +1304,7 @@ def generate_sim_scripts_in_folder(
     if root_dir is None:
         root_dir = "."
 
+    cwd = Path.cwd()
     tdir = pyneuroml.utils.get_pyneuroml_tempdir(rootdir=run_dir, prefix="pyneuroml")
     os.mkdir(tdir)
 
@@ -1314,6 +1313,10 @@ def generate_sim_scripts_in_folder(
             "Please only provide the name of the file here and use rootdir to provide the folder it lives in"
         )
 
+    # change to root_dir, so that we're in the directory where the lems file
+    # is
+    os.chdir(root_dir)
+
     logger.debug("Getting list of model files")
     model_file_list = []  # type: list
     lems_def_dir = None
@@ -1321,12 +1324,10 @@ def generate_sim_scripts_in_folder(
         lems_file_name, model_file_list, root_dir, lems_def_dir
     )
 
-    root_dir = str(Path(root_dir).absolute())
-
     logger.debug(f"Model file list is {model_file_list}")
 
     for model_file in model_file_list:
-        logger.debug(f"Copying: {root_dir}/{model_file} -> {tdir + '/' + model_file}")
+        logger.debug(f"Copying: {model_file} -> {tdir}/{model_file}")
         # if model file has directory structures in it, recreate the dirs in
         # the temporary directory
         if len(model_file.split("/")) > 1:
@@ -1346,13 +1347,12 @@ def generate_sim_scripts_in_folder(
             model_file_path = pathlib.Path(tdir + "/" + model_file)
             parent = model_file_path.parent
             parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(root_dir + "/" + model_file, tdir + "/" + model_file)
+        shutil.copy(model_file, tdir + "/" + model_file)
 
     if lems_def_dir is not None:
         logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
         shutil.rmtree(lems_def_dir)
 
-    cwd = Path.cwd()
     os.chdir(tdir)
     logger.info(f"Working in {tdir}")
     start_time = time.time() - 1.0

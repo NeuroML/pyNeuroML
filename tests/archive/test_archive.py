@@ -25,7 +25,7 @@ logger.setLevel(logging.DEBUG)
 class TestArchiveModule(unittest.TestCase):
     """Test the pyneuroml.archive module."""
 
-    def test_get_model_file_list(self):
+    def test_get_model_file_list_1(self):
         """Test get_model_file_list."""
         # a NeuroML file in the tests directory
         thispath = pathlib.Path(__file__)
@@ -34,7 +34,9 @@ class TestArchiveModule(unittest.TestCase):
         get_model_file_list("HH_example_cell.nml", filelist, dirname)
         self.assertEqual(4, len(filelist))
 
+    def test_get_model_file_list_2(self):
         # a LEMS file in the examples directory
+        thispath = pathlib.Path(__file__)
         dirname = str(thispath.parent.parent.parent)
         filelist = []
         get_model_file_list(
@@ -42,6 +44,8 @@ class TestArchiveModule(unittest.TestCase):
         )
         self.assertEqual(5, len(filelist))
 
+    def test_get_model_file_list_3(self):
+        thispath = pathlib.Path(__file__)
         # a SEDML file in the examples directory
         dirname = str(thispath.parent.parent.parent)
         run_jneuroml(
@@ -58,6 +62,8 @@ class TestArchiveModule(unittest.TestCase):
         )
         self.assertEqual(6, len(filelist))
 
+    def test_get_model_file_list_4(self):
+        thispath = pathlib.Path(__file__)
         # NeuroML file in examples directory
         dirname = str(thispath.parent.parent.parent)
         filelist = []
@@ -65,6 +71,16 @@ class TestArchiveModule(unittest.TestCase):
             "NML2_SingleCompHHCell.nml", filelist, dirname + "/examples"
         )
         self.assertEqual(4, len(filelist))
+
+    def test_get_model_file_list_5(self):
+        thispath = pathlib.Path(__file__)
+        # HL23 network
+        dirname = str(thispath.parent.parent)
+        filelist = []
+        get_model_file_list(
+            "HL23VIP.cell.nml", filelist, dirname + "/plot/L23-example/"
+        )
+        self.assertEqual(13, len(filelist))
 
     def test_create_combine_archive_manifest(self):
         """Test create_combine_archive_manifest function."""
