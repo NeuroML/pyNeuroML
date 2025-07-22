@@ -33,7 +33,7 @@ from pyneuroml.errors import UNKNOWN_ERR
 from pyneuroml.utils.plot import get_next_hex_color
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
@@ -665,11 +665,13 @@ def get_model_file_list(
     :returns: value of lems_def_dir so that the temporary directory can be
         cleaned up. strings are immuatable in Python so the variable cannot be
         modified in the function.
-    :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
+    :raises ValueError: if a file that does not have a valid extension is
+        encountered (xml/nml/sedml)
     """
     rootdirpath = pathlib.Path(rootdir)
     rootfilepath = pathlib.Path(rootfile)
 
+    # convert rootdir path to relative
     if rootdirpath.is_absolute():
         rootdirpath_rel = rootdirpath.relative_to(pathlib.Path.cwd())
     else:
@@ -677,44 +679,51 @@ def get_model_file_list(
 
     rootdirpath_abs = rootdirpath.absolute()
 
-    # Convert absolute path of rootfile to relative path relative to the
-    # rootdir. Otherwise, the zip file will include absolute paths, and
-    # extraction will not work when the system (paths) changes.
+    # convert rootfile path to relative, relative to rootdir path
     if rootfilepath.is_absolute():
         rootfilepath_rel = rootfilepath.relative_to(rootdirpath_abs)
-        rootfile_rel = str(rootfilepath_rel)
     else:
         rootfilepath_rel = rootfilepath.relative_to(pathlib.Path("./"))
-        rootfile_rel = str(rootfilepath_rel)
 
-    logger.debug(f"Processing {rootfile} in {rootdirpath_abs}")
+    # limit the rootfile to the name of the file only, move other bits to the
+    # rootdir path so that they can be correctly passed on to other recursively
+    # included files
+    if len(rootfilepath_rel.parts) > 1:
+        rootdirpath_rel = rootdirpath_rel / rootfilepath_rel.parent
 
-    rootfileloc = str(rootdirpath_rel)
-    fullrootfile_rel = str(rootdirpath_rel) + "/" + rootfile_rel
+    rootfile_name = pathlib.Path(rootfilepath.name)
 
-    if fullrootfile_rel in filelist:
-        logger.debug("Already processed. No op.")
-        return lems_def_dir
+    logger.debug(f"Processing {rootfile_name} in {rootdirpath_rel}")
 
-    logger.debug(f"Appending: {fullrootfile_rel}")
+    fullrootfile_rel = str(rootdirpath_rel / rootfile_name)
 
     if str(rootdirpath_rel) == ".":
-        filelist.append(rootfile_rel)
+        if str(rootfile_name) in filelist:
+            logger.debug("Already processed. No op.")
+            return lems_def_dir
+        else:
+            logger.debug(f"Appending: {rootfile_name}")
+            filelist.append(str(rootfile_name))
     else:
-        filelist.append(fullrootfile_rel)
+        if str(fullrootfile_rel) in filelist:
+            logger.debug("Already processed. No op.")
+            return lems_def_dir
+        else:
+            logger.debug(f"Appending: {fullrootfile_rel}")
+            filelist.append(str(fullrootfile_rel))
 
-    if rootfile.endswith(".nml"):
+    if str(rootfile_name).endswith(".nml"):
         print(f"Processing NML file: {fullrootfile_rel}")
         rootdoc = read_neuroml2_file(fullrootfile_rel)
         logger.debug(f"Has includes: {rootdoc.includes}")
 
         for inc in rootdoc.includes:
-            logger.debug(f"Processing includes: {inc.href} in {str(rootfileloc)}")
+            logger.debug(f"Processing includes: {inc.href} in {str(rootdirpath)}")
             lems_def_dir = get_model_file_list(
-                inc.href, filelist, str(rootfileloc), lems_def_dir
+                inc.href, filelist, str(rootdirpath_rel), lems_def_dir
             )
 
-    elif rootfile.endswith(".xml"):
+    elif str(rootfile_name).endswith(".xml"):
         # extract the standard NeuroML2 LEMS definitions into a directory
         # so that the LEMS parser can find them
         if lems_def_dir is None:
@@ -735,10 +744,10 @@ def get_model_file_list(
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
             lems_def_dir = get_model_file_list(
-                incfile, filelist, str(rootfileloc), lems_def_dir
+                incfile, filelist, str(rootdirpath_rel), lems_def_dir
             )
 
-    elif rootfile.endswith(".sedml"):
+    elif str(rootfile_name).endswith(".sedml"):
         try:
             import libsedml
         except ModuleNotFoundError:
@@ -750,10 +759,10 @@ def get_model_file_list(
         # there should only be one model
         assert rootdoc.getNumModels() == 1
         model = rootdoc.getModel(0)
-        lems_file = model.getSource()
-        logger.debug(f"Got {lems_file} from SED-ML file {rootdoc}")
+        sedml_file = model.getSource()
+        logger.debug(f"Got {sedml_file} from SED-ML file {rootdoc}")
         lems_def_dir = get_model_file_list(
-            lems_file, filelist, str(rootfileloc), lems_def_dir
+            sedml_file, filelist, str(rootdirpath_rel), lems_def_dir
         )
 
     else:

@@ -1327,7 +1327,7 @@ def generate_sim_scripts_in_folder(
     logger.debug(f"Model file list is {model_file_list}")
 
     for model_file in model_file_list:
-        logger.debug(f"Copying: {model_file} -> {tdir + '/' + model_file}")
+        logger.debug(f"Copying: {model_file} -> {tdir}/{model_file}")
         # if model file has directory structures in it, recreate the dirs in
         # the temporary directory
         if len(model_file.split("/")) > 1:
