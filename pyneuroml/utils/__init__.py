@@ -667,25 +667,36 @@ def get_model_file_list(
         modified in the function.
     :raises ValueError: if a file that does not have ".xml" or ".nml" as extension is encountered
     """
-    logger.debug(f"Processing {rootfile}")
+    rootdirpath = pathlib.Path(rootdir)
+    rootfilepath = pathlib.Path(rootfile)
 
-    fullrootdir = pathlib.Path(rootdir).absolute()
-
-    # Only store path of file relative to the rootdir, if it's a descendent of
-    # rootdir
-    if rootfile.startswith(str(fullrootdir)):
-        relrootfile = rootfile.replace(str(fullrootdir), "")
-        if relrootfile.startswith("/"):
-            relrootfile = relrootfile[1:]
+    if rootdirpath.is_absolute():
+        rootdirpath_rel = rootdirpath.relative_to(pathlib.Path.cwd())
     else:
-        relrootfile = rootfile
+        rootdirpath_rel = rootdirpath
 
-    if relrootfile in filelist:
-        logger.debug(f"Already processed {rootfile}. No op.")
+    rootdirpath_abs = rootdirpath.absolute()
+
+    # Convert absolute path of rootfile to relative path relative to the
+    # rootdir. Otherwise, the zip file will include absolute paths, and
+    # extraction will not work when the system (paths) changes.
+    if rootfilepath.is_absolute():
+        rootfile_rel = str(rootfilepath.relative_to(rootdirpath_abs))
+    else:
+        rootfile_rel = str(rootfilepath.relative_to(pathlib.Path("./")))
+
+    logger.debug(f"Processing {rootfile} in {rootdirpath_abs}")
+
+    if (str(rootdirpath_rel) + "/" + rootfile_rel) in filelist:
+        logger.debug(f"Already processed. No op.")
         return lems_def_dir
 
-    logger.debug(f"Appending: {relrootfile}")
-    filelist.append(relrootfile)
+    logger.debug(f"Appending: {rootfile_rel}")
+
+    if str(rootdirpath_rel) == ".":
+        filelist.append(rootfile_rel)
+    else:
+        filelist.append(str(rootdirpath_rel) + "/" + rootfile_rel)
 
     if rootfile.endswith(".nml"):
         if pathlib.Path(rootfile).is_absolute():
@@ -693,9 +704,11 @@ def get_model_file_list(
         else:
             rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
         logger.debug(f"Has includes: {rootdoc.includes}")
+
+        rootfileloc = pathlib.Path(rootfile).parent
         for inc in rootdoc.includes:
             lems_def_dir = get_model_file_list(
-                inc.href, filelist, rootdir, lems_def_dir
+                inc.href, filelist, str(rootfileloc), lems_def_dir
             )
 
     elif rootfile.endswith(".xml"):
