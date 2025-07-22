@@ -681,32 +681,35 @@ def get_model_file_list(
     # rootdir. Otherwise, the zip file will include absolute paths, and
     # extraction will not work when the system (paths) changes.
     if rootfilepath.is_absolute():
-        rootfile_rel = str(rootfilepath.relative_to(rootdirpath_abs))
+        rootfilepath_rel = rootfilepath.relative_to(rootdirpath_abs)
+        rootfile_rel = str(rootfilepath_rel)
     else:
-        rootfile_rel = str(rootfilepath.relative_to(pathlib.Path("./")))
+        rootfilepath_rel = rootfilepath.relative_to(pathlib.Path("./"))
+        rootfile_rel = str(rootfilepath_rel)
 
     logger.debug(f"Processing {rootfile} in {rootdirpath_abs}")
 
-    if (str(rootdirpath_rel) + "/" + rootfile_rel) in filelist:
+    rootfileloc = str(rootdirpath_rel)
+    fullrootfile_rel = str(rootdirpath_rel) + "/" + rootfile_rel
+
+    if fullrootfile_rel in filelist:
         logger.debug("Already processed. No op.")
         return lems_def_dir
 
-    logger.debug(f"Appending: {rootfile_rel}")
+    logger.debug(f"Appending: {fullrootfile_rel}")
 
     if str(rootdirpath_rel) == ".":
         filelist.append(rootfile_rel)
     else:
-        filelist.append(str(rootdirpath_rel) + "/" + rootfile_rel)
+        filelist.append(fullrootfile_rel)
 
     if rootfile.endswith(".nml"):
-        if pathlib.Path(rootfile).is_absolute():
-            rootdoc = read_neuroml2_file(rootfile)
-        else:
-            rootdoc = read_neuroml2_file(rootdir + "/" + rootfile)
+        print(f"Processing NML file: {fullrootfile_rel}")
+        rootdoc = read_neuroml2_file(fullrootfile_rel)
         logger.debug(f"Has includes: {rootdoc.includes}")
 
-        rootfileloc = pathlib.Path(rootfile).parent
         for inc in rootdoc.includes:
+            logger.debug(f"Processing includes: {inc.href} in {str(rootfileloc)}")
             lems_def_dir = get_model_file_list(
                 inc.href, filelist, str(rootfileloc), lems_def_dir
             )
@@ -717,22 +720,23 @@ def get_model_file_list(
         if lems_def_dir is None:
             lems_def_dir = extract_lems_definition_files()
 
-        if pathlib.Path(rootfile).is_absolute():
-            fullrootfilepath = rootfile
-        else:
-            fullrootfilepath = rootdir + "/" + rootfile
-
         model = Model(include_includes=True, fail_on_missing_includes=True)
         model.add_include_directory(lems_def_dir)
-        model.import_from_file(fullrootfilepath)
+        model.import_from_file(fullrootfile_rel)
 
         for inc in model.included_files:
+            # `inc` includes the folder name, but we want to keep the file name
+            # and the directory in which it is located separtely as the
+            # directory may have to be passed on recursively to other included
+            # files. So, we separate the name out.
             incfile = pathlib.Path(inc).name
             logger.debug(f"Processing include file {incfile} ({inc})")
             if incfile in STANDARD_LEMS_FILES:
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
-            lems_def_dir = get_model_file_list(inc, filelist, rootdir, lems_def_dir)
+            lems_def_dir = get_model_file_list(
+                incfile, filelist, str(rootfileloc), lems_def_dir
+            )
 
     elif rootfile.endswith(".sedml"):
         try:
@@ -741,17 +745,16 @@ def get_model_file_list(
             logger.error("Please install optional dependencies to use SED-ML features:")
             logger.error("pip install pyneuroml[combine]")
 
-        if pathlib.Path(rootfile).is_absolute():
-            rootdoc = libsedml.readSedMLFromFile(rootfile)
-        else:
-            rootdoc = libsedml.readSedMLFromFile(rootdir + "/" + rootfile)
+        rootdoc = libsedml.readSedMLFromFile(fullrootfile_rel)
 
         # there should only be one model
         assert rootdoc.getNumModels() == 1
         model = rootdoc.getModel(0)
         lems_file = model.getSource()
         logger.debug(f"Got {lems_file} from SED-ML file {rootdoc}")
-        lems_def_dir = get_model_file_list(lems_file, filelist, rootdir, lems_def_dir)
+        lems_def_dir = get_model_file_list(
+            lems_file, filelist, str(rootfileloc), lems_def_dir
+        )
 
     else:
         raise ValueError(
