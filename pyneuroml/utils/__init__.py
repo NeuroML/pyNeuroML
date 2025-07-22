@@ -688,7 +688,7 @@ def get_model_file_list(
     logger.debug(f"Processing {rootfile} in {rootdirpath_abs}")
 
     if (str(rootdirpath_rel) + "/" + rootfile_rel) in filelist:
-        logger.debug(f"Already processed. No op.")
+        logger.debug("Already processed. No op.")
         return lems_def_dir
 
     logger.debug(f"Appending: {rootfile_rel}")
