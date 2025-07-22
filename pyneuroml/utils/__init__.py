@@ -33,7 +33,7 @@ from pyneuroml.errors import UNKNOWN_ERR
 from pyneuroml.utils.plot import get_next_hex_color
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 MAX_COLOUR = (255, 0, 0)  # type: typing.Tuple[int, int, int]
