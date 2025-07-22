@@ -169,16 +169,16 @@ def create_combine_archive(
         logger.info(f"No zipfile name provided. Using {rootfile}")
         zipfile_name = rootfile
 
+    # change to directory of rootfile
+    thispath = os.getcwd()
+    os.chdir(rootdir)
+
     lems_def_dir = None
     if len(filelist) == 0:
         lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
 
     create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
     filelist.append("manifest.xml")
-
-    # change to directory of rootfile
-    thispath = os.getcwd()
-    os.chdir(rootdir)
 
     with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
         for f in filelist + extra_files:
