@@ -140,6 +140,8 @@ def generate_plot(
 
     :type legend_position: str
     :param show_plot_already: if plot should be shown when created (default: True)
+        Otherwise, the plots are not shown and you must call pyplot.show()
+        explicitly to show them. Should not be used with `close_plot`.
     :type show_plot_already: boolean
     :param animate: if plot should be animated (default: False)
     :type animate: boolean

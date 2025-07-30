@@ -113,19 +113,23 @@ class TestLEMSModule(unittest.TestCase):
         f.flush()
         f.close()
 
-        events = pyl.load_sim_data_from_lems_file(
+        all_events = pyl.load_sim_data_from_lems_file(
             f.name, base_dir=".", get_events=True, get_traces=False
         )
 
-        traces = pyl.load_sim_data_from_lems_file(
+        all_traces = pyl.load_sim_data_from_lems_file(
             f.name, base_dir=".", get_events=False, get_traces=True
         )
 
+        self.assertIsNotNone(all_events)
+        events = all_events[event_data_file.name]
         self.assertIsNotNone(events)
         self.assertEqual(events["IzPop0[0]"][0], 0.04350000000009967)
         self.assertEqual(events["IzPop0[0]"][-1], 0.9433999999997897)
         print(events)
 
+        self.assertIsNotNone(all_traces)
+        traces = all_traces[trace_file.name]
         self.assertIsNotNone(traces)
         self.assertEqual(traces["t"][0], 0.0)
         self.assertEqual(traces["t"][-1], 0.0019)

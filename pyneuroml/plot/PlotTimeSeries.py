@@ -27,6 +27,7 @@ logger.setLevel(logging.WARNING)
 TIME_SERIES_PLOTTER_DEFAULTS = {
     "offset": False,
     "labels": False,
+    "singlePlot": False,
 }
 
 
@@ -84,6 +85,11 @@ def plot_time_series(
     if isinstance(trace_data, dict):
         trace_data = [trace_data]
 
+    # if scalebar needs to be drawn, we need to wait until all plots are done
+    show_this_plot_already = (
+        False if scalebar_location is not None else show_plot_already
+    )
+
     num_traces = 0
     for td in trace_data:
         num_traces += len(td)
@@ -91,10 +97,7 @@ def plot_time_series(
 
     xs = []
     ys = []
-    if labels is True:
-        labelvals = []
-    else:
-        labelvals = None
+    labelvals: typing.List[str] = []
 
     # calculate trace width
     miny = float(math.inf)
@@ -152,9 +155,9 @@ def plot_time_series(
         xvalues=xs,
         yvalues=ys,
         title=title,
-        labels=labelvals,
+        labels=labelvals if labels is True else None,
         show_yticklabels=show_yticklabels,
-        show_plot_already=False if scalebar_location is not None else True,
+        show_plot_already=show_this_plot_already,
         **kwargs_generate_plot,
     )
 
@@ -184,6 +187,7 @@ def plot_time_series_from_lems_file(
     base_dir: str = ".",
     title: str = "",
     labels: bool = True,
+    show_plot_already: bool = True,
     **kwargs,
 ) -> None:
     """Plot time series from a LEMS file.
@@ -204,21 +208,42 @@ def plot_time_series_from_lems_file(
     :type base_dir: str
     :param labels: toggle whether plots should be labelled
     :type labels: bool
+    :param show_plot_already: whether the generated plots should be shown:
+        useful if you want to only save the plots to files without showing them
+    :type show_plot_already: bool
     :param kwargs: other arguments passed to `plot_time_series`
     :returns: None
 
     """
-    traces = pynmll.load_sim_data_from_lems_file(
+    show_each_plot_already = True
+    all_traces = pynmll.load_sim_data_from_lems_file(
         lems_file_name, get_events=False, get_traces=True
     )
 
-    plot_time_series(traces, labels=labels, xaxis="Time (s)", **kwargs)
+    if len(all_traces) > 1:
+        show_each_plot_already = False
+
+    for traces in all_traces:
+        plot_time_series(
+            traces,
+            labels=labels,
+            xaxis="Time (s)",
+            show_plot_already=show_each_plot_already and show_plot_already,
+            **kwargs,
+        )
+
+    # show all plots together at end
+    # if show_each_plot_already is True, each plot will pop up as its plotted
+    if show_plot_already is True and show_each_plot_already is False:
+        plt.show()
 
 
 def plot_time_series_from_data_files(
     data_file_names: typing.Union[str, typing.List[str]],
     labels: bool = True,
     columns: typing.Optional[typing.List[int]] = None,
+    single_plot: bool = False,
+    show_plot_already: bool = True,
     **kwargs,
 ):
     """Plot time series from a data file.
@@ -233,17 +258,39 @@ def plot_time_series_from_data_files(
     :type labels: bool
     :param columns: column indices to plot
     :type columns: list of ints: [1, 2, 3]
+    :param single_plot: whether all data should be plotted in one single plot
+    :type single_plot: bool
     :param kwargs: other key word arguments that are passed to the
         `plot_time_series` function
 
     """
-    all_traces = []
+    show_each_plot_already = True
+    save_each_plot = False
     if isinstance(data_file_names, str):
         data_file_names = [data_file_names]
 
+    if len(data_file_names) > 1 and single_plot is False:
+        show_each_plot_already = False
+
+        # makes no sense as it'll keep being overwritten by each new plot
+        # so we ignore it and inform the user
+        if "save_figure_to" in kwargs:
+            logger.warning(
+                "Multiple files given and single_plot not set.  Ignoring 'save_figure_to'"
+            )
+            logger.warning("Files will be saved to <filename>.png")
+            kwargs.pop("save_figure_to")
+            save_each_plot = True
+
+    if len(data_file_names) == 1:
+        single_plot = True
+
+    traces = {}
+    filenum = 0
     for f in data_file_names:
         print(f"Processing: {f}")
-        traces = {}
+        filenum += 1
+
         data_array = numpy.loadtxt(f)
         traces["t"] = data_array[:, 0]
         num_cols = numpy.shape(data_array)[1]
@@ -252,10 +299,29 @@ def plot_time_series_from_data_files(
                 if i not in columns:
                     logger.warning(f"Skipping column {i}")
                     continue
-            traces[f"{f}_{i}"] = data_array[:, i]
-        all_traces.append(traces)
 
-    plot_time_series(all_traces, labels=labels, **kwargs)
+            if single_plot:
+                traces[f"{f}_{filenum}_{i}"] = data_array[:, i]
+            else:
+                traces[f"{f}_{i}"] = data_array[:, i]
+
+        if not single_plot:
+            plot_time_series(
+                traces,
+                labels=labels,
+                show_plot_already=show_each_plot_already and show_plot_already,
+                save_figure_to=f"{f}.png" if save_each_plot else None,
+                **kwargs,
+            )
+            traces = {}
+
+    if single_plot:
+        plot_time_series(
+            traces, labels=labels, show_plot_already=show_plot_already, **kwargs
+        )
+
+    if show_plot_already is True and show_each_plot_already is False:
+        plt.plot()
 
 
 def _process_time_series_plotter_args():
@@ -294,6 +360,12 @@ def _process_time_series_plotter_args():
         help=("Offset plots"),
     )
     parser.add_argument(
+        "-singlePlot",
+        action="store_true",
+        default=TIME_SERIES_PLOTTER_DEFAULTS["singlePlot"],
+        help=("For data files: whether they should be plotted in a single plot"),
+    )
+    parser.add_argument(
         "-saveToFile",
         type=str,
         metavar="<Image file name>",
@@ -325,6 +397,7 @@ def _time_series_plotter_main(args=None):
             columns=a.columns,
             offset=a.offset,
             labels=a.labels,
+            single_plot=a.single_plot,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
         )
