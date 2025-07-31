@@ -9,7 +9,6 @@ Copyright 2024 NeuroML contributors
 
 import inspect
 import logging
-import math
 import os
 import pathlib
 import shlex
@@ -24,10 +23,12 @@ from pathlib import Path
 from typing import Optional
 
 import ppft as pp
-from lxml import etree
 
+import pyneuroml.lems as pynmll
+import pyneuroml.plot.PlotTimeSeries as pynmlt
 import pyneuroml.utils
 import pyneuroml.utils.misc
+import pyneuroml.utils.simdata as pynmls
 from pyneuroml import DEFAULTS, __version__
 from pyneuroml.errors import UNKNOWN_ERR
 
@@ -1012,10 +1013,25 @@ def reload_saved_data(
     show_plot_already: bool = True,
     simulator: typing.Optional[str] = None,
     reload_events: bool = False,
+    reload_traces: bool = True,
     verbose: bool = DEFAULTS["v"],
     remove_dat_files_after_load: bool = False,
-) -> typing.Union[dict, typing.Tuple[dict, dict]]:
+) -> typing.Tuple[
+    typing.Optional[typing.Dict[str, typing.Dict]],
+    typing.Optional[typing.Dict[str, typing.Dict]],
+]:
     """Reload data saved from previous LEMS simulation run.
+
+    It can also plot the traces from the data. Each "OutputFile" is plotted in
+    a separate plot.
+
+    .. seealso::
+
+        the :py:mod:pyneuroml.plot.PlotTimeSeries module
+            Module for plotting time series
+
+        the :py:mod:pyneuroml.plot.simdata module
+            Module for loading simulation data
 
     :param lems_file_name: name of LEMS file that was used to generate the data
     :type lems_file_name: str
@@ -1023,220 +1039,74 @@ def reload_saved_data(
     :type base_dir: str
     :param t_run: time of run
     :type t_run: datetime
-    :param plot: toggle plotting
+    :param plot: toggle plotting of traces
     :type plot: bool
     :param show_plot_already: toggle if plots should be shown
     :type show_plot_already: bool
     :param simulator: simulator that was used to generate data
     :type simulator: str
-    :param reload_event: toggle whether events should be loaded
-    :type reload_event: bool
-    :param verbose: toggle verbose output
-    :type verbose: bool
+    :param reload_events: toggle whether events should be loaded
+    :type reload_events: bool
+    :param reload_traces: toggle whether traces should be loaded
+    :type reload_traces: bool
     :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
     :type remove_dat_files_after_load: bool
 
+    :returns: if both `get_events` and `get_traces` are selected, a tuple with
+        two dictionaries of dictionaries, one for traces, one for events, is
+        returned:
 
-    TODO: remove unused vebose argument (needs checking to see if is being
-    used in other places)
+        .. code-block:: python
+
+            all_traces, all_events
+
+        Otherwise one dictionary of dictionaries for whichever was selected is
+        returned, with None for the other.
+
+        The events dictionary has the following format:
+
+        .. code-block:: python
+
+            {
+                "outputfile":
+                    {
+                        '<value of select attribute>': { 'cell id': [<events>] }
+                    }
+            }
+
+        The traces dictionary has the following format:
+
+        .. code-block:: python
+
+            {
+                "outputfile":
+                    {
+                        't': [<values>],
+                        'col 1': [<values>]
+                        'col 2': [<values>]
+                    }
+            }
+
+        Each list has multiple dictionaries, one each for each output file in
+        the LEMS file.
     """
-    if not os.path.isfile(lems_file_name):
-        real_lems_file = os.path.realpath(os.path.join(base_dir, lems_file_name))
-    else:
-        real_lems_file = os.path.realpath(lems_file_name)
-
-    logger.debug(
-        "Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s"
-        % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already)
+    all_traces: typing.Optional[typing.Dict] = None
+    all_events: typing.Optional[typing.Dict] = None
+    all_traces, all_events = pynmls.load_sim_data_from_lems_file(
+        lems_file_name=lems_file_name,
+        base_dir=base_dir,
+        get_events=reload_events,
+        get_traces=reload_traces,
+        t_run=t_run,
+        remove_dat_files_after_load=remove_dat_files_after_load,
     )
 
-    # Could use pylems to parse all this...
-    traces = {}  # type: dict
-    events = {}  # type: dict
-
-    if plot:
-        import matplotlib.pyplot as plt
-
-    base_lems_file_path = os.path.dirname(os.path.realpath(lems_file_name))
-    tree = etree.parse(real_lems_file)
-
-    sim = tree.getroot().find("Simulation")
-    ns_prefix = ""
-
-    possible_prefixes = ["{http://www.neuroml.org/lems/0.7.2}"]
-    if sim is None:
-        # print(tree.getroot().nsmap)
-        # print(tree.getroot().getchildren())
-        for pre in possible_prefixes:
-            for comp in tree.getroot().findall(pre + "Component"):
-                if comp.attrib["type"] == "Simulation":
-                    ns_prefix = pre
-                    sim = comp
-
-    if reload_events:
-        event_output_files = sim.findall(ns_prefix + "EventOutputFile")
-        for i, of in enumerate(event_output_files):
-            name = of.attrib["fileName"]
-            file_name = os.path.join(base_dir, name)
-            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-                file_name = os.path.join(base_lems_file_path, name)
-
-            # if not os.path.isfile(file_name): # If not relative to the LEMS file...
-            #    file_name = os.path.join(os.getcwd(),name)
-            # ... try relative to cwd.
-            # if not os.path.isfile(file_name): # If not relative to the LEMS file...
-            #    file_name = os.path.join(os.getcwd(),'NeuroML2','results',name)
-            # ... try relative to cwd in NeuroML2/results subdir.
-            if not os.path.isfile(file_name):  # If not relative to the base dir...
-                raise OSError(("Could not find simulation output file %s" % file_name))
-            format = of.attrib["format"]
-            logger.info(
-                "Loading saved events from %s (format: %s)" % (file_name, format)
-            )
-            selections = {}
-            for col in of.findall(ns_prefix + "EventSelection"):
-                id = int(col.attrib["id"])
-                select = col.attrib["select"]
-                events[select] = []
-                selections[id] = select
-
-            with open(file_name) as f:
-                for line in f:
-                    values = line.split()
-                    if format == "TIME_ID":
-                        t = float(values[0])
-                        id = int(values[1])
-                    elif format == "ID_TIME":
-                        id = int(values[0])
-                        t = float(values[1])
-                    logger.debug(
-                        "Found a event in cell %s (%s) at t = %s"
-                        % (id, selections[id], t)
-                    )
-                    events[selections[id]].append(t)
-
-            if remove_dat_files_after_load:
-                logger.warning(
-                    "Removing file %s after having loading its data!" % file_name
-                )
-                os.remove(file_name)
-
-    output_files = sim.findall(ns_prefix + "OutputFile")
-    n_output_files = len(output_files)
-    if plot:
-        rows = int(max(1, math.ceil(n_output_files / float(3))))
-        columns = min(3, n_output_files)
-        fig, ax = plt.subplots(
-            rows, columns, sharex=True, figsize=(8 * columns, 4 * rows)
-        )
-        if n_output_files > 1:
-            ax = ax.ravel()
-
-    for i, of in enumerate(output_files):
-        traces["t"] = []
-        name = of.attrib["fileName"]
-        file_name = os.path.join(base_dir, name)
-
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            file_name = os.path.join(base_lems_file_path, name)
-
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            file_name = os.path.join(os.getcwd(), name)
-
-            # ... try relative to cwd.
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            file_name = os.path.join(os.getcwd(), "NeuroML2", "results", name)
-            # ... try relative to cwd in NeuroML2/results subdir.
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            raise OSError(("Could not find simulation output file %s" % file_name))
-        t_file_mod = datetime.fromtimestamp(os.path.getmtime(file_name))
-        if t_file_mod < t_run:
-            raise Exception(
-                "Expected output file %s has not been modified since "
-                "%s but the simulation was run later at %s."
-                % (file_name, t_file_mod, t_run)
-            )
-
-        logger.debug(
-            "Loading saved data from %s%s"
-            % (file_name, " (%s)" % simulator if simulator else "")
+    if all_traces and plot:
+        pynmlt._plot_traces(
+            all_traces, show_plot_already=show_plot_already, single_plot=False
         )
 
-        cols = []
-        cols.append("t")
-        for col in of.findall(ns_prefix + "OutputColumn"):
-            quantity = col.attrib["quantity"]
-            traces[quantity] = []
-            cols.append(quantity)
-
-        with open(file_name) as f:
-            for line in f:
-                values = line.split()
-                for vi in range(len(values)):
-                    traces[cols[vi]].append(float(values[vi]))
-
-        if remove_dat_files_after_load:
-            logger.warning(
-                "Removing file %s after having loading its data!" % file_name
-            )
-            os.remove(file_name)
-
-        if plot:
-            info = "Data loaded from %s%s" % (
-                file_name,
-                " (%s)" % simulator if simulator else "",
-            )
-            logger.warning("Reloading: %s" % info)
-            plt.get_current_fig_manager().set_window_title(info)
-
-            legend = False
-            for key in cols:
-                if n_output_files > 1:
-                    ax_ = ax[i]
-                else:
-                    ax_ = ax
-                ax_.set_xlabel("Time (ms)")
-                ax_.set_ylabel("(SI units...)")
-                ax_.xaxis.grid(True)
-                ax_.yaxis.grid(True)
-
-                if key != "t":
-                    ax_.plot(traces["t"], traces[key], label=key)
-                    logger.debug("Adding trace for: %s, from: %s" % (key, file_name))
-                    ax_.used = True
-                    legend = True
-
-                if legend:
-                    if n_output_files > 1:
-                        ax_.legend(
-                            loc="upper right", fancybox=True, shadow=True, ncol=4
-                        )  # ,bbox_to_anchor=(0.5, -0.05))
-                    else:
-                        ax_.legend(
-                            loc="upper center",
-                            bbox_to_anchor=(0.5, -0.05),
-                            fancybox=True,
-                            shadow=True,
-                            ncol=4,
-                        )
-
-    #  print(traces.keys())
-
-    if plot and show_plot_already:
-        if n_output_files > 1:
-            ax_ = ax
-        else:
-            ax_ = [ax]
-        for axi in ax_:
-            if not hasattr(axi, "used") or not axi.used:
-                axi.axis("off")
-        plt.tight_layout()
-        plt.show()
-
-    if reload_events:
-        return traces, events
-    else:
-        return traces
+    return all_traces, all_events
 
 
 def generate_sim_scripts_in_folder(
