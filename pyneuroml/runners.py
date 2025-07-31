@@ -24,7 +24,6 @@ from typing import Optional
 
 import ppft as pp
 
-import pyneuroml.lems as pynmll
 import pyneuroml.plot.PlotTimeSeries as pynmlt
 import pyneuroml.utils
 import pyneuroml.utils.misc

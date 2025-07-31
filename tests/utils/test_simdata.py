@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Tests related to pyneuroml.lems module
+Tests related to pyneuroml.utils.simdata module
 
-File: tests/lems/tests_lems.py
+File: tests/utils/test_simdata.py
 
 Copyright 2024 NeuroML contributors
 """
@@ -12,14 +12,14 @@ import os
 import tempfile
 import unittest
 
-import pyneuroml.lems as pyl
+import pyneuroml.utils.simdata as pyl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class TestLEMSModule(unittest.TestCase):
-    """Test the LEMS module"""
+class TestSimdataModule(unittest.TestCase):
+    """Test the simdata module"""
 
     def test_load_sim_data_from_lems_file(self):
         """Test the load_sim_data_from_lems_file function"""

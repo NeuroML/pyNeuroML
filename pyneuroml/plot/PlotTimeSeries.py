@@ -225,12 +225,12 @@ def plot_time_series_from_lems_file(
     )
     assert all_traces
     _plot_traces(
-        all_traces,
-        title,
-        labels,
-        single_plot,
-        show_plot_already,
-        save_figure_to,
+        all_traces=all_traces,
+        title=title,
+        labels=labels,
+        single_plot=single_plot,
+        show_plot_already=show_plot_already,
+        save_figure_to=save_figure_to,
         **kwargs,
     )
 
@@ -270,12 +270,12 @@ def plot_time_series_from_data_files(
     all_traces = simd.load_traces_from_data_file(data_file_names, columns)
     assert all_traces
     _plot_traces(
-        all_traces,
-        title,
-        labels,
-        single_plot,
-        show_plot_already,
-        save_figure_to,
+        all_traces=all_traces,
+        title=title,
+        labels=labels,
+        single_plot=single_plot,
+        show_plot_already=show_plot_already,
+        save_figure_to=save_figure_to,
         **kwargs,
     )
 
@@ -284,6 +284,7 @@ def _plot_traces(
     all_traces: typing.Dict[str, typing.Dict],
     title: str = "",
     labels: bool = True,
+    offset: bool = False,
     single_plot: bool = False,
     show_plot_already: bool = False,
     save_figure_to: typing.Optional[str] = None,

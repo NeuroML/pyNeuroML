@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-import pyneuroml.lems as pynmll
+import pyneuroml.utils.simdata as pynmls
 from pyneuroml.plot import generate_plot
 from pyneuroml.utils.cli import build_namespace
 
@@ -493,7 +493,7 @@ def plot_spikes_from_lems_file(
     :return: None
     :rtype: None
     """
-    all_events: List[Dict] = pynmll.load_sim_data_from_lems_file(
+    all_events: List[Dict] = pynmls.load_sim_data_from_lems_file(
         lems_file_name, get_events=True, get_traces=False
     )
 
