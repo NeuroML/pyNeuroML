@@ -12,8 +12,8 @@ from typing import Any, Dict, List, Optional, Union
 import airspeed
 from neuroml import __version__ as libnml_ver
 
+import pyneuroml.pynml as pynml2
 from pyneuroml import __version__ as pynml_ver
-from pyneuroml.pynml import read_lems_file, read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
 from pyneuroml.utils.units import convert_to_units
 
@@ -182,7 +182,7 @@ class LEMSSimulation:
             self.include_files.append(nml2_file_name)
 
         if include_included:
-            cell = read_neuroml2_file(full_path)
+            cell = pynml2.read_neuroml2_file(full_path)
             for include in cell.includes:
                 self.include_neuroml2_file(
                     include.href, include_included=True, relative_to_dir=base_path
@@ -204,7 +204,7 @@ class LEMSSimulation:
             self.include_files.append(lems_file_name)
 
         if include_included:
-            model = read_lems_file(lems_file_name)
+            model = pynml2.read_lems_file(lems_file_name)
             for inc in model.included_files:
                 self.include_files.append(inc)
 

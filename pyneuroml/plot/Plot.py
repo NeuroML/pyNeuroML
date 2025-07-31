@@ -209,7 +209,7 @@ def generate_plot(
             f"values to plot ({len(xvalues)}) and markersizes ({len(markersizes)}) must have the same length"
         )
 
-    logger.info("Generating plot: %s" % (title))
+    logger.info("Generating plot" + (f": {title}" if title else ""))
 
     from matplotlib import pyplot as plt
     from matplotlib import rcParams
@@ -382,15 +382,11 @@ def generate_plot(
                 )
 
             pbar.finish(dirty=False)
-            logger.info("Saved animation to %s" % (save_figure_to))
+            logger.info(f"Saved animation to {os.path.abspath(save_figure_to)}")
     else:
         if save_figure_to:
-            logger.info(
-                "Saving image to %s of plot: %s"
-                % (os.path.abspath(save_figure_to), title)
-            )
             plt.savefig(save_figure_to, bbox_inches="tight")
-            logger.info("Saved image to %s of plot: %s" % (save_figure_to, title))
+            logger.info(f"Saved image to {os.path.abspath(save_figure_to)}")
 
     if show_plot_already:
         if interactive_legend is True and legend_box is not None:

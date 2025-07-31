@@ -11,8 +11,8 @@ import logging
 import pathlib as pl
 import unittest
 
+import pyneuroml.pynml as pynml2
 from pyneuroml.channelml import channelml2nml
-from pyneuroml.pynml import validate_neuroml2
 
 from .. import BaseTestCase
 
@@ -38,7 +38,7 @@ class TestChannelML(BaseTestCase):
             print(retval)
             with open(outfile, "w") as f:
                 print(retval, file=f, flush=True)
-            self.assertTrue(validate_neuroml2(outfile))
+            self.assertTrue(pynml2.validate_neuroml2(outfile))
             pl.Path(outfile).unlink()
 
 
