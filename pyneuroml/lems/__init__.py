@@ -7,7 +7,7 @@ import typing
 
 import neuroml
 
-import pyneuroml.pynml as pynml2
+from pyneuroml.io import read_neuroml2_file
 from pyneuroml.lems.LEMSSimulation import LEMSSimulation
 from pyneuroml.utils.plot import get_next_hex_color
 
@@ -143,10 +143,10 @@ def generate_lems_file_for_neuroml(
     ls = LEMSSimulation(sim_id, duration, dt, target, simulation_seed=simulation_seed)
 
     if nml_doc is None:
-        nml_doc = pynml2.read_neuroml2_file(
+        nml_doc = read_neuroml2_file(
             neuroml_file, include_includes=True, verbose=verbose
         )
-        nml_doc_inc_not_included = pynml2.read_neuroml2_file(
+        nml_doc_inc_not_included = read_neuroml2_file(
             neuroml_file, include_includes=False, verbose=False
         )
     else:
@@ -231,7 +231,7 @@ def generate_lems_file_for_neuroml(
 
             ls.include_neuroml2_file(include.href, include_included=False)
             try:
-                sub_doc = pynml2.read_neuroml2_file(incl_curr)
+                sub_doc = read_neuroml2_file(incl_curr)
                 sub_dir = (
                     os.path.dirname(incl_curr)
                     if len(os.path.dirname(incl_curr)) > 0
