@@ -944,6 +944,12 @@ def reload_standard_dat_file(file_name: str) -> typing.Tuple[dict, list]:
     :type file_name: str
     :returns: tuple of (data, column names)
     """
+    warnings.warn(
+        "This function will be removed in the future. Please prefer pyneuroml.utils.simdata.load_traces_from_data_file.",
+        FutureWarning,
+        stacklevel=2,
+    )
+
     with open(file_name) as dat_file:
         data = {}  # type: dict
         indices = []  # type: list
