@@ -17,7 +17,7 @@ import numpy
 from lxml import etree
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 
 def load_traces_from_data_file(
@@ -64,10 +64,7 @@ def load_sim_data_from_lems_file(
     get_traces: bool = True,
     t_run: datetime = datetime(1900, 1, 1),
     remove_dat_files_after_load: bool = False,
-) -> typing.Tuple[
-    typing.Optional[typing.Dict[str, typing.Dict]],
-    typing.Optional[typing.Dict[str, typing.Dict]],
-]:
+):
     """Load simulation outputs from LEMS simulation run.
 
     .. versionadded:: 1.2.2
@@ -94,7 +91,7 @@ def load_sim_data_from_lems_file(
             all_traces, all_events
 
         Otherwise one dictionary of dictionaries for whichever was selected is
-        returned, with None for the other.
+        returned.
 
         The events dictionary has the following format:
 
@@ -261,6 +258,6 @@ def load_sim_data_from_lems_file(
     if get_events and get_traces:
         return all_traces, all_events
     elif get_traces:
-        return all_traces, None
+        return all_traces
     else:
-        return None, all_events
+        return all_events

@@ -1015,9 +1015,9 @@ def reload_saved_data(
     reload_traces: bool = True,
     verbose: bool = DEFAULTS["v"],
     remove_dat_files_after_load: bool = False,
-) -> typing.Tuple[
-    typing.Optional[typing.Dict[str, typing.Dict]],
-    typing.Optional[typing.Dict[str, typing.Dict]],
+) -> typing.Union[
+    typing.Dict[str, typing.Dict],
+    typing.Tuple[typing.Dict[str, typing.Dict], typing.Dict[str, typing.Dict]],
 ]:
     """Reload data saved from previous LEMS simulation run.
 
@@ -1026,10 +1026,10 @@ def reload_saved_data(
 
     .. seealso::
 
-        the :py:mod:pyneuroml.plot.PlotTimeSeries module
+        the :py:mod:`pyneuroml.plot.PlotTimeSeries` module
             Module for plotting time series
 
-        the :py:mod:pyneuroml.plot.simdata module
+        the :py:mod:`pyneuroml.plot.simdata` module
             Module for loading simulation data
 
     :param lems_file_name: name of LEMS file that was used to generate the data
@@ -1052,25 +1052,20 @@ def reload_saved_data(
     :type remove_dat_files_after_load: bool
 
     :returns: if both `get_events` and `get_traces` are selected, a tuple with
-        two dictionaries of dictionaries, one for traces, one for events, is
-        returned:
+        two dictionaries, one for traces, one for events, is returned:
 
         .. code-block:: python
 
             all_traces, all_events
 
-        Otherwise one dictionary of dictionaries for whichever was selected is
-        returned, with None for the other.
+        Otherwise one dictionary for whichever was selected is returned.
 
         The events dictionary has the following format:
 
         .. code-block:: python
 
             {
-                "outputfile":
-                    {
-                        '<value of select attribute>': { 'cell id': [<events>] }
-                    }
+                '<value of select attribute>': { 'cell id': [<events>] }
             }
 
         The traces dictionary has the following format:
@@ -1078,34 +1073,75 @@ def reload_saved_data(
         .. code-block:: python
 
             {
-                "outputfile":
-                    {
-                        't': [<values>],
-                        'col 1': [<values>]
-                        'col 2': [<values>]
-                    }
+                't': [<values>],
+                'col 1': [<values>]
+                'col 2': [<values>]
             }
 
         Each list has multiple dictionaries, one each for each output file in
         the LEMS file.
-    """
-    all_traces: typing.Optional[typing.Dict] = None
-    all_events: typing.Optional[typing.Dict] = None
-    all_traces, all_events = pynmls.load_sim_data_from_lems_file(
-        lems_file_name=lems_file_name,
-        base_dir=base_dir,
-        get_events=reload_events,
-        get_traces=reload_traces,
-        t_run=t_run,
-        remove_dat_files_after_load=remove_dat_files_after_load,
-    )
 
-    if all_traces and plot:
-        pynmlt._plot_traces(
-            all_traces, show_plot_already=show_plot_already, single_plot=False
+
+    .. seealso::
+
+        The :py:mod:`pyneuroml.utils.simdata` module for more utility functions
+        on loading simulation data.
+
+    """
+    if not reload_events and not reload_traces:
+        raise ValueError("At least one of reload_traces or reload_events must be True")
+
+    all_traces: typing.Dict[str, typing.Dict] = {}
+    all_events: typing.Dict[str, typing.Dict] = {}
+    if reload_traces and not reload_events:
+        all_traces = pynmls.load_sim_data_from_lems_file(
+            lems_file_name=lems_file_name,
+            base_dir=base_dir,
+            get_events=False,
+            get_traces=True,
+            t_run=t_run,
+            remove_dat_files_after_load=remove_dat_files_after_load,
+        )
+    elif reload_events and not reload_traces:
+        all_traces = pynmls.load_sim_data_from_lems_file(
+            lems_file_name=lems_file_name,
+            base_dir=base_dir,
+            get_events=True,
+            get_traces=False,
+            t_run=t_run,
+            remove_dat_files_after_load=remove_dat_files_after_load,
+        )
+    else:
+        all_traces, all_events = pynmls.load_sim_data_from_lems_file(
+            lems_file_name=lems_file_name,
+            base_dir=base_dir,
+            get_events=True,
+            get_traces=True,
+            t_run=t_run,
+            remove_dat_files_after_load=remove_dat_files_after_load,
         )
 
-    return all_traces, all_events
+    flat_traces = {}
+    if all_traces:
+        for f, traces in all_traces.items():
+            flat_traces.update(traces)
+
+        if plot:
+            pynmlt._plot_traces(
+                all_traces, show_plot_already=show_plot_already, single_plot=False
+            )
+
+    flat_events = {}
+    if all_events:
+        for f, events in all_events.items():
+            flat_events.update(events)
+
+    if reload_events and reload_traces:
+        return flat_traces, flat_events
+    elif reload_traces and not reload_events:
+        return flat_traces
+    elif reload_events and not reload_traces:
+        return flat_events
 
 
 def generate_sim_scripts_in_folder(

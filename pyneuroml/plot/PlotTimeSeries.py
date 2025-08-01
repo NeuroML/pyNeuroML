@@ -21,7 +21,7 @@ import pyneuroml.utils.simdata as simd
 from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARN)
+logger.setLevel(logging.WARNING)
 
 
 TIME_SERIES_PLOTTER_DEFAULTS = {
@@ -220,7 +220,7 @@ def plot_time_series_from_lems_file(
 
     """
     # the user wants to see the plots
-    all_traces, _ = simd.load_sim_data_from_lems_file(
+    all_traces = simd.load_sim_data_from_lems_file(
         lems_file_name, base_dir, get_events=False, get_traces=True
     )
     assert all_traces

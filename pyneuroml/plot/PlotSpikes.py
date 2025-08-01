@@ -493,14 +493,14 @@ def plot_spikes_from_lems_file(
     :return: None
     :rtype: None
     """
-    all_events: List[Dict] = pynmls.load_sim_data_from_lems_file(
+    all_events: Dict[str, Dict] = pynmls.load_sim_data_from_lems_file(
         lems_file_name, get_events=True, get_traces=False
     )
 
     if len(all_events) > 1:
         show_each_plot_already = False
 
-    for event_data in all_events:
+    for filename, event_data in all_events.items():
         spike_data = []  # type: List[Dict]
         for select, times in event_data.items():
             new_dict = {"name": select}
