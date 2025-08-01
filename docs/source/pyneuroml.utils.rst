@@ -38,6 +38,14 @@ pyneuroml.utils.cli module
    :undoc-members:
    :show-inheritance:
 
+pyneuroml.utils.simdata module
+-------------------------------
+
+.. automodule:: pyneuroml.utils.simdata
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyneuroml.utils.units module
 ----------------------------
 
