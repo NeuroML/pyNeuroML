@@ -4,7 +4,12 @@ set -e
 
 # CI already installs package and all optional dependencies, so this is redundant.
 # But we keep it to allow easy local testing.
-pip install .[dev]
+if command -v uv
+then
+    uv pip install .[dev]
+else
+    pip install .[dev]
+fi
 
 # required to test commands that should fail
 # need this because other constructs don't work:

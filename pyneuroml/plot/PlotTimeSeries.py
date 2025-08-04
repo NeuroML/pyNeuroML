@@ -16,8 +16,8 @@ import numpy
 from matplotlib import pyplot as plt
 from matplotlib_scalebar.scalebar import ScaleBar
 
-import pyneuroml.lems as pynmll
 import pyneuroml.plot.Plot as pynmlplt
+import pyneuroml.utils.simdata as simd
 from pyneuroml.utils.cli import build_namespace
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ logger.setLevel(logging.WARNING)
 TIME_SERIES_PLOTTER_DEFAULTS = {
     "offset": False,
     "labels": False,
+    "singlePlot": False,
 }
 
 
@@ -36,7 +37,7 @@ def plot_time_series(
         typing.List[typing.Dict[typing.Any, typing.Any]],
     ],
     title: str = "",
-    offset: bool = True,
+    offset: bool = False,
     show_plot_already: bool = True,
     scalebar_location: typing.Optional[str] = None,
     scalebar_length: typing.Optional[float] = None,
@@ -84,6 +85,11 @@ def plot_time_series(
     if isinstance(trace_data, dict):
         trace_data = [trace_data]
 
+    # if scalebar needs to be drawn, we need to wait until all plots are done
+    show_this_plot_already = (
+        False if scalebar_location is not None else show_plot_already
+    )
+
     num_traces = 0
     for td in trace_data:
         num_traces += len(td)
@@ -91,10 +97,7 @@ def plot_time_series(
 
     xs = []
     ys = []
-    if labels is True:
-        labelvals = []
-    else:
-        labelvals = None
+    labelvals: typing.List[str] = []
 
     # calculate trace width
     miny = float(math.inf)
@@ -152,9 +155,9 @@ def plot_time_series(
         xvalues=xs,
         yvalues=ys,
         title=title,
-        labels=labelvals,
+        labels=labelvals if labels is True else None,
         show_yticklabels=show_yticklabels,
-        show_plot_already=False if scalebar_location is not None else True,
+        show_plot_already=show_this_plot_already,
         **kwargs_generate_plot,
     )
 
@@ -173,6 +176,8 @@ def plot_time_series(
         )
 
         print(f"Note: length of the scalebar is {scalebar_length} units")
+
+        assert ax
         ax.add_artist(scalebar_)
 
         if show_plot_already is True:
@@ -184,6 +189,9 @@ def plot_time_series_from_lems_file(
     base_dir: str = ".",
     title: str = "",
     labels: bool = True,
+    single_plot: bool = False,
+    show_plot_already: bool = True,
+    save_figure_to: typing.Optional[str] = None,
     **kwargs,
 ) -> None:
     """Plot time series from a LEMS file.
@@ -204,21 +212,37 @@ def plot_time_series_from_lems_file(
     :type base_dir: str
     :param labels: toggle whether plots should be labelled
     :type labels: bool
+    :param show_plot_already: whether the generated plots should be shown:
+        useful if you want to only save the plots to files without showing them
+    :type show_plot_already: bool
     :param kwargs: other arguments passed to `plot_time_series`
     :returns: None
 
     """
-    traces = pynmll.load_sim_data_from_lems_file(
-        lems_file_name, get_events=False, get_traces=True
+    # the user wants to see the plots
+    all_traces = simd.load_sim_data_from_lems_file(
+        lems_file_name, base_dir, get_events=False, get_traces=True
     )
-
-    plot_time_series(traces, labels=labels, xaxis="Time (s)", **kwargs)
+    assert all_traces
+    _plot_traces(
+        all_traces=all_traces,
+        title=title,
+        labels=labels,
+        single_plot=single_plot,
+        show_plot_already=show_plot_already,
+        save_figure_to=save_figure_to,
+        **kwargs,
+    )
 
 
 def plot_time_series_from_data_files(
     data_file_names: typing.Union[str, typing.List[str]],
+    title: str = "",
     labels: bool = True,
     columns: typing.Optional[typing.List[int]] = None,
+    single_plot: bool = False,
+    show_plot_already: bool = True,
+    save_figure_to: typing.Optional[str] = None,
     **kwargs,
 ):
     """Plot time series from a data file.
@@ -233,29 +257,104 @@ def plot_time_series_from_data_files(
     :type labels: bool
     :param columns: column indices to plot
     :type columns: list of ints: [1, 2, 3]
+    :param single_plot: whether all data should be plotted in one single plot
+    :type single_plot: bool
+    :param save_figure_to: file to save figure to
+        note that if there are multiple figures, this is ignored and the files
+        are named based on the input files
+    :type save_figure_to: str
     :param kwargs: other key word arguments that are passed to the
         `plot_time_series` function
 
     """
-    all_traces = []
-    if isinstance(data_file_names, str):
-        data_file_names = [data_file_names]
+    all_traces = simd.load_traces_from_data_file(data_file_names, columns)
+    assert all_traces
+    _plot_traces(
+        all_traces=all_traces,
+        title=title,
+        labels=labels,
+        single_plot=single_plot,
+        show_plot_already=show_plot_already,
+        save_figure_to=save_figure_to,
+        **kwargs,
+    )
 
-    for f in data_file_names:
-        print(f"Processing: {f}")
-        traces = {}
-        data_array = numpy.loadtxt(f)
-        traces["t"] = data_array[:, 0]
-        num_cols = numpy.shape(data_array)[1]
-        for i in range(1, num_cols, 1):
-            if columns and len(columns) > 0:
-                if i not in columns:
-                    logger.warning(f"Skipping column {i}")
-                    continue
-            traces[f"{f}_{i}"] = data_array[:, i]
-        all_traces.append(traces)
 
-    plot_time_series(all_traces, labels=labels, **kwargs)
+def _plot_traces(
+    all_traces: typing.Dict[str, typing.Dict],
+    title: str = "",
+    labels: bool = True,
+    offset: bool = False,
+    single_plot: bool = False,
+    show_plot_already: bool = False,
+    save_figure_to: typing.Optional[str] = None,
+    **kwargs,
+) -> None:
+    """Worker function for plotting traces.
+
+    :param all_traces: dict with traces
+    :param labels: toggle whether plots should be labelled
+    :type labels: bool
+    :param single_plot: whether all data should be plotted in one single plot
+    :type single_plot: bool
+    :param save_figure_to: file to save figure to
+        note that if there are multiple figures, this is ignored and the files
+        are named based on the input files
+    :type save_figure_to: str
+    :param show_plot_already: whether the generated plots should be shown:
+        useful if you want to only save the plots to files without showing them
+    :type show_plot_already: bool
+    :returns: None
+
+    """
+    show_plots = show_plot_already
+    if len(all_traces) > 1 and single_plot is False and save_figure_to:
+        # we will show all plots together at the end instead of one by one,
+        # which blocks on each plot
+        show_plot_already = False
+
+        # let the user know
+        logger.warning(
+            "Ignoring 'save_figure_to': each plot will be saved in individual files of the form <inputfile>.png"
+        )
+
+    if not single_plot:
+        for f, traces in all_traces.items():
+            if save_figure_to:
+                if len(all_traces) > 1:
+                    file_name = f"{f}.png"
+                else:
+                    file_name = save_figure_to
+            else:
+                file_name = None
+
+            plot_time_series(
+                traces,
+                offset=False,
+                labels=labels,
+                show_plot_already=(show_plots and show_plot_already),
+                save_figure_to=file_name,
+                **kwargs,
+            )
+    else:
+        # all traces in one single plot
+        flat_traces = {}
+        for f, traces in all_traces.items():
+            flat_traces.update(traces)
+
+        plot_time_series(
+            flat_traces,
+            offset=False,
+            labels=labels,
+            show_plot_already=(show_plots and show_plot_already),
+            save_figure_to=save_figure_to,
+            **kwargs,
+        )
+
+    # if the user wants to see the plots, but we delayed to show them all
+    # together
+    if show_plots and show_plot_already:
+        plt.show()
 
 
 def _process_time_series_plotter_args():
@@ -294,6 +393,12 @@ def _process_time_series_plotter_args():
         help=("Offset plots"),
     )
     parser.add_argument(
+        "-singlePlot",
+        action="store_true",
+        default=TIME_SERIES_PLOTTER_DEFAULTS["singlePlot"],
+        help=("For data files: whether they should be plotted in a single plot"),
+    )
+    parser.add_argument(
         "-saveToFile",
         type=str,
         metavar="<Image file name>",
@@ -325,6 +430,7 @@ def _time_series_plotter_main(args=None):
             columns=a.columns,
             offset=a.offset,
             labels=a.labels,
+            single_plot=a.single_plot,
             bottom_left_spines_only=True,
             save_figure_to=a.save_to_file,
         )

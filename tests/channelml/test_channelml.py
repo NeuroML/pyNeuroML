@@ -12,7 +12,7 @@ import pathlib as pl
 import unittest
 
 from pyneuroml.channelml import channelml2nml
-from pyneuroml.pynml import validate_neuroml2
+from pyneuroml.validators import validate_neuroml2
 
 from .. import BaseTestCase
 

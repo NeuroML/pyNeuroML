@@ -14,10 +14,10 @@ import shutil
 import typing
 from zipfile import ZipFile
 
-from pyneuroml.runners import run_jneuroml
-from pyneuroml.sedml import validate_sedml_files
-from pyneuroml.utils import get_model_file_list
-from pyneuroml.utils.cli import build_namespace
+import pyneuroml.runners as pynmlr
+import pyneuroml.sedml as pynmls
+import pyneuroml.utils as pynmlu
+import pyneuroml.utils.cli as pynmluc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -85,7 +85,7 @@ def main(args=None):
 
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
-    a = build_namespace(DEFAULTS, a, **kwargs)
+    a = pynmluc.build_namespace(DEFAULTS, a, **kwargs)
 
     rootfile = a.rootfile
     zipfile_extension = ".neux.zip"
@@ -96,13 +96,13 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
         a.rootfile.startswith("LEMS") and a.rootfile.endswith(".xml")
     ) and a.sedml is True:
         logger.debug("Generating SED-ML file from LEMS file")
-        run_jneuroml("", a.rootfile, "-sedml")
+        pynmlr.run_jneuroml("", a.rootfile, "-sedml")
 
         rootfile = a.rootfile.replace(".xml", ".sedml")
         zipfile_extension = ".omex.zip"
 
         # validate the generated file
-        validate_sedml_files([rootfile])
+        pynmls.validate_sedml_files([rootfile])
 
     # if explicitly given, use that
     if a.zipfile_extension is not None:
@@ -175,7 +175,9 @@ def create_combine_archive(
 
     lems_def_dir = None
     if len(filelist) == 0:
-        lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
+        lems_def_dir = pynmlu.get_model_file_list(
+            rootfile, filelist, rootdir, lems_def_dir
+        )
 
     create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
     filelist.append("manifest.xml")

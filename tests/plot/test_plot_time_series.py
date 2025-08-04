@@ -86,11 +86,58 @@ class TestPlotTimeSeries(BaseTestCase):
             show_plot_already=False,
             save_figure_to="time-series-test-from-file-2.png",
         )
-        self.assertIsFile("time-series-test-from-file.png")
+        self.assertIsFile("time-series-test-from-file-2.png")
 
         os.unlink("time-series-test-from-file.png")
         os.unlink("time-series-test-from-file-2.png")
         os.unlink(trace_file.name)
+
+    def test_plot_time_series_from_x_data_files(self):
+        """Test plot_time_series_from_data_file function"""
+        trace_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
+        for i in range(0, 1000):
+            print(
+                f"{i/1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
+                file=trace_file,
+            )
+        trace_file.flush()
+        trace_file.close()
+
+        trace_file2 = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
+        for i in range(0, 1000):
+            print(
+                f"{i/1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
+                file=trace_file2,
+            )
+        trace_file2.flush()
+        trace_file2.close()
+
+        pyplts.plot_time_series_from_data_files(
+            [trace_file.name, trace_file2.name],
+            title="",
+            offset=True,
+            show_plot_already=False,
+            single_plot=True,
+            save_figure_to="time-series-test-from-files.png",
+        )
+        self.assertIsFile("time-series-test-from-files.png")
+
+        os.unlink("time-series-test-from-files.png")
+
+        pyplts.plot_time_series_from_data_files(
+            [trace_file.name, trace_file2.name],
+            title="",
+            offset=False,
+            show_plot_already=False,
+            save_figure_to="something",
+        )
+        self.assertIsFile(f"{trace_file.name}.png")
+        self.assertIsFile(f"{trace_file2.name}.png")
+        os.unlink(f"{trace_file.name}.png")
+        os.unlink(f"{trace_file2.name}.png")
+
+        os.unlink(trace_file.name)
+        os.unlink(trace_file2.name)
 
     def test_plot_time_series_from_lems_file(self):
         """Test plot_time_series_from_lems_file function"""
@@ -128,6 +175,11 @@ class TestPlotTimeSeries(BaseTestCase):
             <OutputColumn id="IzhPop0[1]" quantity="IzhPop0[1]/v"/>
             <OutputColumn id="IzhPop0[2]" quantity="IzhPop0[2]/v"/>
         </OutputFile>
+        <OutputFile id="output1" fileName="{trace_file.name}">
+            <OutputColumn id="IzhPop0[0]" quantity="IzhPop0[0]/v"/>
+            <OutputColumn id="IzhPop0[1]" quantity="IzhPop0[1]/v"/>
+            <OutputColumn id="IzhPop0[2]" quantity="IzhPop0[2]/v"/>
+        </OutputFile>
 
 
     </Simulation>
@@ -148,7 +200,7 @@ class TestPlotTimeSeries(BaseTestCase):
             lems_file.name,
             title="",
             offset=False,
-            show_plot_already=False,
+            show_plot_already=True,
             save_figure_to="time-series-test-from-lems-file.png",
         )
         self.assertIsFile("time-series-test-from-lems-file.png")
@@ -157,10 +209,10 @@ class TestPlotTimeSeries(BaseTestCase):
             lems_file.name,
             title="",
             offset=True,
-            show_plot_already=False,
+            show_plot_already=True,
             save_figure_to="time-series-test-from-lems-file-2.png",
         )
-        self.assertIsFile("time-series-test-from-lems-file.png")
+        self.assertIsFile("time-series-test-from-lems-file-2.png")
 
         os.unlink("time-series-test-from-lems-file.png")
         os.unlink("time-series-test-from-lems-file-2.png")

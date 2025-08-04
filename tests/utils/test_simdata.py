@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Tests related to pyneuroml.lems module
+Tests related to pyneuroml.utils.simdata module
 
-File: tests/lems/tests_lems.py
+File: tests/utils/test_simdata.py
 
 Copyright 2024 NeuroML contributors
 """
@@ -12,14 +12,14 @@ import os
 import tempfile
 import unittest
 
-import pyneuroml.lems as pyl
+import pyneuroml.utils.simdata as pyl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class TestLEMSModule(unittest.TestCase):
-    """Test the LEMS module"""
+class TestSimdataModule(unittest.TestCase):
+    """Test the simdata module"""
 
     def test_load_sim_data_from_lems_file(self):
         """Test the load_sim_data_from_lems_file function"""
@@ -113,19 +113,23 @@ class TestLEMSModule(unittest.TestCase):
         f.flush()
         f.close()
 
-        events = pyl.load_sim_data_from_lems_file(
+        all_events = pyl.load_sim_data_from_lems_file(
             f.name, base_dir=".", get_events=True, get_traces=False
         )
 
-        traces = pyl.load_sim_data_from_lems_file(
+        all_traces = pyl.load_sim_data_from_lems_file(
             f.name, base_dir=".", get_events=False, get_traces=True
         )
 
+        self.assertIsNotNone(all_events)
+        events = all_events[event_data_file.name]
         self.assertIsNotNone(events)
         self.assertEqual(events["IzPop0[0]"][0], 0.04350000000009967)
         self.assertEqual(events["IzPop0[0]"][-1], 0.9433999999997897)
         print(events)
 
+        self.assertIsNotNone(all_traces)
+        traces = all_traces[trace_file.name]
         self.assertIsNotNone(traces)
         self.assertEqual(traces["t"][0], 0.0)
         self.assertEqual(traces["t"][-1], 0.0019)

@@ -13,15 +13,7 @@ import os
 import shutil
 import unittest
 
-from pyneuroml.pynml import (
-    execute_command_in_dir,
-    execute_command_in_dir_with_realtime_output,
-    extract_lems_definition_files,
-    list_exposures,
-    list_recording_paths_for_exposures,
-    run_jneuroml,
-    validate_neuroml2,
-)
+import pyneuroml.pynml as pynmlpynml
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -45,7 +37,7 @@ class TestJarUtils(unittest.TestCase):
             "Synapses.xml",
         ]
 
-        extraction_dir = extract_lems_definition_files()
+        extraction_dir = pynmlpynml.extract_lems_definition_files()
         newfilelist = os.listdir(extraction_dir)
         shutil.rmtree(extraction_dir[: -1 * len("NeuroML2CoreTypes/")])
         assert sorted(filelist) == sorted(newfilelist)
@@ -56,7 +48,7 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_exposure_listing(self):
         """Test listing of exposures in NeuroML documents."""
-        exps = list_exposures("tests/izhikevich_test_file.nml", "iz")
+        exps = pynmlpynml.list_exposures("tests/izhikevich_test_file.nml", "iz")
         ctypes = {}
         for key, val in exps.items():
             ctypes[key.type] = val
@@ -74,13 +66,13 @@ class TestHelperUtils(unittest.TestCase):
     def test_exposure_listing_2(self):
         """Test listing of exposures in NeuroML documents."""
         os.chdir("tests/")
-        exps = list_exposures("HH_example_net.nml")
+        exps = pynmlpynml.list_exposures("HH_example_net.nml")
         print(exps)
         os.chdir("../")
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
-        paths = list_recording_paths_for_exposures(
+        paths = pynmlpynml.list_recording_paths_for_exposures(
             "tests/izhikevich_test_file.nml", "", "IzhNet"
         )
         print("\n".join(paths))
@@ -90,7 +82,7 @@ class TestHelperUtils(unittest.TestCase):
     def test_recording_path_listing_2(self):
         """Test listing of recording paths in NeuroML documents."""
         os.chdir("tests/")
-        paths = list_recording_paths_for_exposures(
+        paths = pynmlpynml.list_recording_paths_for_exposures(
             "HH_example_net.nml", "hh_cell", "single_hh_cell_network"
         )
         print("\n".join(paths))
@@ -104,7 +96,7 @@ class TestHelperUtils(unittest.TestCase):
         output = None
         retcode = None
 
-        retcode, output = execute_command_in_dir(
+        retcode, output = pynmlpynml.execute_command_in_dir(
             command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
 
@@ -114,7 +106,7 @@ class TestHelperUtils(unittest.TestCase):
         command_bad = "ls non_existent_file"
         output = None
         retcode = None
-        retcode, output = execute_command_in_dir(
+        retcode, output = pynmlpynml.execute_command_in_dir(
             command_bad, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
         self.assertNotEqual(retcode, 0)
@@ -127,7 +119,7 @@ class TestHelperUtils(unittest.TestCase):
         verbose = True
         success = False
 
-        success = execute_command_in_dir_with_realtime_output(
+        success = pynmlpynml.execute_command_in_dir_with_realtime_output(
             command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
         self.assertTrue(success)
@@ -135,7 +127,7 @@ class TestHelperUtils(unittest.TestCase):
         command_bad = "ls non_existent_file"
         success = True
 
-        success = execute_command_in_dir_with_realtime_output(
+        success = pynmlpynml.execute_command_in_dir_with_realtime_output(
             command_bad, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
         )
         self.assertFalse(success)
@@ -143,23 +135,23 @@ class TestHelperUtils(unittest.TestCase):
     def test_run_jneuroml(self):
         """Test run_jneuroml"""
         retstat = None
-        retstat = run_jneuroml("-v", None, None)
+        retstat = pynmlpynml.run_jneuroml("-v", None, None)
         self.assertTrue(retstat)
 
         retstat = None
-        retstat = run_jneuroml("-randomflag", "", "")
+        retstat = pynmlpynml.run_jneuroml("-randomflag", "", "")
         self.assertFalse(retstat)
 
     def test_validate_neuroml2(self):
         """Test validate_neuroml2"""
         os.chdir("tests/")
         retval = None
-        retval = validate_neuroml2("HH_example_k_channel.nml")
+        retval = pynmlpynml.validate_neuroml2("HH_example_k_channel.nml")
         self.assertTrue(retval)
 
         retval = None
         retstring = None
-        retval, retstring = validate_neuroml2(
+        retval, retstring = pynmlpynml.validate_neuroml2(
             "HH_example_k_channel.nml", return_string=True
         )
         self.assertTrue(retval)
@@ -168,7 +160,9 @@ class TestHelperUtils(unittest.TestCase):
 
         retval = None
         retstring = None
-        retval, retstring = validate_neuroml2("setup.cfg", return_string=True)
+        retval, retstring = pynmlpynml.validate_neuroml2(
+            "setup.cfg", return_string=True
+        )
         self.assertFalse(retval)
         self.assertIn("1 failed", retstring)
 

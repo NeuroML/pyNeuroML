@@ -11,8 +11,8 @@ import logging
 import typing
 import warnings
 
+import pyneuroml.runners as pynmlr
 from pyneuroml import DEFAULTS
-from pyneuroml.runners import run_jneuroml
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -44,7 +44,7 @@ def validate_neuroml1(
         stacklevel=2,
     )
 
-    return run_jneuroml(
+    return pynmlr.run_jneuroml(
         pre_args,
         nml1_file_name,
         post_args,
@@ -77,7 +77,7 @@ def validate_neuroml2(
     post_args = ""
 
     if max_memory is not None:
-        return run_jneuroml(
+        return pynmlr.run_jneuroml(
             pre_args,
             nml2_file_name,
             post_args,
@@ -88,7 +88,7 @@ def validate_neuroml2(
             return_string=return_string,
         )
     else:
-        return run_jneuroml(
+        return pynmlr.run_jneuroml(
             pre_args,
             nml2_file_name,
             post_args,
@@ -120,7 +120,7 @@ def validate_neuroml2_lems_file(
     post_args = ""
     post_args += "-norun"
 
-    return run_jneuroml(
+    return pynmlr.run_jneuroml(
         "",
         nml2_lems_file_name,
         post_args,

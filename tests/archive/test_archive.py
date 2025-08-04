@@ -14,9 +14,9 @@ import unittest
 from pyneuroml.archive import (
     create_combine_archive,
     create_combine_archive_manifest,
-    get_model_file_list,
 )
 from pyneuroml.runners import run_jneuroml
+from pyneuroml.utils import get_model_file_list
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

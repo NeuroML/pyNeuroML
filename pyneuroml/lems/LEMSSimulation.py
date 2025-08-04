@@ -13,7 +13,7 @@ import airspeed
 from neuroml import __version__ as libnml_ver
 
 from pyneuroml import __version__ as pynml_ver
-from pyneuroml.pynml import read_lems_file, read_neuroml2_file
+from pyneuroml.io import read_lems_file, read_neuroml2_file
 from pyneuroml.utils.plot import get_next_hex_color
 from pyneuroml.utils.units import convert_to_units
 
