@@ -330,8 +330,9 @@ def _plot_traces(
 
             plot_time_series(
                 traces,
-                offset=offset,
+                title=title,
                 labels=labels,
+                offset=offset,
                 show_plot_already=(show_plots and show_plot_already),
                 save_figure_to=file_name,
                 **kwargs,
@@ -344,8 +345,9 @@ def _plot_traces(
 
         plot_time_series(
             flat_traces,
-            offset=offset,
+            title=title,
             labels=labels,
+            offset=offset,
             show_plot_already=(show_plots and show_plot_already),
             save_figure_to=save_figure_to,
             **kwargs,
