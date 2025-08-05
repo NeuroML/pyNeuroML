@@ -330,7 +330,7 @@ def _plot_traces(
 
             plot_time_series(
                 traces,
-                offset=False,
+                offset=offset,
                 labels=labels,
                 show_plot_already=(show_plots and show_plot_already),
                 save_figure_to=file_name,
@@ -344,7 +344,7 @@ def _plot_traces(
 
         plot_time_series(
             flat_traces,
-            offset=False,
+            offset=offset,
             labels=labels,
             show_plot_already=(show_plots and show_plot_already),
             save_figure_to=save_figure_to,
