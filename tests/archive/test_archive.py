@@ -7,7 +7,6 @@ File: test_archive.py
 Copyright 2023 NeuroML contributors
 """
 
-import contextlib
 import logging
 import pathlib
 import unittest
@@ -18,6 +17,7 @@ from pyneuroml.archive import (
     get_model_file_list,
 )
 from pyneuroml.runners import run_jneuroml
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -50,7 +50,7 @@ class TestArchiveModule(unittest.TestCase):
         thispath = pathlib.Path(__file__)
         dirname = str(thispath.parent.parent.parent)
 
-        with contextlib.chdir(dirname + "/examples"):
+        with chdir(dirname + "/examples"):
             filelist = []
             get_model_file_list(
                 "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"

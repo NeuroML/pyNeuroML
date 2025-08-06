@@ -22,6 +22,7 @@ from pyneuroml.pynml import (
     run_jneuroml,
     validate_neuroml2,
 )
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -73,10 +74,9 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_exposure_listing_2(self):
         """Test listing of exposures in NeuroML documents."""
-        os.chdir("tests/")
-        exps = list_exposures("HH_example_net.nml")
-        print(exps)
-        os.chdir("../")
+        with chdir("tests/"):
+            exps = list_exposures("HH_example_net.nml")
+            print(exps)
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
@@ -89,12 +89,11 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_recording_path_listing_2(self):
         """Test listing of recording paths in NeuroML documents."""
-        os.chdir("tests/")
-        paths = list_recording_paths_for_exposures(
-            "HH_example_net.nml", "hh_cell", "single_hh_cell_network"
-        )
-        print("\n".join(paths))
-        os.chdir("../")
+        with chdir("tests/"):
+            paths = list_recording_paths_for_exposures(
+                "HH_example_net.nml", "hh_cell", "single_hh_cell_network"
+            )
+            print("\n".join(paths))
 
     def test_execute_command_in_dir(self):
         """Test execute_command_in_dir function."""
@@ -152,19 +151,18 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_validate_neuroml2(self):
         """Test validate_neuroml2"""
-        os.chdir("tests/")
-        retval = None
-        retval = validate_neuroml2("HH_example_k_channel.nml")
-        self.assertTrue(retval)
+        with chdir("tests/"):
+            retval = None
+            retval = validate_neuroml2("HH_example_k_channel.nml")
+            self.assertTrue(retval)
 
-        retval = None
-        retstring = None
-        retval, retstring = validate_neuroml2(
-            "HH_example_k_channel.nml", return_string=True
-        )
-        self.assertTrue(retval)
-        self.assertIn("Valid against schema and all tests", retstring)
-        os.chdir("../")
+            retval = None
+            retstring = None
+            retval, retstring = validate_neuroml2(
+                "HH_example_k_channel.nml", return_string=True
+            )
+            self.assertTrue(retval)
+            self.assertIn("Valid against schema and all tests", retstring)
 
         retval = None
         retstring = None
