@@ -735,17 +735,25 @@ def get_model_file_list(
         model.import_from_file(fullrootfile_rel)
 
         for inc in model.included_files:
-            # `inc` includes the folder name, but we want to keep the file name
-            # and the directory in which it is located separtely as the
-            # directory may have to be passed on recursively to other included
-            # files. So, we separate the name out.
-            incfile = pathlib.Path(inc).name
+            # `inc` includes the complete path relative to the current
+            # directory, which may repeat information such as the "rootdirpath"
+            # that we're tracking outselves. So, we need to do some massaging
+            # here to get the path to inc relative to the rootdirpath_rel
+            # again
+            incfile_path = pathlib.Path(inc)
+            incfile = incfile_path.name
+
+            if incfile_path.is_relative_to(rootdirpath_rel):
+                incfile_path_rel = incfile_path.relative_to(rootdirpath_rel)
+            else:
+                incfile_path_rel = incfile_path
+
             logger.debug(f"LEMS: Processing include file {incfile} ({inc})")
             if incfile in STANDARD_LEMS_FILES:
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
             lems_def_dir = get_model_file_list(
-                incfile, filelist, str(rootdirpath_rel), lems_def_dir
+                str(incfile_path_rel), filelist, str(rootdirpath_rel), lems_def_dir
             )
 
     elif str(rootfile_name).endswith(".sedml"):
