@@ -7,6 +7,7 @@ File: test_archive.py
 Copyright 2023 NeuroML contributors
 """
 
+import contextlib
 import logging
 import pathlib
 import unittest
@@ -43,6 +44,18 @@ class TestArchiveModule(unittest.TestCase):
             "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
         )
         self.assertEqual(5, len(filelist))
+
+    def test_get_model_file_list_2a(self):
+        # a LEMS file in the examples directory
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent.parent)
+
+        with contextlib.chdir(dirname + "/examples"):
+            filelist = []
+            get_model_file_list(
+                "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
+            )
+            self.assertEqual(5, len(filelist))
 
     def test_get_model_file_list_3(self):
         thispath = pathlib.Path(__file__)
