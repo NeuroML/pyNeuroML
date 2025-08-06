@@ -24,3 +24,23 @@ def get_path_to_jnml_jar() -> str:
         "jNeuroML-%s-jar-with-dependencies.jar" % JNEUROML_VERSION,
     )
     return jar_path
+
+
+try:
+    from contextlib import chdir  # Python 3.11+
+except ImportError:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def chdir(path):
+        """chdir context manager for python < 3.11
+
+        :param path: path to change to
+        :type path: str or os.PathLike
+        """
+        prev_cwd = os.getcwd()
+        os.chdir(path)
+        try:
+            yield
+        finally:
+            os.chdir(prev_cwd)
