@@ -713,17 +713,18 @@ def get_model_file_list(
             filelist.append(str(fullrootfile_rel))
 
     if str(rootfile_name).endswith(".nml"):
-        print(f"Processing NML file: {fullrootfile_rel}")
+        logger.info(f"Processing NML file: {fullrootfile_rel}")
         rootdoc = read_neuroml2_file(fullrootfile_rel)
         logger.debug(f"Has includes: {rootdoc.includes}")
 
         for inc in rootdoc.includes:
-            logger.debug(f"Processing includes: {inc.href} in {str(rootdirpath)}")
+            logger.debug(f"NML: Processing includes: {inc.href} in {str(rootdirpath)}")
             lems_def_dir = get_model_file_list(
                 inc.href, filelist, str(rootdirpath_rel), lems_def_dir
             )
 
     elif str(rootfile_name).endswith(".xml"):
+        logger.info(f"Processing LEMS file: {fullrootfile_rel}")
         # extract the standard NeuroML2 LEMS definitions into a directory
         # so that the LEMS parser can find them
         if lems_def_dir is None:
@@ -739,7 +740,7 @@ def get_model_file_list(
             # directory may have to be passed on recursively to other included
             # files. So, we separate the name out.
             incfile = pathlib.Path(inc).name
-            logger.debug(f"Processing include file {incfile} ({inc})")
+            logger.debug(f"LEMS: Processing include file {incfile} ({inc})")
             if incfile in STANDARD_LEMS_FILES:
                 logger.debug(f"Ignoring NeuroML2 standard LEMS file: {inc}")
                 continue
@@ -754,6 +755,7 @@ def get_model_file_list(
             logger.error("Please install optional dependencies to use SED-ML features:")
             logger.error("pip install pyneuroml[combine]")
 
+        logger.info(f"Processing SED-ML file: {fullrootfile_rel}")
         rootdoc = libsedml.readSedMLFromFile(fullrootfile_rel)
 
         # there should only be one model
