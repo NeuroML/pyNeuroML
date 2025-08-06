@@ -8,7 +8,6 @@ Copyright 2023 NeuroML contributors
 
 import argparse
 import logging
-import os
 import pathlib
 import shutil
 import typing
@@ -18,6 +17,7 @@ from pyneuroml.runners import run_jneuroml
 from pyneuroml.sedml import validate_sedml_files
 from pyneuroml.utils import get_model_file_list
 from pyneuroml.utils.cli import build_namespace
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -170,20 +170,19 @@ def create_combine_archive(
         zipfile_name = rootfile
 
     # change to directory of rootfile
-    thispath = os.getcwd()
-    os.chdir(rootdir)
+    with chdir(rootdir):
+        lems_def_dir = None
+        if len(filelist) == 0:
+            lems_def_dir = get_model_file_list(
+                rootfile, filelist, rootdir, lems_def_dir
+            )
 
-    lems_def_dir = None
-    if len(filelist) == 0:
-        lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
+        create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
+        filelist.append("manifest.xml")
 
-    create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
-    filelist.append("manifest.xml")
-
-    with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
-        for f in filelist + extra_files:
-            archive.write(f)
-    os.chdir(thispath)
+        with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
+            for f in filelist + extra_files:
+                archive.write(f)
 
     if lems_def_dir is not None:
         logger.info(f"Removing LEMS definitions directory {lems_def_dir}")

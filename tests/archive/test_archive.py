@@ -17,6 +17,7 @@ from pyneuroml.archive import (
     get_model_file_list,
 )
 from pyneuroml.runners import run_jneuroml
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -43,6 +44,18 @@ class TestArchiveModule(unittest.TestCase):
             "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
         )
         self.assertEqual(5, len(filelist))
+
+    def test_get_model_file_list_2a(self):
+        # a LEMS file in the examples directory
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent.parent)
+
+        with chdir(dirname + "/examples"):
+            filelist = []
+            get_model_file_list(
+                "LEMS_NML2_Ex5_DetCell.xml", filelist, dirname + "/examples"
+            )
+            self.assertEqual(5, len(filelist))
 
     def test_get_model_file_list_3(self):
         thispath = pathlib.Path(__file__)

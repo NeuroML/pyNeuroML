@@ -30,6 +30,7 @@ import pyneuroml.utils
 import pyneuroml.utils.misc
 from pyneuroml import DEFAULTS, __version__
 from pyneuroml.errors import UNKNOWN_ERR
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -1304,7 +1305,6 @@ def generate_sim_scripts_in_folder(
     if root_dir is None:
         root_dir = "."
 
-    cwd = Path.cwd()
     tdir = pyneuroml.utils.get_pyneuroml_tempdir(rootdir=run_dir, prefix="pyneuroml")
     os.mkdir(tdir)
 
@@ -1315,94 +1315,89 @@ def generate_sim_scripts_in_folder(
 
     # change to root_dir, so that we're in the directory where the lems file
     # is
-    os.chdir(root_dir)
-
-    logger.debug("Getting list of model files")
-    model_file_list = []  # type: list
-    lems_def_dir = None
-    lems_def_dir = pyneuroml.utils.get_model_file_list(
-        lems_file_name, model_file_list, root_dir, lems_def_dir
-    )
-
-    logger.debug(f"Model file list is {model_file_list}")
-
-    for model_file in model_file_list:
-        logger.debug(f"Copying: {model_file} -> {tdir}/{model_file}")
-        # if model file has directory structures in it, recreate the dirs in
-        # the temporary directory
-        if len(model_file.split("/")) > 1:
-            # throw error if files in parent directories are referred to
-            if "../" in model_file:
-                raise ValueError(
-                    """
-                    Cannot handle parent directories because we
-                    cannot create these directories correctly in
-                    the temporary location. Please re-organize
-                    your code such that all included files are in
-                    sub-directories of the root directory where the
-                    main file resides.
-                    """
-                )
-
-            model_file_path = pathlib.Path(tdir + "/" + model_file)
-            parent = model_file_path.parent
-            parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(model_file, tdir + "/" + model_file)
-
-    if lems_def_dir is not None:
-        logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
-        shutil.rmtree(lems_def_dir)
-
-    os.chdir(tdir)
-    logger.info(f"Working in {tdir}")
-    start_time = time.time() - 1.0
-
-    if engine == "jneuroml_neuron":
-        run_lems_with(
-            engine,
-            lems_file_name=Path(lems_file_name).name,
-            compile_mods=False,
-            only_generate_scripts=True,
-            *engine_args,
-            **engine_kwargs,
-        )
-    elif engine == "jneuroml_netpyne":
-        run_lems_with(
-            engine,
-            lems_file_name=Path(lems_file_name).name,
-            only_generate_scripts=True,
-            *engine_args,
-            **engine_kwargs,
+    with chdir(root_dir):
+        logger.debug("Getting list of model files")
+        model_file_list = []  # type: list
+        lems_def_dir = None
+        lems_def_dir = pyneuroml.utils.get_model_file_list(
+            lems_file_name, model_file_list, root_dir, lems_def_dir
         )
 
-    generated_files = pyneuroml.utils.get_files_generated_after(
-        start_time, ignore_suffixes=["xml", "nml"]
-    )
+        logger.debug(f"Model file list is {model_file_list}")
 
-    # For NetPyNE, the channels are converted to NEURON mod files, but the
-    # network and cells are imported from the nml files.
-    # So we include all the model files too.
-    if engine == "jneuroml_netpyne":
-        generated_files.extend(model_file_list)
+        for model_file in model_file_list:
+            logger.debug(f"Copying: {model_file} -> {tdir}/{model_file}")
+            # if model file has directory structures in it, recreate the dirs in
+            # the temporary directory
+            if len(model_file.split("/")) > 1:
+                # throw error if files in parent directories are referred to
+                if "../" in model_file:
+                    raise ValueError(
+                        """
+                        Cannot handle parent directories because we
+                        cannot create these directories correctly in
+                        the temporary location. Please re-organize
+                        your code such that all included files are in
+                        sub-directories of the root directory where the
+                        main file resides.
+                        """
+                    )
 
-    logger.debug(f"Generated files are: {generated_files}")
+                model_file_path = pathlib.Path(tdir + "/" + model_file)
+                parent = model_file_path.parent
+                parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(model_file, tdir + "/" + model_file)
 
-    if generated_files_dir_name is None:
-        generated_files_dir_name = Path(tdir).name + "_generated"
-    logger.debug(
-        f"Creating directory and moving generated files to it: {generated_files_dir_name}"
-    )
+        if lems_def_dir is not None:
+            logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
+            shutil.rmtree(lems_def_dir)
 
-    for f in generated_files:
-        fpath = pathlib.Path(f)
-        moved_path = generated_files_dir_name / fpath
-        # use os.renames because pathlib.Path.rename does not move
-        # recursively and so cannot move files within directories
-        os.renames(fpath, moved_path)
+    with chdir(tdir):
+        logger.info(f"Working in {tdir}")
+        start_time = time.time() - 1.0
 
-    # return to original directory
-    # doesn't affect scripts much, but does affect our tests
-    os.chdir(str(cwd))
+        if engine == "jneuroml_neuron":
+            run_lems_with(
+                engine,
+                lems_file_name=Path(lems_file_name).name,
+                compile_mods=False,
+                only_generate_scripts=True,
+                *engine_args,
+                **engine_kwargs,
+            )
+        elif engine == "jneuroml_netpyne":
+            run_lems_with(
+                engine,
+                lems_file_name=Path(lems_file_name).name,
+                only_generate_scripts=True,
+                *engine_args,
+                **engine_kwargs,
+            )
+
+        generated_files = pyneuroml.utils.get_files_generated_after(
+            start_time, ignore_suffixes=["xml", "nml"]
+        )
+
+        # For NetPyNE, the channels are converted to NEURON mod files, but the
+        # network and cells are imported from the nml files.
+        # So we include all the model files too.
+        if engine == "jneuroml_netpyne":
+            generated_files.extend(model_file_list)
+
+        logger.debug(f"Generated files are: {generated_files}")
+
+        if generated_files_dir_name is None:
+            generated_files_dir_name = Path(tdir).name + "_generated"
+        logger.debug(
+            f"Creating directory and moving generated files to it: {generated_files_dir_name}"
+        )
+
+        for f in generated_files:
+            fpath = pathlib.Path(f)
+            moved_path = generated_files_dir_name / fpath
+            # use os.renames because pathlib.Path.rename does not move
+            # recursively and so cannot move files within directories
+            os.renames(fpath, moved_path)
 
     return tdir
 
