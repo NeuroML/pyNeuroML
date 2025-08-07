@@ -119,6 +119,19 @@ class Annotation(object):
             "modified_dates": DCTERMS.modified,
         }
 
+        self.foaf_supported_attributes = [
+            "name",
+            "homepage",
+            "account",
+            "fundedBy",
+            "email",
+            "mbox",
+            "weblog",
+            "thumbnail",
+            "pubications",
+            "orcid",
+        ]
+
     def create_annotation(
         self,
         subject: str,
@@ -497,14 +510,22 @@ class Annotation(object):
 
                 # other fields
                 for idf, label in info.items():
+                    if label not in self.foaf_supported_attributes:
+                        logger.warning(
+                            f"Not a supported FOAF attribute, Skipping {idf}: {label}."
+                        )
+                        logger.warning(
+                            f"Only {self.foaf_supported_attributes} FOAF attributes are currently supported by NeuroML/LEMS"
+                        )
+                        continue
+
                     if label == "orcid":
                         foaf_type = ORCID.id
+                    elif label == "email":
+                        foaf_type = getattr(FOAF, "mbox", None)
                     else:
                         foaf_type = getattr(FOAF, label, None)
 
-                    if foaf_type is None:
-                        logger.info("Not a FOAF attribute, using DC.identifier")
-                        foaf_type = DC.identifier
                     self.doc.add((top_node, foaf_type, _URIRef_or_Literal(idf)))
         elif annotation_style == "miriam":
             # top level node: creator/contributor etc.
@@ -520,14 +541,22 @@ class Annotation(object):
                 # individual nodes for details
                 self.doc.add((ref, FOAF.name, Literal(name)))
                 for idf, label in info.items():
+                    if label not in self.foaf_supported_attributes:
+                        logger.warning(
+                            f"Not a supported FOAF attribute, Skipping {idf}: {label}."
+                        )
+                        logger.warning(
+                            f"Only {self.foaf_supported_attributes} FOAF attributes are currently supported by NeuroML/LEMS"
+                        )
+                        continue
+
                     if label == "orcid":
                         foaf_type = ORCID.id
+                    elif label == "email":
+                        foaf_type = getattr(FOAF, "mbox", None)
                     else:
                         foaf_type = getattr(FOAF, label, None)
 
-                    if foaf_type is None:
-                        logger.info("Not a FOAF attribute, using DC.identifier")
-                        foaf_type = DC.identifier
                     self.doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
 
     def extract_annotations(
