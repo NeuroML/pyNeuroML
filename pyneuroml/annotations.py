@@ -227,10 +227,14 @@ class Annotation(object):
 
             See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
 
+            Note that for xml formats, the xml is finally parsed through
+            lxml.etree to ensure compatibility with the rest of the
+            NeuroML/LEMS tool chain.
+
         :type serialization_format: str
         :param xml_header: toggle inclusion of xml header if serializing in xml format
         :type xml_header: bool
-        :param indent: number of spaces to use to indent the annotation block
+        :param indent: number of spaces to use to indent the annotation block for xml
         :type indent: int
         :param description: a longer description
         :type description: str
@@ -371,10 +375,6 @@ class Annotation(object):
 
         annotation = self.doc.serialize(format=serialization_format)
 
-        # indent
-        if indent > 0:
-            annotation = textwrap.indent(annotation, " " * indent)
-
         # xml issues
         if "xml" in serialization_format:
             # replace rdf:_1 etc with rdf:li
@@ -388,14 +388,44 @@ class Annotation(object):
             annotation = rdfbnode_pattern.sub("", annotation)
 
             # remove xml header, not used when embedding into other NeuroML files
-            if xml_header is False:
-                annotation = annotation[annotation.find(">") + 1 :]
+            # etree doesn't like it either for unicode strings
+            annotation = annotation[annotation.find(">") + 1 :]
 
-        if write_to_file:
-            with open(write_to_file, "w") as f:
-                print(annotation, file=f)
+            # put all the namespaces on one line
+            # jlems doesn't like multi-line tags
+            # https://github.com/LEMS/jLEMS/issues/127
+            annotation_etree = etree.fromstring(annotation)
 
-        return annotation
+            annotation_str = etree.tostring(
+                annotation_etree,
+                pretty_print=True,
+                encoding="unicode",
+                xml_declaration=xml_header,
+            )
+
+            if write_to_file:
+                with open(write_to_file, "w") as f:
+                    annotation_etree.write(
+                        f,
+                        encoding="unicode",
+                        xml_declaration=xml_header,
+                        pretty_print=True,
+                    )
+
+            # indent
+            if indent > 0:
+                annotation_str = textwrap.indent(annotation_str, " " * indent)
+
+            return annotation_str
+
+        else:
+            annotation = self.doc.serialize(format=serialization_format)
+
+            if write_to_file:
+                with open(write_to_file, "w") as f:
+                    print(annotation, file=f)
+
+            return annotation
 
     def _add_element(
         self,
