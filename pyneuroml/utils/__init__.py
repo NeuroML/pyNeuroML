@@ -730,7 +730,7 @@ def get_model_file_list(
         if lems_def_dir is None:
             lems_def_dir = extract_lems_definition_files()
 
-        model = Model(include_includes=True, fail_on_missing_includes=True)
+        model = Model(include_includes=True, fail_on_missing_includes=False)
         model.add_include_directory(lems_def_dir)
         model.import_from_file(fullrootfile_rel)
 
