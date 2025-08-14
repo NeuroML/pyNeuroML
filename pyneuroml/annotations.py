@@ -396,21 +396,15 @@ class Annotation(object):
             # https://github.com/LEMS/jLEMS/issues/127
             annotation_etree = etree.fromstring(annotation)
 
-            annotation_str = str(
+            annotation_str = (
                 etree.tostring(
-                    annotation_etree,
-                    pretty_print=True,
-                    xml_declaration=xml_header,
+                    annotation_etree, pretty_print=True, xml_declaration=xml_header
                 )
-            )
+            ).decode("utf-8")
 
             if write_to_file:
                 with open(write_to_file, "w") as f:
-                    annotation_etree.write(
-                        f,
-                        xml_declaration=xml_header,
-                        pretty_print=True,
-                    )
+                    print(annotation_str, file=f)
 
             # indent
             if indent > 0:
@@ -614,6 +608,9 @@ class Annotation(object):
                     obj_id = parent.attrib["id"]
                 except KeyError:
                     obj_id = ""
+
+                print(a)
+
                 annotations[obj_id] = self.parse_rdf(a)
 
             logger.info("Annotations in %s: " % (nml2_file))
