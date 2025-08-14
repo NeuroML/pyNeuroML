@@ -396,18 +396,18 @@ class Annotation(object):
             # https://github.com/LEMS/jLEMS/issues/127
             annotation_etree = etree.fromstring(annotation)
 
-            annotation_str = etree.tostring(
-                annotation_etree,
-                pretty_print=True,
-                encoding="unicode",
-                xml_declaration=xml_header,
+            annotation_str = str(
+                etree.tostring(
+                    annotation_etree,
+                    pretty_print=True,
+                    xml_declaration=xml_header,
+                )
             )
 
             if write_to_file:
                 with open(write_to_file, "w") as f:
                     annotation_etree.write(
                         f,
-                        encoding="unicode",
                         xml_declaration=xml_header,
                         pretty_print=True,
                     )
