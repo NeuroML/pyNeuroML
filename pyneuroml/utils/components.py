@@ -38,8 +38,27 @@ def add_new_component(
 
     .. versionadded:: 1.3.13
 
-    :param nmldoc: NeuroMLDocument object to include component in
-    :type nmldoc: NeuroMLDocument
+    Example usage:
+
+    .. code:: python
+
+       # file name to save new component as
+       component_filename = "gaussian_input.xml"
+       add_new_component(component_id="gaussian_input",
+                         component_type="noisyCurrentSource",
+                         component_filename=component_filename,
+                         mean="0.1nA", std="0.01nA", delay="500ms",
+                         duration="1000ms")
+       # the component type
+       lems_includes.append("NoisyCurrentSource.xml")
+       # the component
+       lems_includes.append(component_filename)
+
+
+    the `lems_includes` list can be used when creating the LEMS Simulation
+    object. In this way, the whole simulation can be validated by LEMS (jLEMS),
+    and the NeuroML parts can be validated against the schema.
+
     :param component_id: id of new Component
     :type component_id: str
     :param component_type: name of ComponentType that this Component is an
