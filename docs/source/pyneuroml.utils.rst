@@ -14,8 +14,8 @@ pyneuroml.utils.cli module
    :undoc-members:
    :show-inheritance:
 
-pyneuroml.utils.component module
----------------------------------
+pyneuroml.utils.components module
+----------------------------------
 
 .. automodule:: pyneuroml.utils.component
    :members:
