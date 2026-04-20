@@ -661,8 +661,6 @@ def run_lems_with_eden(
     if load_saved_data:
         logger.warning("Event saving is not yet supported in EDEN!!")
         return results, {}
-    elif load_saved_data:
-        return results
     else:
         return True
 
