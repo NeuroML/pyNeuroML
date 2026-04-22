@@ -73,63 +73,147 @@ def _sanitize_var_name(name: str | int) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Component ordering categories
+# Component ordering — human-logical model construction order
 # ---------------------------------------------------------------------------
 
-_OTHER_ORDER = [
-    "Population",
-    "CellSet",
+_SYNAPSE_TYPES = {
+    "ExpOneSynapse",
+    "ExpTwoSynapse",
+    "AlphaSynapse",
+    "BlockingSynapse",
+}
+
+_CHANNEL_TYPES = {
+    "Channel",
+    "IonChannel",
+    "IonChannelHH",
+    "ChannelDensity",
+    "ChannelDensityNernst",
+}
+
+_CELL_TYPES = {
+    "Cell",
+    "Cell2D",
+    "Cell3D",
+}
+
+_INPUT_GENERATOR_TYPES = {
+    "PulseGenerator",
+    "PulseGeneratorDL",
+    "SineGenerator",
+    "DCInput",
+    "PoissonFiringSynapse",
+    "TransientPoissonFiringSynapse",
+}
+
+_PROJECTION_TYPES = {
     "Projection",
     "ElectricalProjection",
     "ContinuousProjection",
-    "Connection",
-    "ConnectionW",
-    "InputList",
-    "InputW",
-    "ExplicitInput",
-    "Property",
-    "Annotation",
-    "Layout",
-    "Space",
-    "Region",
-]
+}
 
 
 def _order_key(type_name: str) -> int:
-    """Return an ordering key for a component type. Lower = earlier."""
+    """Return an ordering key for a component type.
+
+    Follows human-logical model construction order rather than schema
+    dependency order: network → populations → cells → synapses → projections
+    → connections → inputs → metadata.
+    """
     if type_name == "IncludeType":
         return 0
-    if type_name in {
-        "ExpOneSynapse",
-        "ExpTwoSynapse",
-        "AlphaSynapse",
-        "BlockingSynapse",
-    }:
-        return 1
-    if type_name in {
-        "Channel",
-        "IonChannel",
-        "IonChannelHH",
-        "ChannelDensity",
-        "ChannelDensityNernst",
-    }:
-        return 2
-    if type_name in {
-        "PulseGenerator",
-        "SineGenerator",
-        "DCInput",
-        "PoissonFiringSynapse",
-        "TransientPoissonFiringSynapse",
-    }:
-        return 3
     if type_name == "Network":
+        return 1
+    if type_name == "Population":
+        return 2
+    if type_name in _CHANNEL_TYPES:
+        return 3
+    if type_name in _CELL_TYPES:
         return 4
-    if type_name in _OTHER_ORDER:
-        return 50 + _OTHER_ORDER.index(type_name)
-    # Cells and other extractable types go after includes but before networks
-    if _is_extractable(type_name):
+    if type_name in _SYNAPSE_TYPES:
         return 5
-    return 999
+    if type_name in _PROJECTION_TYPES:
+        return 6
+    if type_name in ("Connection", "ConnectionW"):
+        return 7
+    if type_name in _INPUT_GENERATOR_TYPES:
+        return 8
+    if type_name in ("InputList", "InputW", "ExplicitInput"):
+        return 9
+    # Property, Annotation, Layout, Space, Region, etc.
+    return 10
+
+
+# ---------------------------------------------------------------------------
+# Indexed reference pattern
+# ---------------------------------------------------------------------------
+
+_SYNAPSE_TYPES = {
+    "ExpOneSynapse",
+    "ExpTwoSynapse",
+    "AlphaSynapse",
+    "BlockingSynapse",
+}
+
+_CHANNEL_TYPES = {
+    "Channel",
+    "IonChannel",
+    "IonChannelHH",
+    "ChannelDensity",
+    "ChannelDensityNernst",
+}
+
+_CELL_TYPES = {
+    "Cell",
+    "Cell2D",
+    "Cell3D",
+}
+
+_INPUT_GENERATOR_TYPES = {
+    "PulseGenerator",
+    "PulseGeneratorDL",
+    "SineGenerator",
+    "DCInput",
+    "PoissonFiringSynapse",
+    "TransientPoissonFiringSynapse",
+}
+
+_PROJECTION_TYPES = {
+    "Projection",
+    "ElectricalProjection",
+    "ContinuousProjection",
+}
+
+
+def _order_key(type_name: str) -> int:
+    """Return an ordering key for a component type.
+
+    Follows human-logical model construction order rather than schema
+    dependency order: network → populations → cells → synapses → projections
+    → connections → inputs → metadata.
+    """
+    if type_name == "IncludeType":
+        return 0
+    if type_name == "Network":
+        return 1
+    if type_name == "Population":
+        return 2
+    if type_name in _CHANNEL_TYPES:
+        return 3
+    if type_name in _CELL_TYPES:
+        return 4
+    if type_name in _SYNAPSE_TYPES:
+        return 5
+    if type_name in _PROJECTION_TYPES:
+        return 6
+    if type_name in ("Connection", "ConnectionW"):
+        return 7
+    if type_name in _INPUT_GENERATOR_TYPES:
+        return 8
+    if type_name in ("InputList", "InputW", "ExplicitInput"):
+        return 9
+    # Property, Annotation, Layout, Space, Region, etc.
+    return 10
 
 
 # ---------------------------------------------------------------------------
@@ -525,29 +609,20 @@ def _get_section_name(type_name: str) -> str:
     """Return the section header name for a component type."""
     if type_name == "IncludeType":
         return "Includes"
-    if type_name in {
-        "ExpOneSynapse",
-        "ExpTwoSynapse",
-        "AlphaSynapse",
-        "BlockingSynapse",
-    }:
-        return "Synapses"
-    if type_name in {
-        "Channel",
-        "IonChannel",
-        "IonChannelHH",
-        "ChannelDensity",
-        "ChannelDensityNernst",
-    }:
-        return "Channels"
-    if type_name in {
-        "PulseGenerator",
-        "SineGenerator",
-        "DCInput",
-        "PoissonFiringSynapse",
-        "TransientPoissonFiringSynapse",
-    }:
-        return "Inputs"
     if type_name == "Network":
         return "Networks"
+    if type_name == "Population":
+        return "Populations"
+    if type_name in _CELL_TYPES:
+        return "Cells"
+    if type_name in _CHANNEL_TYPES:
+        return "Channels"
+    if type_name in _SYNAPSE_TYPES:
+        return "Synapses"
+    if type_name in _PROJECTION_TYPES:
+        return "Projections"
+    if type_name in ("Connection", "ConnectionW"):
+        return "Connections"
+    if type_name in _INPUT_GENERATOR_TYPES:
+        return "Inputs"
     return "Other"
