@@ -9,7 +9,7 @@ extracted into separate files following NeuroML file naming conventions
 ({id}.cell.nml, {id}.channel.nml, {id}.synapse.nml). Components that were
 already in separate included files are preserved as includes.
 
-Copyright 2026 NeuroML AI contributors
+Copyright 2026 NeuroML contributors
 """
 
 from __future__ import annotations
@@ -34,9 +34,6 @@ _SCALAR_TYPE_PATTERNS = (
     r"^Nml2PopulationReferencePath$",
     r"^NonNegativeInteger$",
     r"^PositiveInteger$",
-    r"^Integer$",
-    r"^Float$",
-    r"^Boolean$",
     r"^MetaId$",
     r"^NeuroLexId$",
     r"^populationTypes$",
