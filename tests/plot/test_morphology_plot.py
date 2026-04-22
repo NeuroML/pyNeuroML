@@ -8,7 +8,6 @@ Copyright 2023 NeuroML contributors
 """
 
 import logging
-import os
 import pathlib as pl
 from contextlib import chdir
 
@@ -38,23 +37,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture(scope="class", autouse=True)
-def change_test_dir(request):
-    # Store the current working directory
-    original_dir = os.getcwd()
-
-    # Change to the desired directory
-    os.chdir("./tests/plot/")
-
-    # After the test class completes, revert to the original directory
-    def teardown():
-        os.chdir(original_dir)
-
-    request.addfinalizer(teardown)
-
-
 class TestMorphologyPlot(BaseTestCase):
     """Test Plot module"""
+
+    @pytest.fixture(autouse=True)
+    def plot_dir(self, monkeypatch, request):
+        target_dir = request.path.parent
+        monkeypatch.chdir(target_dir)
 
     def test_2d_point_plotter(self):
         """Test plot_2D_point_cells function."""

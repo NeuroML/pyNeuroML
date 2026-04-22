@@ -9,6 +9,7 @@ from pyneuroml import sbml
 def test_sbml_validate_a_valid_file():
     "ensure it validates a single valid file by returning True"
 
+    print(f"{os.getcwd() = }")
     fname = "tests/sbml/test_data/valid_doc.sbml"
     result = sbml.validate_sbml_files([fname])
     assert result
