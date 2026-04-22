@@ -273,9 +273,9 @@ class NmlPythonizer:
         self.nml_file = nml_file
         self.output_dir = Path(output_dir) if output_dir else Path(nml_file).parent
 
-        # id → variable_name mapping
+        # id -> variable_name mapping
         self.id_to_var: dict[str, str] = {}
-        # object identity → variable_name mapping (for components without ids)
+        # object identity -> variable_name mapping (for components without ids)
         self._obj_to_var: dict[int, str] = {}
         # Collected components: (obj, parent_var_name)
         self._components: list[tuple[Any, str | None]] = []
@@ -287,7 +287,7 @@ class NmlPythonizer:
         # Extracted components that need to be written to separate files
         self._extracted: list[tuple[Any, str]] = []  # (obj, filename)
 
-        # Load raw doc (no includes) — this is what we walk for code generation
+        # Load raw doc (no includes)  ---  this is what we walk for code generation
         self.raw_doc = read_neuroml2_file(nml_file, include_includes=False)
 
     # ------------------------------------------------------------------
@@ -373,7 +373,7 @@ class NmlPythonizer:
         """
         type_name = type(obj).__name__
 
-        # Skip IncludeType — handled separately
+        # Skip IncludeType  ---  handled separately
         if type_name == "IncludeType":
             return None
 
