@@ -73,52 +73,16 @@ def _sanitize_var_name(name: str | int) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Component ordering — human-logical model construction order
+# Component ordering -- human-logical model construction order
 # ---------------------------------------------------------------------------
-
-_SYNAPSE_TYPES = {
-    "ExpOneSynapse",
-    "ExpTwoSynapse",
-    "AlphaSynapse",
-    "BlockingSynapse",
-}
-
-_CHANNEL_TYPES = {
-    "Channel",
-    "IonChannel",
-    "IonChannelHH",
-    "ChannelDensity",
-    "ChannelDensityNernst",
-}
-
-_CELL_TYPES = {
-    "Cell",
-    "Cell2D",
-    "Cell3D",
-}
-
-_INPUT_GENERATOR_TYPES = {
-    "PulseGenerator",
-    "PulseGeneratorDL",
-    "SineGenerator",
-    "DCInput",
-    "PoissonFiringSynapse",
-    "TransientPoissonFiringSynapse",
-}
-
-_PROJECTION_TYPES = {
-    "Projection",
-    "ElectricalProjection",
-    "ContinuousProjection",
-}
 
 
 def _order_key(type_name: str) -> int:
     """Return an ordering key for a component type.
 
     Follows human-logical model construction order rather than schema
-    dependency order: network → populations → cells → synapses → projections
-    → connections → inputs → metadata.
+    dependency order: network -> populations -> cells -> channels ->
+    synapses -> projections -> connections -> inputs -> metadata.
     """
     if type_name == "IncludeType":
         return 0
@@ -126,130 +90,20 @@ def _order_key(type_name: str) -> int:
         return 1
     if type_name == "Population":
         return 2
-    if type_name in _CHANNEL_TYPES:
+    if "Channel" in type_name:
         return 3
-    if type_name in _CELL_TYPES:
+    if "Cell" in type_name:
         return 4
-    if type_name in _SYNAPSE_TYPES:
+    if "Synapse" in type_name:
         return 5
-    if type_name in _PROJECTION_TYPES:
+    if "Projection" in type_name:
         return 6
     if type_name in ("Connection", "ConnectionW"):
         return 7
-    if type_name in _INPUT_GENERATOR_TYPES:
-        return 8
     if type_name in ("InputList", "InputW", "ExplicitInput"):
-        return 9
-    # Property, Annotation, Layout, Space, Region, etc.
-    return 10
-
-
-# ---------------------------------------------------------------------------
-# Indexed reference pattern
-# ---------------------------------------------------------------------------
-
-_SYNAPSE_TYPES = {
-    "ExpOneSynapse",
-    "ExpTwoSynapse",
-    "AlphaSynapse",
-    "BlockingSynapse",
-}
-
-_CHANNEL_TYPES = {
-    "Channel",
-    "IonChannel",
-    "IonChannelHH",
-    "ChannelDensity",
-    "ChannelDensityNernst",
-}
-
-_CELL_TYPES = {
-    "Cell",
-    "Cell2D",
-    "Cell3D",
-}
-
-_INPUT_GENERATOR_TYPES = {
-    "PulseGenerator",
-    "PulseGeneratorDL",
-    "SineGenerator",
-    "DCInput",
-    "PoissonFiringSynapse",
-    "TransientPoissonFiringSynapse",
-}
-
-_PROJECTION_TYPES = {
-    "Projection",
-    "ElectricalProjection",
-    "ContinuousProjection",
-}
-
-
-def _order_key(type_name: str) -> int:
-    """Return an ordering key for a component type.
-
-    Follows human-logical model construction order rather than schema
-    dependency order: network → populations → cells → synapses → projections
-    → connections → inputs → metadata.
-    """
-    if type_name == "IncludeType":
-        return 0
-    if type_name == "Network":
-        return 1
-    if type_name == "Population":
-        return 2
-    if type_name in _CHANNEL_TYPES:
-        return 3
-    if type_name in _CELL_TYPES:
-        return 4
-    if type_name in _SYNAPSE_TYPES:
-        return 5
-    if type_name in _PROJECTION_TYPES:
-        return 6
-    if type_name in ("Connection", "ConnectionW"):
-        return 7
-    if type_name in _INPUT_GENERATOR_TYPES:
         return 8
-    if type_name in ("InputList", "InputW", "ExplicitInput"):
-        return 9
-    # Property, Annotation, Layout, Space, Region, etc.
-    return 10
-
-
-# ---------------------------------------------------------------------------
-# Indexed reference pattern
-# ---------------------------------------------------------------------------
-
-_INDEXED_REF_RE = re.compile(r"^(.+?)(\[\d+\])$")
-
-
-def _resolve_nmlid_value(
-    value: str,
-    id_to_var: dict[str, str],
-) -> str:
-    """Resolve an NmlId or population reference value to a Python expression.
-
-    * Exact match → ``var_name.id``
-    * Indexed pattern like ``"IzPop0[0]"`` → ``var_name.id + "[0]"``
-    * Path-prefixed like ``"../IzPop0[0]"`` → ``"../" + var_name.id + "[0]"``
-    * No match → keep as string literal (e.g., references to extracted cells)
-    """
-    path_prefix = ""
-    if value.startswith("../"):
-        path_prefix = "../"
-        value = value[3:]
-
-    m = _INDEXED_REF_RE.match(value)
-    if m:
-        base_id, index_part = m.group(1), m.group(2)
-        if base_id in id_to_var:
-            resolved = f"{id_to_var[base_id]}.id + {index_part!r}"
-            return f"{path_prefix!r} + {resolved}" if path_prefix else resolved
-        return repr(path_prefix + value)
-    if value in id_to_var:
-        resolved = f"{id_to_var[value]}.id"
-        return f"{path_prefix!r} + {resolved}" if path_prefix else resolved
-    return repr(path_prefix + value)
+    # PulseGenerator, SineGenerator, Property, Annotation, Layout, etc.
+    return 9
 
 
 # ---------------------------------------------------------------------------
@@ -446,13 +300,13 @@ class NmlPythonizer:
 
         # Include root doc attributes (notes, etc.)
         root_kwargs = self._build_kwargs(self.raw_doc)
-        # Filter out 'id' since it's already in component_factory
+        # Filter out 'id' since we're using doc_id
         root_kwargs = [(k, v) for k, v in root_kwargs if k != "id"]
         if root_kwargs:
             kw_str = self._format_kwargs(root_kwargs)
             # Replace the simple line with one that includes kwargs
             lines[-1] = (
-                f'nml_doc = component_factory("NeuroMLDocument", id={doc_id!r}, {kw_str}validate=False)'
+                f'nml_doc = component_factory("NeuroMLDocument", id={doc_id!r}, {kw_str}, validate=False)'
             )
 
         lines.append("")
@@ -513,7 +367,7 @@ class NmlPythonizer:
         kwargs = self._build_kwargs(obj)
 
         kw_str = self._format_kwargs(kwargs)
-        call = f"{var_name} = {parent_var}.add({type_name!r}, {kw_str}validate=False)"
+        call = f"{var_name} = {parent_var}.add({type_name!r}, {kw_str}, validate=False)"
 
         return [call]
 
@@ -566,8 +420,7 @@ class NmlPythonizer:
             member_type in ("NmlId", "Nml2PopulationReferencePath")
             and member_name != "id"
         ):
-            str_val = str(value)
-            return _resolve_nmlid_value(str_val, self.id_to_var)
+            return repr(str(value))
 
         if isinstance(value, bool):
             return repr(value)
@@ -589,7 +442,7 @@ class NmlPythonizer:
         for name, value in kwargs:
             parts.append(f"{name}={value}")
 
-        return ", ".join(parts) + ", "
+        return ", ".join(parts)
 
     def _gen_footer(self) -> list[str]:
         """Generate the final validation call."""
@@ -613,16 +466,16 @@ def _get_section_name(type_name: str) -> str:
         return "Networks"
     if type_name == "Population":
         return "Populations"
-    if type_name in _CELL_TYPES:
+    if "Cell" in type_name:
         return "Cells"
-    if type_name in _CHANNEL_TYPES:
+    if "Channel" in type_name:
         return "Channels"
-    if type_name in _SYNAPSE_TYPES:
+    if "Synapse" in type_name:
         return "Synapses"
-    if type_name in _PROJECTION_TYPES:
+    if "Projection" in type_name:
         return "Projections"
     if type_name in ("Connection", "ConnectionW"):
         return "Connections"
-    if type_name in _INPUT_GENERATOR_TYPES:
+    if type_name in ("InputList", "InputW", "ExplicitInput"):
         return "Inputs"
     return "Other"
