@@ -3,21 +3,29 @@
 import os
 import stat
 
+import pytest
+
 from pyneuroml import sbml
+
+
+@pytest.fixture(autouse=True)
+def this_dir(monkeypatch, request):
+    target_dir = request.path.parent
+    monkeypatch.chdir(target_dir)
 
 
 def test_sbml_validate_a_valid_file():
     "ensure it validates a single valid file by returning True"
 
     print(f"{os.getcwd() = }")
-    fname = "tests/sbml/test_data/valid_doc.sbml"
+    fname = "test_data/valid_doc.sbml"
     result = sbml.validate_sbml_files([fname])
     assert result
 
 
 def test_sbml_validate_missing_inputfile():
     try:
-        sbml.validate_sbml_files(["tests/sbml/test_data/nonexistent_file"])
+        sbml.validate_sbml_files(["test_data/nonexistent_file"])
     except FileNotFoundError:
         return
     except Exception:
@@ -27,7 +35,7 @@ def test_sbml_validate_missing_inputfile():
 
 
 def test_sbml_validate_no_read_access():
-    fname = "tests/sbml/test_data/no_read_access.sbml"
+    fname = "test_data/no_read_access.sbml"
 
     # Remove read permission
     os.chmod(fname, 0)
@@ -66,7 +74,7 @@ def test_sbml_validate_unit_consistency_check():
 
     try:
         result = sbml.validate_sbml_files(
-            ["tests/sbml/test_data/inconsistent_units_doc.sbml"], strict_units=True
+            ["test_data/inconsistent_units_doc.sbml"], strict_units=True
         )
         assert not result
     except Exception:
@@ -74,7 +82,7 @@ def test_sbml_validate_unit_consistency_check():
 
     try:
         result = sbml.validate_sbml_files(
-            ["tests/sbml/test_data/inconsistent_units_doc.sbml"], strict_units=False
+            ["test_data/inconsistent_units_doc.sbml"], strict_units=False
         )
         assert result
     except Exception:
@@ -91,7 +99,7 @@ def test_sbml_validate_flag_all_invalid_files():
     n_files = 3
 
     for i in range(n_files):
-        fname = "tests/sbml/test_data/invalid_doc%02d.sbml" % i
+        fname = "test_data/invalid_doc%02d.sbml" % i
 
         try:
             result = sbml.validate_sbml_files([fname])

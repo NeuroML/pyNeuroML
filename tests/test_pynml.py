@@ -13,8 +13,9 @@ import os
 import shutil
 import unittest
 
+import pytest
+
 import pyneuroml.pynml as pynmlpynml
-from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -22,6 +23,11 @@ logger.setLevel(logging.DEBUG)
 
 class TestJarUtils(unittest.TestCase):
     """Test jNeuroML jar related functions"""
+
+    @pytest.fixture(autouse=True)
+    def this_dir(self, monkeypatch, request):
+        target_dir = request.path.parent
+        monkeypatch.chdir(target_dir)
 
     def test_lems_def_files_extraction(self):
         """Test extraction of NeuroML2 LEMS files from jar."""
@@ -47,9 +53,14 @@ class TestJarUtils(unittest.TestCase):
 class TestHelperUtils(unittest.TestCase):
     """Test helper utilities."""
 
+    @pytest.fixture(autouse=True)
+    def this_dir(self, monkeypatch, request):
+        target_dir = request.path.parent
+        monkeypatch.chdir(target_dir)
+
     def test_exposure_listing(self):
         """Test listing of exposures in NeuroML documents."""
-        exps = pynmlpynml.list_exposures("tests/izhikevich_test_file.nml", "iz")
+        exps = pynmlpynml.list_exposures("izhikevich_test_file.nml", "iz")
         ctypes = {}
         for key, val in exps.items():
             ctypes[key.type] = val
@@ -66,14 +77,13 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_exposure_listing_2(self):
         """Test listing of exposures in NeuroML documents."""
-        with chdir("tests/"):
-            exps = pynmlpynml.list_exposures("HH_example_net.nml")
-            print(exps)
+        exps = pynmlpynml.list_exposures("HH_example_net.nml")
+        print(exps)
 
     def test_recording_path_listing(self):
         """Test listing of recording paths in NeuroML documents."""
         paths = pynmlpynml.list_recording_paths_for_exposures(
-            "tests/izhikevich_test_file.nml", "", "IzhNet"
+            "izhikevich_test_file.nml", "", "IzhNet"
         )
         print("\n".join(paths))
         # self.assertTrue("izh2007RS0/u" in paths)
@@ -81,11 +91,10 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_recording_path_listing_2(self):
         """Test listing of recording paths in NeuroML documents."""
-        with chdir("tests/"):
-            paths = pynmlpynml.list_recording_paths_for_exposures(
-                "HH_example_net.nml", "hh_cell", "single_hh_cell_network"
-            )
-            print("\n".join(paths))
+        paths = pynmlpynml.list_recording_paths_for_exposures(
+            "HH_example_net.nml", "hh_cell", "single_hh_cell_network"
+        )
+        print("\n".join(paths))
 
     def test_execute_command_in_dir(self):
         """Test execute_command_in_dir function."""
@@ -143,23 +152,22 @@ class TestHelperUtils(unittest.TestCase):
 
     def test_validate_neuroml2(self):
         """Test validate_neuroml2"""
-        with chdir("tests/"):
-            retval = None
-            retval = pynmlpynml.validate_neuroml2("HH_example_k_channel.nml")
-            self.assertTrue(retval)
-
-            retval = None
-            retstring = None
-            retval, retstring = pynmlpynml.validate_neuroml2(
-                "HH_example_k_channel.nml", return_string=True
-            )
-            self.assertTrue(retval)
-            self.assertIn("Valid against schema and all tests", retstring)
+        retval = None
+        retval = pynmlpynml.validate_neuroml2("HH_example_k_channel.nml")
+        self.assertTrue(retval)
 
         retval = None
         retstring = None
         retval, retstring = pynmlpynml.validate_neuroml2(
-            "setup.cfg", return_string=True
+            "HH_example_k_channel.nml", return_string=True
+        )
+        self.assertTrue(retval)
+        self.assertIn("Valid against schema and all tests", retstring)
+
+        retval = None
+        retstring = None
+        retval, retstring = pynmlpynml.validate_neuroml2(
+            "../setup.cfg", return_string=True
         )
         self.assertFalse(retval)
         self.assertIn("1 failed", retstring)
