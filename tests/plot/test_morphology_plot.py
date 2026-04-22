@@ -9,7 +9,6 @@ Copyright 2023 NeuroML contributors
 
 import logging
 import pathlib as pl
-from contextlib import chdir
 
 import neuroml
 import numpy
@@ -30,6 +29,7 @@ from pyneuroml.plot.PlotMorphologyVispy import (
     plot_interactive_3D,
 )
 from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.utils.misc import chdir
 
 from .. import BaseTestCase
 
