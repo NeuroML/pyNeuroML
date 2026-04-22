@@ -3,22 +3,28 @@
 import os
 import stat
 
+import pytest
+
 from pyneuroml import sedml
+
+
+@pytest.fixture(autouse=True)
+def this_dir(monkeypatch, request):
+    target_dir = request.path.parent
+    monkeypatch.chdir(target_dir)
 
 
 def test_sedml_validate_a_valid_file():
     "ensure it validates a single valid file by returning True"
 
-    fname = "tests/sedml/test_data/valid_doc.sedml"
+    fname = "test_data/valid_doc.sedml"
     result = sedml.validate_sedml_files([fname])
     assert result
 
 
 def test_sedml_validate_missing_sourcefile():
     try:
-        result = sedml.validate_sedml_files(
-            ["tests/sedml/test_data/missing_model_source.sedml"]
-        )
+        result = sedml.validate_sedml_files(["test_data/missing_model_source.sedml"])
         assert not result
         return
     except Exception:
@@ -29,7 +35,7 @@ def test_sedml_validate_missing_sourcefile():
 
 def test_sedml_validate_missing_inputfile():
     try:
-        sedml.validate_sedml_files(["tests/sedml/test_data/nonexistent_file"])
+        sedml.validate_sedml_files(["test_data/nonexistent_file"])
     except FileNotFoundError:
         return
     except Exception:
@@ -39,7 +45,7 @@ def test_sedml_validate_missing_inputfile():
 
 
 def test_sedml_validate_no_read_access():
-    fname = "tests/sedml/test_data/no_read_access.sedml"
+    fname = "test_data/no_read_access.sedml"
 
     # Remove read permission
     os.chmod(fname, 0)
@@ -80,7 +86,7 @@ def test_sedml_validate_flag_all_invalid_files():
     n_files = 2
 
     for i in range(n_files):
-        fname = "tests/sedml/test_data/invalid_doc%02d.sedml" % (i + 1)
+        fname = "test_data/invalid_doc%02d.sedml" % (i + 1)
         try:
             result = sedml.validate_sedml_files([fname])
             if not result:
