@@ -14,23 +14,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-@pytest.fixture(scope="class", autouse=True)
-def change_test_dir(request):
-    # Store the current working directory
-    original_dir = os.getcwd()
-
-    # Change to the desired directory
-    os.chdir("./tests/swc/")
-
-    # After the test class completes, revert to the original directory
-    def teardown():
-        os.chdir(original_dir)
-
-    request.addfinalizer(teardown)
-
-
 # Define a test class for NeuroMLWriter
 class TestNeuroMLWriter(unittest.TestCase):
+    @pytest.fixture(autouse=True)
+    def this_dir(self, monkeypatch, request):
+        target_dir = request.path.parent
+        monkeypatch.chdir(target_dir)
+
     @lru_cache(maxsize=10000)
     def compare_segment_points(self, cell1, cell2, seg1, seg2):
         """Compare two segments"""
