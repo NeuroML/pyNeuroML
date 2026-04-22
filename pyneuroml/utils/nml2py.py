@@ -18,43 +18,25 @@ import re
 from pathlib import Path
 from typing import Any
 
+import neuroml
 import neuroml.writers as writers
 from neuroml.utils import component_factory
 
 from pyneuroml.io import read_neuroml2_file
 
 # ---------------------------------------------------------------------------
-# Type classification helpers
+# Type classification helper
 # ---------------------------------------------------------------------------
-
-_SCALAR_TYPE_PATTERNS = (
-    r"^xs:",
-    r"^NmlId$",
-    r"^Nml2Quantity_",
-    r"^Nml2PopulationReferencePath$",
-    r"^NonNegativeInteger$",
-    r"^PositiveInteger$",
-    r"^MetaId$",
-    r"^NeuroLexId$",
-    r"^populationTypes$",
-    r"^networkTypes$",
-    r"^channelTypes$",
-    r"^gateTypes$",
-    r"^PlasticityTypes$",
-    r"^Metric$",
-    r"^BlockTypes$",
-    r"^ZeroOrOne$",
-    r"^ZeroToOne$",
-    r"^allowedSpaces$",
-)
 
 
 def _is_scalar_type(type_name: str) -> bool:
-    """Return True if the type represents a scalar attribute, not a child component."""
-    for pattern in _SCALAR_TYPE_PATTERNS:
-        if re.match(pattern, type_name):
-            return True
-    return False
+    """Return True if the type is a scalar attribute, not a child component.
+
+    Mirrors libNeuroML's approach in ``get_class_hierarchy``: if the type name
+    cannot be resolved to a class in the ``neuroml`` module, it is a simple
+    (scalar) type like ``NmlId``, ``Float``, ``xs:string``, etc.
+    """
+    return getattr(neuroml, type_name, None) is None
 
 
 def _is_extractable(type_name: str) -> bool:
