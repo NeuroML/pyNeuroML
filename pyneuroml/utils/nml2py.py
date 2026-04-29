@@ -320,6 +320,7 @@ class NmlPythonizer:
             "",
             "from neuroml import NeuroMLDocument",
             "from neuroml.utils import component_factory",
+            "from pyneuroml.io import write_neuroml2_file",
             "",
         ]
 
@@ -480,8 +481,7 @@ class NmlPythonizer:
             "nml_doc.validate()",
             "",
             "# --- To write ---",
-            "# from pyneuroml.io import write_neuroml2_file",
-            "# write_neuroml2_file(nml_doc, str(filepath))" "",
+            f"write_neuroml2_file(nml_doc, {self.nml_file_path.name!r})" "",
         ]
 
     def _script_filename(self) -> str:
