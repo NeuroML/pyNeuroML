@@ -21,11 +21,10 @@ from pathlib import Path
 from typing import Any
 
 import neuroml
-import neuroml.writers as writers
 from neuroml.utils import component_factory
 
 import pyneuroml.utils.cli as pynmluc
-from pyneuroml.io import read_neuroml2_file
+from pyneuroml.io import read_neuroml2_file, write_neuroml2_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -126,13 +125,24 @@ class NmlPythonizer:
     preserved as includes.
 
     :param nml_file: Path to the NeuroML XML file.
-    :param output_dir: Directory for output files. Defaults to the same
-        directory as ``nml_file``.
+        For safety, this should be in the same directory that the script is
+        being called from.
+    :param output_dir: Directory for output files. Must be a single level
+        directory. Only the last directory will be used if multi-level
+        directory is provided. Any suffixes will be stripped. It will be
+        created in the folder where the main `nml_file` resides. If omitted, a
+        directory called "output_nml2py" will be created.
     """
 
     def __init__(self, nml_file: str, output_dir: str | None = None) -> None:
         self.nml_file = nml_file
-        self.output_dir = Path(output_dir) if output_dir else Path(nml_file).parent
+        self.nml_file_path = Path(nml_file)
+        self.output_dir = (
+            (self.nml_file_path.parent / Path(output_dir).stem)
+            if output_dir
+            else (Path(nml_file).parent / Path("output_nml2py"))
+        )
+        logger.info(f"{self.output_dir = }")
 
         # id -> variable_name mapping
         self.id_to_var: dict[str, str] = {}
@@ -148,9 +158,6 @@ class NmlPythonizer:
         # Extracted components that need to be written to separate files
         self._extracted: list[tuple[Any, str]] = []  # (obj, filename)
 
-        # Load raw doc (no includes)  ---  this is what we walk for code generation
-        self.raw_doc = read_neuroml2_file(nml_file, include_includes=False)
-
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -160,7 +167,16 @@ class NmlPythonizer:
 
         Returns list of written file paths.
         """
+        if self.nml_file_path.parent.absolute() != Path.cwd().absolute():
+            logger.error("Please run the script in the directory of the NeuroML file.")
+            return []
+
+        # Load raw doc (no includes)  ---  this is what we walk for code generation
+        self.raw_doc = read_neuroml2_file(self.nml_file, include_includes=False)
+
         self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        # list of written files
         written: list[str] = []
 
         # Collect components from raw doc and identify extractions
@@ -175,6 +191,8 @@ class NmlPythonizer:
         # Generate and write Python script
         code = self.generate()
         script_path = self.output_dir / self._script_filename()
+
+        logger.info(f"Writing {script_path}")
         script_path.write_text(code)
         written.append(str(script_path))
 
@@ -285,7 +303,10 @@ class NmlPythonizer:
         comp_id = getattr(comp, "id", "unnamed")
         doc = component_factory("NeuroMLDocument", id=f"{comp_id}_doc")
         doc.add(comp, validate=False)
-        writers.NeuroMLWriter.write(doc, str(filepath))
+        logger.info(f"Writing {filepath}")
+
+        # individual files may not be valid due to missing includes
+        write_neuroml2_file(doc, str(filepath), validate=False)
 
     # ------------------------------------------------------------------
     # Code generation
@@ -328,13 +349,13 @@ class NmlPythonizer:
 
         # Original includes (preserved as-is)
         for href in self._original_includes:
-            lines.append(f'nml_doc.add("IncludeType", href={href!r}, validate=False)')
+            # we do not move original includes, so we must tweak the path to
+            # refer to the parent directory
+            lines.append(f'nml_doc.add("IncludeType", href={href!r})')
 
         # Extracted inline components
         for comp, filename in self._extracted:
-            lines.append(
-                f'nml_doc.add("IncludeType", href={filename!r}, validate=False)'
-            )
+            lines.append(f'nml_doc.add("IncludeType", href={filename!r})')
 
         lines.append("")
         return lines
@@ -458,6 +479,9 @@ class NmlPythonizer:
             "# --- Validate ---",
             "nml_doc.validate()",
             "",
+            "# --- To write ---",
+            "# from pyneuroml.io import write_neuroml2_file",
+            "# write_neuroml2_file(nml_doc, str(filepath))" "",
         ]
 
     def _script_filename(self) -> str:
@@ -509,7 +533,6 @@ def process_args():
         "-outputDirectory",
         type=str,
         metavar="<output_directory>",
-        default=".",
         help="Output directory",
     )
     return parser.parse_args()
