@@ -14,6 +14,8 @@ Copyright 2026 NeuroML contributors
 
 from __future__ import annotations
 
+import argparse
+import logging
 import re
 from pathlib import Path
 from typing import Any
@@ -22,7 +24,12 @@ import neuroml
 import neuroml.writers as writers
 from neuroml.utils import component_factory
 
+import pyneuroml.utils.cli as pynmluc
 from pyneuroml.io import read_neuroml2_file
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 # ---------------------------------------------------------------------------
 # Type classification helper
@@ -479,3 +486,49 @@ def _get_section_name(type_name: str) -> str:
     if type_name in ("InputList", "InputW", "ExplicitInput"):
         return "Inputs"
     return "Other"
+
+
+def process_args():
+    """
+    Parse command-line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description=(
+            "A script to convert NeuroML XML serializations into Python scripts"
+        )
+    )
+
+    parser.add_argument(
+        "file",
+        type=str,
+        metavar="<NeuroML 2 file>",
+        help="Name of the NeuroML 2 file",
+    )
+
+    parser.add_argument(
+        "-outputDirectory",
+        type=str,
+        metavar="<output_directory>",
+        default=".",
+        help="Output directory",
+    )
+    return parser.parse_args()
+
+
+def main(args=None):
+    """Main runner method"""
+    if args is None:
+        args = process_args()
+
+    cli(a=args)
+
+
+def cli(a: Any | None = None, **kwargs: str):
+    """Main cli caller method"""
+    a = pynmluc.build_namespace({}, a, **kwargs)
+
+    nmlfile = a.file
+    output_dir = a.output_directory
+
+    converter = NmlPythonizer(nmlfile, output_dir)
+    converter.write()
