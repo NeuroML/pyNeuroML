@@ -48,6 +48,7 @@ pre-commit run --all-files
 
 ## Conventions
 
+- **No unicode characters in code**: use ASCII only in comments and strings.
 - **Branch**: development is the working branch; master is stable
 - **Ruff config**: ignores `F403`, `F405` (wildcard imports); excludes `examples/`
 - **mypy**: `ignore_missing_imports = True` (minimal type checking)
