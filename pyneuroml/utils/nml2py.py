@@ -70,6 +70,7 @@ def _get_file_suffix(type_name: str) -> str | None:
 def _sanitize_var_name(name: str | int) -> str:
     """Convert a NeuroML id to a valid Python variable name."""
     name = str(name)
+    # replace anything that's not a letter/digit/underscore
     name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
     if name and name[0].isdigit():
         name = "_" + name
@@ -144,8 +145,6 @@ class NmlPythonizer:
         )
         logger.info(f"{self.output_dir = }")
 
-        # id -> variable_name mapping
-        self.id_to_var: dict[str, str] = {}
         # object identity -> variable_name mapping (for components without ids)
         self._obj_to_var: dict[int, str] = {}
         # Collected components: (obj, parent_var_name)
@@ -218,6 +217,8 @@ class NmlPythonizer:
             self._original_includes.append(inc.href)
 
         # Walk the raw doc's children
+        # "nml_doc" is a special identifier for the top level root
+        # NeuroMLDocument
         self._walk_children(self.raw_doc, parent_var="nml_doc")
 
     def _walk_children(self, obj: Any, parent_var: str) -> None:
@@ -234,16 +235,14 @@ class NmlPythonizer:
             child_type = member_info.get("type", "")
 
             if not _is_scalar_type(child_type):
-                if isinstance(contents, list):
-                    for child in contents:
-                        if hasattr(child, "info"):
-                            child_var = self._collect_one(child, parent_var)
-                            if child_var is not None:
-                                self._walk_children(child, child_var)
-                elif hasattr(contents, "info"):
-                    child_var = self._collect_one(contents, parent_var)
-                    if child_var is not None:
-                        self._walk_children(contents, child_var)
+                if not isinstance(contents, list):
+                    contents = [contents]
+
+                for child in contents:
+                    if hasattr(child, "info"):
+                        child_var = self._collect_one(child, parent_var)
+                        if child_var is not None:
+                            self._walk_children(child, child_var)
 
     def _collect_one(self, obj: Any, parent_var: str) -> str | None:
         """Collect a single component, assigning a variable name.
@@ -272,10 +271,6 @@ class NmlPythonizer:
 
         # Track all components by object identity
         self._obj_to_var[id(obj)] = var_name
-
-        # Track components that have an id (referenceable by NmlId)
-        if hasattr(obj, "id") and obj.id is not None:
-            self.id_to_var[obj.id] = var_name
 
         self._components.append((obj, parent_var))
         return var_name
