@@ -17,10 +17,6 @@ from neuroml.utils import component_factory
 from pyneuroml.io import read_neuroml2_file
 from pyneuroml.utils.nml2py import NmlPythonizer, _sanitize_var_name
 
-logging.basicConfig(
-    format="%(name)s (%(levelname)s) >>> %(message)s\n", level=logging.WARNING
-)
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -55,6 +51,7 @@ def test_collect_one():
     assert id(net) in converter._obj_to_var
     assert converter._obj_to_var.get(id(net)) == net_var
 
+    # skip include type, handled separately
     assert converter._collect_one(inc, "nml_doc") is None
 
 
@@ -87,7 +84,33 @@ def test_walk_children():
     raw_doc = read_neuroml2_file("HH_example_net.nml", include_includes=False)
     converter._walk_children(raw_doc, "nml_doc")
 
-    logger.debug(f"{converter._obj_to_var = }", flush=True)
-    logger.debug(f"{converter._components = }", flush=True)
+    logger.debug(f"{converter._obj_to_var = }")
+    logger.debug(f"{converter._components = }")
+    logger.debug(f"{raw_doc.networks[0].info(True) = }")
 
-    assert True
+    assert converter._obj_to_var[id(raw_doc.networks[0])] == raw_doc.networks[0].id
+    assert (
+        converter._obj_to_var[id(raw_doc.networks[0].populations[0])]
+        == raw_doc.networks[0].populations[0].id
+    )
+
+
+def test_gen_body():
+    """test gen_body"""
+    converter = NmlPythonizer("HH_example_net.nml", "temp_nml2py_1")
+    converter.raw_doc = read_neuroml2_file("HH_example_net.nml", include_includes=False)
+    converter._collect_components()
+
+    lines = []
+    lines.extend(converter._gen_header())
+    lines.extend(converter._gen_includes())
+
+    logger.debug(f"{converter._components = }")
+    for obj, pvar in converter._components:
+        thisline = converter._gen_component(obj, pvar)
+        logger.debug(f"{thisline = }")
+        lines.extend(thisline)
+
+    fullcode = "\n".join(lines)
+    logger.debug(f"{fullcode = }")
+    assert exec(fullcode) is None
