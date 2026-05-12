@@ -412,9 +412,7 @@ class NmlPythonizer:
             if value is None and not required:
                 continue
 
-            if self._is_default_value(obj, member_name, value):
-                continue
-
+            # always add value, even if default, so that all values are explicit in the script
             value_str = self._format_value(member_name, member_type, value)
             if value_str is None:
                 continue
@@ -422,16 +420,6 @@ class NmlPythonizer:
             kwargs.append((member_name, value_str))
 
         return kwargs
-
-    def _is_default_value(self, obj: Any, member_name: str, value: Any) -> bool:
-        """Check if a value matches the component's default for that member."""
-        try:
-            type_cls = type(obj)
-            default_obj = type_cls()
-            default_value = getattr(default_obj, member_name, None)
-            return value == default_value
-        except Exception:
-            return False
 
     def _format_value(
         self, member_name: str, member_type: str, value: Any
