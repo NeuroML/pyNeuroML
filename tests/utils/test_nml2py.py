@@ -95,22 +95,53 @@ def test_walk_children():
     )
 
 
-def test_gen_body():
-    """test gen_body"""
+def test_generated_code_structure():
+    """Test generated code contains expected variable names, parameters, and structure."""
     converter = NmlPythonizer("HH_example_net.nml", "temp_nml2py_1")
     converter.raw_doc = read_neuroml2_file("HH_example_net.nml", include_includes=False)
     converter._collect_components()
+    code = converter.generate()
 
-    lines = []
-    lines.extend(converter._gen_header())
-    lines.extend(converter._gen_includes())
+    assert "nml_doc.add(\"IncludeType\", href='HH_example_cell.nml')" in code
+    assert "single_hh_cell_network = nml_doc.add(" in code
+    assert "pop0 = single_hh_cell_network.add(" in code
+    assert "pg = nml_doc.add(" in code
+    assert "amplitude='0.08nA'" in code
+    assert "delay='100ms'" in code
+    assert "size=2" in code
+    assert "component='hh_cell'" in code
+    assert "target='pop0[0]'" in code
+    assert "# --- Networks ---" in code
+    assert "# --- Populations ---" in code
+    assert "# --- Inputs ---" in code
+    assert "# --- Other ---" in code
 
-    logger.debug(f"{converter._components = }")
-    for obj, pvar in converter._components:
-        thisline = converter._gen_component(obj, pvar)
-        logger.debug(f"{thisline = }")
-        lines.extend(thisline)
 
-    fullcode = "\n".join(lines)
-    logger.debug(f"{fullcode = }")
-    assert exec(fullcode) is None
+def test_generated_code_exec():
+    """Test that generated code executes and creates the correct model structure."""
+    converter = NmlPythonizer("HH_example_net.nml", "temp_nml2py_1")
+    converter.raw_doc = read_neuroml2_file("HH_example_net.nml", include_includes=False)
+    converter._collect_components()
+    code = converter.generate()
+
+    ns = {}
+    exec(code, ns)
+
+    nml_doc = ns["nml_doc"]
+    assert nml_doc.id == "network"
+
+    net = ns["single_hh_cell_network"]
+    assert net.id == "single_hh_cell_network"
+
+    pop = ns["pop0"]
+    assert pop.id == "pop0"
+    assert pop.size == 2
+    assert pop.component == "hh_cell"
+
+    pg = ns["pg"]
+    assert pg.id == "pg"
+    assert pg.amplitude == "0.08nA"
+    assert pg.delay == "100ms"
+
+    assert len(nml_doc.includes) == 1
+    assert nml_doc.includes[0].href == "HH_example_cell.nml"
