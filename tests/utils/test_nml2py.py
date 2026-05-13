@@ -9,12 +9,13 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import logging
+import tempfile
 from pathlib import Path
 
 import pytest
 from neuroml.utils import component_factory
 
-from pyneuroml.io import read_neuroml2_file
+from pyneuroml.io import read_neuroml2_file, write_neuroml2_file
 from pyneuroml.utils.nml2py import NmlPythonizer, _sanitize_var_name
 
 logger = logging.getLogger(__name__)
@@ -115,6 +116,43 @@ def test_generated_code_structure():
     assert "# --- Populations ---" in code
     assert "# --- Inputs ---" in code
     assert "# --- Other ---" in code
+
+
+def test_generated_code_structure_1():
+    """Test generated code contains expected variable names, parameters, and structure.
+
+    This creates a temporary file with the cell included to test extraction.
+    """
+    model = read_neuroml2_file("HH_example_net.nml", include_includes=True)
+    cell_file_name = f"{model.cells[0].id}.cell.nml"
+
+    with tempfile.NamedTemporaryFile("w", dir=".") as f:
+        write_neuroml2_file(model, f.name)
+
+        converter = NmlPythonizer(f.name, "temp_nml2py_1")
+        written = converter.write()
+
+        for af in written:
+            assert Path(af).exists() is True
+
+        with open(written[-1], "r") as sf:
+            code = sf.read()
+            logger.debug(f"{code = }")
+
+            assert f'nml_doc.add("IncludeType", href={cell_file_name!r})' in code
+            assert "single_hh_cell_network = nml_doc.add(" in code
+            assert "pop0 = single_hh_cell_network.add(" in code
+            assert "pg = nml_doc.add(" in code
+            assert "amplitude='0.08nA'" in code
+            assert "delay='100ms'" in code
+            assert "size=2" in code
+            assert "component='hh_cell'" in code
+            assert "target='pop0[0]'" in code
+            assert "# --- Includes ---" in code
+            assert "# --- Networks ---" in code
+            assert "# --- Populations ---" in code
+            assert "# --- Inputs ---" in code
+            assert "# --- Other ---" in code
 
 
 def test_generated_code_exec():
