@@ -86,6 +86,7 @@ To run specific tests, one can use the `-k` flag:
 1. Please contribute pull requests against the `development` branch.
 2. Please ensure that the automated build for your pull request passes.
 3. Please write good commit messages (see the section above).
+4. Please clearly state the contribution of AI assistants. Please read the guidelines on the use of AI assistants below.
 
 ### Updating your pull request branch
 
@@ -137,3 +138,13 @@ One can preview the man pages:
 If all looks well, check in the man pages and commit:
 
     git add .
+
+## Use of AI coding agents
+
+Contributors may use AI coding assistants to help them with coding.
+
+Contributors must fully understand and manually vet any AI generated code before opening pull requests.
+All code that has used AI assistants **must** be contributed via pull requests to allow additional vetting.
+Contributions of the AI assistants must be clearly noted in the pull requests.
+
+Code that is completely AI generated and has not been manually vetted will be rejected/removed.

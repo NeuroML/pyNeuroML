@@ -25,10 +25,15 @@ logger.setLevel(logging.DEBUG)
 class TestPlot(BaseTestCase):
     """Test Plot module"""
 
+    @pytest.fixture(autouse=True)
+    def this_dir(self, monkeypatch, request):
+        target_dir = request.path.parent
+        monkeypatch.chdir(target_dir)
+
     @pytest.mark.localonly
     def test_generate_plot_animated(self):
         """Test generate_plot function."""
-        filename = "tests/plot/test_generate_plot.gif"
+        filename = "test_generate_plot.gif"
 
         # remove the file first
         try:
@@ -60,7 +65,7 @@ class TestPlot(BaseTestCase):
     @pytest.mark.localonly
     def test_generate_plot_animated_specify_writer(self):
         """Test generate_plot function with specific writer."""
-        filename = "tests/plot/test_generate_plot_writer.gif"
+        filename = "test_generate_plot_writer.gif"
 
         # remove the file first
         try:
@@ -93,8 +98,8 @@ class TestPlot(BaseTestCase):
     @pytest.mark.localonly
     def test_generate_plot_animated_should_default_pillow_when_writer_invalid(self):
         """Test generate_plot function does not fail when writer is invalid."""
-        filename1 = "tests/plot/test_generate_plot_writer1.gif"
-        filename2 = "tests/plot/test_generate_plot_writer2.gif"
+        filename1 = "test_generate_plot_writer1.gif"
+        filename2 = "test_generate_plot_writer2.gif"
 
         # remove the file first
         try:
@@ -147,7 +152,7 @@ class TestPlot(BaseTestCase):
 
     def test_generate_plot(self):
         """Test generate_plot function."""
-        filename = "tests/plot/test_generate_plot.png"
+        filename = "test_generate_plot.png"
 
         # remove the file first
         try:
@@ -180,7 +185,7 @@ class TestPlot(BaseTestCase):
 
     def test_generate_interactive_plot(self):
         """Test generate_interactive_plot function."""
-        filename = "tests/plot/test_generate_interactive_plot.png"
+        filename = "test_generate_interactive_plot.png"
 
         # remove the file first
         try:

@@ -31,7 +31,7 @@ logger.setLevel(logging.DEBUG)
 class TestNeuronUtils(unittest.TestCase):
     """Test Neuron Utils"""
 
-    def test_hoc_loader(self):
+    def test_hoc_loader1(self):
         """Test hoc loader util function"""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".hoc") as f:
             print(
@@ -44,6 +44,7 @@ class TestNeuronUtils(unittest.TestCase):
 
             self.assertTrue(load_hoc_or_python_file(f.name))
 
+    def test_hoc_loader2(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".hoc") as f:
             print(
                 """
@@ -53,8 +54,10 @@ class TestNeuronUtils(unittest.TestCase):
                 flush=True,
             )
 
-            self.assertFalse(load_hoc_or_python_file(f.name))
+            with self.assertRaises(RuntimeError):
+                load_hoc_or_python_file(f.name)
 
+    def test_hoc_loader3(self):
         # loading python files is not yet implemented
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py") as f:
             print(

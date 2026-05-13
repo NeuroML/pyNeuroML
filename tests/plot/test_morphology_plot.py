@@ -8,7 +8,6 @@ Copyright 2023 NeuroML contributors
 """
 
 import logging
-import os
 import pathlib as pl
 
 import neuroml
@@ -21,9 +20,7 @@ from pyneuroml.plot.PlotMorphology import (
     plot_2D_schematic,
     plot_segment_groups_curtain_plots,
 )
-from pyneuroml.plot.PlotMorphologyPlotly import (
-    plot_3D_cell_morphology_plotly,
-)
+from pyneuroml.plot.PlotMorphologyPlotly import plot_3D_cell_morphology_plotly
 from pyneuroml.plot.PlotMorphologyVispy import (
     create_cylindrical_mesh,
     make_cell_upright,
@@ -32,6 +29,7 @@ from pyneuroml.plot.PlotMorphologyVispy import (
     plot_interactive_3D,
 )
 from pyneuroml.pynml import read_neuroml2_file
+from pyneuroml.utils.misc import chdir
 
 from .. import BaseTestCase
 
@@ -39,23 +37,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture(scope="class", autouse=True)
-def change_test_dir(request):
-    # Store the current working directory
-    original_dir = os.getcwd()
-
-    # Change to the desired directory
-    os.chdir("./tests/plot/")
-
-    # After the test class completes, revert to the original directory
-    def teardown():
-        os.chdir(original_dir)
-
-    request.addfinalizer(teardown)
-
-
 class TestMorphologyPlot(BaseTestCase):
     """Test Plot module"""
+
+    @pytest.fixture(autouse=True)
+    def plot_dir(self, monkeypatch, request):
+        target_dir = request.path.parent
+        monkeypatch.chdir(target_dir)
 
     def test_2d_point_plotter(self):
         """Test plot_2D_point_cells function."""
@@ -135,48 +123,166 @@ class TestMorphologyPlot(BaseTestCase):
 
     def test_2d_plotter_network_with_spec(self):
         """Test plot_2D function with a network of a few cells with specs."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        ofile = pl.Path(nml_file).name
-        # percentage
-        for plane in ["zx"]:
-            filename = f"test_morphology_plot_2d_spec_{ofile.replace('.', '_', 100)}_{plane}.png"
-            # remove the file first
-            try:
-                pl.Path(filename).unlink()
-            except FileNotFoundError:
-                pass
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            ofile = pl.Path(nml_file).name
+            # percentage
+            for plane in ["zx"]:
+                filename = f"test_morphology_plot_2d_spec_{ofile.replace('.', '_', 100)}_{plane}.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
 
-            plot_2D(
-                nml_file,
+                plot_2D(
+                    nml_file,
+                    nogui=True,
+                    plane2d=plane,
+                    save_to_file=filename,
+                    plot_spec={"point_fraction": 0.5},
+                )
+
+                self.assertIsFile(filename)
+                pl.Path(filename).unlink()
+
+    def test_2d_plotter_network_with_detailed_spec(self):
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            ofile = pl.Path(nml_file).name
+            # more detailed plot_spec
+            for plane in ["xy"]:
+                filename = f"test_morphology_plot_2d_spec_{ofile.replace('.', '_', 100)}_{plane}.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
+
+                plot_2D(
+                    nml_file,
+                    nogui=True,
+                    plane2d=plane,
+                    save_to_file=filename,
+                    plot_spec={
+                        "point_cells": ["HL23VIP"],
+                        "detailed_cells": ["HL23PYR"],
+                        "schematic_cells": ["HL23PV"],
+                        "constant_cells": ["HL23SST"],
+                    },
+                )
+                self.assertIsFile(filename)
+                pl.Path(filename).unlink()
+
+    def test_2d_plotter_network(self):
+        """Test plot_2D function with a network of a few cells."""
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            ofile = pl.Path(nml_file).name
+            for plane in ["yz"]:
+                filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
+
+                plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
+
+                self.assertIsFile(filename)
+                pl.Path(filename).unlink()
+
+    def test_2d_constant_plotter_network(self):
+        """Test plot_2D_schematic function with a network of a few cells."""
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            ofile = pl.Path(nml_file).name
+            for plane in ["xz"]:
+                filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_constant.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
+
+                plot_2D(
+                    nml_file,
+                    nogui=True,
+                    plane2d=plane,
+                    save_to_file=filename,
+                    plot_type="constant",
+                )
+
+                self.assertIsFile(filename)
+                pl.Path(filename).unlink()
+
+    def test_2d_schematic_plotter_network(self):
+        """Test plot_2D_schematic function with a network of a few cells."""
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            ofile = pl.Path(nml_file).name
+            for plane in ["xy"]:
+                filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_schematic.png"
+                # remove the file first
+                try:
+                    pl.Path(filename).unlink()
+                except FileNotFoundError:
+                    pass
+
+                plot_2D(
+                    nml_file,
+                    nogui=True,
+                    plane2d=plane,
+                    save_to_file=filename,
+                    plot_type="schematic",
+                )
+
+                self.assertIsFile(filename)
+                pl.Path(filename).unlink()
+
+    @pytest.mark.localonly
+    def test_3d_schematic_plotter(self):
+        """Test plot_3D_schematic plotter function."""
+        with chdir("L23-example/"):
+            nml_file = "HL23PYR.cell.nml"
+            nml_doc = read_neuroml2_file(nml_file)
+            cell: neuroml.Cell = nml_doc.cells[0]
+            plot_3D_schematic(
+                cell,
+                segment_groups=None,
                 nogui=True,
-                plane2d=plane,
-                save_to_file=filename,
+            )
+
+    @pytest.mark.localonly
+    def test_3d_morphology_plotter_vispy_network(self):
+        """Test plot_3D_cell_morphology_vispy function."""
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            plot_interactive_3D(nml_file, min_width=1, nogui=True, theme="dark")
+
+    @pytest.mark.localonly
+    def test_3d_morphology_plotter_vispy_network_with_spec(self):
+        """Test plot_3D_cell_morphology_vispy function."""
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            plot_interactive_3D(
+                nml_file,
+                min_width=1,
+                nogui=True,
+                theme="dark",
                 plot_spec={"point_fraction": 0.5},
             )
 
-            self.assertIsFile(filename)
-            pl.Path(filename).unlink()
-        os.chdir("../")
-
-    def test_2d_plotter_network_with_detailed_spec(self):
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        ofile = pl.Path(nml_file).name
-        # more detailed plot_spec
-        for plane in ["xy"]:
-            filename = f"test_morphology_plot_2d_spec_{ofile.replace('.', '_', 100)}_{plane}.png"
-            # remove the file first
-            try:
-                pl.Path(filename).unlink()
-            except FileNotFoundError:
-                pass
-
-            plot_2D(
+    @pytest.mark.localonly
+    def test_3d_morphology_plotter_vispy_network_with_spec2(self):
+        """Test plot_3D_cell_morphology_vispy function."""
+        with chdir("L23-example/"):
+            nml_file = "TestNetwork.net.nml"
+            plot_interactive_3D(
                 nml_file,
+                min_width=1,
                 nogui=True,
-                plane2d=plane,
-                save_to_file=filename,
+                theme="dark",
                 plot_spec={
                     "point_cells": ["HL23VIP"],
                     "detailed_cells": ["HL23PYR"],
@@ -184,155 +290,28 @@ class TestMorphologyPlot(BaseTestCase):
                     "constant_cells": ["HL23SST"],
                 },
             )
-            self.assertIsFile(filename)
-            pl.Path(filename).unlink()
-        os.chdir("../")
-
-    def test_2d_plotter_network(self):
-        """Test plot_2D function with a network of a few cells."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        ofile = pl.Path(nml_file).name
-        for plane in ["yz"]:
-            filename = (
-                f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}.png"
-            )
-            # remove the file first
-            try:
-                pl.Path(filename).unlink()
-            except FileNotFoundError:
-                pass
-
-            plot_2D(nml_file, nogui=True, plane2d=plane, save_to_file=filename)
-
-            self.assertIsFile(filename)
-            pl.Path(filename).unlink()
-        os.chdir("../")
-
-    def test_2d_constant_plotter_network(self):
-        """Test plot_2D_schematic function with a network of a few cells."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        ofile = pl.Path(nml_file).name
-        for plane in ["xz"]:
-            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_constant.png"
-            # remove the file first
-            try:
-                pl.Path(filename).unlink()
-            except FileNotFoundError:
-                pass
-
-            plot_2D(
-                nml_file,
-                nogui=True,
-                plane2d=plane,
-                save_to_file=filename,
-                plot_type="constant",
-            )
-
-            self.assertIsFile(filename)
-            pl.Path(filename).unlink()
-        os.chdir("../")
-
-    def test_2d_schematic_plotter_network(self):
-        """Test plot_2D_schematic function with a network of a few cells."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        ofile = pl.Path(nml_file).name
-        for plane in ["xy"]:
-            filename = f"test_morphology_plot_2d_{ofile.replace('.', '_', 100)}_{plane}_schematic.png"
-            # remove the file first
-            try:
-                pl.Path(filename).unlink()
-            except FileNotFoundError:
-                pass
-
-            plot_2D(
-                nml_file,
-                nogui=True,
-                plane2d=plane,
-                save_to_file=filename,
-                plot_type="schematic",
-            )
-
-            self.assertIsFile(filename)
-            pl.Path(filename).unlink()
-        os.chdir("../")
-
-    @pytest.mark.localonly
-    def test_3d_schematic_plotter(self):
-        """Test plot_3D_schematic plotter function."""
-        os.chdir("L23-example/")
-        nml_file = "HL23PYR.cell.nml"
-        nml_doc = read_neuroml2_file(nml_file)
-        cell: neuroml.Cell = nml_doc.cells[0]
-        plot_3D_schematic(
-            cell,
-            segment_groups=None,
-            nogui=True,
-        )
-        os.chdir("../")
-
-    @pytest.mark.localonly
-    def test_3d_morphology_plotter_vispy_network(self):
-        """Test plot_3D_cell_morphology_vispy function."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        plot_interactive_3D(nml_file, min_width=1, nogui=True, theme="dark")
-        os.chdir("../")
-
-    @pytest.mark.localonly
-    def test_3d_morphology_plotter_vispy_network_with_spec(self):
-        """Test plot_3D_cell_morphology_vispy function."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        plot_interactive_3D(
-            nml_file,
-            min_width=1,
-            nogui=True,
-            theme="dark",
-            plot_spec={"point_fraction": 0.5},
-        )
-        os.chdir("../")
-
-    @pytest.mark.localonly
-    def test_3d_morphology_plotter_vispy_network_with_spec2(self):
-        """Test plot_3D_cell_morphology_vispy function."""
-        os.chdir("L23-example/")
-        nml_file = "TestNetwork.net.nml"
-        plot_interactive_3D(
-            nml_file,
-            min_width=1,
-            nogui=True,
-            theme="dark",
-            plot_spec={
-                "point_cells": ["HL23VIP"],
-                "detailed_cells": ["HL23PYR"],
-                "schematic_cells": ["HL23PV"],
-                "constant_cells": ["HL23SST"],
-            },
-        )
-        os.chdir("../")
 
     @pytest.mark.localonly
     def test_3d_plotter_vispy_morph_only(self):
         """Test plot_interactive_3D function with morphology only NeuroML document."""
-        os.chdir("L23-example/")
-        nml_file = "HL23VIP.morph.cell.nml"
-        plot_interactive_3D(nml_file)
-        os.chdir("../")
+        with chdir("L23-example/"):
+            nml_file = "HL23VIP.morph.cell.nml"
+            plot_interactive_3D(nml_file)
 
     @pytest.mark.localonly
     def test_3d_plotter_vispy(self):
         """Test plot_3D_cell_morphology_vispy function."""
-        os.chdir("L23-example/")
-        nml_file = "HL23PYR.cell.nml"
-        nml_doc = read_neuroml2_file(nml_file)
-        cell: neuroml.Cell = nml_doc.cells[0]
-        plot_3D_cell_morphology(
-            cell=cell, nogui=True, color="Groups", verbose=True, plot_type="constant"
-        )
-        os.chdir("../")
+        with chdir("L23-example/"):
+            nml_file = "HL23PYR.cell.nml"
+            nml_doc = read_neuroml2_file(nml_file)
+            cell: neuroml.Cell = nml_doc.cells[0]
+            plot_3D_cell_morphology(
+                cell=cell,
+                nogui=True,
+                color="Groups",
+                verbose=True,
+                plot_type="constant",
+            )
 
         # test a circular soma
         nml_file = "test-spherical-soma.cell.nml"
