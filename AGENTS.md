@@ -39,6 +39,7 @@ pre-commit run --all-files
 - `test-ghactions.sh` is the authoritative test script; it installs the package, verifies all CLI tools, runs pytest, and executes examples
 - Some tests require a display (matplotlib); they're guarded by `if [[ "$CI" != "true" ]]`
 - NEURON examples require the `-neuron` flag and `nrniv` on PATH
+- **Pytest logging**: `--log-level=DEBUG` captures logs but hides them for passing tests by default — use `-rP` to show. `--log-cli-level` does not work with xdist.
 
 ## CI
 
@@ -48,6 +49,8 @@ pre-commit run --all-files
 
 ## Conventions
 
+- **Be concise**: no fluff, no explanations, no summaries of what was done — just the answer.
+- **No unicode characters in code**: use ASCII only in comments and strings.
 - **Branch**: development is the working branch; master is stable
 - **Ruff config**: ignores `F403`, `F405` (wildcard imports); excludes `examples/`
 - **mypy**: `ignore_missing_imports = True` (minimal type checking)
