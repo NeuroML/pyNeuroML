@@ -14,7 +14,7 @@ pyNeuroML
 [![DOI](https://zenodo.org/badge/27832592.svg)](https://zenodo.org/doi/10.5281/zenodo.5744044)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-17-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-18-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A single package in Python unifying scripts and modules for reading, writing, simulating and analysing NeuroML2/LEMS models.
@@ -201,6 +201,7 @@ More closely tied to PyNN?
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/AdityaBITMESRA"><img src="https://avatars.githubusercontent.com/u/147182147?v=4?s=100" width="100px;" alt="AdityaBITMESRA"/><br /><sub><b>AdityaBITMESRA</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/issues?q=author%3AAdityaBITMESRA" title="Bug reports">🐛</a> <a href="#ideas-AdityaBITMESRA" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=AdityaBITMESRA" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/pulls?q=is%3Apr+reviewed-by%3AAdityaBITMESRA" title="Reviewed Pull Requests">👀</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/YBCS"><img src="https://avatars.githubusercontent.com/u/29734619?v=4?s=100" width="100px;" alt="Y. Budhachandra"/><br /><sub><b>Y. Budhachandra</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Code">💻</a> <a href="https://github.com/NeuroML/pyNeuroML/commits?author=YBCS" title="Tests">⚠️</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/stellaprins"><img src="https://avatars.githubusercontent.com/u/30465823?v=4?s=100" width="100px;" alt="Stella"/><br /><sub><b>Stella</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=stellaprins" title="Code">💻</a> <a href="#ideas-stellaprins" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://hengyezhu.github.io/"><img src="https://avatars.githubusercontent.com/u/186930454?v=4?s=100" width="100px;" alt="Hengye Zhu"/><br /><sub><b>Hengye Zhu</b></sub></a><br /><a href="https://github.com/NeuroML/pyNeuroML/commits?author=HengyeZhu" title="Code">💻</a> <a href="#design-HengyeZhu" title="Design">🎨</a> <a href="https://github.com/NeuroML/pyNeuroML/pulls?q=is%3Apr+reviewed-by%3AHengyeZhu" title="Reviewed Pull Requests">👀</a></td>
     </tr>
   </tbody>
   <tfoot>
