@@ -138,11 +138,10 @@ class NmlPythonizer:
     def __init__(self, nml_file: str, output_dir: str | None = None) -> None:
         self.nml_file = nml_file
         self.nml_file_path = Path(nml_file)
-        self.output_dir = (
-            (self.nml_file_path.parent / Path(output_dir).stem)
-            if output_dir
-            else (Path(nml_file).parent / Path("output_nml2py"))
+        self.output_dir_name = (
+            Path(output_dir).stem if output_dir else Path("output_nml2py")
         )
+        self.output_dir = self.nml_file_path.parent / self.output_dir_name
         logger.info(f"{self.output_dir = }")
 
         # object identity -> variable_name mapping (for components without ids)
@@ -464,7 +463,7 @@ class NmlPythonizer:
             "nml_doc.validate()",
             "",
             "# --- To write ---",
-            f"write_neuroml2_file(nml_doc, {self.nml_file_path.name!r})" "",
+            f"write_neuroml2_file(nml_doc, {self.nml_file_path.name!r})",
         ]
 
     def _script_filename(self) -> str:
