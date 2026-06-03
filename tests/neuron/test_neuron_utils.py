@@ -7,34 +7,31 @@ File: tests/neuron/test_neuron_utils.py
 Copyright 2023 NeuroML contributors
 """
 
-
-import unittest
 import logging
-import tempfile
-import pytest
 import pathlib
+import tempfile
+import unittest
 
+import pytest
 
 from pyneuroml.neuron import (
-    load_hoc_or_python_file,
-    morphinfo,
+    export_mod_to_neuroml2,
     get_utils_hoc,
     getinfo,
-    export_mod_to_neuroml2,
+    load_hoc_or_python_file,
+    morphinfo,
 )
 
 from . import load_olm_cell
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
 class TestNeuronUtils(unittest.TestCase):
-
     """Test Neuron Utils"""
 
-    def test_hoc_loader(self):
+    def test_hoc_loader1(self):
         """Test hoc loader util function"""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".hoc") as f:
             print(
@@ -47,6 +44,7 @@ class TestNeuronUtils(unittest.TestCase):
 
             self.assertTrue(load_hoc_or_python_file(f.name))
 
+    def test_hoc_loader2(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".hoc") as f:
             print(
                 """
@@ -56,8 +54,10 @@ class TestNeuronUtils(unittest.TestCase):
                 flush=True,
             )
 
-            self.assertFalse(load_hoc_or_python_file(f.name))
+            with self.assertRaises(RuntimeError):
+                load_hoc_or_python_file(f.name)
 
+    def test_hoc_loader3(self):
         # loading python files is not yet implemented
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py") as f:
             print(

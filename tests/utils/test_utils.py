@@ -12,6 +12,7 @@ import math
 import pathlib as pl
 
 import neuroml
+import pytest
 
 from pyneuroml.pynml import read_neuroml2_file, write_neuroml2_file
 from pyneuroml.utils import (
@@ -30,9 +31,14 @@ logger.setLevel(logging.DEBUG)
 class TestUtils(BaseTestCase):
     """Test utils module"""
 
+    @pytest.fixture(autouse=True)
+    def to_test_dir(self, monkeypatch, request):
+        target_dir = request.path.parent.parent
+        monkeypatch.chdir(target_dir)
+
     def test_extract_position_info(self):
         """Test extract_position_info"""
-        nml_files = ["tests/plot/L23-example/TestNetwork.net.nml"]
+        nml_files = ["plot/L23-example/TestNetwork.net.nml"]
         for nml_file in nml_files:
             nml_model = read_neuroml2_file(
                 nml_file,
@@ -156,7 +162,7 @@ class TestUtils(BaseTestCase):
         )
 
         newdoc.validate(recursive=True)
-        write_neuroml2_file(newdoc, "tests/utils/test_rotation.net.nml", validate=True)
+        write_neuroml2_file(newdoc, "utils/test_rotation.net.nml", validate=True)
 
     def test_translate_cell_to_coords(self):
         """Test translate_cell_to_coords"""
@@ -279,6 +285,4 @@ class TestUtils(BaseTestCase):
         )
 
         newdoc.validate(recursive=True)
-        write_neuroml2_file(
-            newdoc, "tests/utils/test_translation.net.nml", validate=True
-        )
+        write_neuroml2_file(newdoc, "utils/test_translation.net.nml", validate=True)
