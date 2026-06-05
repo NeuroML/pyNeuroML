@@ -2,14 +2,14 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
     - id: trailing-whitespace
     - id: end-of-file-fixer
     - id: check-added-large-files
       args: [ "--maxkb=5000"]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.1
+  rev: v0.15.12
   hooks:
     - id: ruff
       args: [ "--select", "I", "--fix" ]
