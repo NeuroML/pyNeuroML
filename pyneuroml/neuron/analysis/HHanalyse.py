@@ -4,17 +4,18 @@
 Implementation of the pynml-modchananalysis command
 """
 
-import typing
 import argparse
 import logging
 import re
 import subprocess
 import sys
 from math import log
+from typing import Optional
 
 import matplotlib.pyplot as pylab
 import neuron
 from pylab import *
+
 from pyneuroml.utils import get_state_color
 from pyneuroml.utils.cli import build_namespace
 
@@ -137,7 +138,7 @@ def remove_comments(txt):
     return clear_txt
 
 
-def get_states(txt: str) -> typing.List[str]:
+def get_states(txt: str) -> list[str]:
     """Get list of states from mod file text.
 
     :param txt: mod file text
@@ -157,7 +158,7 @@ def get_states(txt: str) -> typing.List[str]:
     return state_list
 
 
-def get_suffix(txt: str) -> typing.Optional[str]:
+def get_suffix(txt: str) -> Optional[str]:
     """Get suffix mod file text
 
     :param txt: mod file text
