@@ -64,7 +64,7 @@ class TestPlotTimeSeries(BaseTestCase):
         trace_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
         for i in range(0, 1000):
             print(
-                f"{i/1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
+                f"{i / 1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
                 file=trace_file,
             )
         trace_file.flush()
@@ -97,7 +97,7 @@ class TestPlotTimeSeries(BaseTestCase):
         trace_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
         for i in range(0, 1000):
             print(
-                f"{i/1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
+                f"{i / 1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
                 file=trace_file,
             )
         trace_file.flush()
@@ -106,7 +106,7 @@ class TestPlotTimeSeries(BaseTestCase):
         trace_file2 = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
         for i in range(0, 1000):
             print(
-                f"{i/1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
+                f"{i / 1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
                 file=trace_file2,
             )
         trace_file2.flush()
@@ -144,7 +144,7 @@ class TestPlotTimeSeries(BaseTestCase):
         trace_file = tempfile.NamedTemporaryFile(mode="w", delete=False, dir=".")
         for i in range(0, 1000):
             print(
-                f"{i/1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
+                f"{i / 1000}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}\t{numpy.random.default_rng().random()}",
                 file=trace_file,
             )
         trace_file.flush()
