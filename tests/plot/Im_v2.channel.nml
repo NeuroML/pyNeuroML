@@ -6,14 +6,14 @@
     <ionChannel id="Im_v2" conductance="10pS" type="ionChannelHH" species="k">
 
         <notes>Im current
-            
-Comment from original mod file: 
+
+Comment from original mod file:
 Based on Im model of Vervaeke et al. (2006)</notes>
 
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="Im_v2">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Kv7/KCNQ/M-channels in rat glutamatergic hippocampal axons and their role in regulation of excitability and transmitter release,
@@ -22,7 +22,7 @@ Based on Im model of Vervaeke et al. (2006)</notes>
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -33,18 +33,18 @@ Based on Im model of Vervaeke et al. (2006)</notes>
                 </rdf:Description>
             </rdf:RDF>
         </annotation>
-        
-        
+
+
         <gate id="m" type="gateHHratesTau" instances="1">
             <q10Settings type="q10ExpTemp" q10Factor="2.3" experimentalTemp="30 degC"/>
             <forwardRate type="HHExpRate" rate="0.007per_ms" scale="10.88333mV" midpoint="-48mV"/>
             <reverseRate type="HHExpRate" rate="0.007per_ms" scale="-7.255555mV" midpoint="-48mV"/>
             <timeCourse type="Im_v2_tau"/>
         </gate>
-                            
+
     </ionChannel>
-    
-    
+
+
     <ComponentType name="Im_v2_tau" extends="baseVoltageDepTime">
         <Constant name="TIME_SCALE" dimension="time" value="1 ms"/>
         <Constant name="VOLT_SCALE" dimension="voltage" value="1 mV"/>

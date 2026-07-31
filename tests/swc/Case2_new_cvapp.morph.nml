@@ -1,0 +1,87 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.3.1.xsd"
+  id="Case2_new_morphology">
+
+      <notes>
+        Neuronal morphology exported in NeuroML v2.3.1 from CVapp (NeuroMorpho.org version)
+        Original file: Case2_new.swc </notes>
+
+      <morphology id="morphology_Case2_new">
+
+        <segment id="0" name="Seg_0"> <!-- "Cable" is 0-->
+
+          <proximal x="0" y="0" z="0" diameter="4"/>
+          <distal x="0" y="0" z="0" diameter="4"/>
+        </segment>
+
+        <segment id="1" name="Seg_1"> <!-- "Cable" is 1-->
+          <parent segment="0"/>
+          <proximal x="0" y="0" z="0" diameter="4"/>
+          <distal x="20" y="0" z="0" diameter="4"/>
+        </segment>
+
+        <segment id="2" name="Seg_2"> <!-- "Cable" is 2-->
+          <parent segment="0"/>
+          <proximal x="0" y="0" z="0" diameter="4"/>
+          <distal x="0" y="20" z="0" diameter="4"/>
+        </segment>
+
+        <segment id="3" name="Seg_3"> <!-- "Cable" is 2-->
+          <parent segment="2"/>
+          <distal x="0" y="30" z="0" diameter="4"/>
+        </segment>
+
+        <segment id="4" name="Seg_4"> <!-- "Cable" is 3-->
+          <parent segment="0"/>
+          <proximal x="0" y="0" z="0" diameter="4"/>
+          <distal x="0" y="-20" z="0" diameter="4"/>
+        </segment>
+
+        <segment id="5" name="Seg_5"> <!-- "Cable" is 3-->
+          <parent segment="4"/>
+          <distal x="0" y="-30" z="0" diameter="4"/>
+        </segment>
+
+        <segmentGroup id="Cable_0" >
+          <member segment="0"/>
+        </segmentGroup>
+
+        <segmentGroup id="Cable_1" >
+          <member segment="1"/>
+        </segmentGroup>
+
+        <segmentGroup id="Cable_2" >
+          <member segment="2"/>
+          <member segment="3"/>
+        </segmentGroup>
+
+        <segmentGroup id="Cable_3" >
+          <member segment="4"/>
+          <member segment="5"/>
+        </segmentGroup>
+
+        <segmentGroup id="axon_group" >
+          <include segmentGroup="Cable_0"/>
+          <include segmentGroup="Cable_1"/>
+          <include segmentGroup="Cable_2"/>
+          <include segmentGroup="Cable_3"/>
+        </segmentGroup>
+
+        <segmentGroup id="all" >
+          <include segmentGroup="Cable_0"/>
+          <include segmentGroup="Cable_1"/>
+          <include segmentGroup="Cable_2"/>
+          <include segmentGroup="Cable_3"/>
+        </segmentGroup>
+
+        <segmentGroup id="color_grey" >
+          <include segmentGroup="Cable_0"/>
+          <include segmentGroup="Cable_1"/>
+          <include segmentGroup="Cable_2"/>
+          <include segmentGroup="Cable_3"/>
+        </segmentGroup>
+
+      </morphology>
+
+</neuroml>

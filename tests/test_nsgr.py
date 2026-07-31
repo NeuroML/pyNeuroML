@@ -7,7 +7,6 @@ File: tests/utils/test_nsgr.py
 Copyright 2024 NeuroML contributors
 """
 
-
 import logging
 import pathlib as pl
 

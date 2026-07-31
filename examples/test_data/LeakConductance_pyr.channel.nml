@@ -6,7 +6,7 @@
     <ionChannel id="LeakConductance_pyr" conductance="10pS" type="ionChannelPassive">
 
         <notes>Passive conductance for pyramidal cell</notes>
-                            
+
     </ionChannel>
 
 </neuroml>

@@ -6,15 +6,15 @@
     <ionChannel id="SK" conductance="10pS" type="ionChannelHH" species="k">
 
         <notes>Small-conductance, Ca2+ activated K+ current
-            
-Comment from original mod file: 
+
+Comment from original mod file:
 : SK-type calcium-activated potassium current
 : Reference : Kohler et al. 1996</notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="SK">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
@@ -23,7 +23,7 @@ Comment from original mod file:
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -39,7 +39,7 @@ Comment from original mod file:
             <timeCourse type="SK_z_tau_tau"/>
             <steadyState type="SK_z_inf_inf"/>
         </gate>
-                            
+
     </ionChannel>
 
     <ComponentType name="SK_z_tau_tau" extends="baseVoltageConcDepTime">

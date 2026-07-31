@@ -7,8 +7,8 @@ File: pyneuroml/utils/cli.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import argparse
+
 from . import convert_case
 
 

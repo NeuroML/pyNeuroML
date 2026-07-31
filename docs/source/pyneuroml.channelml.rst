@@ -5,4 +5,3 @@ pyneuroml.channelml package
    :members:
    :undoc-members:
    :show-inheritance:
-

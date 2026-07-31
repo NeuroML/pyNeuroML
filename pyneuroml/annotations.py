@@ -119,6 +119,19 @@ class Annotation(object):
             "modified_dates": DCTERMS.modified,
         }
 
+        self.foaf_supported_attributes = [
+            "name",
+            "homepage",
+            "account",
+            "fundedBy",
+            "email",
+            "mbox",
+            "weblog",
+            "thumbnail",
+            "pubications",
+            "orcid",
+        ]
+
     def create_annotation(
         self,
         subject: str,
@@ -214,10 +227,14 @@ class Annotation(object):
 
             See: https://rdflib.readthedocs.io/en/stable/plugin_serializers.html
 
+            Note that for xml formats, the xml is finally parsed through
+            lxml.etree to ensure compatibility with the rest of the
+            NeuroML/LEMS tool chain.
+
         :type serialization_format: str
         :param xml_header: toggle inclusion of xml header if serializing in xml format
         :type xml_header: bool
-        :param indent: number of spaces to use to indent the annotation block
+        :param indent: number of spaces to use to indent the annotation block for xml
         :type indent: int
         :param description: a longer description
         :type description: str
@@ -358,10 +375,6 @@ class Annotation(object):
 
         annotation = self.doc.serialize(format=serialization_format)
 
-        # indent
-        if indent > 0:
-            annotation = textwrap.indent(annotation, " " * indent)
-
         # xml issues
         if "xml" in serialization_format:
             # replace rdf:_1 etc with rdf:li
@@ -375,14 +388,38 @@ class Annotation(object):
             annotation = rdfbnode_pattern.sub("", annotation)
 
             # remove xml header, not used when embedding into other NeuroML files
-            if xml_header is False:
-                annotation = annotation[annotation.find(">") + 1 :]
+            # etree doesn't like it either for unicode strings
+            annotation = annotation[annotation.find(">") + 1 :]
 
-        if write_to_file:
-            with open(write_to_file, "w") as f:
-                print(annotation, file=f)
+            # put all the namespaces on one line
+            # jlems doesn't like multi-line tags
+            # https://github.com/LEMS/jLEMS/issues/127
+            annotation_etree = etree.fromstring(annotation)
 
-        return annotation
+            annotation_str = (
+                etree.tostring(
+                    annotation_etree, pretty_print=True, xml_declaration=xml_header
+                )
+            ).decode("utf-8")
+
+            if write_to_file:
+                with open(write_to_file, "w") as f:
+                    print(annotation_str, file=f)
+
+            # indent
+            if indent > 0:
+                annotation_str = textwrap.indent(annotation_str, " " * indent)
+
+            return annotation_str
+
+        else:
+            annotation = self.doc.serialize(format=serialization_format)
+
+            if write_to_file:
+                with open(write_to_file, "w") as f:
+                    print(annotation, file=f)
+
+            return annotation
 
     def _add_element(
         self,
@@ -497,14 +534,22 @@ class Annotation(object):
 
                 # other fields
                 for idf, label in info.items():
+                    if label not in self.foaf_supported_attributes:
+                        logger.warning(
+                            f"Not a supported FOAF attribute, Skipping {idf}: {label}."
+                        )
+                        logger.warning(
+                            f"Only {self.foaf_supported_attributes} FOAF attributes are currently supported by NeuroML/LEMS"
+                        )
+                        continue
+
                     if label == "orcid":
                         foaf_type = ORCID.id
+                    elif label == "email":
+                        foaf_type = getattr(FOAF, "mbox", None)
                     else:
                         foaf_type = getattr(FOAF, label, None)
 
-                    if foaf_type is None:
-                        logger.info("Not a FOAF attribute, using DC.identifier")
-                        foaf_type = DC.identifier
                     self.doc.add((top_node, foaf_type, _URIRef_or_Literal(idf)))
         elif annotation_style == "miriam":
             # top level node: creator/contributor etc.
@@ -520,14 +565,22 @@ class Annotation(object):
                 # individual nodes for details
                 self.doc.add((ref, FOAF.name, Literal(name)))
                 for idf, label in info.items():
+                    if label not in self.foaf_supported_attributes:
+                        logger.warning(
+                            f"Not a supported FOAF attribute, Skipping {idf}: {label}."
+                        )
+                        logger.warning(
+                            f"Only {self.foaf_supported_attributes} FOAF attributes are currently supported by NeuroML/LEMS"
+                        )
+                        continue
+
                     if label == "orcid":
                         foaf_type = ORCID.id
+                    elif label == "email":
+                        foaf_type = getattr(FOAF, "mbox", None)
                     else:
                         foaf_type = getattr(FOAF, label, None)
 
-                    if foaf_type is None:
-                        logger.info("Not a FOAF attribute, using DC.identifier")
-                        foaf_type = DC.identifier
                     self.doc.add((ref, foaf_type, _URIRef_or_Literal(idf)))
 
     def extract_annotations(
@@ -555,6 +608,9 @@ class Annotation(object):
                     obj_id = parent.attrib["id"]
                 except KeyError:
                     obj_id = ""
+
+                print(a)
+
                 annotations[obj_id] = self.parse_rdf(a)
 
             logger.info("Annotations in %s: " % (nml2_file))

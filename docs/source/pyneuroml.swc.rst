@@ -21,3 +21,11 @@ pyneuroml.swc.ExportSWC module
    :members:
    :undoc-members:
    :show-inheritance:
+
+pyneuroml.swc.ExportNML module
+------------------------------
+
+.. automodule:: pyneuroml.swc.ExportNML
+   :members:
+   :undoc-members:
+   :show-inheritance:

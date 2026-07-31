@@ -7,17 +7,15 @@ File:
 Copyright 2023 NeuroML contributors
 """
 
-
-import unittest
 import pathlib
-
+import unittest
 
 import neuroml
+
 from pyneuroml.analysis import generate_current_vs_frequency_curve
 
 
 class TestCellAnalysis(unittest.TestCase):
-
     """Test cell analysis module"""
 
     def test_cell_analysis(self):

@@ -7,10 +7,8 @@ File: tests/neuron/__init__.py
 Copyright 2023 NeuroML contributors
 """
 
-
 import pathlib
 import subprocess
-
 
 from pyneuroml.neuron import load_hoc_or_python_file
 

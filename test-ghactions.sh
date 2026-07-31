@@ -4,7 +4,12 @@ set -e
 
 # CI already installs package and all optional dependencies, so this is redundant.
 # But we keep it to allow easy local testing.
-pip install .[dev]
+if command -v uv
+then
+    uv pip install .[dev]
+else
+    pip install .[dev]
+fi
 
 # required to test commands that should fail
 # need this because other constructs don't work:
@@ -28,7 +33,7 @@ echo "##   Testing all CLI tools"
 full_path=$(command -v pynml)
 bin_location=$(dirname $full_path)
 
-for f in ${bin_location}/pynml*
+for f in ${bin_location}/pynml* ${bin_location}/jnml
 do
     current_exec=$(basename $f)
     echo "-> Testing $current_exec runs"

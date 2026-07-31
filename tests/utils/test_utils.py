@@ -9,6 +9,7 @@ Copyright 2023 NeuroML contributors
 
 import logging
 import math
+import os
 import pathlib as pl
 
 import neuroml
@@ -21,6 +22,7 @@ from pyneuroml.utils import (
     rotate_cell,
     translate_cell_to_coords,
 )
+from pyneuroml.utils.components import add_new_component
 
 from .. import BaseTestCase
 
@@ -286,3 +288,12 @@ class TestUtils(BaseTestCase):
 
         newdoc.validate(recursive=True)
         write_neuroml2_file(newdoc, "utils/test_translation.net.nml", validate=True)
+
+    def test_adding_new_components(self):
+        """Test add_new_component method."""
+        new_comp, new_comp_file = add_new_component(
+            "newcomp", "sometype", param1="5v", param2="something"
+        )
+        self.assertIsNotNone(new_comp)
+        self.assertIsFile(new_comp_file)
+        os.unlink(new_comp_file)

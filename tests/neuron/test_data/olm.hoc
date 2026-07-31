@@ -347,5 +347,3 @@ proc position() { local i
 
 
 endtemplate olm
-
-

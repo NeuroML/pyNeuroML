@@ -6,11 +6,11 @@
     <ionChannel id="Kahp_pyr" conductance="10pS" type="ionChannelHH" species="k">
 
         <notes/>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="Kahp_pyr">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Traub, R. D., Wong, R. K., Miles, R., and Michelson, H. (1991). A model of a CA3 hippocampal pyramidal neuron incorporating voltage-clamp data on intrinsic conductances. Journal of neurophysiology, 66(2), 635-50.</rdf:li>
@@ -18,7 +18,7 @@
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -34,7 +34,7 @@
             <forwardRate type="Kahp_pyr_z_alpha_rate"/>
             <reverseRate type="Kahp_pyr_z_beta_rate"/>
         </gate>
-                            
+
     </ionChannel>
 
     <ComponentType name="Kahp_pyr_z_alpha_rate" extends="baseVoltageConcDepRate">

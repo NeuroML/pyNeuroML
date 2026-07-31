@@ -9,7 +9,6 @@ Copyright 2024 NeuroML contributors
 
 import inspect
 import logging
-import math
 import os
 import pathlib
 import shlex
@@ -24,12 +23,14 @@ from pathlib import Path
 from typing import Optional
 
 import ppft as pp
-from lxml import etree
 
+import pyneuroml.plot.PlotTimeSeries as pynmlt
 import pyneuroml.utils
 import pyneuroml.utils.misc
+import pyneuroml.utils.simdata as pynmls
 from pyneuroml import DEFAULTS, __version__
 from pyneuroml.errors import UNKNOWN_ERR
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -705,6 +706,7 @@ def run_jneuroml(
     report_jnml_output: bool = True,
     exit_on_fail: bool = False,
     return_string: bool = False,
+    output_prefix: str = " jNeuroML >>  ",
 ) -> typing.Union[typing.Tuple[bool, str], bool]:
     """Run jnml with provided arguments.
 
@@ -726,6 +728,8 @@ def run_jneuroml(
     :type exit_on_fail: bool
     :param return_string: toggle whether the output string should be returned
     :type return_string: bool
+    :param output_prefix: string to prefix the returned jNeuroML output with
+    :type output_prefix: str
 
     :returns: either a bool, or a Tuple (bool, str) depending on the value of
         return_string: True of jnml ran successfully, False if not; along with the
@@ -756,7 +760,7 @@ def run_jneuroml(
     try:
         command = f'java -Xmx{max_memory} {pre_jar} -jar  "{jar_path}" {pre_args} {target_file} {post_args}'
         retcode, output = execute_command_in_dir(
-            command, exec_in_dir, verbose=verbose, prefix=" jNeuroML >>  "
+            command, exec_in_dir, verbose=verbose, prefix=output_prefix
         )
 
         if retcode != 0:
@@ -770,14 +774,11 @@ def run_jneuroml(
                     return False
 
         if report_jnml_output:
-            logger.debug(
+            logger.info(
                 "Successfully ran the following command using pyNeuroML v%s: \n    %s"
                 % (__version__, command)
             )
-            logger.debug("Output:\n\n%s" % output)
-
-    #  except KeyboardInterrupt as e:
-    #    raise e
+            logger.info("Output:\n\n%s" % output)
 
     except Exception as e:
         logger.error("*** Execution of jnml has failed! ***")
@@ -905,7 +906,7 @@ def execute_command_in_dir_with_realtime_output(
         )
         with p.stdout:
             for line in iter(p.stdout.readline, ""):
-                print("# %s" % line.strip())
+                print(" %s %s" % (prefix, line.strip()))
         p.wait()  # wait for the subprocess to exit
 
         print("####################################################################")
@@ -922,8 +923,8 @@ def execute_command_in_dir_with_realtime_output(
         raise e
 
     if not p.returncode == 0:
-        logger.critical(
-            "*** Problem running command (return code: %s): \n       %s"
+        logger.error(
+            "*** Problem running command (return code: %s): [%s]"
             % (p.returncode, command)
         )
 
@@ -993,13 +994,14 @@ def execute_command_in_dir(
         return return_string.decode("utf-8")
 
     except subprocess.CalledProcessError as e:
-        logger.critical("*** Problem running command: \n       %s" % e)
-        logger.critical(
-            "%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix))
-        )
+        logger.error("*** Problem running last command: %s" % e)
+
+        print("####################################################################")
+        print("%s%s" % (prefix, e.output.decode().replace("\n", "\n" + prefix)))
+        print("####################################################################")
         return (e.returncode, e.output.decode())
     except Exception as e:
-        logger.critical("*** Unknown problem running command: %s" % e)
+        logger.error("*** Unknown problem running command: %s" % e)
         return (-1, str(e))
 
 
@@ -1011,10 +1013,25 @@ def reload_saved_data(
     show_plot_already: bool = True,
     simulator: typing.Optional[str] = None,
     reload_events: bool = False,
+    reload_traces: bool = True,
     verbose: bool = DEFAULTS["v"],
     remove_dat_files_after_load: bool = False,
-) -> typing.Union[dict, typing.Tuple[dict, dict]]:
+) -> typing.Union[
+    typing.Dict[str, typing.Dict],
+    typing.Tuple[typing.Dict[str, typing.Dict], typing.Dict[str, typing.Dict]],
+]:
     """Reload data saved from previous LEMS simulation run.
+
+    It can also plot the traces from the data. Each "OutputFile" is plotted in
+    a separate plot.
+
+    .. seealso::
+
+        the :py:mod:`pyneuroml.plot.PlotTimeSeries` module
+            Module for plotting time series
+
+        the :py:mod:`pyneuroml.plot.simdata` module
+            Module for loading simulation data
 
     :param lems_file_name: name of LEMS file that was used to generate the data
     :type lems_file_name: str
@@ -1022,222 +1039,110 @@ def reload_saved_data(
     :type base_dir: str
     :param t_run: time of run
     :type t_run: datetime
-    :param plot: toggle plotting
+    :param plot: toggle plotting of traces
     :type plot: bool
     :param show_plot_already: toggle if plots should be shown
     :type show_plot_already: bool
     :param simulator: simulator that was used to generate data
     :type simulator: str
-    :param reload_event: toggle whether events should be loaded
-    :type reload_event: bool
-    :param verbose: toggle verbose output
-    :type verbose: bool
+    :param reload_events: toggle whether events should be loaded
+    :type reload_events: bool
+    :param reload_traces: toggle whether traces should be loaded
+    :type reload_traces: bool
     :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
     :type remove_dat_files_after_load: bool
 
+    :returns: if both `get_events` and `get_traces` are selected, a tuple with
+        two dictionaries, one for traces, one for events, is returned:
 
-    TODO: remove unused vebose argument (needs checking to see if is being
-    used in other places)
+        .. code-block:: python
+
+            all_traces, all_events
+
+        Otherwise one dictionary for whichever was selected is returned.
+
+        The events dictionary has the following format:
+
+        .. code-block:: python
+
+            {
+                '<value of select attribute>': { 'cell id': [<events>] }
+            }
+
+        The traces dictionary has the following format:
+
+        .. code-block:: python
+
+            {
+                't': [<values>],
+                'col 1': [<values>]
+                'col 2': [<values>]
+            }
+
+        Each list has multiple dictionaries, one each for each output file in
+        the LEMS file.
+
+
+    .. seealso::
+
+        The :py:mod:`pyneuroml.utils.simdata` module for more utility functions
+        on loading simulation data.
+
     """
-    if not os.path.isfile(lems_file_name):
-        real_lems_file = os.path.realpath(os.path.join(base_dir, lems_file_name))
+    if not reload_events and not reload_traces:
+        raise ValueError("At least one of reload_traces or reload_events must be True")
+
+    all_traces: typing.Dict[str, typing.Dict] = {}
+    all_events: typing.Dict[str, typing.Dict] = {}
+    if reload_traces and not reload_events:
+        all_traces = pynmls.load_sim_data_from_lems_file(
+            lems_file_name=lems_file_name,
+            base_dir=base_dir,
+            get_events=False,
+            get_traces=True,
+            t_run=t_run,
+            remove_dat_files_after_load=remove_dat_files_after_load,
+        )
+    elif reload_events and not reload_traces:
+        all_traces = pynmls.load_sim_data_from_lems_file(
+            lems_file_name=lems_file_name,
+            base_dir=base_dir,
+            get_events=True,
+            get_traces=False,
+            t_run=t_run,
+            remove_dat_files_after_load=remove_dat_files_after_load,
+        )
     else:
-        real_lems_file = os.path.realpath(lems_file_name)
-
-    logger.debug(
-        "Reloading data specified in LEMS file: %s (%s), base_dir: %s, cwd: %s; plotting %s"
-        % (lems_file_name, real_lems_file, base_dir, os.getcwd(), show_plot_already)
-    )
-
-    # Could use pylems to parse all this...
-    traces = {}  # type: dict
-    events = {}  # type: dict
-
-    if plot:
-        import matplotlib.pyplot as plt
-
-    base_lems_file_path = os.path.dirname(os.path.realpath(lems_file_name))
-    tree = etree.parse(real_lems_file)
-
-    sim = tree.getroot().find("Simulation")
-    ns_prefix = ""
-
-    possible_prefixes = ["{http://www.neuroml.org/lems/0.7.2}"]
-    if sim is None:
-        # print(tree.getroot().nsmap)
-        # print(tree.getroot().getchildren())
-        for pre in possible_prefixes:
-            for comp in tree.getroot().findall(pre + "Component"):
-                if comp.attrib["type"] == "Simulation":
-                    ns_prefix = pre
-                    sim = comp
-
-    if reload_events:
-        event_output_files = sim.findall(ns_prefix + "EventOutputFile")
-        for i, of in enumerate(event_output_files):
-            name = of.attrib["fileName"]
-            file_name = os.path.join(base_dir, name)
-            if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-                file_name = os.path.join(base_lems_file_path, name)
-
-            # if not os.path.isfile(file_name): # If not relative to the LEMS file...
-            #    file_name = os.path.join(os.getcwd(),name)
-            # ... try relative to cwd.
-            # if not os.path.isfile(file_name): # If not relative to the LEMS file...
-            #    file_name = os.path.join(os.getcwd(),'NeuroML2','results',name)
-            # ... try relative to cwd in NeuroML2/results subdir.
-            if not os.path.isfile(file_name):  # If not relative to the base dir...
-                raise OSError(
-                    ("Could not find simulation output " "file %s" % file_name)
-                )
-            format = of.attrib["format"]
-            logger.info(
-                "Loading saved events from %s (format: %s)" % (file_name, format)
-            )
-            selections = {}
-            for col in of.findall(ns_prefix + "EventSelection"):
-                id = int(col.attrib["id"])
-                select = col.attrib["select"]
-                events[select] = []
-                selections[id] = select
-
-            with open(file_name) as f:
-                for line in f:
-                    values = line.split()
-                    if format == "TIME_ID":
-                        t = float(values[0])
-                        id = int(values[1])
-                    elif format == "ID_TIME":
-                        id = int(values[0])
-                        t = float(values[1])
-                    logger.debug(
-                        "Found a event in cell %s (%s) at t = %s"
-                        % (id, selections[id], t)
-                    )
-                    events[selections[id]].append(t)
-
-            if remove_dat_files_after_load:
-                logger.warning(
-                    "Removing file %s after having loading its data!" % file_name
-                )
-                os.remove(file_name)
-
-    output_files = sim.findall(ns_prefix + "OutputFile")
-    n_output_files = len(output_files)
-    if plot:
-        rows = int(max(1, math.ceil(n_output_files / float(3))))
-        columns = min(3, n_output_files)
-        fig, ax = plt.subplots(
-            rows, columns, sharex=True, figsize=(8 * columns, 4 * rows)
-        )
-        if n_output_files > 1:
-            ax = ax.ravel()
-
-    for i, of in enumerate(output_files):
-        traces["t"] = []
-        name = of.attrib["fileName"]
-        file_name = os.path.join(base_dir, name)
-
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            file_name = os.path.join(base_lems_file_path, name)
-
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            file_name = os.path.join(os.getcwd(), name)
-
-            # ... try relative to cwd.
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            file_name = os.path.join(os.getcwd(), "NeuroML2", "results", name)
-            # ... try relative to cwd in NeuroML2/results subdir.
-        if not os.path.isfile(file_name):  # If not relative to the LEMS file...
-            raise OSError(("Could not find simulation output " "file %s" % file_name))
-        t_file_mod = datetime.fromtimestamp(os.path.getmtime(file_name))
-        if t_file_mod < t_run:
-            raise Exception(
-                "Expected output file %s has not been modified since "
-                "%s but the simulation was run later at %s."
-                % (file_name, t_file_mod, t_run)
-            )
-
-        logger.debug(
-            "Loading saved data from %s%s"
-            % (file_name, " (%s)" % simulator if simulator else "")
+        all_traces, all_events = pynmls.load_sim_data_from_lems_file(
+            lems_file_name=lems_file_name,
+            base_dir=base_dir,
+            get_events=True,
+            get_traces=True,
+            t_run=t_run,
+            remove_dat_files_after_load=remove_dat_files_after_load,
         )
 
-        cols = []
-        cols.append("t")
-        for col in of.findall(ns_prefix + "OutputColumn"):
-            quantity = col.attrib["quantity"]
-            traces[quantity] = []
-            cols.append(quantity)
-
-        with open(file_name) as f:
-            for line in f:
-                values = line.split()
-                for vi in range(len(values)):
-                    traces[cols[vi]].append(float(values[vi]))
-
-        if remove_dat_files_after_load:
-            logger.warning(
-                "Removing file %s after having loading its data!" % file_name
-            )
-            os.remove(file_name)
+    flat_traces = {}
+    if all_traces:
+        for f, traces in all_traces.items():
+            flat_traces.update(traces)
 
         if plot:
-            info = "Data loaded from %s%s" % (
-                file_name,
-                " (%s)" % simulator if simulator else "",
+            pynmlt._plot_traces(
+                all_traces, show_plot_already=show_plot_already, single_plot=False
             )
-            logger.warning("Reloading: %s" % info)
-            plt.get_current_fig_manager().set_window_title(info)
 
-            legend = False
-            for key in cols:
-                if n_output_files > 1:
-                    ax_ = ax[i]
-                else:
-                    ax_ = ax
-                ax_.set_xlabel("Time (ms)")
-                ax_.set_ylabel("(SI units...)")
-                ax_.xaxis.grid(True)
-                ax_.yaxis.grid(True)
+    flat_events = {}
+    if all_events:
+        for f, events in all_events.items():
+            flat_events.update(events)
 
-                if key != "t":
-                    ax_.plot(traces["t"], traces[key], label=key)
-                    logger.debug("Adding trace for: %s, from: %s" % (key, file_name))
-                    ax_.used = True
-                    legend = True
-
-                if legend:
-                    if n_output_files > 1:
-                        ax_.legend(
-                            loc="upper right", fancybox=True, shadow=True, ncol=4
-                        )  # ,bbox_to_anchor=(0.5, -0.05))
-                    else:
-                        ax_.legend(
-                            loc="upper center",
-                            bbox_to_anchor=(0.5, -0.05),
-                            fancybox=True,
-                            shadow=True,
-                            ncol=4,
-                        )
-
-    #  print(traces.keys())
-
-    if plot and show_plot_already:
-        if n_output_files > 1:
-            ax_ = ax
-        else:
-            ax_ = [ax]
-        for axi in ax_:
-            if not hasattr(axi, "used") or not axi.used:
-                axi.axis("off")
-        plt.tight_layout()
-        plt.show()
-
-    if reload_events:
-        return traces, events
-    else:
-        return traces
+    if reload_events and reload_traces:
+        return flat_traces, flat_events
+    elif reload_traces and not reload_events:
+        return flat_traces
+    elif reload_events and not reload_traces:
+        return flat_events
 
 
 def generate_sim_scripts_in_folder(
@@ -1313,95 +1218,91 @@ def generate_sim_scripts_in_folder(
             "Please only provide the name of the file here and use rootdir to provide the folder it lives in"
         )
 
-    logger.debug("Getting list of model files")
-    model_file_list = []  # type: list
-    lems_def_dir = None
-    lems_def_dir = pyneuroml.utils.get_model_file_list(
-        lems_file_name, model_file_list, root_dir, lems_def_dir
-    )
-
-    root_dir = str(Path(root_dir).absolute())
-
-    logger.debug(f"Model file list is {model_file_list}")
-
-    for model_file in model_file_list:
-        logger.debug(f"Copying: {root_dir}/{model_file} -> {tdir + '/' + model_file}")
-        # if model file has directory structures in it, recreate the dirs in
-        # the temporary directory
-        if len(model_file.split("/")) > 1:
-            # throw error if files in parent directories are referred to
-            if "../" in model_file:
-                raise ValueError(
-                    """
-                    Cannot handle parent directories because we
-                    cannot create these directories correctly in
-                    the temporary location. Please re-organize
-                    your code such that all included files are in
-                    sub-directories of the root directory where the
-                    main file resides.
-                    """
-                )
-
-            model_file_path = pathlib.Path(tdir + "/" + model_file)
-            parent = model_file_path.parent
-            parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(root_dir + "/" + model_file, tdir + "/" + model_file)
-
-    if lems_def_dir is not None:
-        logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
-        shutil.rmtree(lems_def_dir)
-
-    cwd = Path.cwd()
-    os.chdir(tdir)
-    logger.info(f"Working in {tdir}")
-    start_time = time.time() - 1.0
-
-    if engine == "jneuroml_neuron":
-        run_lems_with(
-            engine,
-            lems_file_name=Path(lems_file_name).name,
-            compile_mods=False,
-            only_generate_scripts=True,
-            *engine_args,
-            **engine_kwargs,
-        )
-    elif engine == "jneuroml_netpyne":
-        run_lems_with(
-            engine,
-            lems_file_name=Path(lems_file_name).name,
-            only_generate_scripts=True,
-            *engine_args,
-            **engine_kwargs,
+    # change to root_dir, so that we're in the directory where the lems file
+    # is
+    with chdir(root_dir):
+        logger.debug("Getting list of model files")
+        model_file_list = []  # type: list
+        lems_def_dir = None
+        lems_def_dir = pyneuroml.utils.get_model_file_list(
+            lems_file_name, model_file_list, root_dir, lems_def_dir
         )
 
-    generated_files = pyneuroml.utils.get_files_generated_after(
-        start_time, ignore_suffixes=["xml", "nml"]
-    )
+        logger.debug(f"Model file list is {model_file_list}")
 
-    # For NetPyNE, the channels are converted to NEURON mod files, but the
-    # network and cells are imported from the nml files.
-    # So we include all the model files too.
-    if engine == "jneuroml_netpyne":
-        generated_files.extend(model_file_list)
+        for model_file in model_file_list:
+            logger.debug(f"Copying: {model_file} -> {tdir}/{model_file}")
+            # if model file has directory structures in it, recreate the dirs in
+            # the temporary directory
+            if len(model_file.split("/")) > 1:
+                # throw error if files in parent directories are referred to
+                if "../" in model_file:
+                    raise ValueError(
+                        """
+                        Cannot handle parent directories because we
+                        cannot create these directories correctly in
+                        the temporary location. Please re-organize
+                        your code such that all included files are in
+                        sub-directories of the root directory where the
+                        main file resides.
+                        """
+                    )
 
-    logger.debug(f"Generated files are: {generated_files}")
+                model_file_path = pathlib.Path(tdir + "/" + model_file)
+                parent = model_file_path.parent
+                parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(model_file, tdir + "/" + model_file)
 
-    if generated_files_dir_name is None:
-        generated_files_dir_name = Path(tdir).name + "_generated"
-    logger.debug(
-        f"Creating directory and moving generated files to it: {generated_files_dir_name}"
-    )
+        if lems_def_dir is not None:
+            logger.info(f"Removing LEMS definitions directory {lems_def_dir}")
+            shutil.rmtree(lems_def_dir)
 
-    for f in generated_files:
-        fpath = pathlib.Path(f)
-        moved_path = generated_files_dir_name / fpath
-        # use os.renames because pathlib.Path.rename does not move
-        # recursively and so cannot move files within directories
-        os.renames(fpath, moved_path)
+    with chdir(tdir):
+        logger.info(f"Working in {tdir}")
+        start_time = time.time() - 1.0
 
-    # return to original directory
-    # doesn't affect scripts much, but does affect our tests
-    os.chdir(str(cwd))
+        if engine == "jneuroml_neuron":
+            run_lems_with(
+                engine,
+                lems_file_name=Path(lems_file_name).name,
+                compile_mods=False,
+                only_generate_scripts=True,
+                *engine_args,
+                **engine_kwargs,
+            )
+        elif engine == "jneuroml_netpyne":
+            run_lems_with(
+                engine,
+                lems_file_name=Path(lems_file_name).name,
+                only_generate_scripts=True,
+                *engine_args,
+                **engine_kwargs,
+            )
+
+        generated_files = pyneuroml.utils.get_files_generated_after(
+            start_time, ignore_suffixes=["xml", "nml"]
+        )
+
+        # For NetPyNE, the channels are converted to NEURON mod files, but the
+        # network and cells are imported from the nml files.
+        # So we include all the model files too.
+        if engine == "jneuroml_netpyne":
+            generated_files.extend(model_file_list)
+
+        logger.debug(f"Generated files are: {generated_files}")
+
+        if generated_files_dir_name is None:
+            generated_files_dir_name = Path(tdir).name + "_generated"
+        logger.debug(
+            f"Creating directory and moving generated files to it: {generated_files_dir_name}"
+        )
+
+        for f in generated_files:
+            fpath = pathlib.Path(f)
+            moved_path = generated_files_dir_name / fpath
+            # use os.renames because pathlib.Path.rename does not move
+            # recursively and so cannot move files within directories
+            os.renames(fpath, moved_path)
 
     return tdir
 

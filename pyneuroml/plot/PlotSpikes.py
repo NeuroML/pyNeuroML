@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-import pyneuroml.lems as pynmll
+import pyneuroml.utils.simdata as pynmls
 from pyneuroml.plot import generate_plot
 from pyneuroml.utils.cli import build_namespace
 
@@ -480,7 +480,7 @@ def plot_spikes_from_lems_file(
     :type lems_file_name: str
     :param base_dir: Directory where the LEMS file resides. Defaults to the current directory.
     :type base_dir: str
-    :param show_plots_already: Whether to show the plots immediately after they are generated. Defaults to True.
+    :param show_plots_already: Whether to show the plots
     :type show_plots_already: bool
     :param save_spike_plot_to: Path to save the spike plot to. If `None`, the plot will not be saved. Defaults to `None`.
     :type save_spike_plot_to: Optional[str]
@@ -493,31 +493,38 @@ def plot_spikes_from_lems_file(
     :return: None
     :rtype: None
     """
-    event_data = pynmll.load_sim_data_from_lems_file(
+    all_events: Dict[str, Dict] = pynmls.load_sim_data_from_lems_file(
         lems_file_name, get_events=True, get_traces=False
     )
 
-    spike_data = []  # type: List[Dict]
-    for select, times in event_data.items():
-        new_dict = {"name": select}
-        new_dict["times"] = times
-        # the plot_spikes function will add an offset for each data entry, so
-        # we set the ids to 0 here
-        new_dict["ids"] = [0] * len(times)
+    if len(all_events) > 1:
+        show_each_plot_already = False
 
-        spike_data.append(new_dict)
+    for filename, event_data in all_events.items():
+        spike_data = []  # type: List[Dict]
+        for select, times in event_data.items():
+            new_dict = {"name": select}
+            new_dict["times"] = times
+            # the plot_spikes function will add an offset for each data entry, so
+            # we set the ids to 0 here
+            new_dict["ids"] = [0] * len(times)
 
-    logger.debug("Spike data is:")
-    logger.debug(spike_data)
+            spike_data.append(new_dict)
 
-    plot_spikes(
-        spike_data,
-        show_plots_already=show_plots_already,
-        save_spike_plot_to=save_spike_plot_to,
-        rates=rates,
-        rate_window=rate_window,
-        rate_bins=rate_bins,
-    )
+        logger.debug("Spike data is:")
+        logger.debug(spike_data)
+
+        plot_spikes(
+            spike_data,
+            show_plots_already=show_each_plot_already,
+            save_spike_plot_to=save_spike_plot_to,
+            rates=rates,
+            rate_window=rate_window,
+            rate_bins=rate_bins,
+        )
+
+    if show_plots_already is True and show_each_plot_already is False:
+        plt.show()
 
 
 def main(args: Optional[argparse.Namespace] = None) -> None:

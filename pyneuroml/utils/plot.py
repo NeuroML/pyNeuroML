@@ -351,7 +351,6 @@ def load_minimal_morphplottable__model(
     model_members = list(vars(nml_model).keys())
     required_members = [
         "id",
-        "cells",
         "morphology",
         "cell2_ca_poolses",
         "networks",
@@ -359,7 +358,7 @@ def load_minimal_morphplottable__model(
         "includes",
     ]
     for m in model_members:
-        if m not in required_members:
+        if m not in required_members and "cells" not in m:
             setattr(nml_model, m, None)
             logger.debug(f"Dropped {m}")
 
@@ -376,16 +375,27 @@ def load_minimal_morphplottable__model(
             pop.component for pop in nml_model.networks[0].populations
         ]
 
+        # see what cells we already have in the model document
+        available_cell_types = [cell.id for cell in nml_model.cells]
+
+        # remove ones that are already available
+        required_cell_types = [
+            cellid
+            for cellid in required_cell_types
+            if cellid not in available_cell_types
+        ]
+
         # add only required cells that are included in populations to the
-        # document
-        for inc in nml_model.includes:
-            incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
-            if os.path.isfile(incl_loc):
-                inc = read_neuroml2_file(incl_loc)
-                for acell in inc.cells:
-                    if acell.id in required_cell_types:
-                        acell.biophysical_properties = None
-                        nml_model.add(acell)
+        # document, if required
+        if len(required_cell_types) > 0:
+            for inc in nml_model.includes:
+                incl_loc = os.path.abspath(os.path.join(base_path, inc.href))
+                if os.path.isfile(incl_loc):
+                    inc = read_neuroml2_file(incl_loc)
+                    for acell in inc.cells:
+                        if acell.id in required_cell_types:
+                            acell.biophysical_properties = None
+                            nml_model.add(acell)
     else:
         # add any included cells or morphologies to the main document
         for inc in nml_model.includes:

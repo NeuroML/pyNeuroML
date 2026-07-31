@@ -13,19 +13,19 @@ NEURON {
     SUFFIX leak_chan
     NONSPECIFIC_CURRENT i
     RANGE e
-    
-    RANGE gion                           
+
+    RANGE gion
     RANGE gmax                              : Will be changed when ion channel mechanism placed on cell!
     RANGE conductance                       : parameter
-    
+
     RANGE g                                 : exposure
-    
+
     RANGE fopen                             : exposure
-    
+
 }
 
 UNITS {
-    
+
     (nA) = (nanoamp)
     (uA) = (microamp)
     (mA) = (milliamp)
@@ -39,59 +39,58 @@ UNITS {
     (um) = (micrometer)
     (umol) = (micromole)
     (S) = (siemens)
-    
+
 }
 
 PARAMETER {
-    
+
     gmax = 0  (S/cm2)                       : Will be changed when ion channel mechanism placed on cell!
-    
+
     conductance = 1.0E-6 (uS)
 }
 
 ASSIGNED {
-    
+
     gion   (S/cm2)                          : Transient conductance density of the channel? Standard Assigned variables with ionChannel
     v (mV)
     celsius (degC)
     temperature (K)
     e (mV)
     i (mA/cm2)
-    
-    
+
+
     fopen                                  : derived variable
-    
+
     g (uS)                                 : derived variable
-    
+
 }
 
 STATE {
-    
+
 }
 
 INITIAL {
     temperature = celsius + 273.15
-    
+
     rates()
     rates() ? To ensure correct initialisation.
-    
+
 }
 
 BREAKPOINT {
-    
+
     rates()
     fopen = 1 ? evaluable
     g = conductance ? evaluable
-    gion = gmax * fopen 
-    
+    gion = gmax * fopen
+
     i = gion * (v - e)
-    
+
 }
 
 PROCEDURE rates() {
-    
-    
-     
-    
-}
 
+
+
+
+}

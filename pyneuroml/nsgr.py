@@ -14,6 +14,7 @@ import typing
 from zipfile import ZipFile
 
 from pyneuroml.runners import generate_sim_scripts_in_folder
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -126,8 +127,6 @@ def run_on_nsg(
     # NSG requires that the top level directory exist
     nsg_dir = pathlib.Path(zipfile_name.replace(".zip", ""))
 
-    cwd = pathlib.Path.cwd()
-
     tdir = generate_sim_scripts_in_folder(
         engine=engine,
         lems_file_name=lems_file_name,
@@ -139,44 +138,43 @@ def run_on_nsg(
     logger.info("Generating zip file")
     runner_file = ""
 
-    os.chdir(str(tdir))
-    generated_files = os.listdir(nsg_dir)
+    with chdir(str(tdir)):
+        generated_files = os.listdir(nsg_dir)
 
-    print(f"Generated files are {generated_files}")
+        print(f"Generated files are {generated_files}")
 
-    with ZipFile(zipfile_name, "w") as archive:
-        for f in generated_files:
-            if engine == "jneuroml_neuron":
-                if f.endswith("_nrn.py"):
-                    runner_file = f
-            elif engine == "jneuroml_netpyne":
-                if f.endswith("_netpyne.py"):
-                    runner_file = f
-            fpath = pathlib.Path(f)
-            moved_path = nsg_dir / fpath
-            archive.write(str(moved_path))
+        with ZipFile(zipfile_name, "w") as archive:
+            for f in generated_files:
+                if engine == "jneuroml_neuron":
+                    if f.endswith("_nrn.py"):
+                        runner_file = f
+                elif engine == "jneuroml_netpyne":
+                    if f.endswith("_netpyne.py"):
+                        runner_file = f
+                fpath = pathlib.Path(f)
+                moved_path = nsg_dir / fpath
+                archive.write(str(moved_path))
 
-    logger.debug("Printing testParam.properties")
-    nsg_sim_config_dict["filename_"] = runner_file
-    logger.debug(f"NSG sim config is: {nsg_sim_config_dict}")
+        logger.debug("Printing testParam.properties")
+        nsg_sim_config_dict["filename_"] = runner_file
+        logger.debug(f"NSG sim config is: {nsg_sim_config_dict}")
 
-    with open("testParam.properties", "w") as file:
-        for key, val in nsg_sim_config_dict.items():
-            print(f"{key}={val}", file=file)
+        with open("testParam.properties", "w") as file:
+            for key, val in nsg_sim_config_dict.items():
+                print(f"{key}={val}", file=file)
 
-    logger.debug("Printing testInput.properties")
-    with open("testInput.properties", "w") as file:
-        print(f"infile_=@./{zipfile_name}", file=file)
+        logger.debug("Printing testInput.properties")
+        with open("testInput.properties", "w") as file:
+            print(f"infile_=@./{zipfile_name}", file=file)
 
-    print(f"{zipfile_name} generated")
-    # uses argv, where the first argument is the script itself, so we must pass
-    # something as the 0th index of the list
-    if not dry_run:
-        if nsgr_submit(["", ".", "validate"]) == 0:
-            print("Attempting to submit to NSGR")
-            return nsgr_submit(["", ".", "run"])
-    else:
-        print("Dry run mode enabled. Not submitting to NSG.")
+        print(f"{zipfile_name} generated")
+        # uses argv, where the first argument is the script itself, so we must pass
+        # something as the 0th index of the list
+        if not dry_run:
+            if nsgr_submit(["", ".", "validate"]) == 0:
+                print("Attempting to submit to NSGR")
+                return nsgr_submit(["", ".", "run"])
+        else:
+            print("Dry run mode enabled. Not submitting to NSG.")
 
-    os.chdir(str(cwd))
     return tdir

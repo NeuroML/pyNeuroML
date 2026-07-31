@@ -8,16 +8,16 @@ Copyright 2023 NeuroML contributors
 
 import argparse
 import logging
-import os
 import pathlib
 import shutil
 import typing
 from zipfile import ZipFile
 
-from pyneuroml.utils import get_model_file_list
-from pyneuroml.utils.cli import build_namespace
-from pyneuroml.runners import run_jneuroml
-from pyneuroml.sedml import validate_sedml_files
+import pyneuroml.runners as pynmlr
+import pyneuroml.sedml as pynmls
+import pyneuroml.utils as pynmlu
+import pyneuroml.utils.cli as pynmluc
+from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -85,10 +85,10 @@ def main(args=None):
 
 def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
     """Main cli caller method"""
-    a = build_namespace(DEFAULTS, a, **kwargs)
+    a = pynmluc.build_namespace(DEFAULTS, a, **kwargs)
 
     rootfile = a.rootfile
-    zipfile_extension = None
+    zipfile_extension = ".neux.zip"
 
     # first generate SED-ML file
     # use .omex as extension
@@ -96,13 +96,13 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
         a.rootfile.startswith("LEMS") and a.rootfile.endswith(".xml")
     ) and a.sedml is True:
         logger.debug("Generating SED-ML file from LEMS file")
-        run_jneuroml("", a.rootfile, "-sedml")
+        pynmlr.run_jneuroml("", a.rootfile, "-sedml")
 
         rootfile = a.rootfile.replace(".xml", ".sedml")
-        zipfile_extension = ".omex"
+        zipfile_extension = ".omex.zip"
 
         # validate the generated file
-        validate_sedml_files([rootfile])
+        pynmls.validate_sedml_files([rootfile])
 
     # if explicitly given, use that
     if a.zipfile_extension is not None:
@@ -119,7 +119,7 @@ def cli(a: typing.Optional[typing.Any] = None, **kwargs: str):
 def create_combine_archive(
     rootfile: str,
     zipfile_name: typing.Optional[str] = None,
-    zipfile_extension=".neux",
+    zipfile_extension=".neux.zip",
     filelist: typing.List[str] = [],
     extra_files: typing.List[str] = [],
 ):
@@ -169,21 +169,19 @@ def create_combine_archive(
         logger.info(f"No zipfile name provided. Using {rootfile}")
         zipfile_name = rootfile
 
-    lems_def_dir = None
-    if len(filelist) == 0:
-        lems_def_dir = get_model_file_list(rootfile, filelist, rootdir, lems_def_dir)
-
-    create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
-    filelist.append("manifest.xml")
-
     # change to directory of rootfile
-    thispath = os.getcwd()
-    os.chdir(rootdir)
+    with chdir(rootdir):
+        lems_def_dir = None
+        if len(filelist) == 0:
+            lems_def_dir = pynmlu.get_model_file_list(
+                rootfile, filelist, rootdir, lems_def_dir
+            )
+        create_combine_archive_manifest(rootfile, filelist + extra_files, rootdir)
+        filelist.append("manifest.xml")
 
-    with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
-        for f in filelist + extra_files:
-            archive.write(f)
-    os.chdir(thispath)
+        with ZipFile(zipfile_name + zipfile_extension, "w") as archive:
+            for f in filelist + extra_files:
+                archive.write(f)
 
     if lems_def_dir is not None:
         logger.info(f"Removing LEMS definitions directory {lems_def_dir}")

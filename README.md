@@ -21,7 +21,7 @@ A single package in Python unifying scripts and modules for reading, writing, si
 
 Builds on: [libNeuroML](https://github.com/NeuralEnsemble/libNeuroML) & [PyLEMS](https://github.com/LEMS/pylems) and wraps functionality from [jNeuroML](https://github.com/NeuroML/jNeuroML).
 
-Installation
+Installation 
 ------------
 
 ### Dependencies

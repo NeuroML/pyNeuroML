@@ -8,6 +8,7 @@ Copyright 2024 NeuroML contributors
 """
 
 import typing
+
 from lxml import etree
 
 

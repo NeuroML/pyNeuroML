@@ -14137,8 +14137,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="1010"/>
                 <member segment="1011"/>
@@ -14451,8 +14451,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="955"/>
                 <member segment="956"/>
@@ -14564,8 +14564,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="525"/>
                 <member segment="526"/>
@@ -14700,8 +14700,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="248"/>
                 <member segment="249"/>
@@ -14759,8 +14759,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="32"/>
                 <member segment="33"/>
@@ -14887,8 +14887,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="3256"/>
                 <member segment="3257"/>
@@ -15017,8 +15017,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="888"/>
                 <member segment="889"/>
@@ -15094,8 +15094,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="852"/>
                 <member segment="853"/>
@@ -15140,8 +15140,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="719"/>
                 <member segment="720"/>
@@ -15242,8 +15242,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="653"/>
                 <member segment="654"/>
@@ -15318,8 +15318,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="438"/>
                 <member segment="439"/>
@@ -15428,8 +15428,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="108"/>
                 <member segment="109"/>
@@ -15606,8 +15606,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="3177"/>
                 <member segment="3178"/>
@@ -15706,8 +15706,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="372"/>
                 <member segment="373"/>
@@ -15782,8 +15782,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="313"/>
                 <member segment="314"/>
@@ -15851,8 +15851,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="201"/>
                 <member segment="202"/>
@@ -15990,8 +15990,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="3084"/>
                 <member segment="3085"/>
@@ -16110,8 +16110,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1214"/>
                 <member segment="1215"/>
@@ -16222,8 +16222,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="3014"/>
                 <member segment="3015"/>
@@ -16302,8 +16302,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2984"/>
                 <member segment="2985"/>
@@ -16342,8 +16342,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2904"/>
                 <member segment="2905"/>
@@ -16415,8 +16415,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1303"/>
                 <member segment="1304"/>
@@ -16473,8 +16473,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2852"/>
                 <member segment="2853"/>
@@ -16550,8 +16550,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1419"/>
                 <member segment="1420"/>
@@ -16624,8 +16624,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1361"/>
                 <member segment="1362"/>
@@ -16692,8 +16692,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1520"/>
                 <member segment="1521"/>
@@ -16753,8 +16753,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1483"/>
                 <member segment="1484"/>
@@ -16800,8 +16800,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2824"/>
                 <member segment="2825"/>
@@ -16867,8 +16867,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2744"/>
                 <member segment="2745"/>
@@ -16957,8 +16957,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1595"/>
                 <member segment="1596"/>
@@ -17009,8 +17009,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1695"/>
                 <member segment="1696"/>
@@ -17087,8 +17087,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1637"/>
                 <member segment="1638"/>
@@ -17155,8 +17155,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2384"/>
                 <member segment="2385"/>
@@ -17236,8 +17236,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1763"/>
                 <member segment="1764"/>
@@ -17281,8 +17281,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2575"/>
                 <member segment="2576"/>
@@ -17353,8 +17353,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2455"/>
                 <member segment="2456"/>
@@ -17472,8 +17472,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2696"/>
                 <member segment="2697"/>
@@ -17538,8 +17538,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2511"/>
                 <member segment="2512"/>
@@ -17629,8 +17629,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2279"/>
                 <member segment="2280"/>
@@ -17772,8 +17772,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1893"/>
                 <member segment="1894"/>
@@ -17836,8 +17836,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="1822"/>
                 <member segment="1823"/>
@@ -17887,8 +17887,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2655"/>
                 <member segment="2656"/>
@@ -17958,8 +17958,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="5"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="5"/>
+
                 </annotation>
                 <member segment="2191"/>
                 <member segment="2192"/>
@@ -18056,8 +18056,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="3"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="3"/>
+
                 </annotation>
                 <member segment="2001"/>
                 <member segment="2002"/>
@@ -18163,8 +18163,8 @@ Electrophysiology on which this model is based: http://celltypes.brain-map.org/m
              These segmentGroups correspond to the 'cables' of NeuroML v1.8.1, and map to/from NEURON sections.</notes>
                 <property tag="numberInternalDivisions" value="7"/>
                 <annotation>
-                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/> 
-        
+                    <property xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" tag="numberInternalDivisions" value="7"/>
+
                 </annotation>
                 <member segment="2077"/>
                 <member segment="2078"/>

@@ -6,7 +6,7 @@
     <ionChannel id="Kd" conductance="10pS" type="ionChannelHH" species="k">
 
         <notes>Delayed rectifier K+ current based on Traub and Miles 1991.
-            
+
 Comment from original mod file: Hippocampal HH channels
 Fast Na+ and K+ currents responsible for action potentials
 Iterative equations
@@ -16,11 +16,11 @@ Equations modified by Traub, for Hippocampal Pyramidal cells, in: Traub and Mile
 - range variable vtraub adjust threshold
 - Written by Alain Destexhe, Salk Institute, Aug 1992
 - Modified Oct 96 for compatibility with Windows: trap low values of arguments</notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="Kd">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Minimal Hodgkin-Huxley type models for different classes of cortical and thalamic neurons</rdf:li>
@@ -28,7 +28,7 @@ Equations modified by Traub, for Hippocampal Pyramidal cells, in: Traub and Mile
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -44,7 +44,7 @@ Equations modified by Traub, for Hippocampal Pyramidal cells, in: Traub and Mile
             <forwardRate type="Kd_n_alpha_rate"/>
             <reverseRate type="Kd_n_beta_rate"/>
         </gate>
-                            
+
     </ionChannel>
 
     <ComponentType name="Kd_n_alpha_rate" extends="baseVoltageDepRate">

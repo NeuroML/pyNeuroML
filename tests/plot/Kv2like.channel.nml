@@ -6,16 +6,16 @@
     <ionChannel id="Kv2like" conductance="10pS" type="ionChannelHH" species="k">
 
         <notes>Kv2-like channel
-            
-Comment from original mod file: 
+
+Comment from original mod file:
 : Kv2-like channel
 : Adapted from model implemented in Keren et al. 2005
 : Adjusted parameters to be similar to guangxitoxin-sensitive current in mouse CA1 pyramids from Liu and Bean 2014</notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="Kv2like">
-                    
+
                     <bqmodel:isDerivedFrom xmlns:bqmodel="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Constraining compartmental models using multiple voltage recordings and genetic algorithms.
@@ -25,14 +25,14 @@ Comment from original mod file:
                     </bqmodel:isDerivedFrom>
                     <bqmodel:isDerivedFrom xmlns:bqmodel="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
-                            <rdf:li>Kv2 channel regulation of action potential repolarization and firing patterns 
+                            <rdf:li>Kv2 channel regulation of action potential repolarization and firing patterns
                                 in superior cervical ganglion neurons and hippocampal CA1 pyramidal neurons.
                             Liu PW, Bean BP. J Neurosci. 2014 Apr 2;34(14):4991-5002.</rdf:li>
                             <rdf:li rdf:resource="http://www.ncbi.nlm.nih.gov/pubmed/24695716"/>
                         </rdf:Bag>
                     </bqmodel:isDerivedFrom>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -52,7 +52,7 @@ Comment from original mod file:
 
         <gate id="h" type="gateFractional" instances="1">
             <q10Settings type="q10ExpTemp" q10Factor="2.3" experimentalTemp="21 degC"/>
-            
+
             <subGate id="h1" fractionalConductance="0.5">
                 <steadyState type="HHSigmoidVariable" rate="1" midpoint="-58mV" scale="-11mV"/>
                 <timeCourse type="h1_tau"/>
@@ -64,9 +64,9 @@ Comment from original mod file:
             </subGate>
         </gate>
 
-                            
+
     </ionChannel>
-    
+
 
 
 

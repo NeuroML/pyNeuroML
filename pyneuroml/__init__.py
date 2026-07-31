@@ -12,13 +12,22 @@ except ImportError:
     __version__ = importlib_metadata.version("pyNeuroML")
 
 
-JNEUROML_VERSION = "0.13.3"
+JNEUROML_VERSION = "0.14.0"
 
-# Define a logger for the package
-logging.basicConfig(
-    format="pyNeuroML >>> %(levelname)s - %(message)s",
-    level=logging.WARN,
+logger = logging.getLogger(__name__)
+logger.propagate = False
+logger.setLevel(logging.INFO)
+
+ch = logging.StreamHandler()
+# do not set level
+
+formatter = logging.Formatter(
+    "pyNeuroML >>> %(asctime)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S"
 )
+
+ch.setFormatter(formatter)
+
+logger.addHandler(ch)
 
 
 def print_v(msg):

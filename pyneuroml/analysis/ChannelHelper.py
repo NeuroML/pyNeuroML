@@ -1,7 +1,7 @@
-from math import exp
-from pyneuroml.pynml import get_value_in_si
 import logging
+from math import exp
 
+from pyneuroml.pynml import get_value_in_si
 
 logger = logging.getLogger(__name__)
 

@@ -24,10 +24,10 @@ Cell Group: baskets contains 1 cells
     <pulseGenerator id="Input_1" delay="0.1s" duration="0.5s" amplitude="6.0E-10A"/>
 
 
-    
+
     <network id="network" type="networkWithTemperature" temperature="6.3 degC">
 
-        
+
 
         <population id="pyramidals" component="pyr_4_sym" type="populationList" size="1">
            <annotation>

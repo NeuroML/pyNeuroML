@@ -1,0 +1,238 @@
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2.3.1.xsd"
+  id="l22_small_morphology">
+
+      <notes>
+        Neuronal morphology exported in NeuroML v2.3.1 from CVapp (NeuroMorpho.org version)
+        Original file: l22_small.swc </notes>
+
+      <morphology id="morphology_l22_small">
+
+        <!-- First point is of a multi point soma => not spherical! -->
+
+        <segment id="0" name="Seg_0"> <!-- "Cable" is 0-->
+
+          <!-- Cylindrical soma... -->
+          <proximal x="0" y="-5.114" z="4.688" diameter="15.686"/>
+          <distal x="-0.313" y="-0.323" z="4.906" diameter="15.29"/>
+        </segment>
+
+        <segment id="1" name="Seg_1"> <!-- "Cable" is 0-->
+          <parent segment="0"/>
+          <distal x="-0.625" y="4.469" z="5.125" diameter="11.864"/>
+        </segment>
+
+        <segment id="2" name="Seg_2"> <!-- "Cable" is 0-->
+          <parent segment="1"/>
+          <distal x="-0.938" y="9.26" z="5.344" diameter="8.574"/>
+        </segment>
+
+        <segment id="3" name="Seg_3"> <!-- "Cable" is 0-->
+          <parent segment="2"/>
+          <distal x="-1.25" y="14.051" z="5.562" diameter="6.606"/>
+        </segment>
+
+        <segment id="4" name="Seg_4"> <!-- "Cable" is 0-->
+          <parent segment="3"/>
+          <distal x="-1.563" y="18.843" z="5.781" diameter="5.666"/>
+        </segment>
+
+        <segment id="5" name="Seg_5"> <!-- "Cable" is 0-->
+          <parent segment="4"/>
+          <distal x="-1.875" y="23.634" z="6" diameter="5.46"/>
+        </segment>
+
+        <segment id="6" name="Seg_6"> <!-- "Cable" is 0-->
+          <parent segment="5"/>
+          <distal x="-2.913" y="28.103" z="10.7" diameter="4.84"/>
+        </segment>
+
+        <!-- Parent point is on soma! Not creating 'real' segment -->
+
+        <segment id="7" name="Seg_7"> <!-- "Cable" is 1-->
+          <parent segment="6"/>
+          <proximal x="-3.112" y="30.457" z="13.2" diameter="4.84"/>
+          <distal x="-3.325" y="30.457" z="13.2" diameter="4.84"/>
+        </segment>
+
+        <segment id="8" name="Seg_8"> <!-- "Cable" is 1-->
+          <parent segment="7"/>
+          <distal x="0.825" y="34.287" z="14.2" diameter="2.66"/>
+        </segment>
+
+        <segment id="9" name="Seg_9"> <!-- "Cable" is 1-->
+          <parent segment="8"/>
+          <distal x="1.663" y="39.607" z="13.95" diameter="2.66"/>
+        </segment>
+
+        <segment id="10" name="Seg_10"> <!-- "Cable" is 1-->
+          <parent segment="9"/>
+          <distal x="2.487" y="44.076" z="10.95" diameter="2.04"/>
+        </segment>
+
+        <segment id="11" name="Seg_11"> <!-- "Cable" is 1-->
+          <parent segment="10"/>
+          <distal x="4.575" y="50.686" z="9.7" diameter="2.04"/>
+        </segment>
+
+        <segment id="12" name="Seg_12"> <!-- "Cable" is 1-->
+          <parent segment="11"/>
+          <distal x="5.812" y="52.814" z="9.95" diameter="2.04"/>
+        </segment>
+
+        <segment id="13" name="Seg_13"> <!-- "Cable" is 1-->
+          <parent segment="12"/>
+          <distal x="3.538" y="57.922" z="14.45" diameter="1.1"/>
+        </segment>
+
+        <segment id="14" name="Seg_14"> <!-- "Cable" is 1-->
+          <parent segment="13"/>
+          <distal x="0.213" y="66.008" z="14.45" diameter="1.1"/>
+        </segment>
+
+        <segment id="15" name="Seg_15"> <!-- "Cable" is 1-->
+          <parent segment="14"/>
+          <distal x="0" y="66.008" z="14.45" diameter="1.1"/>
+        </segment>
+
+        <segment id="16" name="Seg_16"> <!-- "Cable" is 1-->
+          <parent segment="15"/>
+          <distal x="-3.95" y="74.32" z="14.45" diameter="1.1"/>
+        </segment>
+
+        <segment id="17" name="Seg_17"> <!-- "Cable" is 1-->
+          <parent segment="16"/>
+          <distal x="-3.95" y="74.533" z="14.45" diameter="1.1"/>
+        </segment>
+
+        <segment id="18" name="Seg_18"> <!-- "Cable" is 1-->
+          <parent segment="17"/>
+          <distal x="-4.15" y="80.917" z="12.7" diameter="1.1"/>
+        </segment>
+
+        <segment id="19" name="Seg_19"> <!-- "Cable" is 1-->
+          <parent segment="18"/>
+          <distal x="1.955" y="88.219" z="10.25" diameter="0.48"/>
+        </segment>
+
+        <segment id="20" name="Seg_20"> <!-- "Cable" is 1-->
+          <parent segment="19"/>
+          <distal x="3.405" y="92.262" z="10.25" diameter="0.48"/>
+        </segment>
+
+        <segment id="21" name="Seg_21"> <!-- "Cable" is 1-->
+          <parent segment="20"/>
+          <distal x="4.03" y="93.113" z="10.25" diameter="0.48"/>
+        </segment>
+
+        <segment id="22" name="Seg_22"> <!-- "Cable" is 1-->
+          <parent segment="21"/>
+          <distal x="5.48" y="107.384" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="23" name="Seg_23"> <!-- "Cable" is 1-->
+          <parent segment="22"/>
+          <distal x="5.48" y="108.023" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="24" name="Seg_24"> <!-- "Cable" is 1-->
+          <parent segment="23"/>
+          <distal x="12.13" y="117.173" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="25" name="Seg_25"> <!-- "Cable" is 1-->
+          <parent segment="24"/>
+          <distal x="12.342" y="117.811" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="26" name="Seg_26"> <!-- "Cable" is 1-->
+          <parent segment="25"/>
+          <distal x="16.492" y="126.55" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="27" name="Seg_27"> <!-- "Cable" is 1-->
+          <parent segment="26"/>
+          <distal x="16.918" y="127.401" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="28" name="Seg_28"> <!-- "Cable" is 1-->
+          <parent segment="27"/>
+          <distal x="19.817" y="131.87" z="9.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="29" name="Seg_29"> <!-- "Cable" is 1-->
+          <parent segment="28"/>
+          <distal x="22.317" y="136.551" z="21.75" diameter="0.48"/>
+        </segment>
+
+        <segment id="30" name="Seg_30"> <!-- "Cable" is 1-->
+          <parent segment="29"/>
+          <distal x="22.517" y="136.764" z="21.75" diameter="0.48"/>
+        </segment>
+
+        <segmentGroup id="Cable_0" >
+          <member segment="0"/>
+          <member segment="1"/>
+          <member segment="2"/>
+          <member segment="3"/>
+          <member segment="4"/>
+          <member segment="5"/>
+          <member segment="6"/>
+        </segmentGroup>
+
+        <segmentGroup id="Cable_1" >
+          <member segment="7"/>
+          <member segment="8"/>
+          <member segment="9"/>
+          <member segment="10"/>
+          <member segment="11"/>
+          <member segment="12"/>
+          <member segment="13"/>
+          <member segment="14"/>
+          <member segment="15"/>
+          <member segment="16"/>
+          <member segment="17"/>
+          <member segment="18"/>
+          <member segment="19"/>
+          <member segment="20"/>
+          <member segment="21"/>
+          <member segment="22"/>
+          <member segment="23"/>
+          <member segment="24"/>
+          <member segment="25"/>
+          <member segment="26"/>
+          <member segment="27"/>
+          <member segment="28"/>
+          <member segment="29"/>
+          <member segment="30"/>
+        </segmentGroup>
+
+        <segmentGroup id="dendrite_group" >
+          <include segmentGroup="Cable_1"/>
+        </segmentGroup>
+
+        <segmentGroup id="apical_dendrite" >
+          <include segmentGroup="Cable_1"/>
+        </segmentGroup>
+
+        <segmentGroup id="soma_group" >
+          <include segmentGroup="Cable_0"/>
+        </segmentGroup>
+
+        <segmentGroup id="all" >
+          <include segmentGroup="Cable_0"/>
+          <include segmentGroup="Cable_1"/>
+        </segmentGroup>
+
+        <segmentGroup id="color_white" >
+          <include segmentGroup="Cable_0"/>
+        </segmentGroup>
+
+        <segmentGroup id="color_magenta" >
+          <include segmentGroup="Cable_1"/>
+        </segmentGroup>
+
+      </morphology>
+
+</neuroml>

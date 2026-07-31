@@ -7,16 +7,16 @@
 
         <notes>Muscarinic K+ current
 Modified slightly for Allen Institute cell models from Hay et al. 2011 version:
- - Added Q10 scaling to rate variables 
-            
-Comment from original mod file: 
+ - Added Q10 scaling to rate variables
+
+Comment from original mod file:
 :Reference : :		Adams et al. 1982 - M-currents and other potassium currents in bullfrog sympathetic neurones
 :Comment: corrected rates using q10 = 2.3, target temperature 34, orginal 21</notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="Im">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
@@ -25,7 +25,7 @@ Comment from original mod file:
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -42,7 +42,7 @@ Comment from original mod file:
             <forwardRate type="HHExpRate" rate="0.0033per_ms" scale="10mV" midpoint="-35mV"/>
             <reverseRate type="HHExpRate" rate="0.0033per_ms" scale="-10mV" midpoint="-35mV"/>
         </gate>
-                            
+
     </ionChannel>
 
 </neuroml>

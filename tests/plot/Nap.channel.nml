@@ -8,18 +8,18 @@
         <notes>Persistent Na+ current
 Modified for Allen Institute cell models from Hay et al. 2011 version:
 - Form of conductance expression changed from: g = gbar * m^3 * h to: g = gbar * minf * h (comment in mod: assuming instantaneous activation as modeled by Magistretti and Alonso)
-- Added Q10 scaling to rate variables            
+- Added Q10 scaling to rate variables
 
-Comment from original mod file: 
+Comment from original mod file:
 :Comment : mtau deduced from text (said to be 6 times faster than for NaTa)
 :Comment : so I used the equations from NaT and multiplied by 6
 :Reference : Modeled according to kinetics derived from Magistretti and Alonso 1999
 :Comment: corrected rates using q10 = 2.3, target temperature 34, orginal 21</notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="Nap">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
@@ -28,7 +28,7 @@ Comment from original mod file:
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Na channels</rdf:li>
@@ -50,7 +50,7 @@ Comment from original mod file:
             <reverseRate type="HHExpLinearRate" rate="1.82522e-05per_ms" scale="2.63mV" midpoint="-64.4mV"/>
             <steadyState type="HHSigmoidVariable" rate="1" scale="-10mV" midpoint="-48.8mV"/>
         </gate>
-                            
+
     </ionChannel>
 
 

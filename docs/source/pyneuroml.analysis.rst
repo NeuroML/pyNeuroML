@@ -29,4 +29,3 @@ pyneuroml.analysis.ChannelHelper module
    :members:
    :undoc-members:
    :show-inheritance:
-

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd" 
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2 https://raw.github.com/NeuroML/NeuroML2/development/Schemas/NeuroML2/NeuroML_v2beta4.xsd"
          id="K_P">
 
     <notes>NeuroML file containing a single Channel description</notes>
@@ -10,19 +10,19 @@
 
         <notes>Slow inactivating K+ current
 Modified slightly for Allen Institute cell models from Hay et al. 2011 version:
- - Added Q10 scaling to rate variables 
+ - Added Q10 scaling to rate variables
  - Equations for tau/inf updated to match mod
-            
-Comment from original mod file: 
+
+Comment from original mod file:
 :Comment : The persistent component of the K current
 :Reference : :		Voltage-gated K+ channels in layer 5 neocortical pyramidal neurones from young rats:subtypes and gradients,Korngreen and Sakmann, J. Physiology, 2000
 :Comment : shifted -10 mv to correct for junction potential
 :Comment: corrected rates using q10 = 2.3, target temperature 34, orginal 21</notes>
-                
+
         <annotation>
             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
                 <rdf:Description rdf:about="K_P">
-                    
+
                     <bqmodel:isDescribedBy xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>Models of Neocortical Layer 5b Pyramidal Cells Capturing a Wide Range of Dendritic and Perisomatic Active Properties,
@@ -31,7 +31,7 @@ Comment from original mod file:
                         </rdf:Bag>
                     </bqmodel:isDescribedBy>
 
-                
+
                     <bqbiol:isVersionOf xmlns:bqbiol="http://biomodels.net/biology-qualifiers/">
                         <rdf:Bag>
                             <rdf:li>K channels</rdf:li>
@@ -54,7 +54,7 @@ Comment from original mod file:
             <timeCourse type="K_P_h_tau_tau"/>
             <steadyState type="HHSigmoidVariable" rate="1" scale="-11mV" midpoint="-54mV"/>
         </gate>
-                            
+
     </ionChannel>
 
     <ComponentType name="K_P_m_tau_tau" extends="baseVoltageDepTime">

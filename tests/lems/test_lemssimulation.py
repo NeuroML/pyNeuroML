@@ -13,6 +13,7 @@ import pathlib as pl
 import unittest
 
 import pytest
+
 from pyneuroml.lems import LEMSSimulation
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,6 @@ logger.setLevel(logging.DEBUG)
 
 
 class TestLEMSSimulation(unittest.TestCase):
-
     """Test the LEMSSimulation class"""
 
     def test_lemssimulation_meta(self):

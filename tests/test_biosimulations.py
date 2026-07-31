@@ -8,13 +8,13 @@ Copyright 2024 NeuroML contributors
 """
 
 import logging
-import os
 import pathlib
 
 from pyneuroml.biosimulations import (
     get_simulator_versions,
     submit_simulation,
 )
+from pyneuroml.utils.misc import chdir
 
 from . import BaseTestCase
 
@@ -53,20 +53,18 @@ class TestBiosimulations(BaseTestCase):
         dry_run = True
         thispath = pathlib.Path(__file__)
         dirname = str(thispath.parent.parent)
-        cwd = os.getcwd()
-        os.chdir(dirname + "/examples")
-        sim_dict = {
-            "name": "PyNeuroML test simulation",
-            "simulator": "neuron",
-            "simulatorVersion": "latest",
-            "maxTime": "20",
-        }
+        with chdir(dirname + "/examples"):
+            sim_dict = {
+                "name": "PyNeuroML test simulation",
+                "simulator": "neuron",
+                "simulatorVersion": "latest",
+                "maxTime": "20",
+            }
 
-        resdict = submit_simulation(
-            "LEMS_NML2_Ex5_DetCell.xml", sim_dict=sim_dict, dry_run=dry_run
-        )
-        response = resdict["response"]
-        os.chdir(cwd)
+            resdict = submit_simulation(
+                "LEMS_NML2_Ex5_DetCell.xml", sim_dict=sim_dict, dry_run=dry_run
+            )
+            response = resdict["response"]
 
         if dry_run:
             pass
