@@ -9,7 +9,7 @@ import logging
 import re
 import subprocess
 import sys
-import typing
+
 from math import log
 from typing import Optional
 
