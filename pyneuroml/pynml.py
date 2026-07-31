@@ -130,7 +130,7 @@ def _parse_arguments():
     shared_options = parser.add_argument_group(
         title="Shared options",
         description=(
-            "These options can be added to any of the " "mutually-exclusive options"
+            "These options can be added to any of the mutually-exclusive options"
         ),
     )
 
@@ -145,15 +145,14 @@ def _parse_arguments():
         metavar="MAX",
         default=DEFAULTS["default_java_max_memory"],
         help=(
-            "Java memory for jNeuroML, e.g. 400M, 2G (used in\n"
-            "-Xmx argument to java)"
+            "Java memory for jNeuroML, e.g. 400M, 2G (used in\n-Xmx argument to java)"
         ),
     )
     shared_options.add_argument(
         "-nogui",
         action="store_true",
         default=DEFAULTS["nogui"],
-        help=("Suppress GUI,\n" "i.e. show no plots, just save results"),
+        help=("Suppress GUI,\ni.e. show no plots, just save results"),
     )
 
     shared_options.add_argument(
@@ -270,38 +269,38 @@ def _parse_arguments():
     mut_exc_opts.add_argument(
         "-vertex",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to VERTEX format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto VERTEX format"),
     )
     mut_exc_opts.add_argument(
         "-xpp",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to XPPAUT format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto XPPAUT format"),
     )
     mut_exc_opts.add_argument(
         "-dnsim",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to DNsim format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto DNsim format"),
     )
     mut_exc_opts.add_argument(
         "-brian",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to Brian format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto Brian format"),
     )
     mut_exc_opts.add_argument(
         "-brian2",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to Brian2 format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto Brian2 format"),
     )
     # TODO: add run_lems_with_jneuroml_moose API function
     mut_exc_opts.add_argument(
         "-moose",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to Moose format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto Moose format"),
     )
     mut_exc_opts.add_argument(
         "-sbml",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to SBML format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto SBML format"),
     )
     mut_exc_opts.add_argument(
         "-sbml-sedml",
@@ -314,7 +313,7 @@ def _parse_arguments():
     mut_exc_opts.add_argument(
         "-matlab",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to MATLAB format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto MATLAB format"),
     )
     mut_exc_opts.add_argument(
         "-cvode",
@@ -327,12 +326,12 @@ def _parse_arguments():
     mut_exc_opts.add_argument(
         "-nineml",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to NineML format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto NineML format"),
     )
     mut_exc_opts.add_argument(
         "-spineml",
         action="store_true",
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to SpineML format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto SpineML format"),
     )
     mut_exc_opts.add_argument(
         "-sbml-import",
@@ -359,7 +358,7 @@ def _parse_arguments():
         "-vhdl",
         metavar=("neuronid", "<LEMS file>"),
         nargs=2,
-        help=("(Via jNeuroML) Load a LEMS file, and convert it\n" "to VHDL format"),
+        help=("(Via jNeuroML) Load a LEMS file, and convert it\nto VHDL format"),
     )
     mut_exc_opts.add_argument(
         "-graph",
@@ -376,8 +375,7 @@ def _parse_arguments():
         "-lems-graph",
         action="store_true",
         help=(
-            "(Via jNeuroML) Load LEMS file, and convert it to a \n"
-            "graph using GraphViz."
+            "(Via jNeuroML) Load LEMS file, and convert it to a \ngraph using GraphViz."
         ),
     )
     mut_exc_opts.add_argument(
@@ -392,12 +390,12 @@ def _parse_arguments():
     mut_exc_opts.add_argument(
         "-validate",
         action="store_true",
-        help=("(Via jNeuroML) Validate NeuroML2 file(s) against the\n" "latest Schema"),
+        help=("(Via jNeuroML) Validate NeuroML2 file(s) against the\nlatest Schema"),
     )
     mut_exc_opts.add_argument(
         "-validatev1",
         action="store_true",
-        help=("(Via jNeuroML) Validate NeuroML file(s) against the\n" "v1.8.1 Schema"),
+        help=("(Via jNeuroML) Validate NeuroML file(s) against the\nv1.8.1 Schema"),
     )
     mut_exc_opts.add_argument(
         "-validate-sbml",
