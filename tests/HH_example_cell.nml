@@ -11,7 +11,7 @@
                 <distal x="0.000000e+00" y="0.000000e+00" z="0.000000e+00" diameter="17.841241161527712"/>
             </segment>
         </morphology>
-        <biophysicalProperties>
+        <biophysicalProperties id="biophys">
             <membraneProperties>
                 <channelDensity id="na_channels" ionChannel="na_channel" condDensity="120.0 mS_per_cm2" erev="50.0 mV" ion="na"/>
                 <channelDensity id="k_channels" ionChannel="k_channel" condDensity="360 S_per_m2" erev="-77mV" ion="k"/>

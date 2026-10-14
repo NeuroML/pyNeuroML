@@ -184,3 +184,7 @@ coverage.xml
 /examples/LEMS_NML2_Ex5_DetCell.neux.zip
 /examples/NML2_SingleCompHHCell.neux.zip
 /tests/HH_example.neux.zip
+
+.opencode/
+
+/tests/temp_nml2py*

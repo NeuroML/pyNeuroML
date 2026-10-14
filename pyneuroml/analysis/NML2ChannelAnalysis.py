@@ -188,21 +188,21 @@ def process_args():
         "-norun",
         action="store_true",
         default=DEFAULTS["norun"],
-        help=("If used, just generate the LEMS file, " "don't run it"),
+        help=("If used, just generate the LEMS file, don't run it"),
     )
 
     parser.add_argument(
         "-nogui",
         action="store_true",
         default=DEFAULTS["nogui"],
-        help=("Supress plotting of variables and only save " "data to file"),
+        help=("Supress plotting of variables and only save data to file"),
     )
 
     parser.add_argument(
         "-html",
         action="store_true",
         default=DEFAULTS["html"],
-        help=("Generate a HTML page featuring the plots for the " "channel"),
+        help=("Generate a HTML page featuring the plots for the channel"),
     )
 
     parser.add_argument(
@@ -304,7 +304,7 @@ def generate_lems_channel_analyser(
     """
 
     logger.info(
-        ("Generating LEMS file to investigate %s in %s, %smV->%smV, " "%sdegC")
+        ("Generating LEMS file to investigate %s in %s, %smV->%smV, %sdegC")
         % (channel, channel_file, min_target_voltage, max_target_voltage, temperature)
     )
 
@@ -586,7 +586,7 @@ def plot_channel(channel, a, results, iv_data=None, grid=True):
 def plot_kinetics(channel, a, results, grid=True):
     plt.figure()
     plt.get_current_fig_manager().set_window_title(
-        ("Time course(s) of activation variables of " "%s from %s at %s degC")
+        ("Time course(s) of activation variables of %s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
 
@@ -629,7 +629,7 @@ def plot_kinetics(channel, a, results, grid=True):
 def plot_steady_state(channel, a, results, grid=True):
     plt.figure()
     plt.get_current_fig_manager().set_window_title(
-        ("Steady state(s) of activation variables of " "%s from %s at %s degC")
+        ("Steady state(s) of activation variables of %s from %s at %s degC")
         % (channel.id, channel.file, a.temperature)
     )
     plt.xlabel("Membrane potential (mV)")
@@ -751,7 +751,7 @@ def plot_iv_curve_vm(channel, a, hold_v, times, currents, grid=True):
     plt.figure()
     ax = plt.subplot(111)
     plt.get_current_fig_manager().set_window_title(
-        ("Currents through voltage clamp for %s " "from %s at %s degC, erev: %s V")
+        ("Currents through voltage clamp for %s from %s at %s degC, erev: %s V")
         % (channel.id, channel.file, a.temperature, a.erev)
     )
     plt.xlabel("Time (ms)")
@@ -835,12 +835,7 @@ def run(a=None, **kwargs):
     #    print('mpl')
 
     info = {
-        "info": (
-            "Channel information at: "
-            "T = %s degC, "
-            "E_rev = %s mV, "
-            "[Ca2+] = %s mM"
-        )
+        "info": ("Channel information at: T = %s degC, E_rev = %s mV, [Ca2+] = %s mM")
         % (a.temperature, a.erev, a.ca_conc),
         "channels": [],
     }

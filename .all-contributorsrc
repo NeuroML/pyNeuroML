@@ -235,6 +235,17 @@
         "code",
         "ideas"
       ]
+    },
+    {
+      "login": "HengyeZhu",
+      "name": "Hengye Zhu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/186930454?v=4",
+      "profile": "https://hengyezhu.github.io/",
+      "contributions": [
+        "code",
+        "design",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 7,

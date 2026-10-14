@@ -1,11 +1,10 @@
 """
 
-    Still under developemnt!!
+Still under developemnt!!
 
-    Subject to change without notice!!
+Subject to change without notice!!
 
 """
-
 
 import sys
 from pyneuroml.tune.NeuroMLTuner import run_optimisation
