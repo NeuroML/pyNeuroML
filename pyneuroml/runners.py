@@ -60,7 +60,7 @@ def run_lems_with_jneuroml(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -284,7 +284,7 @@ def run_lems_with_jneuroml_neuron(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -419,7 +419,7 @@ def run_lems_with_jneuroml_netpyne(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -544,7 +544,7 @@ def run_lems_with_jneuroml_brian2(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -818,7 +818,7 @@ def run_jneuroml_with_realtime_output(
     :param target_file: LEMS or NeuroML file to run jnml on
     :type target_file: str
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param exec_in_dir: working directory to execute LEMS simulation in
     :type exec_in_dir: str
     :param verbose: toggle whether jnml should print verbose information
