@@ -255,6 +255,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "dhiraj-143r",
+      "name": "Dhiraj Rathod",
+      "avatar_url": "https://avatars.githubusercontent.com/u/235248713?v=4",
+      "profile": "https://github.com/dhiraj-143r",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
