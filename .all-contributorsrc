@@ -246,6 +246,15 @@
         "design",
         "review"
       ]
+    },
+    {
+      "login": "avanishkasar",
+      "name": "Avanish Kasar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/151715253?v=4",
+      "profile": "http://avanish.tech",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
