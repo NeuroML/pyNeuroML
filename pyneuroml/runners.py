@@ -60,7 +60,7 @@ def run_lems_with_jneuroml(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -284,7 +284,7 @@ def run_lems_with_jneuroml_neuron(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -419,7 +419,7 @@ def run_lems_with_jneuroml_netpyne(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -544,7 +544,7 @@ def run_lems_with_jneuroml_brian2(
     :param paths_to_include: additional directory paths to include (for other NML/LEMS files, for example)
     :type paths_to_include: list(str)
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param skip_run: toggle whether run should be skipped, if skipped, file will only be parsed
     :type skip_run: bool
     :param nogui: toggle whether jnml GUI should be shown
@@ -818,7 +818,7 @@ def run_jneuroml_with_realtime_output(
     :param target_file: LEMS or NeuroML file to run jnml on
     :type target_file: str
     :param max_memory: maximum memory allowed for use by the JVM
-    :type max_memory: bool
+    :type max_memory: str
     :param exec_in_dir: working directory to execute LEMS simulation in
     :type exec_in_dir: str
     :param verbose: toggle whether jnml should print verbose information
@@ -1016,6 +1016,7 @@ def reload_saved_data(
     reload_traces: bool = True,
     verbose: bool = DEFAULTS["v"],
     remove_dat_files_after_load: bool = False,
+    downsample: int = 1,
 ) -> typing.Union[
     typing.Dict[str, typing.Dict],
     typing.Tuple[typing.Dict[str, typing.Dict], typing.Dict[str, typing.Dict]],
@@ -1051,6 +1052,10 @@ def reload_saved_data(
     :type reload_traces: bool
     :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
     :type remove_dat_files_after_load: bool
+    :param downsample: only load every nth row (time point) of trace data
+        files, to speed up loading. The default, 1, loads all rows. Events are
+        never downsampled.
+    :type downsample: int
 
     :returns: if both `get_events` and `get_traces` are selected, a tuple with
         two dictionaries, one for traces, one for events, is returned:
@@ -1102,6 +1107,7 @@ def reload_saved_data(
             get_traces=True,
             t_run=t_run,
             remove_dat_files_after_load=remove_dat_files_after_load,
+            downsample=downsample,
         )
     elif reload_events and not reload_traces:
         all_traces = pynmls.load_sim_data_from_lems_file(
@@ -1111,6 +1117,7 @@ def reload_saved_data(
             get_traces=False,
             t_run=t_run,
             remove_dat_files_after_load=remove_dat_files_after_load,
+            downsample=downsample,
         )
     else:
         all_traces, all_events = pynmls.load_sim_data_from_lems_file(
@@ -1120,6 +1127,7 @@ def reload_saved_data(
             get_traces=True,
             t_run=t_run,
             remove_dat_files_after_load=remove_dat_files_after_load,
+            downsample=downsample,
         )
 
     flat_traces = {}

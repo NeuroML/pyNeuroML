@@ -64,6 +64,7 @@ def load_sim_data_from_lems_file(
     get_traces: bool = True,
     t_run: datetime = datetime(1900, 1, 1),
     remove_dat_files_after_load: bool = False,
+    downsample: int = 1,
 ):
     """Load simulation outputs from LEMS simulation run.
 
@@ -81,6 +82,10 @@ def load_sim_data_from_lems_file(
     :type get_traces: bool
     :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
     :type remove_dat_files_after_load: bool
+    :param downsample: only load every nth row (time point) of trace data
+        files, which speeds up loading of large files. The default, 1, loads
+        all rows. Events are never downsampled.
+    :type downsample: int
 
     :returns: if both `get_events` and `get_traces` are selected, a tuple with
         two dictionaries of dictionaries, one for traces, one for events, is
@@ -120,13 +125,16 @@ def load_sim_data_from_lems_file(
         Each list has multiple dictionaries, one each for each output file in
         the LEMS file.
 
-    :raises ValueError: if neither traces nor events are selected for loading
+    :raises ValueError: if neither traces nor events are selected for loading,
+        or if downsample is less than 1
     :raises OSError: if simulation output data file could not be found
     :raises Exception: if the output file has not been modified since the
         simulation was run (given as `t_run`)
     """
     if not get_events and not get_traces:
         raise ValueError("One of get_events or get_traces must be True")
+    if downsample < 1:
+        raise ValueError("downsample must be an integer >= 1")
 
     all_traces: typing.Dict[str, typing.Dict] = {}
     all_events: typing.Dict[str, typing.Dict] = {}
@@ -242,7 +250,9 @@ def load_sim_data_from_lems_file(
                 cols.append(quantity)
 
             with open(file_name) as f:
-                for line in f:
+                for line_num, line in enumerate(f):
+                    if line_num % downsample != 0:
+                        continue
                     values = line.split()
                     for vi in range(len(values)):
                         traces[cols[vi]].append(float(values[vi]))
