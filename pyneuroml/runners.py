@@ -1110,7 +1110,7 @@ def reload_saved_data(
             downsample=downsample,
         )
     elif reload_events and not reload_traces:
-        all_traces = pynmls.load_sim_data_from_lems_file(
+        all_events = pynmls.load_sim_data_from_lems_file(
             lems_file_name=lems_file_name,
             base_dir=base_dir,
             get_events=True,

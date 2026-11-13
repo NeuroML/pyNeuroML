@@ -36,7 +36,7 @@ bin_location=$(dirname $full_path)
 for f in ${bin_location}/pynml* ${bin_location}/jnml
 do
     current_exec=$(basename $f)
-    echo "-> Testing $current_exec runs"
+    echo "-> Testing $current_exec runs..."
     echo
     command $current_exec -h
     echo
