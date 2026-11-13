@@ -188,3 +188,4 @@ coverage.xml
 .opencode/
 
 /tests/temp_nml2py*
+/.coverage*
