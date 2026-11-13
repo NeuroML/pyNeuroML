@@ -1016,6 +1016,7 @@ def reload_saved_data(
     reload_traces: bool = True,
     verbose: bool = DEFAULTS["v"],
     remove_dat_files_after_load: bool = False,
+    downsample: int = 1,
 ) -> typing.Union[
     typing.Dict[str, typing.Dict],
     typing.Tuple[typing.Dict[str, typing.Dict], typing.Dict[str, typing.Dict]],
@@ -1051,6 +1052,10 @@ def reload_saved_data(
     :type reload_traces: bool
     :param remove_dat_files_after_load: toggle if data files should be deleted after they've been loaded
     :type remove_dat_files_after_load: bool
+    :param downsample: only load every nth row (time point) of trace data
+        files, to speed up loading. The default, 1, loads all rows. Events are
+        never downsampled.
+    :type downsample: int
 
     :returns: if both `get_events` and `get_traces` are selected, a tuple with
         two dictionaries, one for traces, one for events, is returned:
@@ -1102,6 +1107,7 @@ def reload_saved_data(
             get_traces=True,
             t_run=t_run,
             remove_dat_files_after_load=remove_dat_files_after_load,
+            downsample=downsample,
         )
     elif reload_events and not reload_traces:
         all_traces = pynmls.load_sim_data_from_lems_file(
@@ -1111,6 +1117,7 @@ def reload_saved_data(
             get_traces=False,
             t_run=t_run,
             remove_dat_files_after_load=remove_dat_files_after_load,
+            downsample=downsample,
         )
     else:
         all_traces, all_events = pynmls.load_sim_data_from_lems_file(
@@ -1120,6 +1127,7 @@ def reload_saved_data(
             get_traces=True,
             t_run=t_run,
             remove_dat_files_after_load=remove_dat_files_after_load,
+            downsample=downsample,
         )
 
     flat_traces = {}
