@@ -172,6 +172,33 @@ class TestHelperUtils(unittest.TestCase):
         self.assertFalse(retval)
         self.assertIn("1 failed", retstring)
 
+    def test_validate_neuroml2_lems_file(self):
+        """Test validate_neuroml2_lems_file"""
+        lems_file = "../examples/LEMS_NML2_Ex9_FN.xml"
+
+        self.assertTrue(pynmlpynml.validate_neuroml2_lems_file(lems_file))
+
+        retval, retstring = pynmlpynml.validate_neuroml2_lems_file(
+            lems_file, return_string=True
+        )
+        self.assertTrue(retval)
+        self.assertIsInstance(retstring, str)
+
+        # an invalid file exits by default, as before
+        with self.assertRaises(SystemExit):
+            pynmlpynml.validate_neuroml2_lems_file("../setup.cfg")
+
+        # but the result can be retrieved instead
+        self.assertFalse(
+            pynmlpynml.validate_neuroml2_lems_file("../setup.cfg", exit_on_fail=False)
+        )
+        retval, retstring = pynmlpynml.validate_neuroml2_lems_file(
+            "../setup.cfg", exit_on_fail=False, return_string=True
+        )
+        self.assertFalse(retval)
+        self.assertIsInstance(retstring, str)
+        self.assertNotEqual(retstring.strip(), "")
+
     # TODO: add similar validation for NeuroMLv1
 
 

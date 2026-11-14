@@ -8,16 +8,22 @@ Copyright 2024 NeuroML contributors
 """
 
 import logging
+import os
 import pathlib as pl
+import sys
 import tempfile
+from unittest import mock
 
 import pytest
 
 from pyneuroml.runners import (
+    _get_brian2_script_path,
+    _run_generated_brian2_script,
     execute_command_in_dir,
     execute_multiple_in_dir,
     generate_sim_scripts_in_folder,
     reload_saved_data,
+    run_lems_with_jneuroml_brian2,
     run_multiple_lems_with,
 )
 
@@ -175,3 +181,107 @@ class TestRunners(BaseTestCase):
                     reload_events=False,
                     reload_traces=False,
                 )
+
+    def test_get_brian2_script_path(self):
+        """Test that the generated Brian2 script is located next to the LEMS file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = pl.Path(tmpdir).resolve()
+
+            # relative LEMS file: relative to exec_in_dir
+            self.assertEqual(
+                _get_brian2_script_path("LEMS_sim.xml", tmpdir),
+                base / "LEMS_sim_brian2.py",
+            )
+            self.assertEqual(
+                _get_brian2_script_path("sub/LEMS_sim.xml", tmpdir),
+                base / "sub" / "LEMS_sim_brian2.py",
+            )
+            # absolute LEMS file: exec_in_dir does not matter
+            self.assertEqual(
+                _get_brian2_script_path(str(base / "LEMS_sim.xml"), "elsewhere"),
+                base / "LEMS_sim_brian2.py",
+            )
+            # jNeuroML only replaces a trailing .xml, other extensions are kept
+            self.assertEqual(
+                _get_brian2_script_path("my-sim.lems", tmpdir),
+                base / "my-sim.lems_brian2.py",
+            )
+            self.assertEqual(
+                _get_brian2_script_path("LEMS.xml.sim.xml", tmpdir),
+                base / "LEMS.xml.sim_brian2.py",
+            )
+
+    def test_run_generated_brian2_script(self):
+        """Test running a generated script that is not on the Python path."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run_dir = pl.Path(tmpdir).resolve()
+            # the name has a dash, so it could not be imported with `import`
+            script = run_dir / "my-sim_brian2.py"
+            script.write_text(
+                "import os\n"
+                "import sys\n"
+                "with open('ran.txt', 'w') as f:\n"
+                "    f.write(os.getcwd() + '|' + '|'.join(sys.argv[1:]))\n"
+            )
+
+            cwd_before = os.getcwd()
+            argv_before = list(sys.argv)
+            self.assertNotIn(str(run_dir), sys.path)
+
+            _run_generated_brian2_script(script, tmpdir)
+
+            # ran in exec_in_dir with the gui suppressed
+            written = (run_dir / "ran.txt").read_text().split("|")
+            self.assertEqual(pl.Path(written[0]).resolve(), run_dir)
+            self.assertEqual(written[1:], ["-nogui"])
+            # and left the caller's state alone
+            self.assertEqual(os.getcwd(), cwd_before)
+            self.assertEqual(sys.argv, argv_before)
+            self.assertNotIn(str(run_dir), sys.path)
+
+    def test_run_generated_brian2_script_restores_state_on_error(self):
+        """Test that sys.argv and the working directory are restored on errors."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            script = pl.Path(tmpdir) / "LEMS_sim_brian2.py"
+            script.write_text("raise RuntimeError('simulation failed')\n")
+
+            cwd_before = os.getcwd()
+            argv_before = list(sys.argv)
+            # a single entry, as when called from an interactive session
+            with mock.patch.object(sys, "argv", argv_before[:1]):
+                with self.assertRaises(RuntimeError):
+                    _run_generated_brian2_script(script, tmpdir)
+                self.assertEqual(sys.argv, argv_before[:1])
+            self.assertEqual(os.getcwd(), cwd_before)
+
+            with self.assertRaises(FileNotFoundError):
+                _run_generated_brian2_script(
+                    pl.Path(tmpdir) / "missing_brian2.py", tmpdir
+                )
+
+    def test_run_lems_with_jneuroml_brian2(self):
+        """Test that the script next to the LEMS file is run after jnml succeeds."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run_dir = pl.Path(tmpdir).resolve()
+            script = run_dir / "LEMS_sim_brian2.py"
+            script.write_text("open('ran.txt', 'w').close()\n")
+
+            # jnml would generate the script: here it already exists
+            with mock.patch(
+                "pyneuroml.runners.run_jneuroml", return_value=True
+            ) as jnml:
+                self.assertTrue(
+                    run_lems_with_jneuroml_brian2("LEMS_sim.xml", exec_in_dir=tmpdir)
+                )
+            jnml.assert_called_once()
+            self.assertIsFile(run_dir / "ran.txt")
+
+            # nothing is run if jnml fails
+            (run_dir / "ran.txt").unlink()
+            with mock.patch("pyneuroml.runners.run_jneuroml", return_value=False):
+                self.assertFalse(
+                    run_lems_with_jneuroml_brian2(
+                        "LEMS_sim.xml", exec_in_dir=tmpdir, exit_on_fail=False
+                    )
+                )
+            self.assertFalse((run_dir / "ran.txt").exists())
