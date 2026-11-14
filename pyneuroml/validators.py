@@ -100,8 +100,11 @@ def validate_neuroml2(
 
 
 def validate_neuroml2_lems_file(
-    nml2_lems_file_name: str, max_memory: str = DEFAULTS["default_java_max_memory"]
-) -> bool:
+    nml2_lems_file_name: str,
+    max_memory: str = DEFAULTS["default_java_max_memory"],
+    exit_on_fail: bool = True,
+    return_string: bool = False,
+) -> typing.Union[bool, typing.Tuple[bool, str]]:
     """Validate a NeuroML 2 LEMS file using jNeuroML.
 
     Note that this uses jNeuroML and so is aware of the standard NeuroML LEMS
@@ -114,7 +117,14 @@ def validate_neuroml2_lems_file(
     :type nml2_lems_file_name: str
     :param max_memory: memory to use for the Java virtual machine
     :type max_memory: str
-    :returns: True if valid, False if invalid
+    :param exit_on_fail: toggle whether the Python interpreter should exit if
+        the file is invalid; set this to False to get the result back instead
+    :type exit_on_fail: bool
+    :param return_string: toggle to enable or disable returning the output of
+        the jnml validation
+    :type return_string: bool
+    :returns: Either a bool, or a tuple (bool, str): True if valid, False if
+        invalid; along with the message returned by jnml
 
     """
     post_args = ""
@@ -127,5 +137,6 @@ def validate_neuroml2_lems_file(
         max_memory=max_memory,
         verbose=False,
         report_jnml_output=True,
-        exit_on_fail=True,
+        exit_on_fail=exit_on_fail,
+        return_string=return_string,
     )
