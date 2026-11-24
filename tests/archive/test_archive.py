@@ -7,13 +7,17 @@ File: test_archive.py
 Copyright 2023 NeuroML contributors
 """
 
+import json
 import logging
 import pathlib
+import tempfile
 import unittest
+from zipfile import ZipFile
 
 from pyneuroml.archive import (
     create_combine_archive,
     create_combine_archive_manifest,
+    create_ro_crate,
 )
 from pyneuroml.runners import run_jneuroml
 from pyneuroml.utils import get_model_file_list
@@ -21,6 +25,13 @@ from pyneuroml.utils.misc import chdir
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+try:
+    import rocrate  # noqa: F401
+
+    HAS_ROCRATE = True
+except ImportError:
+    HAS_ROCRATE = False
 
 
 class TestArchiveModule(unittest.TestCase):
@@ -159,4 +170,81 @@ class TestArchiveModule(unittest.TestCase):
         )
         self.assertTrue(
             pathlib.Path(dirname + "/examples/NML2_SingleCompHHCell.neux.zip").exists()
+        )
+
+    @unittest.skipUnless(HAS_ROCRATE, "rocrate is not installed")
+    def test_create_ro_crate(self):
+        """Test create_ro_crate with a NeuroML file and its includes."""
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent)
+        filelist = []
+        outfile = create_ro_crate(
+            rootfile=dirname + "/HH_example_cell.nml",
+            zipfile_name="HH_example",
+            filelist=filelist,
+            name="HH example cell",
+            license="https://creativecommons.org/licenses/by/4.0/",
+        )
+        self.addCleanup(pathlib.Path(outfile).unlink, missing_ok=True)
+        # the caller's list is not modified
+        self.assertEqual(0, len(filelist))
+        self.assertTrue(outfile.endswith("HH_example.crate.zip"))
+        self.assertTrue(pathlib.Path(outfile).exists())
+
+        with ZipFile(outfile) as archive:
+            names = archive.namelist()
+            self.assertIn("ro-crate-metadata.json", names)
+            metadata = json.loads(archive.read("ro-crate-metadata.json"))
+
+        expected_files = [
+            "HH_example_cell.nml",
+            "HH_example_k_channel.nml",
+            "HH_example_leak_channel.nml",
+            "HH_example_na_channel.nml",
+        ]
+        for f in expected_files:
+            self.assertIn(f, names)
+
+        entities = {e["@id"]: e for e in metadata["@graph"]}
+        root = entities["./"]
+        self.assertEqual("HH example cell", root["name"])
+        self.assertEqual({"@id": "HH_example_cell.nml"}, root["mainEntity"])
+        self.assertEqual(
+            sorted(expected_files), sorted(p["@id"] for p in root["hasPart"])
+        )
+        for f in expected_files:
+            self.assertEqual("File", entities[f]["@type"])
+            self.assertEqual("application/xml", entities[f]["encodingFormat"])
+
+    @unittest.skipUnless(HAS_ROCRATE, "rocrate is not installed")
+    def test_create_ro_crate_lems(self):
+        """Test create_ro_crate with a LEMS file and an explicit file list."""
+        thispath = pathlib.Path(__file__)
+        dirname = str(thispath.parent.parent.parent) + "/examples"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # extra files are relative to the root file
+            extra = pathlib.Path(dirname) / "README_rocrate_test.txt"
+            extra.write_text("test")
+            try:
+                outfile = create_ro_crate(
+                    rootfile=dirname + "/LEMS_NML2_Ex5_DetCell.xml",
+                    zipfile_name="LEMS_NML2_Ex5_DetCell",
+                    extra_files=["README_rocrate_test.txt"],
+                )
+            finally:
+                extra.unlink()
+            self.addCleanup(pathlib.Path(outfile).unlink, missing_ok=True)
+
+            with ZipFile(outfile) as archive:
+                archive.extractall(tmpdir)
+            metadata = json.loads(
+                (pathlib.Path(tmpdir) / "ro-crate-metadata.json").read_text()
+            )
+
+        entities = {e["@id"]: e for e in metadata["@graph"]}
+        root = entities["./"]
+        self.assertEqual({"@id": "LEMS_NML2_Ex5_DetCell.xml"}, root["mainEntity"])
+        self.assertIn("NML2_SingleCompHHCell.nml", entities)
+        self.assertEqual(
+            "text/plain", entities["README_rocrate_test.txt"]["encodingFormat"]
         )
