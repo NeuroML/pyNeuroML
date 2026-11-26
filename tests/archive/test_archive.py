@@ -225,14 +225,18 @@ class TestArchiveModule(unittest.TestCase):
             # extra files are relative to the root file
             extra = pathlib.Path(dirname) / "README_rocrate_test.txt"
             extra.write_text("test")
+            # a format not in RO_CRATE_ENCODING_FORMATS
+            unknown = pathlib.Path(dirname) / "rocrate_test.dat"
+            unknown.write_text("1 2 3")
             try:
                 outfile = create_ro_crate(
                     rootfile=dirname + "/LEMS_NML2_Ex5_DetCell.xml",
                     zipfile_name="LEMS_NML2_Ex5_DetCell",
-                    extra_files=["README_rocrate_test.txt"],
+                    extra_files=["README_rocrate_test.txt", "rocrate_test.dat"],
                 )
             finally:
                 extra.unlink()
+                unknown.unlink()
             self.addCleanup(pathlib.Path(outfile).unlink, missing_ok=True)
 
             with ZipFile(outfile) as archive:
@@ -248,3 +252,6 @@ class TestArchiveModule(unittest.TestCase):
         self.assertEqual(
             "text/plain", entities["README_rocrate_test.txt"]["encodingFormat"]
         )
+        # files of other formats are still included, just without encodingFormat
+        self.assertIn("rocrate_test.dat", entities)
+        self.assertNotIn("encodingFormat", entities["rocrate_test.dat"])
